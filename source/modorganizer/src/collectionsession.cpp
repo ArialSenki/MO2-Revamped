@@ -103,6 +103,10 @@ QString pendingPath()
   return QDir(Settings::instance().paths().base()).filePath("collections/pending.json");
 }
 
+const char* QuietProperty = "mo2r.collectionQuiet";
+
+constexpr int MaxRetries = 3;
+
 const char* PresetProperty       = "mo2r.fomodPreset";
 const char* PresetResultProperty = "mo2r.fomodPresetResult";
 
@@ -261,6 +265,9 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
 
 CollectionSession::~CollectionSession()
 {
+  if (m_stage == Stage::Running) {
+    qApp->setProperty(QuietProperty, QVariant());
+  }
   for (auto& c : m_connections) {
     c.disconnect();
   }
@@ -568,6 +575,9 @@ void CollectionSession::setSelected(int row, bool selected)
 void CollectionSession::setStage(Stage s)
 {
   m_stage = s;
+  // the per-file notices (and their sound) stay quiet while it runs: the
+  // window shows the progress
+  qApp->setProperty(QuietProperty, s == Stage::Running ? QVariant(true) : QVariant());
   if (s == Stage::Running) {
     m_watchdog.start();
   } else {
@@ -1340,7 +1350,7 @@ void CollectionSession::scanDownloads()
       continue;
     }
 
-    int complete = -1, running = -1, failed = -1;
+    int complete = -1, running = -1, stalled = -1;
     for (int i = 0; i < total && complete < 0; ++i) {
       const ModRepositoryFileInfo* info = dm->getFileInfo(i);
       const bool byId = info != nullptr && mod.fileId > 0 && info->fileID == mod.fileId &&
@@ -1355,10 +1365,14 @@ void CollectionSession::scanDownloads()
       const auto state = dm->getState(i);
       if (isDownloadComplete(state)) {
         complete = i;
+      } else if (byId && (state == DownloadManager::STATE_ERROR ||
+                          (state == DownloadManager::STATE_PAUSED &&
+                           !dm->getLastError(i).isEmpty()))) {
+        // stopped by a failure (the download manager pauses one that is out
+        // of its own retries), not by the user
+        stalled = i;
       } else if (byId && isDownloadRunning(state)) {
         running = i;
-      } else if (byId && state == DownloadManager::STATE_ERROR) {
-        failed = i;
       }
     }
 
@@ -1369,10 +1383,15 @@ void CollectionSession::scanDownloads()
     }
 
     const Status before = e.status;
+    if (stalled < 0) {
+      e.errorSeen.invalidate();
+    }
     if (complete >= 0) {
       e.archive = dm->getFilePath(complete);
       setStatus(row, Status::Downloaded);
     } else if (running >= 0 || pending) {
+      e.awaitingClick = false;
+      e.retryAt.invalidate();
       const int progress = running >= 0 ? dm->getProgress(running).first : -1;
       const bool queued  = e.queuedByUs;
       setStatus(row, Status::Downloading);
@@ -1381,9 +1400,9 @@ void CollectionSession::scanDownloads()
         e.progress = progress;
         emit entryChanged(row);
       }
-    } else if (failed >= 0 && e.status == Status::Downloading) {
-      setStatus(row, Status::Failed,
-                tr("The download failed: %1").arg(dm->getLastError(failed)));
+    } else if (stalled >= 0 && (e.status == Status::Downloading ||
+                                e.status == Status::WaitingForClick)) {
+      handleStalled(row, stalled);
     } else if (e.status == Status::Downloading) {
       if (e.queuedByUs && e.queuedAt.isValid() && e.queuedAt.elapsed() < QueueTimeoutMs) {
         // queued, not in the list yet
@@ -1466,6 +1485,158 @@ void CollectionSession::pumpDownloads()
   }
 }
 
+void CollectionSession::handleStalled(int row, int download)
+{
+  // nothing is retried while the collection is paused or finishing
+  if (m_stage != Stage::Running) {
+    return;
+  }
+  Entry& e            = m_entries[row];
+  DownloadManager* dm = m_core.downloadManager();
+  const QString why   = dm->getLastError(download);
+
+  // a free account's file waits for the user's new click: the stopped
+  // download stays as it is until that click resumes it
+  if (e.awaitingClick) {
+    return;
+  }
+
+  // a download in the error state is still in the download manager's own
+  // retries (2, 10 and 30 seconds): they come first
+  if (dm->getState(download) == DownloadManager::STATE_ERROR) {
+    if (!e.errorSeen.isValid()) {
+      e.errorSeen.start();
+    }
+    if (e.errorSeen.elapsed() < 50000) {
+      return;
+    }
+  }
+
+  // one retry at a time per file; a retry just sent gets a moment to fetch
+  // its new link before the stop counts again
+  if (e.retryPending || (e.retryAt.isValid() && e.retryAt.elapsed() < 15000)) {
+    return;
+  }
+  if (e.retries >= MaxRetries) {
+    setStatus(row, Status::Failed,
+              why.isEmpty() ? tr("The download failed after %1 tries.").arg(MaxRetries)
+                            : tr("The download failed after %1 tries: %2")
+                                  .arg(MaxRetries)
+                                  .arg(why));
+    return;
+  }
+
+  // the stop counts here, once per stop, and the retry follows after 5, 20
+  // and 60 seconds
+  static const int delays[MaxRetries] = {5, 20, 60};
+  const int delay = delays[e.retries];
+  ++e.retries;
+  e.retryPending = true;
+  setStatus(row, Status::Downloading,
+            tr("The download stopped; trying again (%1 of %2).")
+                .arg(e.retries)
+                .arg(MaxRetries));
+  QPointer<CollectionSession> self(this);
+  const int fileId = modOf(e).fileId;
+  QTimer::singleShot(delay * 1000, this, [self, row, fileId] {
+    if (self) {
+      self->retryDownload(row, fileId);
+    }
+  });
+}
+
+int CollectionSession::stalledDownload(const Entry& e) const
+{
+  // the file's download, when it is stopped by a failure and nothing is
+  // already fetching a link for it
+  DownloadManager* dm = m_core.downloadManager();
+  const auto& mod     = modOf(e);
+  for (int i = 0; i < dm->numPendingDownloads(); ++i) {
+    const auto p = dm->getPendingDownload(i);
+    if (std::get<1>(p) == mod.modId && std::get<2>(p) == mod.fileId) {
+      return -1;
+    }
+  }
+  for (int i = 0; i < dm->numTotalDownloads(); ++i) {
+    const ModRepositoryFileInfo* info = dm->getFileInfo(i);
+    if (info == nullptr || info->fileID != mod.fileId ||
+        (mod.modId > 0 && info->modID != mod.modId)) {
+      continue;
+    }
+    const auto state = dm->getState(i);
+    if (state == DownloadManager::STATE_ERROR ||
+        (state == DownloadManager::STATE_PAUSED && !dm->getLastError(i).isEmpty())) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void CollectionSession::retryDownload(int row, int fileId)
+{
+  if (row < 0 || row >= static_cast<int>(m_entries.size())) {
+    return;
+  }
+  Entry& e        = m_entries[row];
+  const auto& mod = modOf(e);
+  if (mod.fileId != fileId) {
+    return;
+  }
+  e.retryPending = false;
+  if (m_stage != Stage::Running) {
+    // paused meanwhile: the stop is looked at again on Continue
+    --e.retries;
+    return;
+  }
+  if (e.status != Status::Downloading && e.status != Status::WaitingForClick) {
+    return;  // it came, or the user did something else meanwhile
+  }
+  // only a download still stopped: one that resumed or is being fetched
+  // would get a box about it already running
+  if (stalledDownload(e) < 0) {
+    return;
+  }
+  e.retryAt.start();
+  e.errorSeen.invalidate();
+
+  if (isPremium() && m_autoDownload && !e.byHand && gameMatches(domainOf(e))) {
+    // a fresh link from Nexus; the download manager resumes the stopped file
+    // with it (one request for the file, within the API limits)
+    log::debug("collection {}: retrying the download of file {}", m_link.slug, fileId);
+    m_core.downloadManager()->addNXMDownload(QStringLiteral("nxm://%1/mods/%2/files/%3")
+                                                 .arg(domainOf(e))
+                                                 .arg(mod.modId)
+                                                 .arg(mod.fileId),
+                                             false);
+  } else {
+    // a free account's link comes only from a click on the page
+    e.awaitingClick = true;
+    setStatus(row, Status::WaitingForClick,
+              tr("Click the file on Nexus again: its download stopped."));
+    openPage(row);
+  }
+  saveState();
+  emit changed();
+}
+
+void CollectionSession::retryFailed()
+{
+  int count = 0;
+  for (int row = 0; row < static_cast<int>(m_entries.size()); ++row) {
+    Entry& e = m_entries[row];
+    if (e.status == Status::Failed && e.selected) {
+      e.retries = 0;
+      e.retryAt.invalidate();
+      e.errorSeen.invalidate();
+      retry(row);
+      ++count;
+    }
+  }
+  if (count > 0 && m_stage != Stage::Running) {
+    start();
+  }
+}
+
 bool CollectionSession::openNext()
 {
   for (int pass = 0; pass < 2; ++pass) {
@@ -1538,7 +1709,12 @@ void CollectionSession::retry(int row)
     return;
   }
   Entry& e = m_entries[row];
-  e.selected = true;
+  e.selected      = true;
+  e.retries       = 0;
+  e.retryPending  = false;
+  e.awaitingClick = false;
+  e.retryAt.invalidate();
+  e.errorSeen.invalidate();
   setStatus(row, !e.archive.isEmpty() && QFile::exists(e.archive) ? Status::Downloaded
                                                                    : Status::Pending);
   if (m_stage == Stage::Done) {
@@ -1908,6 +2084,9 @@ void CollectionSession::start()
       GuessedValue<QString> name(internal, GUESS_USER);
       if (m_core.createMod(name) != nullptr) {
         m_core.refresh();
+        if (Profile* profile = m_core.currentProfile()) {
+          profile->writeModlistNow();
+        }
       }
     }
   }
@@ -2781,10 +2960,23 @@ void CollectionSession::finalize()
           self->finalizeFailed(QString::fromUtf8(ex.what()));
           return;
         }
+        // files put back meanwhile (Retry failed): the collection goes on
+        for (const auto& e : self->m_entries) {
+          if (!self->isFinished(e)) {
+            self->m_finalizing = false;
+            self->m_loadingText.clear();
+            self->saveState();
+            emit self->changed();
+            self->scheduleScan();
+            return;
+          }
+        }
         self->m_finalizing = false;
         self->m_loadingText.clear();
         self->setStage(Stage::Done);
         self->saveState();
+        // once, at the end
+        QApplication::beep();
         emit self->finished();
       },
       OrganizerCore::RefreshCallbackGroup::EXTERNAL,
@@ -2869,6 +3061,71 @@ QString CollectionSession::categorySeparator(const QString& category)
   return name;
 }
 
+bool CollectionSession::separatorEmptyEverywhere(const QString& internalName) const
+{
+  // in this profile: no mod between it and the next separator by priority
+  const Profile* current = m_core.currentProfile();
+  const unsigned int self = ModInfo::getIndex(internalName);
+  if (current == nullptr || self == UINT_MAX) {
+    return false;
+  }
+  const int from = current->getModPriority(self);
+  int until      = INT_MAX;
+  std::vector<int> modPriorities;
+  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+    ModInfo::Ptr info = ModInfo::getByIndex(i);
+    if (i == self || info->hasAutomaticPriority()) {
+      continue;
+    }
+    const int p = current->getModPriority(i);
+    if (info->isSeparator()) {
+      if (p > from) {
+        until = std::min(until, p);
+      }
+    } else {
+      modPriorities.push_back(p);
+    }
+  }
+  for (int p : modPriorities) {
+    if (p > from && p < until) {
+      return false;
+    }
+  }
+
+  // in every other profile's modlist.txt (highest priority first): no mod
+  // line between it and the separator above it
+  const QDir profiles(m_core.settings().paths().profiles());
+  for (const QString& p : profiles.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (p.compare(current->name(), Qt::CaseInsensitive) == 0) {
+      continue;
+    }
+    QFile file(profiles.filePath(p + "/modlist.txt"));
+    if (!file.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    QStringList lines;
+    for (QString line : QString::fromUtf8(file.readAll()).split('\n')) {
+      line = line.trimmed();
+      if (!line.isEmpty() && !line.startsWith('#')) {
+        lines.append(line.mid(1));
+      }
+    }
+    const int at = lines.indexOf(QRegularExpression(
+        "^" + QRegularExpression::escape(internalName) + "$",
+        QRegularExpression::CaseInsensitiveOption));
+    if (at < 0) {
+      continue;
+    }
+    for (int k = at - 1; k >= 0; --k) {
+      if (lines[k].endsWith(QLatin1String("_separator"), Qt::CaseInsensitive)) {
+        break;
+      }
+      return false;  // a mod under it in that profile
+    }
+  }
+  return true;
+}
+
 void CollectionSession::applyModOrder()
 {
   std::vector<int> mods;
@@ -2912,35 +3169,110 @@ void CollectionSession::applyModOrder()
     groupOf[mod] = name;
   }
 
-  // grouped under a separator per category, only when every rule still holds
-  m_notGrouped = false;
+  // grouped under a separator per category. Only the rules between mods that
+  // share a file count: the others change nothing the game sees
+  m_overflowCount = 0;
   GroupResult grouped;
   grouped.order = sorted.order;
   if (m_categorySeparators) {
-    grouped = groupByCategory(sorted, [&groupOf](int mod) {
-      return groupOf[mod];
-    });
-    // the rules cross categories: the flat order, and the summary says why
-    m_notGrouped = !grouped.grouped;
-    // one category only: its separator would say nothing more
-    if (grouped.grouped && grouped.groups.size() < 2) {
+    std::map<int, QSet<QString>> files;
+    auto filesOf = [&](int mod) -> const QSet<QString>& {
+      auto it = files.find(mod);
+      if (it != files.end()) {
+        return it->second;
+      }
+      QSet<QString> set;
+      const unsigned int index = ModInfo::getIndex(m_entries[rowOfMod[mod]].modName);
+      if (index != UINT_MAX) {
+        const QDir dir(ModInfo::getByIndex(index)->absolutePath());
+        QDirIterator walk(dir.path(), QDir::Files | QDir::Hidden,
+                          QDirIterator::Subdirectories);
+        while (walk.hasNext()) {
+          const QString relative = dir.relativeFilePath(walk.next()).toLower();
+          if (relative != QLatin1String("meta.ini") &&
+              !relative.endsWith(QLatin1String(".mohidden"))) {
+            set.insert(relative);
+          }
+        }
+      }
+      return files.emplace(mod, std::move(set)).first->second;
+    };
+    const auto conflicts = [&](int a, int b) {
+      const QSet<QString>& fa = filesOf(a);
+      const QSet<QString>& fb = filesOf(b);
+      const QSet<QString>& fewer = fa.size() < fb.size() ? fa : fb;
+      const QSet<QString>& more = fa.size() < fb.size() ? fb : fa;
+      for (const QString& f : fewer) {
+        if (more.contains(f)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    // inside a category the collection's own order: phases, then mods[]
+    const auto position = [&rowOfMod](int mod) {
+      return rowOfMod[mod];
+    };
+    grouped = groupByCategory(
+        sorted,
+        [&groupOf](int mod) {
+          return groupOf[mod];
+        },
+        conflicts, position);
+    // one section only: its separator would say nothing more
+    const size_t sectionCount = grouped.groups.size() + (grouped.overflow.empty() ? 0 : 1);
+    if (sectionCount < 2) {
       grouped.grouped = false;
-    }
-    if (!grouped.grouped) {
-      grouped.order = sorted.order;
+      grouped.order   = sorted.order;
     }
   }
 
   // the separators first, then one refresh, so their indexes exist
   std::vector<std::pair<QString, std::vector<int>>> sections;
+  QSet<QString> usedSeparators;
   if (grouped.grouped) {
     for (const auto& [category, members] : grouped.groups) {
       const QString title = category.isEmpty() ? tr("Other") : category;
       sections.push_back({categorySeparator(title), members});
     }
+    if (!grouped.overflow.empty()) {
+      sections.push_back({categorySeparator(tr("Patches and overrides")), grouped.overflow});
+      m_overflowCount = static_cast<int>(grouped.overflow.size());
+    }
+    for (const auto& section : sections) {
+      usedSeparators.insert(section.first.toLower());
+    }
     m_core.refresh();
   } else {
     sections.push_back({QString(), grouped.order});
+  }
+
+  // category separators this collection made before that this order no
+  // longer uses (an earlier run grouped otherwise): removed only when no mod
+  // sits under them in any profile, as the mods folder is shared
+  if (m_categorySeparators && !usedSeparators.isEmpty()) {
+    QStringList unused;
+    for (auto it = m_categorySeparatorNames.begin(); it != m_categorySeparatorNames.end();) {
+      const QString name = it.value().toString();
+      if (usedSeparators.contains(name.toLower())) {
+        ++it;
+        continue;
+      }
+      if (ModInfo::getIndex(name + "_separator") == UINT_MAX) {
+        it = m_categorySeparatorNames.erase(it);  // gone already
+        continue;
+      }
+      if (separatorEmptyEverywhere(name + "_separator")) {
+        unused.append(name + "_separator");
+        it = m_categorySeparatorNames.erase(it);
+      } else {
+        ++it;
+      }
+    }
+    if (!unused.isEmpty()) {
+      m_core.modList()->removeModsForce(unused);
+      m_core.refresh();
+    }
   }
 
   ModList* list     = m_core.modList();
@@ -2962,6 +3294,10 @@ void CollectionSession::applyModOrder()
     }
   }
   list->setActive(names, true);
+  // in the profile's modlist.txt now, not only when the list is next written
+  if (Profile* profile = m_core.currentProfile()) {
+    profile->writeModlistNow();
+  }
 
   // the user's own mods in the collection's order: said in the summary
   m_movedOwn.clear();
@@ -2989,7 +3325,7 @@ void CollectionSession::applyPlugins()
     }
   }
 
-  if (!m_manifest.pluginRules.empty()) {
+  if (!m_manifest.pluginRules.empty() && !m_manifest.excludePluginRules) {
     QStringList all = plugins->pluginNames();
     std::stable_sort(all.begin(), all.end(), [plugins](const QString& a, const QString& b) {
       return plugins->priority(a) < plugins->priority(b);
@@ -3053,10 +3389,12 @@ QString CollectionSession::summary() const
   section(tr("Moved to the Recycle Bin, no longer in the collection:"), m_removedNotes);
   section(tr("Still installed, no longer in the collection:"), m_keptNotes);
   section(tr("Mod order rules dropped to break a loop:"), m_modCycles);
-  if (m_notGrouped) {
+  if (m_overflowCount > 0) {
     lines.append(QString());
-    lines.append(tr("Mod order rules cross categories, so the mods aren't grouped "
-                    "under category separators; their categories are set."));
+    lines.append(tr("%n mod(s) whose order rules cross categories went under \"%1\", "
+                    "at the end.",
+                    "", m_overflowCount)
+                     .arg(tr("Patches and overrides")));
   }
   section(tr("Plugin order rules dropped to break a loop:"), m_pluginCycles);
 

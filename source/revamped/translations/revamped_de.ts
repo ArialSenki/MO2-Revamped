@@ -15977,6 +15977,14 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
       <source>Update to revision %1</source>
       <translation>Auf Revision %1 aktualisieren</translation>
     </message>
+    <message>
+      <source>Retry failed</source>
+      <translation>Fehlgeschlagene erneut versuchen</translation>
+    </message>
+    <message>
+      <source>Tries every file that failed again.</source>
+      <translation>Versucht jede fehlgeschlagene Datei erneut.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>
@@ -16103,10 +16111,6 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>Die Sammlung konnte nicht gelesen werden: %1.</translation>
-    </message>
-    <message>
-      <source>The download failed: %1</source>
-      <translation>Der Download ist fehlgeschlagen: %1</translation>
     </message>
     <message>
       <source>The download didn't start.</source>
@@ -16295,10 +16299,6 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
       <translation>Mod Organizer kann sich gerade nicht schließen. Die Sammlung geht weiter, wenn du die Instanz „%1“ öffnest.</translation>
     </message>
     <message>
-      <source>Mod order rules cross categories, so the mods aren't grouped under category separators; their categories are set.</source>
-      <translation>Die Reihenfolgeregeln der Mods gehen über Kategorien hinweg, daher werden die Mods nicht unter Kategorie-Trennern gruppiert; ihre Kategorien werden gesetzt.</translation>
-    </message>
-    <message>
       <source>Other</source>
       <translation>Sonstiges</translation>
     </message>
@@ -16457,6 +16457,33 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>Your own mods, moved and enabled in the collection's order:</source>
       <translation>Deine eigenen Mods, in der Reihenfolge der Sammlung verschoben und aktiviert:</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) whose order rules cross categories went under "%1", at the end.</source>
+      <translation>
+        <numerusform>%n Mod, deren Reihenfolgeregeln über Kategorien hinweg gehen, kam unter „%1“, ans Ende.</numerusform>
+        <numerusform>%n Mods, deren Reihenfolgeregeln über Kategorien hinweg gehen, kamen unter „%1“, ans Ende.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Click the file on Nexus again: its download stopped.</source>
+      <translation>Klicke die Datei auf Nexus erneut an: Ihr Download wurde unterbrochen.</translation>
+    </message>
+    <message>
+      <source>Patches and overrides</source>
+      <translation>Patches und Überschreibungen</translation>
+    </message>
+    <message>
+      <source>The download failed after %1 tries.</source>
+      <translation>Der Download ist nach %1 Versuchen fehlgeschlagen.</translation>
+    </message>
+    <message>
+      <source>The download failed after %1 tries: %2</source>
+      <translation>Der Download ist nach %1 Versuchen fehlgeschlagen: %2</translation>
+    </message>
+    <message>
+      <source>The download stopped; trying again (%1 of %2).</source>
+      <translation>Der Download wurde unterbrochen; neuer Versuch (%1 von %2).</translation>
     </message>
   </context>
   <context>

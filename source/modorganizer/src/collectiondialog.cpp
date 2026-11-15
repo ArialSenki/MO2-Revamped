@@ -399,6 +399,15 @@ void CollectionDialog::setupUi()
     close();
     open(link, from);
   });
+  m_retryFailed = new QPushButton(tr("Retry failed"), this);
+  m_retryFailed->setObjectName(QStringLiteral("collectionRetryFailed"));
+  m_retryFailed->setAutoDefault(false);
+  m_retryFailed->setToolTip(tr("Tries every file that failed again."));
+  m_retryFailed->hide();
+  footer->addWidget(m_retryFailed);
+  connect(m_retryFailed, &QPushButton::clicked, this, [this] {
+    m_session->retryFailed();
+  });
   footer->addWidget(m_next);
   footer->addWidget(m_start);
   footer->addWidget(m_cancel);
@@ -1062,6 +1071,10 @@ void CollectionDialog::updateButtons()
       m_status->clear();
     }
   }
+
+  // not while the mods are being ordered
+  m_retryFailed->setVisible(loaded && m_session->count(Status::Failed) > 0 &&
+                            !m_session->finalizing());
 
   // an update when Nexus has a newer revision and this one was installed
   {

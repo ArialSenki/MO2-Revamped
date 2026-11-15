@@ -327,6 +327,14 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
 {
   log::debug("{}", text);
 
+  // MO2 Revamped: a collection running shows its own progress; hundreds of
+  // notices, each with the system's sound, are only noise
+  if (qApp->property("mo2r.collectionQuiet").toBool()) {
+    // still in the log, where a user looking for it finds it
+    log::info("notice not shown while a collection installs: {}", text);
+    return;
+  }
+
   // MO2 Revamped: over the dialog in front (the instance wizard, Settings),
   // not the main window under it
   QWidget* modal = QApplication::activeModalWidget();

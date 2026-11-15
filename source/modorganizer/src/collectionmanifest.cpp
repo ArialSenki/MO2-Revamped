@@ -322,8 +322,9 @@ std::optional<CollectionManifest> CollectionManifest::parse(const QByteArray& js
     }
   }
 
-  c.recommendNewProfile =
-      root.value("collectionConfig").toObject().value("recommendNewProfile").toBool();
+  const QJsonObject config = root.value("collectionConfig").toObject();
+  c.recommendNewProfile    = config.value("recommendNewProfile").toBool();
+  c.excludePluginRules     = config.value("excludePluginRules").toBool();
 
   return c;
 }
@@ -589,47 +590,162 @@ SortResult sortModsByRules(const CollectionManifest& manifest,
 }
 
 GroupResult groupByCategory(const SortResult& sorted,
-                            const std::function<QString(int)>& category)
+                            const std::function<QString(int)>& category,
+                            const std::function<bool(int, int)>& conflicts,
+                            const std::function<int(int)>& position)
 {
   GroupResult result;
 
-  // the groups in the order their first mod comes; names compare without case
-  std::vector<std::pair<QString, std::vector<int>>> groups;
-  for (int node : sorted.order) {
-    const QString name = category(node);
-    auto it = std::find_if(groups.begin(), groups.end(), [&name](const auto& g) {
-      return g.first.compare(name, Qt::CaseInsensitive) == 0;
-    });
-    if (it == groups.end()) {
-      groups.push_back({name, {node}});
-    } else {
-      it->second.push_back(node);
+  // only the rules on a path between two mods that share a file change what
+  // the game sees: A before B before C, with A and C sharing one, keeps both
+  std::vector<std::pair<int, int>> edges;
+  if (!conflicts) {
+    edges = sorted.kept;
+  } else {
+    const int n = static_cast<int>(sorted.order.size());
+    std::map<int, int> at;
+    for (int i = 0; i < n; ++i) {
+      at[sorted.order[i]] = i;
+    }
+    std::vector<std::vector<int>> next(n);
+    for (const auto& [a, b] : sorted.kept) {
+      auto ia = at.find(a);
+      auto ib = at.find(b);
+      if (ia != at.end() && ib != at.end()) {
+        next[ia->second].push_back(ib->second);
+      }
+    }
+    // what each node reaches (itself included); the sorted order is a
+    // topological order of the kept edges, so from the end
+    std::vector<std::vector<bool>> reach(n, std::vector<bool>(n, false));
+    for (int i = n - 1; i >= 0; --i) {
+      reach[i][i] = true;
+      for (int j : next[i]) {
+        for (int k = 0; k < n; ++k) {
+          if (reach[j][k]) {
+            reach[i][k] = true;
+          }
+        }
+      }
+    }
+    // the pairs that conflict and are ordered by the rules
+    std::vector<std::vector<int>> conflictsWith(n);
+    for (int x = 0; x < n; ++x) {
+      for (int y = 0; y < n; ++y) {
+        if (x != y && reach[x][y] && conflicts(sorted.order[x], sorted.order[y])) {
+          conflictsWith[x].push_back(y);
+        }
+      }
+    }
+    for (const auto& e : sorted.kept) {
+      auto iu = at.find(e.first);
+      auto iv = at.find(e.second);
+      if (iu == at.end() || iv == at.end()) {
+        continue;
+      }
+      const int u = iu->second, v = iv->second;
+      bool relevant = false;
+      for (int x = 0; x < n && !relevant; ++x) {
+        if (!reach[x][u]) {
+          continue;
+        }
+        for (int y : conflictsWith[x]) {
+          if (reach[v][y]) {
+            relevant = true;
+            break;
+          }
+        }
+      }
+      if (relevant) {
+        edges.push_back(e);
+      }
     }
   }
 
-  std::vector<int> order;
-  for (const auto& g : groups) {
-    order.insert(order.end(), g.second.begin(), g.second.end());
+  // the collection's own order (its phases and mods[]), else the sorted one
+  std::map<int, int> sortedPos;
+  for (int i = 0; i < static_cast<int>(sorted.order.size()); ++i) {
+    sortedPos[sorted.order[i]] = i;
   }
+  auto posOf = [&](int node) {
+    return position ? position(node) : sortedPos[node];
+  };
 
-  // every rule the sort kept still holds, or nothing is grouped
-  std::map<int, int> position;
-  for (int i = 0; i < static_cast<int>(order.size()); ++i) {
-    position[order[i]] = i;
-  }
-  for (const auto& [a, b] : sorted.kept) {
-    auto ia = position.find(a);
-    auto ib = position.find(b);
-    if (ia != position.end() && ib != position.end() && ia->second > ib->second) {
-      result.order = sorted.order;
-      return result;
+  std::set<int> moved;  // to the group at the end, in the rules' order
+  for (;;) {
+    // the groups in the order their first mod comes
+    std::vector<std::pair<QString, std::vector<int>>> groups;
+    for (int node : sorted.order) {
+      if (moved.count(node)) {
+        continue;
+      }
+      const QString name = category(node);
+      auto it = std::find_if(groups.begin(), groups.end(), [&name](const auto& g) {
+        return g.first.compare(name, Qt::CaseInsensitive) == 0;
+      });
+      if (it == groups.end()) {
+        groups.push_back({name, {node}});
+      } else {
+        it->second.push_back(node);
+      }
     }
-  }
 
-  result.grouped = true;
-  result.groups  = std::move(groups);
-  result.order   = std::move(order);
-  return result;
+    // in each group the collection's order, moved only by the rules inside it
+    for (auto& g : groups) {
+      std::stable_sort(g.second.begin(), g.second.end(), [&](int a, int b) {
+        return posOf(a) < posOf(b);
+      });
+      const std::set<int> members(g.second.begin(), g.second.end());
+      std::vector<std::pair<int, int>> inside;
+      for (const auto& e : edges) {
+        if (members.count(e.first) && members.count(e.second)) {
+          inside.push_back(e);
+        }
+      }
+      g.second = stableTopologicalSort(g.second, inside).order;
+    }
+
+    std::vector<int> overflow;
+    for (int node : sorted.order) {
+      if (moved.count(node)) {
+        overflow.push_back(node);
+      }
+    }
+
+    std::vector<int> order;
+    for (const auto& g : groups) {
+      order.insert(order.end(), g.second.begin(), g.second.end());
+    }
+    order.insert(order.end(), overflow.begin(), overflow.end());
+
+    std::map<int, int> at;
+    for (int i = 0; i < static_cast<int>(order.size()); ++i) {
+      at[order[i]] = i;
+    }
+
+    // a rule the grouping breaks: the mod that must come later goes to the
+    // end, after everything it has to follow
+    bool broken = false;
+    for (const auto& [a, b] : edges) {
+      auto ia = at.find(a);
+      auto ib = at.find(b);
+      if (ia != at.end() && ib != at.end() && ia->second > ib->second) {
+        // within the end group the sorted order holds every rule
+        moved.insert(moved.count(b) ? a : b);
+        broken = true;
+        break;
+      }
+    }
+    if (broken) {
+      continue;
+    }
+
+    result.grouped  = true;
+    result.groups   = std::move(groups);
+    result.overflow = std::move(overflow);
+    result.order    = std::move(order);
+    return result;
+  }
 }
 
 QStringList sortPluginsByRules(const QStringList& plugins,

@@ -86,6 +86,12 @@ public:
     qint64 size     = 0;
     int progress    = -1;  // percent while downloading
     bool queuedByUs = false;
+    // the collection's own retries of a download that stopped
+    int retries       = 0;
+    bool retryPending = false;
+    bool awaitingClick = false;  // a free account's retry: the user clicks again
+    QElapsedTimer retryAt;
+    QElapsedTimer errorSeen;
     QElapsedTimer queuedAt;
   };
 
@@ -118,6 +124,7 @@ public:
   qint64 remainingSize() const;
   int count(Status s) const;
   bool started() const { return m_started; }
+  bool finalizing() const { return m_finalizing; }
   // where it installs can no longer change: started, or in the instance made for it
   bool placeFixed() const { return m_started || m_profileMade || m_placeFixed; }
 
@@ -172,6 +179,8 @@ public:
   void openPage(int row);
   void chooseFile(int row, const QString& path);
   void markDone(int row);
+  // every failed file again, and the collection goes on
+  void retryFailed();
   void retry(int row);
   void skip(int row);
 
@@ -250,7 +259,7 @@ private:
   bool m_categorySeparators = true;
   // the category separators made for this collection: category to name
   QJsonObject m_categorySeparatorNames;
-  bool m_notGrouped = false;  // the rules crossed categories
+  int m_overflowCount = 0;  // mods put in the group at the end
   QString m_profileName;
   QString m_separatorName;
   bool m_autoOpen      = true;
@@ -304,6 +313,10 @@ private:
   void scheduleScan();
   void scanDownloads();
   void pumpDownloads();
+  void handleStalled(int row, int download);
+  void retryDownload(int row, int fileId);
+  int stalledDownload(const Entry& e) const;
+  bool separatorEmptyEverywhere(const QString& internalName) const;
   void pumpInstall();
   bool installEntry(int row);
   bool installBundle(int row);

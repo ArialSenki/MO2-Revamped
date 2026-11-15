@@ -148,6 +148,8 @@ struct CollectionManifest
   std::vector<PluginRule> pluginRules;
 
   bool recommendNewProfile = false;
+  // the curator asked for the plugin rules to be left out (collectionConfig)
+  bool excludePluginRules = false;
 
   // nothing, with the reason in error, when the text isn't a collection
   static std::optional<CollectionManifest> parse(const QByteArray& json,
@@ -180,19 +182,25 @@ SortResult stableTopologicalSort(const std::vector<int>& nodes,
 SortResult sortModsByRules(const CollectionManifest& manifest,
                            const std::vector<int>& mods);
 
-// the sorted mods grouped by category: each group where its first mod is, its
-// mods in their order. grouped is false, and order the one given, when the
-// grouping would break one of the kept edges. category() gives a node's
-// group, empty for none (those make a group of their own, named empty)
+// the sorted mods grouped by category, each group where its first mod is.
+// Inside a group the mods keep the collection's own order (position(), the
+// sorted order when not given), moved only by the rules among them. Only the
+// rules between mods that conflict (conflicts(), all when not given) count:
+// a mod a rule would put out of order across groups goes to a group at the
+// end, overflow, in the sorted order. category() gives a node's group, empty
+// for none (those make a group of their own, named empty)
 struct GroupResult
 {
   bool grouped = false;
   std::vector<std::pair<QString, std::vector<int>>> groups;
+  std::vector<int> overflow;
   std::vector<int> order;
 };
 
 GroupResult groupByCategory(const SortResult& sorted,
-                            const std::function<QString(int)>& category);
+                            const std::function<QString(int)>& category,
+                            const std::function<bool(int, int)>& conflicts = {},
+                            const std::function<int(int)>& position = {});
 
 // the plugins given, in their current order, sorted by the rules' "after"
 // lists; names compare without case. cycles gets "a > b" for each rule that

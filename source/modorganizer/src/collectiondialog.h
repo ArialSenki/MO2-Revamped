@@ -64,6 +64,7 @@ private:
   std::function<void()> m_runLoot;
   std::function<void(const QString&, int)> m_openUpdate;
   QPushButton* m_update = nullptr;
+  QPushButton* m_retryFailed = nullptr;
   bool m_built = false;
 
   QLabel* m_name;

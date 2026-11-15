@@ -16141,6 +16141,14 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <source>Update to revision %1</source>
       <translation>Mettre à jour vers la révision %1</translation>
     </message>
+    <message>
+      <source>Retry failed</source>
+      <translation>Réessayer les échecs</translation>
+    </message>
+    <message>
+      <source>Tries every file that failed again.</source>
+      <translation>Réessaie chaque fichier qui a échoué.</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>
@@ -16267,10 +16275,6 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>La collection n'a pas pu être lue : %1.</translation>
-    </message>
-    <message>
-      <source>The download failed: %1</source>
-      <translation>Le téléchargement a échoué : %1</translation>
     </message>
     <message>
       <source>The download didn't start.</source>
@@ -16459,10 +16463,6 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <translation>Mod Organizer ne peut pas se fermer pour l'instant. La collection continue lorsque vous ouvrez l'instance « %1 ».</translation>
     </message>
     <message>
-      <source>Mod order rules cross categories, so the mods aren't grouped under category separators; their categories are set.</source>
-      <translation>Les règles d'ordre des mods traversent les catégories : les mods ne sont donc pas regroupés sous des séparateurs de catégorie ; leurs catégories sont définies.</translation>
-    </message>
-    <message>
       <source>Other</source>
       <translation>Autres</translation>
     </message>
@@ -16621,6 +16621,33 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>Your own mods, moved and enabled in the collection's order:</source>
       <translation>Vos propres mods, déplacés et activés dans l'ordre de la collection :</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) whose order rules cross categories went under "%1", at the end.</source>
+      <translation>
+        <numerusform>%n mod dont les règles d'ordre traversent les catégories est placé sous « %1 », à la fin.</numerusform>
+        <numerusform>%n mods dont les règles d'ordre traversent les catégories sont placés sous « %1 », à la fin.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Click the file on Nexus again: its download stopped.</source>
+      <translation>Cliquez à nouveau sur le fichier sur Nexus : son téléchargement s'est arrêté.</translation>
+    </message>
+    <message>
+      <source>Patches and overrides</source>
+      <translation>Correctifs et remplacements</translation>
+    </message>
+    <message>
+      <source>The download failed after %1 tries.</source>
+      <translation>Le téléchargement a échoué après %1 tentatives.</translation>
+    </message>
+    <message>
+      <source>The download failed after %1 tries: %2</source>
+      <translation>Le téléchargement a échoué après %1 tentatives : %2</translation>
+    </message>
+    <message>
+      <source>The download stopped; trying again (%1 of %2).</source>
+      <translation>Le téléchargement s'est arrêté ; nouvelle tentative (%1 sur %2).</translation>
     </message>
   </context>
   <context>
