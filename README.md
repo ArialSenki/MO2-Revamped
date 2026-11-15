@@ -21,8 +21,8 @@ removes everything on uninstall, and Elden Ring and Nightreign get fixes for
 closing and starting the game and for saves. Script extenders and the borderless
 window were tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas.
 
-**Experimental: [v1.1.0-dev.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.1)**
-— `MO2-Revamped-Setup-1.1.0-dev.1.exe`. A separate test build. It has everything
+**Experimental: [v1.1.0-dev.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.2)**
+— `MO2-Revamped-Setup-1.1.0-dev.2.exe`. A separate test build. It has everything
 in the beta, plus native installation of **Wabbajack modlists**, which is still
 being tested. Use the beta above if you want the safer version.
 
