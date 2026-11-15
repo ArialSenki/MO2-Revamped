@@ -17109,6 +17109,36 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
       <source>Later</source>
       <translation>Später</translation>
     </message>
+    <message>
+      <source>Open its page</source>
+      <translation>Seine Seite öffnen</translation>
+    </message>
+    <message>
+      <source>Choose the downloaded file…</source>
+      <translation>Heruntergeladene Datei auswählen…</translation>
+    </message>
+    <message>
+      <source>The downloaded file of %1</source>
+      <translation>Die heruntergeladene Datei von %1</translation>
+    </message>
+    <message>
+      <source>Checking %1…</source>
+      <translation>%1 wird geprüft…</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files have to be downloaded in the browser: double-click one to open its page. MO2 Revamped watches %1 and takes them by their hash as they arrive; a file saved elsewhere goes in with a right click.</source>
+      <translation>
+        <numerusform>%n Datei muss im Browser heruntergeladen werden: Doppelklick öffnet ihre Seite. MO2 Revamped überwacht %1 und übernimmt sie anhand ihres Hashes, sobald sie ankommt; eine anderswo gespeicherte Datei kommt per Rechtsklick dazu.</numerusform>
+        <numerusform>%n Dateien müssen im Browser heruntergeladen werden: Doppelklick öffnet ihre Seite. MO2 Revamped überwacht %1 und übernimmt sie anhand ihres Hashes, sobald sie ankommen; eine anderswo gespeicherte Datei kommt per Rechtsklick dazu.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files have to be downloaded in the browser: double-click one to open its page, then choose the downloaded file with a right click.</source>
+      <translation>
+        <numerusform>%n Datei muss im Browser heruntergeladen werden: Doppelklick öffnet ihre Seite, danach die heruntergeladene Datei per Rechtsklick auswählen.</numerusform>
+        <numerusform>%n Dateien müssen im Browser heruntergeladen werden: Doppelklick öffnet ihre Seite, danach die heruntergeladene Datei per Rechtsklick auswählen.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack</name>
@@ -17324,10 +17354,6 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
       <translation>Fehlgeschlagen: %1</translation>
     </message>
     <message>
-      <source>Download it in the browser</source>
-      <translation>Im Browser herunterladen</translation>
-    </message>
-    <message>
       <source>Not needed</source>
       <translation>Nicht nötig</translation>
     </message>
@@ -17346,6 +17372,26 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>Nexus didn't answer.</source>
       <translation>Nexus hat nicht geantwortet.</translation>
+    </message>
+    <message>
+      <source>%1 was taken from %2.</source>
+      <translation>%1 wurde aus %2 übernommen.</translation>
+    </message>
+    <message>
+      <source>%1 isn't the list's %2 (its hash differs).</source>
+      <translation>%1 ist nicht %2 der Liste (der Hash ist anders).</translation>
+    </message>
+    <message>
+      <source>Download it in the browser (double-click)</source>
+      <translation>Im Browser herunterladen (Doppelklick)</translation>
+    </message>
+    <message>
+      <source>That is MO2 Revamped's own unfinished download of %1.</source>
+      <translation>Das ist der unfertige Download von %1, den MO2 Revamped macht.</translation>
+    </message>
+    <message>
+      <source>%1 can't be read.</source>
+      <translation>%1 kann nicht gelesen werden.</translation>
     </message>
   </context>
   <context>
@@ -17484,6 +17530,45 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>Not enough memory.</source>
       <translation>Nicht genug Arbeitsspeicher.</translation>
+    </message>
+    <message>
+      <source>the texture's format isn't known</source>
+      <translation>das Format der Textur ist unbekannt</translation>
+    </message>
+    <message>
+      <source>the texture can't be read</source>
+      <translation>die Textur kann nicht gelesen werden</translation>
+    </message>
+    <message>
+      <source>the texture's shape isn't supported</source>
+      <translation>die Form der Textur wird nicht unterstützt</translation>
+    </message>
+    <message>
+      <source>the texture can't be resized</source>
+      <translation>die Textur kann nicht skaliert werden</translation>
+    </message>
+    <message>
+      <source>the texture's mipmaps can't be made</source>
+      <translation>die Mipmaps der Textur können nicht erstellt werden</translation>
+    </message>
+    <message>
+      <source>the texture can't be compressed</source>
+      <translation>die Textur kann nicht komprimiert werden</translation>
+    </message>
+    <message>
+      <source>the texture can't be written</source>
+      <translation>die Textur kann nicht geschrieben werden</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n textures resized.</source>
+      <translation>
+        <numerusform>%n Textur verkleinert.</numerusform>
+        <numerusform>%n Texturen verkleinert.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>the texture's size isn't possible</source>
+      <translation>die Größe der Textur ist nicht möglich</translation>
     </message>
   </context>
 </TS>

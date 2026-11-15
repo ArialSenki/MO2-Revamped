@@ -141,11 +141,25 @@ public:
   // what is left to download, in bytes
   qint64 remaining() const;
   int countOf(Status s) const;
-  // which archives can be downloaded by MO2 Revamped, and how many are done
+  // the archives the downloads folder has to hold, and how many are there
   int downloadable() const;
   int done() const;
 
   QString statusText(int i) const;
+
+  // files only a browser gets (Google Drive, Mega, a page that wants a click):
+  // the user downloads them, and they are taken from the folder watched (the
+  // browser's Downloads) or from the file the user chooses, by their hash,
+  // copied into the downloads folder
+  void adoptFile(int i, const QString& path);
+  void setWatchFolder(const QString& folder);
+  QString watchFolder() const { return m_watchFolder; }
+  // the archives the user has to download in the browser, not here yet
+  int byHandCount() const;
+  // whether a file can be chosen for this archive now
+  bool canAdopt(int i) const;
+  // the watched folder is looked at (not the downloads folder itself)
+  bool isWatching() const;
 
   // the file of an archive in the folder; the game's file for a game file
   QString pathOf(int i) const;
@@ -180,6 +194,25 @@ private:
   QTimer m_pump;
   QTimer m_saveCache;
 
+  // the files to take in, one hashed at a time
+  QTimer m_watch;
+  QString m_watchFolder;
+  QHash<QString, qint64> m_seen;  // files of the watched folder looked at, and when changed
+  // size and time of the candidates at the last tick: taken when unchanged
+  QHash<QString, QPair<qint64, qint64>> m_settling;
+  struct Adoption
+  {
+    QString path;
+    std::vector<int> rows;  // the archives of its size, one hash for all
+    bool byUser = false;
+  };
+  std::vector<Adoption> m_adoptQueue;
+  bool m_adopting = false;
+  int m_adopted   = 0;
+  // stops the hash of a file taken in: only when the queue goes
+  std::shared_ptr<std::atomic_bool> m_cancelAdopt =
+      std::make_shared<std::atomic_bool>(false);
+
   void scanFolder();
   void hashJobs(std::vector<std::pair<int, QString>> jobs, bool thenDownload);
   void pumpQueue();
@@ -199,6 +232,13 @@ private:
   void startCdnParts(int i, quint64 id);
   void nextCdnPart(int i, quint64 id);
   void finishDownload(int i);
+  // the part file of an archive becomes its file (another one in the way is
+  // moved aside); the reason when it can't
+  QString putInPlace(int i);
+  bool needsByHand(int i) const;
+  bool belongsInFolder(int i) const;
+  void watchTick();
+  void nextAdoption();
   void failDownload(int i, const QString& reason, bool retry = true);
   void verifyDownload(int i);
   void cancelJob(int i);

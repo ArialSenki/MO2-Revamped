@@ -13,8 +13,12 @@
 //    old lists).
 //  - InlineFile and RemappedInlineFile: the files the list carries; the second
 //    with the paths of this install written in.
-//  - CreateBSA: BSA and BA2 (general) archives built from the files gathered
-//    for them, with libbsarch.
+//  - CreateBSA: BSA and BA2 archives built from the files gathered for them,
+//    with libbsarch.
+//  - TransformedTexture: a texture made smaller or recompressed, as the list's
+//    author did, with DirectXTex (not checked by hash: the result of a
+//    compression isn't the same byte for byte, Wabbajack doesn't check it either).
+// Then the screen's size goes into the profiles' prefs, as Wabbajack does.
 // Mod Organizer's own files (the list brings its own MO2) are never written;
 // the list's ModOrganizer.ini is handed back, its paths written in, for the
 // instance to take what it needs. MO2 plugins the list adds go aside, to be
@@ -42,6 +46,9 @@ struct InstallPlan
   QString gameFolder;  // empty when the game isn't installed
   // the file of each archive, by its hash: downloads and game files
   QHash<uint64_t, QString> archives;
+  // the screen the game's prefs get, as Wabbajack writes it; 0 leaves them
+  int screenWidth  = 0;
+  int screenHeight = 0;
 };
 
 struct InstallResult

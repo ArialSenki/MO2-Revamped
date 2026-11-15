@@ -29,6 +29,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QPixmap>
 #include <QPushButton>
 #include <QScreen>
@@ -39,6 +40,8 @@
 #include <QTreeWidget>
 #include <QUrl>
 #include <QVBoxLayout>
+
+#include <Windows.h>
 #include <QtConcurrent/QtConcurrentRun>
 
 using namespace MOBase;
@@ -61,6 +64,7 @@ namespace
 constexpr char FolderSetting[] = "Wabbajack/downloadsFolder";
 constexpr char FileSetting[]   = "Wabbajack/lastListFolder";
 constexpr char ResumeSetting[] = "Wabbajack/resumeList";
+constexpr char WatchSetting[]  = "Wabbajack/watchFolder";
 constexpr char16_t NextGlyph   = 0xE8A7;  // OpenInNewWindow
 constexpr char16_t DownloadGlyph = 0xE896;  // Download
 
@@ -490,6 +494,14 @@ QFrame* WabbajackDialog::createArchives()
   folderRow->addWidget(m_check);
   layout->addLayout(folderRow);
 
+  // the files only a browser gets: how they come in
+  m_byHand = new QLabel(m_archivesCard);
+  m_byHand->setObjectName(QStringLiteral("instanceDetailCaption"));
+  m_byHand->setWordWrap(true);
+  m_byHand->setContentsMargins(6, 0, 6, 2);
+  m_byHand->hide();
+  layout->addWidget(m_byHand);
+
   m_tree = new QTreeWidget(m_archivesCard);
   m_tree->setObjectName(QStringLiteral("wabbajackArchiveList"));
   m_tree->setColumnCount(ColCount);
@@ -500,6 +512,7 @@ QFrame* WabbajackDialog::createArchives()
   m_tree->setSelectionMode(QAbstractItemView::SingleSelection);
   m_tree->setAccessibleName(tr("Archives"));
   m_tree->setSortingEnabled(false);
+  m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
   m_tree->header()->setStretchLastSection(true);
   m_tree->header()->setSectionResizeMode(ColName, QHeaderView::Interactive);
   m_tree->setColumnWidth(ColName, 420);
@@ -545,6 +558,34 @@ QFrame* WabbajackDialog::createArchives()
               m_queue->openPage(item->data(ColName, RowRole).toInt());
             }
           });
+  connect(m_tree, &QTreeWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+    QTreeWidgetItem* item = m_tree->itemAt(pos);
+    if (item == nullptr || m_queue == nullptr) {
+      return;
+    }
+    const int row = item->data(ColName, RowRole).toInt();
+    const auto& a = m_list->archives[std::size_t(row)];
+    if (a.source == Source::GameFile || a.isModOrganizer) {
+      return;
+    }
+    QMenu menu(this);
+    menu.addAction(tr("Open its page"), this, [this, row] {
+      m_queue->openPage(row);
+    });
+    QAction* choose = menu.addAction(tr("Choose the downloaded file…"), this, [this, row] {
+      const auto& a      = m_list->archives[std::size_t(row)];
+      const QString file = QFileDialog::getOpenFileName(
+          this, tr("The downloaded file of %1").arg(a.name),
+          m_queue->watchFolder().isEmpty() ? m_queue->folder() : m_queue->watchFolder());
+      if (!file.isEmpty()) {
+        m_status->setText(tr("Checking %1…").arg(QFileInfo(file).fileName()));
+        m_queue->adoptFile(row, file);
+      }
+    });
+    choose->setEnabled(m_queue->canAdopt(row) && !m_queue->isRunning() &&
+                       !m_queue->isChecking() && !isInstalling());
+    menu.exec(m_tree->viewport()->mapToGlobal(pos));
+  });
 
   m_archivesCard->hide();
   return m_archivesCard;
@@ -639,6 +680,12 @@ void WabbajackDialog::onRead()
 
   fillTree();
   m_queue->setFolder(QDir::fromNativeSeparators(m_folder->text().trimmed()));
+  // the browser's downloads: where the files only a browser gets arrive
+  // (a browser saving elsewhere: the "Wabbajack/watchFolder" setting)
+  m_queue->setWatchFolder(
+      GlobalSettings::value(WatchSetting,
+                            QStandardPaths::writableLocation(QStandardPaths::DownloadLocation))
+          .toString());
   m_download->setEnabled(true);
   updateState();
 }
@@ -988,6 +1035,23 @@ void WabbajackDialog::updateState()
     m_space->hide();
   }
 
+  const int byHand = m_queue->byHandCount();
+  if (byHand > 0) {
+    m_byHand->setText(
+        m_queue->isWatching()
+            ? tr("%n files have to be downloaded in the browser: double-click one to open its "
+                 "page. MO2 Revamped watches %1 and takes them by their hash as they arrive; "
+                 "a file saved elsewhere goes in with a right click.",
+                 nullptr, byHand)
+                  .arg(QDir::toNativeSeparators(m_queue->watchFolder()))
+            : tr("%n files have to be downloaded in the browser: double-click one to open its "
+                 "page, then choose the downloaded file with a right click.",
+                 nullptr, byHand));
+    m_byHand->show();
+  } else {
+    m_byHand->hide();
+  }
+
   const bool running  = m_queue->isRunning();
   const bool checking = m_queue->isChecking();
   m_download->setText(running ? tr("Pause") : tr("Download"));
@@ -1197,6 +1261,18 @@ void WabbajackDialog::startInstall()
   plan.installFolder   = m_installFolder;
   plan.downloadsFolder = downloads;
   plan.gameFolder      = gameDirectory();
+  // the screen the game will show on, in pixels, as Wabbajack writes it
+  // (the display's mode: Qt's size is rounded to device-independent pixels)
+  DEVMODEW mode{};
+  mode.dmSize = sizeof(mode);
+  if (EnumDisplaySettingsW(nullptr, ENUM_CURRENT_SETTINGS, &mode) && mode.dmPelsWidth > 0) {
+    plan.screenWidth  = int(mode.dmPelsWidth);
+    plan.screenHeight = int(mode.dmPelsHeight);
+  } else if (const QScreen* screen = QGuiApplication::primaryScreen()) {
+    const QSize size  = screen->size() * screen->devicePixelRatio();
+    plan.screenWidth  = size.width();
+    plan.screenHeight = size.height();
+  }
   for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
     const QString p = m_queue->pathOf(int(i));
     if (!p.isEmpty()) {

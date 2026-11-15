@@ -2,6 +2,7 @@
 
 #include "collectionfiles.h"
 
+#include <DirectXTex.h>
 #include <archive.h>
 #include <libbsarch.h>
 #include <log.h>
@@ -235,6 +236,159 @@ bool applyPatch(const QString& basisPath, const QString& patchPath, const QStrin
   return false;
 }
 
+// a texture made as the list's author made it: resized, its mipmaps made again
+// and compressed to the format the list names
+bool transformTexture(const QString& source, const QString& target, const QJsonObject& state,
+                      QString* error)
+{
+  using namespace DirectX;
+  static const QHash<QString, int> formats = {
+      {"BC1_UNORM", 71},       {"BC1_UNORM_SRGB", 72}, {"BC2_UNORM", 74},
+      {"BC2_UNORM_SRGB", 75},  {"BC3_UNORM", 77},      {"BC3_UNORM_SRGB", 78},
+      {"BC4_UNORM", 80},       {"BC4_SNORM", 81},      {"BC5_UNORM", 83},
+      {"BC5_SNORM", 84},       {"BC6H_UF16", 95},      {"BC6H_SF16", 96},
+      {"BC7_UNORM", 98},       {"BC7_UNORM_SRGB", 99}, {"R8G8B8A8_UNORM", 28},
+      {"R8G8B8A8_UNORM_SRGB", 29}, {"B8G8R8A8_UNORM", 87}, {"B8G8R8X8_UNORM", 88},
+      {"B8G8R8A8_UNORM_SRGB", 91}, {"B5G6R5_UNORM", 85}, {"B5G5R5A1_UNORM", 86},
+      {"R8_UNORM", 61},          {"A8_UNORM", 65},       {"R8G8_UNORM", 49},
+      {"BC1_TYPELESS", 70},      {"BC2_TYPELESS", 73},   {"BC3_TYPELESS", 76},
+      {"BC4_TYPELESS", 79},      {"BC5_TYPELESS", 82},   {"BC7_TYPELESS", 97},
+      {"R8G8B8A8_TYPELESS", 27}, {"B8G8R8A8_TYPELESS", 90}};
+  const QJsonValue f = state.value("Format");
+  QString name       = f.toString().toUpper();
+  if (name.startsWith(u"DXGI_FORMAT_")) {
+    name = name.mid(12);
+  }
+  const int formatCode = f.isString() ? formats.value(name, 0) : f.toInt(0);
+  const auto format    = DXGI_FORMAT(formatCode);
+  const int width      = state.value("Width").toInt();
+  const int height     = state.value("Height").toInt();
+  const int mips       = state.value("MipLevels").toInt(0);  // 0: the whole chain
+  if (format == DXGI_FORMAT_UNKNOWN) {
+    *error = tr("the texture's format isn't known");
+    return false;
+  }
+  if (width <= 0 || height <= 0 || width > 16384 || height > 16384) {
+    *error = tr("the texture's size isn't possible");
+    return false;
+  }
+
+  TexMetadata meta;
+  ScratchImage image;
+  if (FAILED(LoadFromDDSFile(source.toStdWString().c_str(), DDS_FLAGS_NONE, &meta, image))) {
+    *error = tr("the texture can't be read");
+    return false;
+  }
+  if (meta.arraySize != 1 || meta.depth != 1 || meta.IsCubemap()) {
+    *error = tr("the texture's shape isn't supported");
+    return false;
+  }
+
+  // the largest image, uncompressed: sRGB stays sRGB, HDR (BC6H) stays in floats
+  ScratchImage plain;
+  const Image* top = image.GetImage(0, 0, 0);
+  if (IsCompressed(meta.format)) {
+    const bool hdr = meta.format == DXGI_FORMAT_BC6H_UF16 ||
+                     meta.format == DXGI_FORMAT_BC6H_SF16 ||
+                     format == DXGI_FORMAT_BC6H_UF16 || format == DXGI_FORMAT_BC6H_SF16;
+    const DXGI_FORMAT to = hdr ? DXGI_FORMAT_R16G16B16A16_FLOAT
+                         : IsSRGB(meta.format) ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
+                                               : DXGI_FORMAT_R8G8B8A8_UNORM;
+    if (FAILED(Decompress(*top, to, plain))) {
+      *error = tr("the texture can't be read");
+      return false;
+    }
+    image.Release();  // the source isn't needed any more
+    top = plain.GetImage(0, 0, 0);
+  }
+
+  // DirectXTex's own filters: WIC's would need COM on this thread
+  const TEX_FILTER_FLAGS filter = TEX_FILTER_CUBIC | TEX_FILTER_FORCE_NON_WIC;
+  ScratchImage resized;
+  if (FAILED(Resize(*top, std::size_t(width), std::size_t(height), filter, resized))) {
+    *error = tr("the texture can't be resized");
+    return false;
+  }
+  plain.Release();
+  image.Release();
+
+  // as many levels as the list says, never more than the size allows
+  std::size_t possible = 1;
+  for (int side = std::max(width, height); side > 1; side /= 2) {
+    ++possible;
+  }
+  const std::size_t levels = mips <= 0 ? possible : std::min<std::size_t>(std::size_t(mips), possible);
+  ScratchImage mipped;
+  if (levels <= 1) {
+    mipped = std::move(resized);
+  } else if (FAILED(GenerateMipMaps(*resized.GetImage(0, 0, 0), filter, levels, mipped))) {
+    *error = tr("the texture's mipmaps can't be made");
+    return false;
+  }
+
+  ScratchImage done;
+  HRESULT hr;
+  if (IsCompressed(format)) {
+    // BC7's full search takes minutes a texture: its quick mode, as lists' tools use
+    const TEX_COMPRESS_FLAGS quick = TEX_COMPRESS_BC7_QUICK;
+    hr = Compress(mipped.GetImages(), mipped.GetImageCount(), mipped.GetMetadata(), format,
+                  quick | TEX_COMPRESS_PARALLEL, TEX_THRESHOLD_DEFAULT, done);
+    if (FAILED(hr)) {
+      hr = Compress(mipped.GetImages(), mipped.GetImageCount(), mipped.GetMetadata(), format,
+                    quick, TEX_THRESHOLD_DEFAULT, done);
+    }
+  } else if (mipped.GetMetadata().format != format) {
+    hr = Convert(mipped.GetImages(), mipped.GetImageCount(), mipped.GetMetadata(), format,
+                 TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, done);
+  } else {
+    done = std::move(mipped);
+    hr   = S_OK;
+  }
+  if (FAILED(hr)) {
+    *error = tr("the texture can't be compressed");
+    return false;
+  }
+  QFile::remove(target);
+  if (FAILED(SaveToDDSFile(done.GetImages(), done.GetImageCount(), done.GetMetadata(),
+                           DDS_FLAGS_NONE, target.toStdWString().c_str()))) {
+    *error = tr("the texture can't be written");
+    return false;
+  }
+  return true;
+}
+
+// a key of a section of an ini set, when the file has it; the bytes it doesn't
+// touch stay as they are (read as Latin-1)
+bool setIniValue(QString& text, const QString& section, const QString& key, const QString& value)
+{
+  const QStringList lines = text.split(u'\n');
+  QStringList out;
+  bool inSection = false, changed = false;
+  for (QString line : lines) {
+    const QString trimmed = line.trimmed();
+    if (trimmed.startsWith(u'[')) {
+      // "[Display] ; a note" is the section too
+      const int end = trimmed.indexOf(u']');
+      inSection     = end > 0 && trimmed.mid(1, end - 1).trimmed().compare(section, Qt::CaseInsensitive) == 0;
+    } else if (inSection) {
+      const int eq = line.indexOf(u'=');
+      if (eq > 0 && line.left(eq).trimmed().compare(key, Qt::CaseInsensitive) == 0) {
+        const bool cr          = line.endsWith(u'\r');
+        const QString replaced = line.left(eq + 1) + value + (cr ? QStringLiteral("\r") : QString());
+        if (replaced != line) {
+          line    = replaced;
+          changed = true;
+        }
+      }
+    }
+    out.append(line);
+  }
+  if (changed) {
+    text = out.join(u'\n');
+  }
+  return changed;
+}
+
 QString bsaMessage(const bsa_result_message_t& m)
 {
   return QString::fromWCharArray(m.text);
@@ -299,6 +453,7 @@ private:
   qint64 m_done  = 0;
   QElapsedTimer m_shown;
   QSet<QString> m_plugins;
+  int m_textures = 0;
 
   bool cancelled() const { return m_cancel.load(); }
   void report(const QString& text, bool force = false);
@@ -315,6 +470,7 @@ private:
   void finishItem(const Item& item);
   void installInline();
   void buildBsas();
+  void setScreenSize();
   bool verify(const Directive& d, const QString& path);
 };
 
@@ -445,13 +601,13 @@ void Installer::installArchives()
   std::map<uint64_t, std::vector<Item>> byArchive;
   std::map<QString, int> unsupported;
   for (const Directive& d : m_list->directives) {
-    if (d.type == DirectiveType::TransformedTexture || d.type == DirectiveType::MergedPatch) {
-      ++unsupported[d.type == DirectiveType::TransformedTexture ? QStringLiteral("TransformedTexture")
-                                                                 : QStringLiteral("MergedPatch")];
+    if (d.type == DirectiveType::MergedPatch) {
+      ++unsupported[QStringLiteral("MergedPatch")];
       m_done += d.size;
       continue;
     }
-    if (d.type != DirectiveType::FromArchive && d.type != DirectiveType::PatchedFromArchive) {
+    if (d.type != DirectiveType::FromArchive && d.type != DirectiveType::PatchedFromArchive &&
+        d.type != DirectiveType::TransformedTexture) {
       continue;
     }
     bool skipped       = false;
@@ -526,7 +682,8 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
     if (cancelled()) {
       return;
     }
-    if (item->d->type == DirectiveType::PatchedFromArchive) {
+    if (item->d->type == DirectiveType::PatchedFromArchive ||
+        item->d->type == DirectiveType::TransformedTexture) {
       finishItem(Item{item->d, {}, path});
       continue;
     }
@@ -548,7 +705,8 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
   // to open as an archive
   for (auto& [key, n] : needs) {
     for (Item* leaf : n.leaves) {
-      if (leaf->d->type == DirectiveType::PatchedFromArchive) {
+      if (leaf->d->type == DirectiveType::PatchedFromArchive ||
+          leaf->d->type == DirectiveType::TransformedTexture) {
         leaf->out = stageFile();
         n.outputs.push_back(leaf->out);
       } else {
@@ -698,11 +856,82 @@ void Installer::finishItem(const Item& item)
     } else if (verify(d, target)) {
       ++m_result.written;
     }
+  } else if (d.type == DirectiveType::TransformedTexture) {
+    bool skipped         = false;
+    const QString target = targetOf(d, &skipped);
+    QDir().mkpath(QFileInfo(target).absolutePath());
+    QString why;
+    const QJsonObject state = QJsonDocument::fromJson(d.extra).object().value("ImageState").toObject();
+    const bool made         = transformTexture(item.out, target, state, &why);
+    if (item.out.startsWith(m_stage)) {
+      QFile::remove(item.out);
+    }
+    if (made) {
+      ++m_result.written;
+      ++m_textures;
+    } else {
+      fail(d, why);
+    }
   } else if (verify(d, item.out)) {
     ++m_result.written;
   }
   m_done += d.size;
   report(QFileInfo(d.to).fileName());
+}
+
+void Installer::setScreenSize()
+{
+  if (m_plan.screenWidth <= 0 || m_plan.screenHeight <= 0) {
+    return;
+  }
+  const QString width  = QString::number(m_plan.screenWidth);
+  const QString height = QString::number(m_plan.screenHeight);
+  auto rewrite         = [](const QString& path, const std::function<bool(QString&)>& edit) {
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+      return;
+    }
+    QString text = QString::fromLatin1(f.readAll());
+    f.close();
+    if (!edit(text)) {
+      return;
+    }
+    QSaveFile out(path);
+    if (out.open(QIODevice::WriteOnly)) {
+      out.write(text.toLatin1());
+      out.commit();
+    }
+  };
+
+  // the profiles' prefs (SkyrimPrefs.ini, Fallout4Prefs.ini...) and Oblivion.ini
+  const QString profiles = installPath(m_plan.installFolder, QStringLiteral("profiles"));
+  QDirIterator it(profiles, QDir::Files, QDirIterator::Subdirectories);
+  while (it.hasNext()) {
+    const QString path = it.next();
+    const QString name = it.fileName().toLower();
+    if (name.endsWith(u"prefs.ini") || name == u"oblivion.ini") {
+      rewrite(path, [&](QString& text) {
+        // both or neither: a prefs file without them keeps the game's default
+        if (!text.contains(u"iSize W", Qt::CaseInsensitive) ||
+            !text.contains(u"iSize H", Qt::CaseInsensitive)) {
+          return false;
+        }
+        const bool w = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize W"), width);
+        const bool h = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize H"), height);
+        return w || h;
+      });
+    }
+  }
+  // SSE Display Tweaks, in whichever mod it is
+  const QString mods = installPath(m_plan.installFolder, QStringLiteral("mods"));
+  QDirIterator tweaks(mods, {QStringLiteral("SSEDisplayTweaks.ini")}, QDir::Files,
+                      QDirIterator::Subdirectories);
+  while (tweaks.hasNext()) {
+    rewrite(tweaks.next(), [&](QString& text) {
+      return setIniValue(text, QStringLiteral("Render"), QStringLiteral("Resolution"),
+                         width + u'x' + height);
+    });
+  }
 }
 
 void Installer::installInline()
@@ -927,6 +1156,12 @@ InstallResult Installer::run()
       }
       if (!cancelled()) {
         buildBsas();
+      }
+      if (!cancelled()) {
+        setScreenSize();
+      }
+      if (m_textures > 0) {
+        m_result.notes.append(tr("%n textures resized.", nullptr, m_textures));
       }
     }
   } catch (const std::bad_alloc&) {

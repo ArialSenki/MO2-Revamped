@@ -93,6 +93,7 @@ private:
   QPushButton* m_chooseFolder;
   QPushButton* m_check;
   QLabel* m_space;
+  QLabel* m_byHand;
   QLabel* m_status;
   QPushButton* m_retry;
   QPushButton* m_next;

@@ -301,6 +301,8 @@ DownloadQueue::~DownloadQueue()
 {
   m_cancelHash->store(true);
   m_cancelWork->store(true);
+  m_watch.stop();
+  m_cancelAdopt->store(true);
   if (m_hasher != nullptr) {
     m_hasher->waitForFinished();
   }
@@ -569,6 +571,10 @@ void DownloadQueue::hashJobs(std::vector<std::pair<int, QString>> jobs, bool the
       QMetaObject::invokeMethod(
           queue,
           [queue, row, path, hash, percent] {
+            if (queue->m_entries[std::size_t(row)].status == Status::Verified &&
+                queue->m_list->archives[std::size_t(row)].source != Source::GameFile) {
+              return;  // put in place meanwhile (a file taken in): this read was the old one
+            }
             const Archive& a = queue->m_list->archives[std::size_t(row)];
             const bool game  = a.source == Source::GameFile;
             Status s;
@@ -598,12 +604,20 @@ bool DownloadQueue::downloadsNexusByThemselves() const
   return !account.isValid() || account.type() == APIUserAccountTypes::Premium;
 }
 
+bool DownloadQueue::belongsInFolder(int i) const
+{
+  // what the downloads folder has to hold: downloaded here or in the browser
+  const Archive& a = m_list->archives[std::size_t(i)];
+  return !a.isModOrganizer && a.source != Source::GameFile && a.source != Source::Unknown &&
+         m_badName[std::size_t(i)].isEmpty();
+}
+
 qint64 DownloadQueue::remaining() const
 {
   qint64 left = 0;
   for (std::size_t n = 0; n < m_entries.size(); ++n) {
     const Entry& e = m_entries[n];
-    if (canDownload(int(n)) && e.status != Status::Verified) {
+    if (belongsInFolder(int(n)) && e.status != Status::Verified) {
       left += qMax<qint64>(0, m_list->archives[n].size - e.received);
     }
   }
@@ -639,7 +653,7 @@ int DownloadQueue::downloadable() const
 {
   int n = 0;
   for (std::size_t i = 0; i < m_entries.size(); ++i) {
-    if (canDownload(int(i))) {
+    if (belongsInFolder(int(i))) {
       ++n;
     }
   }
@@ -650,7 +664,7 @@ int DownloadQueue::done() const
 {
   int n = 0;
   for (std::size_t i = 0; i < m_entries.size(); ++i) {
-    if (canDownload(int(i)) && m_entries[i].status == Status::Verified) {
+    if (belongsInFolder(int(i)) && m_entries[i].status == Status::Verified) {
       ++n;
     }
   }
@@ -1523,10 +1537,20 @@ void DownloadQueue::verifyDownload(int i)
 
 void DownloadQueue::finishDownload(int i)
 {
+  m_jobs.erase(i);
+  const QString problem = putInPlace(i);
+  if (!problem.isEmpty()) {
+    failDownload(i, problem, false);
+    return;
+  }
+  QTimer::singleShot(0, this, &DownloadQueue::pumpQueue);
+}
+
+QString DownloadQueue::putInPlace(int i)
+{
   const Archive& a     = m_list->archives[std::size_t(i)];
   const QString target = pathOf(i);
   const QString part   = partPath(i);
-  m_jobs.erase(i);
 
   // a file already under that name is another one: kept aside with its .meta,
   // never deleted
@@ -1539,10 +1563,8 @@ void DownloadQueue::finishDownload(int i)
       moved = QDir(aside).filePath(QStringLiteral("%1 (%2)").arg(a.name).arg(n));
     }
     if (!QFile::rename(target, moved)) {
-      failDownload(i, tr("%1 is in the way and can't be moved aside.")
-                          .arg(QDir::toNativeSeparators(target)),
-                   false);
-      return;
+      return tr("%1 is in the way and can't be moved aside.")
+          .arg(QDir::toNativeSeparators(target));
     }
     if (QFileInfo::exists(meta)) {
       QFile::rename(meta, moved + QStringLiteral(".meta"));
@@ -1550,8 +1572,7 @@ void DownloadQueue::finishDownload(int i)
     log::info("wabbajack: '{}' had another hash, moved to {}", target, moved);
   }
   if (!QFile::rename(part, target)) {
-    failDownload(i, tr("%1 can't be renamed.").arg(QDir::toNativeSeparators(part)), false);
-    return;
+    return tr("%1 can't be renamed.").arg(QDir::toNativeSeparators(part));
   }
   m_cache->store(target, a.hash);
   m_saveCache.start();
@@ -1569,7 +1590,244 @@ void DownloadQueue::finishDownload(int i)
   e.received = a.size;
   setStatus(i, Status::Verified);
   emit changed();
-  QTimer::singleShot(0, this, &DownloadQueue::pumpQueue);
+  return {};
+}
+
+// ---- files downloaded by hand -----------------------------------------------
+
+bool DownloadQueue::needsByHand(int i) const
+{
+  const Archive& a = m_list->archives[std::size_t(i)];
+  const Status s   = m_entries[std::size_t(i)].status;
+  if (!belongsInFolder(i)) {
+    return false;
+  }
+  // only a browser gets it, or MO2 Revamped's own try failed
+  return s == Status::ByHand || s == Status::Failed || s == Status::WrongHash ||
+         (s == Status::Unsupported && a.source != Source::Unknown);
+}
+
+bool DownloadQueue::canAdopt(int i) const
+{
+  return belongsInFolder(i) && m_entries[std::size_t(i)].status != Status::Verified &&
+         m_jobs.count(i) == 0;
+}
+
+int DownloadQueue::byHandCount() const
+{
+  int n = 0;
+  for (std::size_t i = 0; i < m_entries.size(); ++i) {
+    if (needsByHand(int(i))) {
+      ++n;
+    }
+  }
+  return n;
+}
+
+bool DownloadQueue::isWatching() const
+{
+  if (m_watchFolder.isEmpty() || m_folder.isEmpty()) {
+    return false;
+  }
+  // the same folder under another spelling (a junction, subst) is the same
+  const QString watch     = QFileInfo(m_watchFolder).canonicalFilePath();
+  const QString downloads = QFileInfo(m_folder).canonicalFilePath();
+  return !watch.isEmpty() &&
+         watch.compare(downloads.isEmpty() ? m_folder : downloads, Qt::CaseInsensitive) != 0;
+}
+
+void DownloadQueue::setWatchFolder(const QString& folder)
+{
+  m_watchFolder = QDir::cleanPath(QDir::fromNativeSeparators(folder));
+  m_seen.clear();
+  m_settling.clear();
+  if (!m_watch.isActive()) {
+    m_watch.setInterval(4000);
+    connect(&m_watch, &QTimer::timeout, this, &DownloadQueue::watchTick,
+            Qt::UniqueConnection);
+    m_watch.start();
+  }
+  watchTick();
+}
+
+void DownloadQueue::watchTick()
+{
+  if (!isWatching()) {
+    return;
+  }
+  // the sizes of the files waited for: a file of another size isn't one
+  QHash<qint64, std::vector<int>> wanted;
+  for (std::size_t i = 0; i < m_entries.size(); ++i) {
+    if (needsByHand(int(i)) && m_list->archives[i].size > 0) {
+      wanted[m_list->archives[i].size].push_back(int(i));
+    }
+  }
+  if (wanted.isEmpty()) {
+    m_settling.clear();
+    return;
+  }
+
+  // what browsers write while downloading: never touched
+  static const QStringList unfinished = {".crdownload", ".part", ".partial", ".download",
+                                         ".opdownload", ".tmp", ".!ut"};
+  QHash<QString, QPair<qint64, qint64>> settling;
+  for (const QFileInfo& fi : QDir(m_watchFolder).entryInfoList(QDir::Files)) {
+    const QString name = fi.fileName().toLower();
+    if (std::any_of(unfinished.begin(), unfinished.end(), [&](const QString& s) {
+          return name.endsWith(s);
+        })) {
+      continue;
+    }
+    const auto it = wanted.constFind(fi.size());
+    if (it == wanted.constEnd()) {
+      continue;
+    }
+    const QString path    = fi.absoluteFilePath();
+    const qint64 modified = fi.lastModified().toMSecsSinceEpoch();
+    if (m_seen.value(path, -1) == modified) {
+      continue;
+    }
+    // taken only once it hasn't changed for a whole tick: a browser done with it
+    const auto now = qMakePair(fi.size(), modified);
+    settling.insert(path, now);
+    if (m_settling.value(path) != now) {
+      continue;
+    }
+    m_seen.insert(path, modified);
+    m_adoptQueue.push_back(Adoption{path, it.value(), false});
+  }
+  m_settling = settling;
+  nextAdoption();
+}
+
+void DownloadQueue::adoptFile(int i, const QString& path)
+{
+  if (!canAdopt(i)) {
+    return;
+  }
+  // the archive's own file, or MO2 Revamped's unfinished download of it
+  const QString canonical = QFileInfo(path).canonicalFilePath();
+  const QString target    = QFileInfo(pathOf(i)).canonicalFilePath();
+  const QString part      = QFileInfo(partPath(i)).canonicalFilePath();
+  if (!canonical.isEmpty() && canonical.compare(part, Qt::CaseInsensitive) == 0) {
+    emit message(tr("That is MO2 Revamped's own unfinished download of %1.")
+                     .arg(m_list->archives[std::size_t(i)].name));
+    return;
+  }
+  if (!canonical.isEmpty() && canonical.compare(target, Qt::CaseInsensitive) == 0) {
+    // already where it goes: only its hash is read
+    if (!isChecking()) {
+      hashJobs({{i, pathOf(i)}}, false);
+    }
+    return;
+  }
+  m_adoptQueue.push_back(Adoption{path, {i}, true});
+  nextAdoption();
+}
+
+void DownloadQueue::nextAdoption()
+{
+  if (m_adopting || m_adoptQueue.empty()) {
+    return;
+  }
+  // a hash check or a download writes the same entries: it goes first
+  if (isChecking()) {
+    QTimer::singleShot(1000, this, &DownloadQueue::nextAdoption);
+    return;
+  }
+  Adoption job = m_adoptQueue.front();
+  m_adoptQueue.erase(m_adoptQueue.begin());
+  job.rows.erase(std::remove_if(job.rows.begin(), job.rows.end(),
+                                [&](int i) {
+                                  return !canAdopt(i);
+                                }),
+                 job.rows.end());
+  if (job.rows.empty() || m_folder.isEmpty()) {
+    QTimer::singleShot(0, this, &DownloadQueue::nextAdoption);
+    return;
+  }
+
+  // copied into the downloads folder's own place first, then that copy is
+  // hashed: off the window's thread, and what is hashed is what is kept. The
+  // user's file is only read
+  const QString aside = QDir(stateFolder(m_folder)).filePath("adopting");
+  QDir().mkpath(aside);
+  const QString copy = QDir(aside).filePath(QString::number(++m_adopted));
+  QFile::remove(copy);
+
+  m_adopting    = true;
+  auto cancel   = m_cancelAdopt;
+  auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
+  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, job, copy] {
+    watcher->deleteLater();
+    m_adopting      = false;
+    const auto hash = watcher->result();
+    if (!hash) {
+      QFile::remove(copy);
+      // read again at the next tick (the browser or an antivirus held it)
+      m_seen.remove(job.path);
+      if (job.byUser) {
+        emit message(tr("%1 can't be read.").arg(QDir::toNativeSeparators(job.path)));
+      }
+      nextAdoption();
+      return;
+    }
+
+    int matched = -1;
+    bool taken  = false;  // the right file, but its entry was filled meanwhile
+    for (int i : job.rows) {
+      if (m_list->archives[std::size_t(i)].hash == *hash) {
+        if (canAdopt(i) && !isChecking()) {
+          matched = i;
+        } else {
+          taken = true;
+        }
+        break;
+      }
+    }
+    if (matched < 0) {
+      QFile::remove(copy);
+      if (job.byUser && !taken) {
+        emit message(tr("%1 isn't the list's %2 (its hash differs).")
+                         .arg(QFileInfo(job.path).fileName(),
+                              m_list->archives[std::size_t(job.rows.front())].name));
+      }
+      emit changed();
+      nextAdoption();
+      return;
+    }
+
+    const Archive& a   = m_list->archives[std::size_t(matched)];
+    const QString part = partPath(matched);
+    QFile::remove(part);  // ours: an unfinished download of the same archive
+    QString problem;
+    if (!QFile::rename(copy, part)) {
+      QFile::remove(copy);
+      problem = tr("%1 can't be written.").arg(QDir::toNativeSeparators(part));
+    } else {
+      problem = putInPlace(matched);
+    }
+    if (problem.isEmpty()) {
+      emit message(tr("%1 was taken from %2.")
+                       .arg(a.name, QDir::toNativeSeparators(QFileInfo(job.path).absolutePath())));
+    } else {
+      setStatus(matched, Status::Failed, problem);
+    }
+    emit changed();
+    nextAdoption();
+  });
+  const QString source = job.path;
+  watcher->setFuture(QtConcurrent::run([source, copy, cancel]() -> std::optional<uint64_t> {
+    try {
+      if (!QFile::copy(source, copy) || cancel->load()) {
+        QFile::remove(copy);
+        return std::nullopt;
+      }
+      return hashFile(copy, cancel.get());
+    } catch (...) {
+      return std::nullopt;
+    }
+  }));
 }
 
 void DownloadQueue::cancelJob(int i)
@@ -1652,7 +1910,7 @@ QString DownloadQueue::statusText(int i) const
   case Status::Failed:
     return tr("Failed: %1").arg(e.reason);
   case Status::ByHand:
-    return tr("Download it in the browser");
+    return tr("Download it in the browser (double-click)");
   case Status::NotNeeded:
     return tr("Not needed");
   case Status::Unsupported:
