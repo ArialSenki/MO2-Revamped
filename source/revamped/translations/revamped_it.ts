@@ -7817,6 +7817,18 @@ Errore: %1</translation>
       <source>This game has no collections on Nexus Mods.</source>
       <translation>Questo gioco non ha collezioni su Nexus Mods.</translation>
     </message>
+    <message>
+      <source>Wabbajack lists</source>
+      <translation>Liste di Wabbajack</translation>
+    </message>
+    <message>
+      <source>Open a Wabbajack list…</source>
+      <translation>Apri una lista di Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Shows what a .wabbajack file needs and which of its archives are already downloaded.</source>
+      <translation>Mostra cosa serve a un file .wabbajack e quali dei suoi archivi sono già scaricati.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -16793,6 +16805,411 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>Nexus didn't answer: %1</source>
       <translation>Nexus non ha risposto: %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>WabbajackDialog</name>
+    <message>
+      <source>Open a Wabbajack list</source>
+      <translation>Apri una lista di Wabbajack</translation>
+    </message>
+    <message>
+      <source>Wabbajack lists (*.wabbajack);;All files (*)</source>
+      <translation>Liste di Wabbajack (*.wabbajack);;Tutti i file (*)</translation>
+    </message>
+    <message>
+      <source>Wabbajack list</source>
+      <translation>Lista di Wabbajack</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Installa</translation>
+    </message>
+    <message>
+      <source>Installing Wabbajack lists comes in a coming version. For now this window shows what a list needs.</source>
+      <translation>L'installazione delle liste di Wabbajack arriva in una prossima versione. Per ora questa finestra mostra cosa serve a una lista.</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Chiudi</translation>
+    </message>
+    <message>
+      <source>Reading the list…</source>
+      <translation>Lettura della lista…</translation>
+    </message>
+    <message>
+      <source>What it needs</source>
+      <translation>Cosa serve</translation>
+    </message>
+    <message>
+      <source>Archives</source>
+      <translation>Archivi</translation>
+    </message>
+    <message>
+      <source>Downloads folder</source>
+      <translation>Cartella dei download</translation>
+    </message>
+    <message>
+      <source>Where the list's archives are looked for. A folder used by Wabbajack or by another list can be used again: archives are recognised by their hash.</source>
+      <translation>Dove si cercano gli archivi della lista. Si può riutilizzare una cartella di Wabbajack o di un'altra lista: gli archivi si riconoscono dal loro hash.</translation>
+    </message>
+    <message>
+      <source>Choose…</source>
+      <translation>Scegli…</translation>
+    </message>
+    <message>
+      <source>Check by hash</source>
+      <translation>Controlla per hash</translation>
+    </message>
+    <message>
+      <source>Reads the archives found in the folder and the game files the list takes from the game, and compares their hashes with the list's. Nothing is changed. Large lists take a while.</source>
+      <translation>Legge gli archivi trovati nella cartella e i file che la lista prende dal gioco, e confronta i loro hash con quelli della lista. Non viene cambiato nulla. Le liste grandi richiedono un po' di tempo.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Source</source>
+      <translation>Origine</translation>
+    </message>
+    <message>
+      <source>Size</source>
+      <translation>Dimensione</translation>
+    </message>
+    <message>
+      <source>Status</source>
+      <translation>Stato</translation>
+    </message>
+    <message>
+      <source>Downloads folder for Wabbajack lists</source>
+      <translation>Cartella dei download per le liste di Wabbajack</translation>
+    </message>
+    <message>
+      <source>This list can't be read: %1</source>
+      <translation>Impossibile leggere questa lista: %1</translation>
+    </message>
+    <message>
+      <source>Wabbajack list: %1</source>
+      <translation>Lista di Wabbajack: %1</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>di %1</translation>
+    </message>
+    <message>
+      <source>version %1</source>
+      <translation>versione %1</translation>
+    </message>
+    <message>
+      <source>adult content (NSFW)</source>
+      <translation>contenuti per adulti (NSFW)</translation>
+    </message>
+    <message>
+      <source>made with Wabbajack %1</source>
+      <translation>creata con Wabbajack %1</translation>
+    </message>
+    <message>
+      <source>Website</source>
+      <translation>Sito web</translation>
+    </message>
+    <message>
+      <source>Readme</source>
+      <translation>Leggimi</translation>
+    </message>
+    <message>
+      <source>Community</source>
+      <translation>Comunità</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;%1&lt;/b&gt; to download, about &lt;b&gt;%2&lt;/b&gt; installed</source>
+      <translation>&lt;b&gt;%1&lt;/b&gt; da scaricare, circa &lt;b&gt;%2&lt;/b&gt; installati</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from Nexus Mods (%1)</source>
+      <translation>
+        <numerusform>%n file da Nexus Mods (%1)</numerusform>
+        <numerusform>%n file da Nexus Mods (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from Wabbajack's servers (%1)</source>
+      <translation>
+        <numerusform>%n file dai server di Wabbajack (%1)</numerusform>
+        <numerusform>%n file dai server di Wabbajack (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n direct downloads (%1)</source>
+      <translation>
+        <numerusform>%n download diretto (%1)</numerusform>
+        <numerusform>%n download diretti (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files to download in the browser (%1)</source>
+      <translation>
+        <numerusform>%n file da scaricare nel browser (%1)</numerusform>
+        <numerusform>%n file da scaricare nel browser (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files taken from the game's own folder (%1)</source>
+      <translation>
+        <numerusform>%n file preso dalla cartella del gioco (%1)</numerusform>
+        <numerusform>%n file presi dalla cartella del gioco (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from sources MO2 Revamped doesn't know</source>
+      <translation>
+        <numerusform>%n file da una fonte che MO2 Revamped non conosce</numerusform>
+        <numerusform>%n file da fonti che MO2 Revamped non conosce</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files copied from archives</source>
+      <translation>
+        <numerusform>%n file copiato dagli archivi</numerusform>
+        <numerusform>%n file copiati dagli archivi</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n patched</source>
+      <translation>
+        <numerusform>%n patchato</numerusform>
+        <numerusform>%n patchati</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n carried by the list</source>
+      <translation>
+        <numerusform>%n incluso nella lista</numerusform>
+        <numerusform>%n inclusi nella lista</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n BSA archives built</source>
+      <translation>
+        <numerusform>%n archivio BSA creato</numerusform>
+        <numerusform>%n archivi BSA creati</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n textures resized</source>
+      <translation>
+        <numerusform>%n texture ridimensionata</numerusform>
+        <numerusform>%n texture ridimensionate</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n zEdit merges</source>
+      <translation>
+        <numerusform>%n unione di zEdit</numerusform>
+        <numerusform>%n unioni di zEdit</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>To install: %1.</source>
+      <translation>Da installare: %1.</translation>
+    </message>
+    <message>
+      <source>Profiles: %1</source>
+      <translation>Profili: %1</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for %1.</source>
+      <translation>MO2 Revamped non ha un plugin di gioco per %1.</translation>
+    </message>
+    <message>
+      <source>%1 isn't installed on this PC, or MO2 Revamped didn't find it.</source>
+      <translation>%1 non è installato su questo PC, o MO2 Revamped non l'ha trovato.</translation>
+    </message>
+    <message>
+      <source>%1 found in %2.</source>
+      <translation>%1 trovato in %2.</translation>
+    </message>
+    <message>
+      <source>The list was made with version %1; you have %2.</source>
+      <translation>La lista è stata fatta con la versione %1; tu hai la %2.</translation>
+    </message>
+    <message numerus="yes">
+      <source>The list brings its own Mod Organizer (%n files): MO2 Revamped takes its place, so those files are not installed.</source>
+      <translation>
+        <numerusform>La lista porta il suo Mod Organizer (%n file): MO2 Revamped ne prende il posto, quindi quel file non viene installato.</numerusform>
+        <numerusform>La lista porta il suo Mod Organizer (%n file): MO2 Revamped ne prende il posto, quindi quei file non vengono installati.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>It adds Mod Organizer plugins: %1. They will be offered at the end, not installed by themselves.</source>
+      <translation>Aggiunge plugin di Mod Organizer: %1. Verranno proposti alla fine, non installati da soli.</translation>
+    </message>
+    <message>
+      <source>Parts MO2 Revamped doesn't know yet: %1.</source>
+      <translation>Parti che MO2 Revamped non conosce ancora: %1.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives</source>
+      <translation>
+        <numerusform>%n archivio</numerusform>
+        <numerusform>%n archivi</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Mod Organizer (not used)</source>
+      <translation>Mod Organizer (non usato)</translation>
+    </message>
+    <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Game folder</source>
+      <translation>Cartella del gioco</translation>
+    </message>
+    <message>
+      <source>Direct download</source>
+      <translation>Download diretto</translation>
+    </message>
+    <message>
+      <source>Wabbajack servers</source>
+      <translation>Server di Wabbajack</translation>
+    </message>
+    <message>
+      <source>Google Drive</source>
+      <translation>Google Drive</translation>
+    </message>
+    <message>
+      <source>MEGA</source>
+      <translation>MEGA</translation>
+    </message>
+    <message>
+      <source>MediaFire</source>
+      <translation>MediaFire</translation>
+    </message>
+    <message>
+      <source>ModDB</source>
+      <translation>ModDB</translation>
+    </message>
+    <message>
+      <source>Forum site</source>
+      <translation>Forum</translation>
+    </message>
+    <message>
+      <source>By hand</source>
+      <translation>A mano</translation>
+    </message>
+    <message>
+      <source>Bethesda.net</source>
+      <translation>Bethesda.net</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Sconosciuto</translation>
+    </message>
+    <message>
+      <source>Not downloaded</source>
+      <translation>Non scaricato</translation>
+    </message>
+    <message>
+      <source>In the folder</source>
+      <translation>Nella cartella</translation>
+    </message>
+    <message>
+      <source>In the folder, verified</source>
+      <translation>Nella cartella, verificato</translation>
+    </message>
+    <message>
+      <source>In the folder, but a different file</source>
+      <translation>Nella cartella, ma è un altro file</translation>
+    </message>
+    <message>
+      <source>In the game, verified</source>
+      <translation>Nel gioco, verificato</translation>
+    </message>
+    <message>
+      <source>In the game, but another version</source>
+      <translation>Nel gioco, ma un'altra versione</translation>
+    </message>
+    <message>
+      <source>Not in the game folder</source>
+      <translation>Non è nella cartella del gioco</translation>
+    </message>
+    <message>
+      <source>%1 of %2 found</source>
+      <translation>%1 di %2 trovati</translation>
+    </message>
+    <message>
+      <source>Nothing to check: no archive of the list is in the folder.</source>
+      <translation>Niente da controllare: nessun archivio della lista è nella cartella.</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Ferma</translation>
+    </message>
+    <message numerus="yes">
+      <source>Checking %n files…</source>
+      <translation>
+        <numerusform>Controllo di %n file…</numerusform>
+        <numerusform>Controllo di %n file…</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Check stopped.</source>
+      <translation>Controllo fermato.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files verified.</source>
+      <translation>
+        <numerusform>%n file verificato.</numerusform>
+        <numerusform>%n file verificati.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Checking… %1%</source>
+      <translation>Controllo… %1%</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n don't match the list.</source>
+      <translation>
+        <numerusform>%n non corrisponde alla lista.</numerusform>
+        <numerusform>%n non corrispondono alla lista.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Not needed</source>
+      <translation>Non serve</translation>
+    </message>
+  </context>
+  <context>
+    <name>Wabbajack</name>
+    <message>
+      <source>the archive library couldn't be loaded</source>
+      <translation>non è stato possibile caricare la libreria degli archivi</translation>
+    </message>
+    <message>
+      <source>it couldn't be opened as a zip file</source>
+      <translation>non è stato possibile aprirlo come file zip</translation>
+    </message>
+    <message>
+      <source>it has no modlist inside: it isn't a Wabbajack list</source>
+      <translation>non contiene una modlist: non è una lista di Wabbajack</translation>
+    </message>
+    <message>
+      <source>its modlist couldn't be extracted</source>
+      <translation>non è stato possibile estrarre la sua modlist</translation>
+    </message>
+    <message>
+      <source>no temporary folder could be made</source>
+      <translation>non è stato possibile creare una cartella temporanea</translation>
+    </message>
+    <message>
+      <source>its modlist couldn't be read</source>
+      <translation>non è stato possibile leggere la sua modlist</translation>
+    </message>
+    <message>
+      <source>its modlist is not valid JSON (%1)</source>
+      <translation>la sua modlist non è un JSON valido (%1)</translation>
     </message>
   </context>
 </TS>

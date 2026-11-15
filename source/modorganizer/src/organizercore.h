@@ -411,6 +411,10 @@ public:
   // a file link a collection waits for: its download gives no notice, the
   // collection's window shows it
   void setCollectionClaims(std::function<bool(const QString&)> claims);
+  // a .wabbajack file from the command line or another MO2 start: the main
+  // window shows it; one that comes before the window waits for it
+  void setWabbajackHandler(std::function<void(const QString&)> handler);
+  void requestWabbajackList(const QString& path);
 
   boost::signals2::connection onAboutToRun(
       const std::function<bool(const QString&, const QDir&, const QString&)>& func);
@@ -610,6 +614,8 @@ private:
   std::function<void(const QString&)> m_CollectionHandler;
   QStringList m_PendingCollections;
   std::function<bool(const QString&)> m_CollectionClaims;
+  std::function<void(const QString&)> m_WabbajackHandler;
+  QStringList m_PendingWabbajackLists;
 
   // the last createMod() set an existing folder aside (Replace)
   bool m_CreatedModReplaced = false;

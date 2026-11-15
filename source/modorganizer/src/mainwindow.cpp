@@ -58,6 +58,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "collectionbrowser.h"
 #include "collectiondialog.h"
+#include "wabbajackdialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
 #include "pluginlist.h"
@@ -1790,6 +1791,12 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       openCollection(url);
     });
   });
+  // MO2 Revamped: a .wabbajack from the command line opens its window
+  m_OrganizerCore.setWabbajackHandler([this](const QString& path) {
+    QTimer::singleShot(0, this, [this, path] {
+      openWabbajackList(path);
+    });
+  });
   // the file links a collection waits for start without a notice each
   m_OrganizerCore.setCollectionClaims([this](const QString& url) {
     return m_CollectionDialog && m_CollectionDialog->claims(url);
@@ -1995,6 +2002,8 @@ MainWindow::~MainWindow()
     m_OrganizerCore.setCollectionClaims({});
     // a window of its own, not a child of this one
     delete m_CollectionDialog.data();
+    m_OrganizerCore.setWabbajackHandler({});
+    delete m_WabbajackDialog.data();
     cleanup();
 
     m_OrganizerCore.setUserInterface(nullptr);
@@ -3074,16 +3083,28 @@ void MainWindow::updateToolMenu()
     none->setEnabled(false);
   }
   toolMenu->addSeparator();
-  QAction* collection = new QAction(FluentIcons::glyph(0xE896),
-                                    tr("Download a Nexus collection…"), toolMenu);
+  // MO2 Revamped: lists of mods to install whole, each kind under its own
+  // heading: Nexus collections and Wabbajack lists
+  QMenu* collections = toolMenu->addMenu(FluentIcons::glyph(0xE896), tr("Nexus collections"));
+  QAction* collection =
+      new QAction(FluentIcons::glyph(0xE896), tr("Download a Nexus collection…"), collections);
   connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
           Qt::QueuedConnection);
-  toolMenu->addAction(collection);
+  collections->addAction(collection);
   QAction* browse = new QAction(FluentIcons::glyph(0xE721), tr("Browse collections…"),
-                                toolMenu);
+                                collections);
   connect(browse, &QAction::triggered, this, &MainWindow::browseCollections,
           Qt::QueuedConnection);
-  toolMenu->addAction(browse);
+  collections->addAction(browse);
+
+  QMenu* wabbajack = toolMenu->addMenu(FluentIcons::glyph(0xE8F1), tr("Wabbajack lists"));
+  QAction* openList =
+      new QAction(FluentIcons::glyph(0xE8E5), tr("Open a Wabbajack list…"), wabbajack);
+  openList->setToolTip(tr("Shows what a .wabbajack file needs and which of its archives "
+                          "are already downloaded."));
+  connect(openList, &QAction::triggered, this, &MainWindow::askForWabbajackList,
+          Qt::QueuedConnection);
+  wabbajack->addAction(openList);
 
   m_ToolMenuDirty = false;
 }
@@ -5008,6 +5029,31 @@ void MainWindow::browseCollections()
       },
       this);
   browser->show();
+}
+
+void MainWindow::askForWabbajackList()
+{
+  const QString file = WabbajackDialog::askFile(this);
+  if (!file.isEmpty()) {
+    openWabbajackList(file);
+  }
+}
+
+void MainWindow::openWabbajackList(const QString& path)
+{
+  if (m_WabbajackDialog) {
+    if (QFileInfo(m_WabbajackDialog->path()) == QFileInfo(path)) {
+      m_WabbajackDialog->showNormal();
+      m_WabbajackDialog->raise();
+      m_WabbajackDialog->activateWindow();
+      return;
+    }
+    m_WabbajackDialog->close();
+  }
+  m_WabbajackDialog = new WabbajackDialog(m_OrganizerCore, path, this);
+  m_WabbajackDialog->show();
+  m_WabbajackDialog->raise();
+  m_WabbajackDialog->activateWindow();
 }
 
 void MainWindow::askForCollection()

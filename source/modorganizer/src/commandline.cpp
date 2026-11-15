@@ -8,6 +8,7 @@
 #include "shared/appconfig.h"
 #include "shared/util.h"
 #include "spawn.h"
+#include "wabbajacklist.h"
 #include <log.h>
 #include <report.h>
 
@@ -189,6 +190,8 @@ std::optional<int> CommandLine::process(const std::wstring& line)
         // not a shortcut, try a link
         if (isNxmLink(qs)) {
           m_nxmLink = qs;
+        } else if (Wabbajack::isListFile(qs)) {
+          m_wabbajackList = QFileInfo(qs).absoluteFilePath();
         } else {
           // assume an executable name/binary
           m_executable = qs;
@@ -219,6 +222,8 @@ bool CommandLine::forwardToPrimary(MOMultiProcess& multiProcess)
     multiProcess.sendMessage(m_shortcut.toString());
   } else if (m_nxmLink) {
     multiProcess.sendMessage(*m_nxmLink);
+  } else if (m_wabbajackList) {
+    multiProcess.sendMessage(*m_wabbajackList);
   } else if (m_command && m_command->canForwardToPrimary()) {
     multiProcess.sendMessage(QString::fromWCharArray(GetCommandLineW()));
   } else {
@@ -295,6 +300,8 @@ std::optional<int> CommandLine::runPostOrganizer(OrganizerCore& core)
     log::debug("starting download from command line: {}",
                m_nxmLink->section(QLatin1Char('?'), 0, 0));
     core.downloadRequestedNXM(*m_nxmLink);
+  } else if (m_wabbajackList) {
+    core.requestWabbajackList(*m_wabbajackList);
   } else if (m_executable) {
     const QString exeName = *m_executable;
     log::debug("starting {} from command line", exeName);
@@ -332,6 +339,7 @@ void CommandLine::clear()
   m_vm.clear();
   m_shortcut = {};
   m_nxmLink  = {};
+  m_wabbajackList = {};
 }
 
 void CommandLine::createOptions()

@@ -348,6 +348,8 @@ private:
   po::variables_map m_vm;
   MOShortcut m_shortcut;
   std::optional<QString> m_nxmLink;
+  // MO2 Revamped: a .wabbajack file, shown in its window
+  std::optional<QString> m_wabbajackList;
   std::optional<QString> m_executable;
   QStringList m_untouched;
   Command* m_command;

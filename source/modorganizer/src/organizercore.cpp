@@ -383,6 +383,28 @@ void OrganizerCore::requestCollection(const QString& url)
   }
 }
 
+void OrganizerCore::setWabbajackHandler(std::function<void(const QString&)> handler)
+{
+  m_WabbajackHandler = std::move(handler);
+  if (m_WabbajackHandler) {
+    const QStringList pending = m_PendingWabbajackLists;
+    m_PendingWabbajackLists.clear();
+    for (const QString& path : pending) {
+      m_WabbajackHandler(path);
+    }
+  }
+}
+
+void OrganizerCore::requestWabbajackList(const QString& path)
+{
+  log::debug("wabbajack list requested: {}", path);
+  if (m_WabbajackHandler) {
+    m_WabbajackHandler(path);
+  } else {
+    m_PendingWabbajackLists.append(path);
+  }
+}
+
 void OrganizerCore::downloadRequestedNXM(const QString& url)
 {
   // MO2 Revamped: a collection opens its window; it isn't a file to download

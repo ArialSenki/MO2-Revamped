@@ -133,6 +133,8 @@ mo2_add_filter(NAME src/collections GROUPS
 	collectionfiles
 	collectionmanifest
 	collectionsession
+	wabbajackdialog
+	wabbajacklist
 )
 
 mo2_add_filter(NAME src/core GROUPS
