@@ -123,6 +123,56 @@ std::optional<QByteArray> gunzip(const QByteArray& data)
   return out;
 }
 
+// why a request failed, in the user's language: Qt's own texts are English
+// only ("Operation canceled", "Host ... not found"); its words go to the log
+QString networkErrorText(int httpStatus, QNetworkReply::NetworkError error,
+                         const QString& raw)
+{
+  auto tr = [](const char* text) {
+    return QCoreApplication::translate("Wabbajack::DownloadQueue", text);
+  };
+  log::debug("wabbajack: request failed: HTTP {}, error {}: {}", httpStatus, int(error), raw);
+  if (httpStatus == 401 || httpStatus == 403) {
+    return tr("The server refused the download (HTTP %1).").arg(httpStatus);
+  }
+  if (httpStatus == 404 || httpStatus == 410) {
+    return tr("The file isn't on the server any more (HTTP %1).").arg(httpStatus);
+  }
+  if (httpStatus == 429) {
+    return tr("The server asks to wait: too many requests.");
+  }
+  if (httpStatus >= 500 && httpStatus < 600) {
+    return tr("The server had a problem (HTTP %1).").arg(httpStatus);
+  }
+  switch (error) {
+  case QNetworkReply::OperationCanceledError:
+  case QNetworkReply::TimeoutError:
+    return tr("The server stopped answering.");
+  case QNetworkReply::ConnectionRefusedError:
+  case QNetworkReply::RemoteHostClosedError:
+  case QNetworkReply::HostNotFoundError:
+  case QNetworkReply::TemporaryNetworkFailureError:
+  case QNetworkReply::NetworkSessionFailedError:
+  case QNetworkReply::UnknownNetworkError:
+    return tr("The connection failed: no network, or the server can't be reached.");
+  case QNetworkReply::SslHandshakeFailedError:
+    return tr("The secure connection failed (a certificate problem).");
+  default:
+    break;
+  }
+  if (httpStatus >= 400) {
+    return tr("The server answered with an error (HTTP %1).").arg(httpStatus);
+  }
+  return tr("Network error: %1").arg(raw);
+}
+
+QString networkErrorText(const QNetworkReply* reply)
+{
+  return networkErrorText(
+      reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), reply->error(),
+      reply->errorString());
+}
+
 QString speedText(qint64 bytesPerSecond)
 {
   return QCoreApplication::translate("Wabbajack::DownloadQueue", "%1/s")
@@ -1050,7 +1100,7 @@ void DownloadQueue::onApiFailed(QString, int, int, QVariant, int requestId, int 
 
   if (errorCode == 429) {
     // the request limit: nothing more is asked until the user goes on
-    failDownload(i, errorString, false);
+    failDownload(i, networkErrorText(errorCode, QNetworkReply::NoError, errorString), false);
     pause();
     emit message(tr("Nexus's request limit was reached. Continue later; nothing is "
                     "lost."));
@@ -1059,7 +1109,8 @@ void DownloadQueue::onApiFailed(QString, int, int, QVariant, int requestId, int 
   const auto account = NexusInterface::instance().getAPIUserAccount();
   if (account.isValid() && account.type() != APIUserAccountTypes::Premium) {
     // a free link that expired, or another account's: one more click
-    setStatus(i, Status::NeedsClick, errorString);
+    setStatus(i, Status::NeedsClick,
+              networkErrorText(errorCode, QNetworkReply::NoError, errorString));
     emit changed();
     return;
   }
@@ -1067,7 +1118,7 @@ void DownloadQueue::onApiFailed(QString, int, int, QVariant, int requestId, int 
   // again only spends requests
   const bool final = errorCode == 401 || errorCode == 403 || errorCode == 404 ||
                      errorCode == 410;
-  failDownload(i, errorString, !final);
+  failDownload(i, networkErrorText(errorCode, QNetworkReply::NoError, errorString), !final);
 }
 
 // ---- HTTP -----------------------------------------------------------------
@@ -1236,7 +1287,7 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
         verifyDownload(i);
         return;
       }
-      failDownload(i, reply->errorString(),
+      failDownload(i, networkErrorText(reply),
                    code != 401 && code != 403 && code != 404 && code != 410);
       return;
     }
@@ -1312,7 +1363,7 @@ void DownloadQueue::downloadCdn(int i)
       return;
     }
     if (reply->error() != QNetworkReply::NoError) {
-      failDownload(i, reply->errorString());
+      failDownload(i, networkErrorText(reply));
       return;
     }
     const auto json     = gunzip(reply->readAll());
@@ -1505,7 +1556,7 @@ void DownloadQueue::nextCdnPart(int i, quint64 id)
       if (++j->partRetries > MaxPartRetries) {
         j->file.close();
         failDownload(i, reply->error() != QNetworkReply::NoError
-                            ? reply->errorString()
+                            ? networkErrorText(reply)
                             : tr("A part of the file kept arriving damaged."));
         return;
       }

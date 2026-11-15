@@ -17385,6 +17385,42 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
       <source>The connection ended before the whole file came.</source>
       <translation>A conexão caiu antes de o arquivo chegar inteiro.</translation>
     </message>
+    <message>
+      <source>The server refused the download (HTTP %1).</source>
+      <translation>O servidor recusou o download (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The file isn't on the server any more (HTTP %1).</source>
+      <translation>O arquivo não está mais no servidor (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The server asks to wait: too many requests.</source>
+      <translation>O servidor pede para esperar: pedidos demais.</translation>
+    </message>
+    <message>
+      <source>The server had a problem (HTTP %1).</source>
+      <translation>O servidor teve um problema (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The server stopped answering.</source>
+      <translation>O servidor parou de responder.</translation>
+    </message>
+    <message>
+      <source>The connection failed: no network, or the server can't be reached.</source>
+      <translation>A conexão falhou: sem rede, ou o servidor não pode ser alcançado.</translation>
+    </message>
+    <message>
+      <source>The secure connection failed (a certificate problem).</source>
+      <translation>A conexão segura falhou (um problema de certificado).</translation>
+    </message>
+    <message>
+      <source>The server answered with an error (HTTP %1).</source>
+      <translation>O servidor respondeu com um erro (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>Network error: %1</source>
+      <translation>Erro de rede: %1</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack::Installer</name>
