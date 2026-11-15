@@ -935,6 +935,10 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
       <source>Download failed: %1</source>
       <translation>Download fehlgeschlagen: %1</translation>
     </message>
+    <message>
+      <source>Retrying…</source>
+      <translation>Neuer Versuch…</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -13083,6 +13087,10 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
       <source>the server sent no data</source>
       <translation>der Server hat keine Daten gesendet</translation>
     </message>
+    <message>
+      <source>the connection ended before the whole file came</source>
+      <translation>die Verbindung brach ab, bevor die ganze Datei kam</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -17396,6 +17404,10 @@ Starte das Spiel erneut; bleibt eine Mod draußen, installiere sie neu.</transla
     <message>
       <source>The server sent another part of the file than the one asked for.</source>
       <translation>Der Server hat einen anderen Teil der Datei geschickt als den angeforderten.</translation>
+    </message>
+    <message>
+      <source>The connection ended before the whole file came.</source>
+      <translation>Die Verbindung brach ab, bevor die ganze Datei kam.</translation>
     </message>
   </context>
   <context>

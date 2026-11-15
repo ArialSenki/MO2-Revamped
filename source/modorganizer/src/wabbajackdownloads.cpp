@@ -1124,6 +1124,11 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
   }
 
   QNetworkRequest r = request(url);
+  // a retry goes over HTTP/1.1, a connection of its own: a reply cut short
+  // comes from a shared HTTP/2 one that broke
+  if (e.retries > 0) {
+    r.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+  }
   // a direct download's own headers ("Name: value", a referrer or an agent some
   // sites want); the links Nexus gives get none
   if (a.source == Source::Http) {
@@ -1236,10 +1241,19 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
       return;
     }
     j->file.close();
-    const Archive& a  = m_list->archives[std::size_t(i)];
-    const qint64 size = j->file.size();
+    const Archive& a   = m_list->archives[std::size_t(i)];
+    const qint64 size  = j->file.size();
+    const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    if (a.size > 0 && size < a.size && !type.startsWith(u"text/html")) {
+      // the connection ended before the end, "without error" (a reset HTTP/2
+      // stream): what came stays, and the next try goes on from there
+      log::warn("wabbajack: '{}' ended at {} of {} bytes (HTTP/2 {})", a.name, size, a.size,
+                reply->attribute(QNetworkRequest::Http2WasUsedAttribute).toBool());
+      m_entries[std::size_t(i)].received = size;
+      failDownload(i, tr("The connection ended before the whole file came."));
+      return;
+    }
     if (a.size > 0 && size != a.size) {
-      const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString();
       QFile::remove(j->file.fileName());
       m_entries[std::size_t(i)].received = 0;
       // what came isn't the file: asking again brings the same

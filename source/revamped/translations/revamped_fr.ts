@@ -931,6 +931,10 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
       <source>Download failed: %1</source>
       <translation>Échec du téléchargement : %1</translation>
     </message>
+    <message>
+      <source>Retrying…</source>
+      <translation>Nouvel essai…</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -13258,6 +13262,10 @@ Vérifiez les options du jeu avant de jouer.</translation>
       <source>the server sent no data</source>
       <translation>le serveur n'a envoyé aucune donnée</translation>
     </message>
+    <message>
+      <source>the connection ended before the whole file came</source>
+      <translation>la connexion s'est coupée avant que tout le fichier arrive</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -17560,6 +17568,10 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>The server sent another part of the file than the one asked for.</source>
       <translation>Le serveur a envoyé une autre partie du fichier que celle demandée.</translation>
+    </message>
+    <message>
+      <source>The connection ended before the whole file came.</source>
+      <translation>La connexion s'est coupée avant que tout le fichier arrive.</translation>
     </message>
   </context>
   <context>

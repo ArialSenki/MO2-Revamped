@@ -1228,6 +1228,12 @@ void DownloadManager::resumeDownloadInt(int index)
     QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toUtf8()));
     request.setHeader(QNetworkRequest::UserAgentHeader,
                       m_NexusInterface->getAccessManager()->userAgent());
+    // MO2 Revamped: an automatic retry goes over HTTP/1.1, a connection of its
+    // own: replies that end empty or short come from a shared HTTP/2 one
+    // that broke (many downloads from one server at once, as a collection)
+    if (info->m_State == STATE_ERROR) {
+      request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+    }
     // MO2 Revamped: an automatic retry after an error goes on from what is there
     // too; an error page never reaches the file (see acceptReplyData()), and a
     // server that ignores the range (200) or refuses it (416) starts it over
@@ -2648,9 +2654,26 @@ void DownloadManager::downloadFinished(int index)
         log::warn("download \"{}\": content type is {}", info->m_FileName, contentType);
         emit showMessage(tr("Nexus sent a web page instead of the file."));
       }
-      if ((info->m_Output.size() == 0) || (status == 416) ||
+      // MO2 Revamped: a reply that ends "without error" but short of the length
+      // the server gave (a connection cut, an HTTP/2 stream reset) isn't the
+      // whole file: it goes on from there instead of being taken as done
+      const qint64 length = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+      const bool shortRead = reply->error() == QNetworkReply::NoError && status >= 200 &&
+                             status < 300 && length > 0 &&
+                             info->m_Output.size() < info->m_ResumePos + length;
+      if ((info->m_Output.size() == 0) || (status == 416) || shortRead ||
           ((reply->error() != QNetworkReply::NoError) &&
            (reply->error() != QNetworkReply::OperationCanceledError))) {
+        if (reply->error() == QNetworkReply::NoError) {
+          // what the next look at such a stop needs: Qt calls it no error
+          log::warn("download \"{}\" ended early: HTTP {}, {} of {} bytes, from {} "
+                    "bytes on, HTTP/2 {}",
+                    info->m_FileName, status, info->m_Output.size(),
+                    length > 0 ? QString::number(info->m_ResumePos + length)
+                               : QStringLiteral("?"),
+                    info->m_ResumePos,
+                    reply->attribute(QNetworkRequest::Http2WasUsedAttribute).toBool());
+        }
         if (reply->error() == QNetworkReply::UnknownContentError) {
           log::warn("download header content length: {} downloaded file size: {}",
                     reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(),
@@ -2669,6 +2692,11 @@ void DownloadManager::downloadFinished(int index)
         failure = QString("%1 (%2)")
                       .arg(withoutQuery(reply->errorString()))
                       .arg(reply->error());
+        if (reply->error() == QNetworkReply::NoError) {
+          // Qt's "Unknown error (0)" says nothing
+          failure = shortRead ? tr("the connection ended before the whole file came")
+                              : tr("the server sent no data");
+        }
         log::warn("download \"{}\" failed: {}", info->m_FileName, failure);
         // MO2 Revamped: kept for the row's tool tip, in words where Qt has none
         if (status == 416) {
@@ -2677,7 +2705,7 @@ void DownloadManager::downloadFinished(int index)
                    reply->error() != QNetworkReply::OperationCanceledError) {
           info->m_LastError = failure;
         } else {
-          info->m_LastError = tr("the server sent no data");
+          info->m_LastError = failure;
         }
         error = true;
         setState(info, STATE_ERROR);

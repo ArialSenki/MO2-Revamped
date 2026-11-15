@@ -962,6 +962,10 @@ Le modifiche vengono salvate quando scegli OK.</translation>
       <source>Download failed: %1</source>
       <translation>Download non riuscito: %1</translation>
     </message>
+    <message>
+      <source>Retrying…</source>
+      <translation>Nuovo tentativo…</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -1193,6 +1197,10 @@ Vuoi davvero continuare?</translation>
     <message>
       <source>the server sent no data</source>
       <translation>il server non ha inviato dati</translation>
+    </message>
+    <message>
+      <source>the connection ended before the whole file came</source>
+      <translation>la connessione si è interrotta prima che arrivasse tutto il file</translation>
     </message>
   </context>
   <context>
@@ -17618,6 +17626,10 @@ Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     <message>
       <source>The server sent another part of the file than the one asked for.</source>
       <translation>Il server ha inviato una parte del file diversa da quella richiesta.</translation>
+    </message>
+    <message>
+      <source>The connection ended before the whole file came.</source>
+      <translation>La connessione si è interrotta prima che arrivasse tutto il file.</translation>
     </message>
   </context>
   <context>

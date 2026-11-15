@@ -181,8 +181,10 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
           return tr("Canceled");
         case DownloadManager::STATE_PAUSED:
           return tr("Paused");
+        // MO2 Revamped: a failed download waits a few seconds for its own
+        // retry; one out of retries is paused, with its reason
         case DownloadManager::STATE_ERROR:
-          return tr("Error");
+          return tr("Retrying…");
         case DownloadManager::STATE_FETCHINGMODINFO:
           return tr("Fetching Info");
         case DownloadManager::STATE_FETCHINGFILEINFO:
@@ -213,7 +215,7 @@ QVariant DownloadList::data(const QModelIndex& index, int role) const
       else if (state == DownloadManager::STATE_PAUSED)
         return MOBase::RevampedTheme::cautionText();
       else if (state == DownloadManager::STATE_ERROR)
-        return MOBase::RevampedTheme::criticalText();
+        return MOBase::RevampedTheme::cautionText();
     }
   } else if (role == Qt::ToolTipRole) {
     if (pendingDownload) {

@@ -927,6 +927,10 @@ As alterações são salvas quando você escolhe OK.</translation>
       <source>Download failed: %1</source>
       <translation>O download falhou: %1</translation>
     </message>
+    <message>
+      <source>Retrying…</source>
+      <translation>Tentando de novo…</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -13059,6 +13063,10 @@ Confira as opções do jogo antes de jogar.</translation>
       <source>the server sent no data</source>
       <translation>o servidor não enviou dados</translation>
     </message>
+    <message>
+      <source>the connection ended before the whole file came</source>
+      <translation>a conexão caiu antes de o arquivo chegar inteiro</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -17372,6 +17380,10 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
     <message>
       <source>The server sent another part of the file than the one asked for.</source>
       <translation>O servidor enviou outra parte do arquivo, diferente da pedida.</translation>
+    </message>
+    <message>
+      <source>The connection ended before the whole file came.</source>
+      <translation>A conexão caiu antes de o arquivo chegar inteiro.</translation>
     </message>
   </context>
   <context>
