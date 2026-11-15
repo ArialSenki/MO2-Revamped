@@ -24,6 +24,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QRegularExpression>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -1396,7 +1397,29 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
         }
         return QString();
       };
-      if (dir.contains(u"/steamapps/")) {
+      // an edition the folder names ("Fallout 3 goty" is Game Of The Year):
+      // by its name or the initials of its words, when only one matches
+      const QString folder = QFileInfo(dir).fileName();
+      QStringList named;
+      for (const QString& v : variants) {
+        QString initials;
+        for (const QString& w : v.split(u' ', Qt::SkipEmptyParts)) {
+          initials += w.front();
+        }
+        const auto word = [&](const QString& text) {
+          return !text.isEmpty() &&
+                 QRegularExpression(QStringLiteral("(^|[^a-z0-9])%1($|[^a-z0-9])")
+                                        .arg(QRegularExpression::escape(text.toLower())))
+                     .match(folder)
+                     .hasMatch();
+        };
+        if (word(v) || (initials.size() >= 3 && word(initials))) {
+          named.append(v);
+        }
+      }
+      if (named.size() == 1) {
+        edition = named.front();
+      } else if (dir.contains(u"/steamapps/")) {
         edition = pick(QStringLiteral("Steam"));
       } else if (dir.contains(u"gog")) {
         edition = pick(QStringLiteral("GOG"));
