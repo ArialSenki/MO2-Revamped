@@ -7681,6 +7681,10 @@ Erreur : %1</translation>
       <source>Another list is downloading or checking its files. Pause it and close its window first.</source>
       <translation>Une autre liste télécharge ou vérifie ses fichiers. Mettez-la en pause et fermez d'abord sa fenêtre.</translation>
     </message>
+    <message>
+      <source>A Wabbajack list is being installed. Stop it and quit? Installing it again into the same folder starts over.</source>
+      <translation>Une liste Wabbajack est en cours d'installation. L'arrêter et quitter ? L'installer à nouveau dans le même dossier recommence depuis le début.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -17109,6 +17113,166 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <source>Pause</source>
       <translation>Pause</translation>
     </message>
+    <message>
+      <source>Stopping the install…</source>
+      <translation>Arrêt de l'installation…</translation>
+    </message>
+    <message>
+      <source>Stop installing</source>
+      <translation>Arrêter l'installation</translation>
+    </message>
+    <message>
+      <source>Installs the list into a new instance of its own.</source>
+      <translation>Installe la liste dans une nouvelle instance à elle.</translation>
+    </message>
+    <message>
+      <source>The list isn't read yet.</source>
+      <translation>La liste n'est pas encore lue.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for this list's game.</source>
+      <translation>MO2 Revamped n'a pas de plugin pour le jeu de cette liste.</translation>
+    </message>
+    <message>
+      <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
+      <translation>Le jeu de la liste n'est pas installé, ou MO2 Revamped ne l'a pas trouvé.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives the list uses aren't downloaded and verified yet.</source>
+      <translation>
+        <numerusform>%n archive utilisée par la liste n'est pas encore téléchargée et vérifiée.</numerusform>
+        <numerusform>%n archives utilisées par la liste ne sont pas encore téléchargées et vérifiées.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Install the list</source>
+      <translation>Installer la liste</translation>
+    </message>
+    <message>
+      <source>The list is installed into a new instance of its own, as Wabbajack does. Its folder must be empty or new; the downloads stay where they are.</source>
+      <translation>La liste est installée dans une nouvelle instance à elle, comme le fait Wabbajack. Son dossier doit être vide ou nouveau ; les téléchargements restent où ils sont.</translation>
+    </message>
+    <message>
+      <source>Instance name</source>
+      <translation>Nom de l'instance</translation>
+    </message>
+    <message>
+      <source>Install folder</source>
+      <translation>Dossier d'installation</translation>
+    </message>
+    <message>
+      <source>Enter a name for the instance.</source>
+      <translation>Saisissez un nom pour l'instance.</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow this name for a folder.</source>
+      <translation>Windows n'autorise pas ce nom pour un dossier.</translation>
+    </message>
+    <message>
+      <source>An instance with this name already exists.</source>
+      <translation>Une instance de ce nom existe déjà.</translation>
+    </message>
+    <message>
+      <source>Choose the folder to install into.</source>
+      <translation>Choisissez le dossier où installer.</translation>
+    </message>
+    <message>
+      <source>A drive's root can't be the install folder.</source>
+      <translation>La racine d'un disque ne peut pas être le dossier d'installation.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be the game's folder, inside it or around it.</source>
+      <translation>Le dossier d'installation ne peut pas être celui du jeu, ni dedans, ni le contenir.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be the downloads folder, inside it or around it.</source>
+      <translation>Le dossier d'installation ne peut pas être celui des téléchargements, ni dedans, ni le contenir.</translation>
+    </message>
+    <message>
+      <source>The install folder isn't empty.</source>
+      <translation>Le dossier d'installation n'est pas vide.</translation>
+    </message>
+    <message>
+      <source>Not enough free space there: the list takes about %1 and the drive has %2.</source>
+      <translation>Pas assez d'espace : la liste prend environ %1 et le disque a %2.</translation>
+    </message>
+    <message>
+      <source>About %1 will be written there.</source>
+      <translation>Environ %1 y seront écrits.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be made: %1</source>
+      <translation>Le dossier d'installation ne peut pas être créé : %1</translation>
+    </message>
+    <message>
+      <source>Installing… %1% · %2</source>
+      <translation>Installation… %1% · %2</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nouvelle instance</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created.</source>
+      <translation>L'instance n'a pas pu être créée.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files installed and verified.</source>
+      <translation>
+        <numerusform>%n fichier installé et vérifié.</numerusform>
+        <numerusform>%n fichiers installés et vérifiés.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files of the list's own Mod Organizer left out.</source>
+      <translation>
+        <numerusform>%n fichier du Mod Organizer de la liste laissé de côté.</numerusform>
+        <numerusform>%n fichiers du Mod Organizer de la liste laissés de côté.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Not done yet by MO2 Revamped: %1.</source>
+      <translation>Pas encore fait par MO2 Revamped : %1.</translation>
+    </message>
+    <message>
+      <source>MO2 plugins the list adds, set aside in %1: %2.</source>
+      <translation>Plugins de MO2 ajoutés par la liste, mis de côté dans %1 : %2.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files failed:</source>
+      <translation>
+        <numerusform>%n fichier a échoué :</numerusform>
+        <numerusform>%n fichiers ont échoué :</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Install stopped. Installing again into the same folder starts it over.</source>
+      <translation>Installation arrêtée. Installer à nouveau dans le même dossier la reprend depuis le début.</translation>
+    </message>
+    <message>
+      <source>The install failed: %1</source>
+      <translation>L'installation a échoué : %1</translation>
+    </message>
+    <message>
+      <source>Installed, but the instance couldn't be made.</source>
+      <translation>Installée, mais l'instance n'a pas pu être créée.</translation>
+    </message>
+    <message>
+      <source>Installed into %1.</source>
+      <translation>Installée dans %1.</translation>
+    </message>
+    <message>
+      <source>"%1" is installed in the instance "%2".</source>
+      <translation>« %1 » est installée dans l'instance « %2 ».</translation>
+    </message>
+    <message>
+      <source>Restart in the new instance</source>
+      <translation>Redémarrer dans la nouvelle instance</translation>
+    </message>
+    <message>
+      <source>Later</source>
+      <translation>Plus tard</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack</name>
@@ -17346,6 +17510,144 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     <message>
       <source>Nexus didn't answer.</source>
       <translation>Nexus n'a pas répondu.</translation>
+    </message>
+  </context>
+  <context>
+    <name>Wabbajack::Installer</name>
+    <message>
+      <source>it wasn't written</source>
+      <translation>il n'a pas été écrit</translation>
+    </message>
+    <message>
+      <source>its hash isn't the list's</source>
+      <translation>son hash n'est pas celui de la liste</translation>
+    </message>
+    <message>
+      <source>Taking the list's own files out of it…</source>
+      <translation>Extraction des fichiers fournis par la liste…</translation>
+    </message>
+    <message>
+      <source>The list's file can't be opened.</source>
+      <translation>Le fichier de la liste ne peut pas être ouvert.</translation>
+    </message>
+    <message>
+      <source>The list's own files can't be taken out of it.</source>
+      <translation>Les fichiers fournis par la liste ne peuvent pas être extraits.</translation>
+    </message>
+    <message>
+      <source>its path leads out of the install folder</source>
+      <translation>son chemin sort du dossier d'installation</translation>
+    </message>
+    <message>
+      <source>its archive %1 isn't there</source>
+      <translation>son archive %1 est absente</translation>
+    </message>
+    <message>
+      <source>Installing from %1…</source>
+      <translation>Installation depuis %1…</translation>
+    </message>
+    <message>
+      <source>its archive is inside too many others</source>
+      <translation>son archive est dans trop d'autres</translation>
+    </message>
+    <message>
+      <source>it can't be copied</source>
+      <translation>il ne peut pas être copié</translation>
+    </message>
+    <message>
+      <source>its archive can't be read: %1</source>
+      <translation>son archive ne peut pas être lue : %1</translation>
+    </message>
+    <message>
+      <source>its archive can't be opened</source>
+      <translation>son archive ne peut pas être ouverte</translation>
+    </message>
+    <message>
+      <source>%1 isn't in its archive</source>
+      <translation>%1 n'est pas dans son archive</translation>
+    </message>
+    <message>
+      <source>Writing the list's own files…</source>
+      <translation>Écriture des fichiers fournis par la liste…</translation>
+    </message>
+    <message>
+      <source>the list doesn't carry it</source>
+      <translation>la liste ne le fournit pas</translation>
+    </message>
+    <message>
+      <source>it can't be written</source>
+      <translation>il ne peut pas être écrit</translation>
+    </message>
+    <message>
+      <source>Building %1…</source>
+      <translation>Construction de %1…</translation>
+    </message>
+    <message>
+      <source>the archive's kind (%1) isn't known</source>
+      <translation>le type d'archive (%1) est inconnu</translation>
+    </message>
+    <message>
+      <source>a file that goes into it wasn't installed</source>
+      <translation>un fichier qui y va n'a pas été installé</translation>
+    </message>
+    <message>
+      <source>it can't be built: %1</source>
+      <translation>elle ne peut pas être construite : %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n BSA archives built.</source>
+      <translation>
+        <numerusform>%n archive BSA construite.</numerusform>
+        <numerusform>%n archives BSA construites.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The install folder can't be written.</source>
+      <translation>Le dossier d'installation ne peut pas être écrit.</translation>
+    </message>
+    <message>
+      <source>Reading the list…</source>
+      <translation>Lecture de la liste…</translation>
+    </message>
+    <message>
+      <source>The list can't be read: %1</source>
+      <translation>La liste ne peut pas être lue : %1</translation>
+    </message>
+    <message>
+      <source>Done.</source>
+      <translation>Terminé.</translation>
+    </message>
+    <message>
+      <source>the file to patch can't be read</source>
+      <translation>le fichier à patcher ne peut pas être lu</translation>
+    </message>
+    <message>
+      <source>the patch is damaged</source>
+      <translation>le patch est endommagé</translation>
+    </message>
+    <message>
+      <source>the patched file can't be written</source>
+      <translation>le fichier patché ne peut pas être écrit</translation>
+    </message>
+    <message>
+      <source>the patch doesn't fit the file it patches</source>
+      <translation>le patch ne correspond pas au fichier qu'il patche</translation>
+    </message>
+    <message>
+      <source>the list's patch isn't in it</source>
+      <translation>le patch n'est pas dans la liste</translation>
+    </message>
+    <message>
+      <source>the patch has a format MO2 Revamped doesn't know</source>
+      <translation>le patch a un format que MO2 Revamped ne connaît pas</translation>
+    </message>
+    <message>
+      <source>%1 can't be taken out of its archive: %2</source>
+      <translation>%1 ne peut pas être extrait de son archive : %2</translation>
+    </message>
+    <message>
+      <source>Not enough memory.</source>
+      <translation>Pas assez de mémoire.</translation>
     </message>
   </context>
 </TS>

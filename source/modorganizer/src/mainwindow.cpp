@@ -2937,6 +2937,17 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 bool MainWindow::canExit()
 {
+  // MO2 Revamped: a Wabbajack list being installed stops, when the user says
+  if (m_WabbajackDialog && m_WabbajackDialog->isInstalling()) {
+    if (QMessageBox::question(this, tr("Wabbajack list"),
+                              tr("A Wabbajack list is being installed. Stop it and quit? "
+                                 "Installing it again into the same folder starts over."),
+                              QMessageBox::Yes | QMessageBox::Cancel) != QMessageBox::Yes) {
+      return false;
+    }
+    m_WabbajackDialog->stopInstallAndWait();
+  }
+
   if (m_OrganizerCore.downloadManager()->downloadsInProgressNoPause()) {
     if (QMessageBox::question(
             this, tr("Downloads in progress"),

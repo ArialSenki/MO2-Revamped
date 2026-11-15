@@ -1,17 +1,26 @@
 #include "wabbajackdialog.h"
 
+#include "createinstancedialog.h"
 #include "downloadmanager.h"
+#include "instancemanager.h"
+#include "shared/util.h"
 #include "fluenticons.h"
 #include "organizercore.h"
 #include "plugincontainer.h"
 #include "settings.h"
 
+#include <filesystemutilities.h>
 #include <iplugingame.h>
 #include <log.h>
 #include <utility.h>
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QDialogButtonBox>
+#include <QFormLayout>
+#include <QMessageBox>
+#include <QSaveFile>
+#include <QSettings>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -25,6 +34,7 @@
 #include <QScreen>
 #include <QScrollArea>
 #include <QStandardPaths>
+#include <QStorageInfo>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QUrl>
@@ -39,6 +49,7 @@ using Wabbajack::findGamePlugin;
 using Wabbajack::gameInfo;
 using Wabbajack::DownloadQueue;
 using Wabbajack::isListFile;
+using Wabbajack::installStateFolder;
 using Wabbajack::readModList;
 // Archive and ModList are names MO2 has already
 using WjArchive = Wabbajack::Archive;
@@ -148,7 +159,24 @@ WabbajackDialog::~WabbajackDialog()
 
 bool WabbajackDialog::isRunning() const
 {
-  return m_queue != nullptr && (m_queue->isRunning() || m_queue->isChecking());
+  return isInstalling() ||
+         (m_queue != nullptr && (m_queue->isRunning() || m_queue->isChecking()));
+}
+
+bool WabbajackDialog::isInstalling() const
+{
+  return m_installer != nullptr && m_installer->isRunning();
+}
+
+void WabbajackDialog::stopInstallAndWait()
+{
+  if (!isInstalling()) {
+    return;
+  }
+  m_installCancel->store(true);
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  m_installer->waitForFinished();
+  QApplication::restoreOverrideCursor();
 }
 
 bool WabbajackDialog::claimNxm(const QString& url)
@@ -273,8 +301,15 @@ void WabbajackDialog::setupUi()
   m_install->setAutoDefault(false);
   m_install->setMinimumWidth(102);
   m_install->setEnabled(false);
-  m_install->setToolTip(tr("Installing Wabbajack lists comes in a coming version. For now "
-                           "this window downloads what a list needs."));
+  connect(m_install, &QPushButton::clicked, this, [this] {
+    if (isInstalling()) {
+      m_installCancel->store(true);
+      m_status->setText(tr("Stopping the install…"));
+      m_install->setEnabled(false);
+    } else {
+      startInstall();
+    }
+  });
   m_close = new QPushButton(tr("Close"), this);
   m_close->setObjectName(QStringLiteral("wabbajackClose"));
   m_close->setAutoDefault(false);
@@ -553,6 +588,16 @@ void WabbajackDialog::closeEvent(QCloseEvent* e)
 {
   Settings::instance().geometry().saveGeometry(this);
   m_readCancel->store(true);
+  if (isInstalling()) {
+    // the install stops (inside the archive it is in, too); the window closes
+    // once it has, without holding the rest of MO2 meanwhile
+    m_installCancel->store(true);
+    m_closeAfterInstall = true;
+    m_status->setText(tr("Stopping the install…"));
+    m_install->setEnabled(false);
+    e->ignore();
+    return;
+  }
   // nothing is lost: the downloads go on from where they were, and MO2 opens
   // this list again at its next start
   const bool wasRunning = m_queue != nullptr && m_queue->isRunning();
@@ -954,4 +999,407 @@ void WabbajackDialog::updateState()
   m_next->setVisible(running && !m_queue->downloadsNexusByThemselves() &&
                      m_queue->countOf(DownloadQueue::Status::NeedsClick) > 0);
   m_retry->setVisible(!running && m_queue->countOf(DownloadQueue::Status::Failed) > 0);
+
+  const bool installing = isInstalling();
+  const QString problem = installProblem();
+  m_install->setText(installing ? tr("Stop installing") : tr("Install"));
+  m_install->setEnabled(installing ? !m_installCancel->load()
+                                   : problem.isEmpty() && !running && !checking);
+  m_install->setToolTip(installing ? QString()
+                        : problem.isEmpty()
+                            ? tr("Installs the list into a new instance of its own.")
+                            : problem);
+  if (installing) {
+    m_download->setEnabled(false);
+    m_check->setEnabled(false);
+    m_folder->setEnabled(false);
+    m_chooseFolder->setEnabled(false);
+    m_retry->setVisible(false);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// installing
+
+QString WabbajackDialog::installProblem() const
+{
+  if (!m_list || m_queue == nullptr) {
+    return tr("The list isn't read yet.");
+  }
+  if (findGamePlugin(m_list->game, m_core.pluginContainer().plugins<IPluginGame>()) ==
+      nullptr) {
+    return tr("MO2 Revamped has no game plugin for this list's game.");
+  }
+  if (gameDirectory().isEmpty()) {
+    return tr("The list's game isn't installed, or MO2 Revamped didn't find it.");
+  }
+  int missing = 0;
+  for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
+    const auto& a = m_list->archives[i];
+    if (a.isModOrganizer || a.uses == 0) {
+      continue;
+    }
+    const auto s = m_queue->entry(int(i)).status;
+    const bool here = s == DownloadQueue::Status::Verified ||
+                      s == DownloadQueue::Status::GameFound ||
+                      (a.source == Source::GameFile && s == DownloadQueue::Status::Unknown);
+    if (!here) {
+      ++missing;
+    }
+  }
+  if (missing > 0) {
+    return tr("%n archives the list uses aren't downloaded and verified yet.", nullptr,
+              missing);
+  }
+  return {};
+}
+
+void WabbajackDialog::startInstall()
+{
+  if (!installProblem().isEmpty() || isRunning()) {
+    return;
+  }
+
+  // the instance's name and the folder it goes into
+  QDialog ask(this);
+  ask.setWindowTitle(tr("Install the list"));
+  auto* layout = new QVBoxLayout(&ask);
+  auto* intro  = new QLabel(
+      tr("The list is installed into a new instance of its own, as Wabbajack does. Its "
+         "folder must be empty or new; the downloads stay where they are."),
+      &ask);
+  intro->setWordWrap(true);
+  layout->addWidget(intro);
+  auto* form = new QFormLayout;
+  QString defaultName = m_list->name.trimmed();
+  if (!fixDirectoryName(defaultName)) {
+    defaultName = QStringLiteral("Wabbajack list");
+  }
+  auto* name = new QLineEdit(defaultName, &ask);
+  form->addRow(tr("Instance name"), name);
+  auto* folderRow = new QHBoxLayout;
+  const QString downloads = m_queue->folder();
+  QDir parent(downloads);
+  parent.cdUp();
+  auto* folder = new QLineEdit(QDir::toNativeSeparators(parent.filePath(defaultName)), &ask);
+  auto* choose = new QPushButton(FluentIcons::glyph(FolderGlyph), tr("Choose…"), &ask);
+  choose->setAutoDefault(false);
+  folderRow->addWidget(folder, 1);
+  folderRow->addWidget(choose);
+  form->addRow(tr("Install folder"), folderRow);
+  layout->addLayout(form);
+  auto* note = new QLabel(&ask);
+  note->setWordWrap(true);
+  note->setObjectName(QStringLiteral("instanceDetailCaption"));
+  layout->addWidget(note);
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &ask);
+  buttons->button(QDialogButtonBox::Ok)->setText(tr("Install"));
+  layout->addWidget(buttons);
+  ask.resize(640, ask.sizeHint().height());
+
+  connect(choose, &QPushButton::clicked, &ask, [&] {
+    const QString dir = QFileDialog::getExistingDirectory(&ask, tr("Install folder"),
+                                                          folder->text());
+    if (!dir.isEmpty()) {
+      folder->setText(QDir::toNativeSeparators(dir));
+    }
+  });
+
+  // why the name or the folder can't be used, empty when they can
+  auto problemOf = [&]() -> QString {
+    const QString n = name->text().trimmed();
+    QString fixed   = n;
+    if (n.isEmpty()) {
+      return tr("Enter a name for the instance.");
+    }
+    if (!fixDirectoryName(fixed) || fixed != n) {
+      return tr("Windows doesn't allow this name for a folder.");
+    }
+    const auto& instances = InstanceManager::singleton();
+    if (QFileInfo::exists(instances.instancePath(n))) {
+      return tr("An instance with this name already exists.");
+    }
+    for (const QString& p : instances.globalInstancePaths()) {
+      if (QFileInfo(p).fileName().compare(n, Qt::CaseInsensitive) == 0) {
+        return tr("An instance with this name already exists.");
+      }
+    }
+
+    const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder->text().trimmed()));
+    if (f.isEmpty() || !QDir::isAbsolutePath(f)) {
+      return tr("Choose the folder to install into.");
+    }
+    if (QDir(f).isRoot()) {
+      return tr("A drive's root can't be the install folder.");
+    }
+    auto inside = [&](const QString& outer) {
+      const QString o = QDir::cleanPath(outer);
+      return !o.isEmpty() && (f.compare(o, Qt::CaseInsensitive) == 0 ||
+                              f.startsWith(o + u'/', Qt::CaseInsensitive) ||
+                              o.startsWith(f + u'/', Qt::CaseInsensitive));
+    };
+    if (inside(gameDirectory())) {
+      return tr("The install folder can't be the game's folder, inside it or around it.");
+    }
+    if (inside(downloads)) {
+      return tr("The install folder can't be the downloads folder, inside it or around it.");
+    }
+    const QDir dir(f);
+    if (dir.exists()) {
+      // empty, or an install of this list stopped before
+      const QStringList entries =
+          dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
+      if (!entries.isEmpty() &&
+          (!QFileInfo::exists(installStateFolder(f)) || Wabbajack::isFinishedInstall(f))) {
+        return tr("The install folder isn't empty.");
+      }
+    }
+    // the nearest folder that exists, for its drive's free space
+    QString existing = f;
+    while (!QFileInfo(existing).isDir() && QFileInfo(existing).absolutePath() != existing) {
+      existing = QFileInfo(existing).absolutePath();
+    }
+    const QStorageInfo storage(existing);
+    if (storage.isValid() && storage.bytesAvailable() < m_list->installSize) {
+      return tr("Not enough free space there: the list takes about %1 and the drive has %2.")
+          .arg(localizedByteSize(m_list->installSize))
+          .arg(localizedByteSize(storage.bytesAvailable()));
+    }
+    return {};
+  };
+  auto refresh = [&] {
+    const QString p = problemOf();
+    note->setText(p.isEmpty() ? tr("About %1 will be written there.")
+                                    .arg(localizedByteSize(m_list->installSize))
+                              : p);
+    buttons->button(QDialogButtonBox::Ok)->setEnabled(p.isEmpty());
+  };
+  connect(name, &QLineEdit::textChanged, &ask, refresh);
+  connect(folder, &QLineEdit::textChanged, &ask, refresh);
+  connect(buttons, &QDialogButtonBox::accepted, &ask, &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, &ask, &QDialog::reject);
+  refresh();
+  if (ask.exec() != QDialog::Accepted || !problemOf().isEmpty()) {
+    return;
+  }
+
+  m_instanceName  = name->text().trimmed();
+  m_installFolder = QDir::cleanPath(QDir::fromNativeSeparators(folder->text().trimmed()));
+  if (!QDir().mkpath(m_installFolder)) {
+    QMessageBox::warning(this, tr("Install the list"),
+                         tr("The install folder can't be made: %1")
+                             .arg(QDir::toNativeSeparators(m_installFolder)));
+    return;
+  }
+
+  Wabbajack::InstallPlan plan;
+  plan.listPath        = m_path;
+  plan.installFolder   = m_installFolder;
+  plan.downloadsFolder = downloads;
+  plan.gameFolder      = gameDirectory();
+  for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
+    const QString p = m_queue->pathOf(int(i));
+    if (!p.isEmpty()) {
+      plan.archives.insert(m_list->archives[i].hash, p);
+    }
+  }
+
+  log::info("wabbajack: installing '{}' into {}", m_list->name, m_installFolder);
+  m_installCancel = std::make_shared<std::atomic_bool>(false);
+  m_installer     = new QFutureWatcher<Wabbajack::InstallResult>(this);
+  connect(m_installer, &QFutureWatcherBase::finished, this, &WabbajackDialog::onInstalled);
+  auto cancel             = m_installCancel;
+  QPointer<QLabel> status = m_status;
+  m_installer->setFuture(QtConcurrent::run([plan, cancel, status] {
+    return Wabbajack::install(plan, *cancel, [status, cancel](const QString& text, int permille) {
+      QMetaObject::invokeMethod(
+          status.data(),
+          [status, cancel, text, permille] {
+            if (status && !cancel->load()) {
+              status->setText(WabbajackDialog::tr("Installing… %1% · %2")
+                                  .arg(permille / 10)
+                                  .arg(text));
+            }
+          },
+          Qt::QueuedConnection);
+    });
+  }));
+  updateState();
+}
+
+bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QString* dataPath)
+{
+  IPluginGame* game =
+      findGamePlugin(m_list->game, m_core.pluginContainer().plugins<IPluginGame>());
+  if (game == nullptr) {
+    return false;
+  }
+  const Settings& settings = m_core.settings();
+  CreateInstanceDialog::ProfileSettings profiles;
+  profiles.localInis           = settings.profileLocalInis();
+  profiles.localSaves          = settings.profileLocalSaves();
+  profiles.archiveInvalidation = settings.profileArchiveInvalidation();
+  profiles.eldenRingSaveMode   = settings.eldenRingDefaultSaveMode();
+
+  // the game's edition (Steam, GOG...), so the new instance doesn't ask for it:
+  // this instance's when it is the same game, else from where the game is;
+  // when neither says, MO2 asks at the instance's first start as always
+  QString edition;
+  const QStringList variants = game->gameVariants();
+  if (variants.size() > 1) {
+    const IPluginGame* managed = m_core.managedGame();
+    if (managed != nullptr && managed->gameName() == game->gameName()) {
+      edition = settings.game().edition().value_or(QString());
+    }
+    if (edition.isEmpty()) {
+      const QString dir = gameDirectory().toLower();
+      auto pick         = [&](const QString& word) {
+        for (const QString& v : variants) {
+          if (v.contains(word, Qt::CaseInsensitive)) {
+            return v;
+          }
+        }
+        return QString();
+      };
+      if (dir.contains(u"/steamapps/")) {
+        edition = pick(QStringLiteral("Steam"));
+      } else if (dir.contains(u"gog")) {
+        edition = pick(QStringLiteral("GOG"));
+      } else if (dir.contains(u"epic")) {
+        edition = pick(QStringLiteral("Epic"));
+      }
+    }
+  }
+
+  auto ci = CreateInstanceDialog::globalCreationInfo(
+      m_instanceName, game, QDir::toNativeSeparators(gameDirectory()), edition, profiles);
+  // the install folder is the instance's base: its mods, profiles and overwrite
+  ci.paths.base      = QDir::toNativeSeparators(m_installFolder);
+  ci.paths.downloads = QDir::toNativeSeparators(m_queue->folder());
+
+  QStringList lines;
+  if (!CreateInstanceDialog::createInstance(ci, [&lines](QString line) {
+        lines.append(line);
+      })) {
+    QMessageBox::warning(this, tr("New instance"),
+                         tr("The instance couldn't be created.") + "\n\n" + lines.join('\n'));
+    return false;
+  }
+  *dataPath = ci.dataPath;
+
+  // what the list's own ModOrganizer.ini says that the instance can use: the
+  // game's folder (its Stock Game), the profile it starts with, its programs
+  if (!result.modOrganizerIni.isEmpty()) {
+    const QString copy = QDir(installStateFolder(m_installFolder)).filePath("ModOrganizer.ini");
+    QSaveFile f(copy);
+    if (f.open(QIODevice::WriteOnly)) {
+      f.write(result.modOrganizerIni);
+      f.commit();
+    }
+    QSettings from(copy, QSettings::IniFormat);
+    QSettings to(ci.iniPath, QSettings::IniFormat);
+
+    // QSettings reads the [General] section as its top-level keys
+    const QString gamePath = from.value("gamePath").toString();
+    if (!gamePath.isEmpty() && QFileInfo(gamePath).isDir() &&
+        QDir::cleanPath(QDir::fromNativeSeparators(gamePath))
+            .startsWith(m_installFolder + u'/', Qt::CaseInsensitive)) {
+      to.setValue("gamePath", from.value("gamePath"));
+    }
+    const QString profile = from.value("selected_profile").toString();
+    if (!profile.isEmpty() && result.profiles.contains(profile, Qt::CaseInsensitive)) {
+      to.setValue("selected_profile", from.value("selected_profile"));
+    }
+    from.beginGroup("customExecutables");
+    const QStringList keys = from.allKeys();
+    from.endGroup();
+    if (!keys.isEmpty()) {
+      to.remove("customExecutables");
+      for (const QString& key : keys) {
+        to.setValue("customExecutables/" + key, from.value("customExecutables/" + key));
+      }
+    }
+    to.sync();
+  }
+  log::info("wabbajack: instance '{}' made for {}", m_instanceName, m_installFolder);
+  return true;
+}
+
+void WabbajackDialog::onInstalled()
+{
+  const Wabbajack::InstallResult r = m_installer->result();
+  m_installer->deleteLater();
+  m_installer = nullptr;
+  updateState();
+
+  QStringList lines;
+  lines << tr("%n files installed and verified.", nullptr, r.written);
+  if (r.modOrganizer > 0) {
+    lines << tr("%n files of the list's own Mod Organizer left out.", nullptr, r.modOrganizer);
+  }
+  if (!r.unsupported.isEmpty()) {
+    lines << tr("Not done yet by MO2 Revamped: %1.").arg(r.unsupported.join(", "));
+  }
+  if (!r.plugins.isEmpty()) {
+    lines << tr("MO2 plugins the list adds, set aside in %1: %2.")
+                 .arg(QDir::toNativeSeparators(
+                     QDir(installStateFolder(m_installFolder)).filePath("plugins")))
+                 .arg(r.plugins.join(", "));
+  }
+  lines << r.notes;
+  if (r.failed > 0) {
+    lines << tr("%n files failed:", nullptr, r.failed);
+    lines << r.failures.mid(0, 30);
+  }
+
+  // the summary, kept with the install
+  {
+    QSaveFile f(QDir(installStateFolder(m_installFolder)).filePath("summary.txt"));
+    if (f.open(QIODevice::WriteOnly)) {
+      QStringList all = lines;
+      all << QString() << r.failures;
+      f.write(all.join("\r\n").toUtf8());
+      f.commit();
+    }
+  }
+
+  if (m_closeAfterInstall) {
+    close();
+    return;
+  }
+  if (r.cancelled) {
+    m_status->setText(
+        tr("Install stopped. Installing again into the same folder starts it over."));
+    return;
+  }
+  if (!r.ok) {
+    m_status->setText(tr("The install failed: %1").arg(r.error));
+    QMessageBox::warning(this, tr("Install the list"),
+                         tr("The install failed: %1").arg(r.error));
+    return;
+  }
+
+  QString dataPath;
+  if (!makeInstance(r, &dataPath)) {
+    m_status->setText(tr("Installed, but the instance couldn't be made."));
+    return;
+  }
+  m_status->setText(tr("Installed into %1.").arg(QDir::toNativeSeparators(m_installFolder)));
+
+  QMessageBox box(r.failed > 0 ? QMessageBox::Warning : QMessageBox::Information,
+                  tr("Install the list"),
+                  tr("\"%1\" is installed in the instance \"%2\".")
+                      .arg(m_list->name, m_instanceName),
+                  QMessageBox::NoButton, this);
+  box.setInformativeText(lines.join("\n"));
+  QPushButton* restart = box.addButton(tr("Restart in the new instance"), QMessageBox::AcceptRole);
+  box.addButton(tr("Later"), QMessageBox::RejectRole);
+  box.exec();
+  if (box.clickedButton() != restart) {
+    return;
+  }
+  if (ExitModOrganizer(Exit::Restart)) {
+    // only once closing is certain, as the instance manager does
+    InstanceManager::singleton().setCurrentInstance(Instance(dataPath, false));
+  }
 }

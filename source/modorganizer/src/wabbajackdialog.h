@@ -6,6 +6,7 @@
 // Reading the list and checking files by hash run off the UI thread.
 
 #include "wabbajackdownloads.h"
+#include "wabbajackinstaller.h"
 #include "wabbajacklist.h"
 
 #include <QDialog>
@@ -44,6 +45,10 @@ public:
   // it again at its start
   static QString resumeList();
 
+  bool isInstalling() const;
+  // MO2 is closing: the install stops at once (the archive it is in included)
+  void stopInstallAndWait();
+
   // asks for a .wabbajack file; empty when none was chosen
   static QString askFile(QWidget* parent);
 
@@ -65,6 +70,12 @@ private:
   std::shared_ptr<std::atomic_bool> m_readCancel;
   // the tree's item of each archive, by its index in the list
   std::vector<QTreeWidgetItem*> m_items;
+
+  // the install running in the background, and where it goes
+  QFutureWatcher<Wabbajack::InstallResult>* m_installer = nullptr;
+  std::shared_ptr<std::atomic_bool> m_installCancel;
+  QString m_instanceName;
+  QString m_installFolder;
 
   QLabel* m_image;
   QLabel* m_name;
@@ -105,6 +116,16 @@ private:
   void rememberResume(bool running);
 
   QString gameDirectory() const;
+
+  // why the list can't be installed now, empty when it can
+  QString installProblem() const;
+  // the window closes once the install has stopped
+  bool m_closeAfterInstall = false;
+  // asks for the instance's name and folder, then installs
+  void startInstall();
+  void onInstalled();
+  // the new instance, with the list's own settings; false with a message
+  bool makeInstance(const Wabbajack::InstallResult& result, QString* dataPath);
   QString sourceText(const Wabbajack::Archive& a) const;
 };
 

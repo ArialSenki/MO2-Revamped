@@ -616,10 +616,11 @@ qint64 DownloadQueue::freeSpace() const
     return -1;
   }
   // the folder may not exist yet: its nearest parent that does
-  QDir dir(m_folder);
-  while (!dir.exists() && dir.cdUp()) {
+  QString existing = m_folder;
+  while (!QFileInfo(existing).isDir() && QFileInfo(existing).absolutePath() != existing) {
+    existing = QFileInfo(existing).absolutePath();
   }
-  const QStorageInfo info(dir.absolutePath());
+  const QStorageInfo info(existing);
   return info.isValid() ? info.bytesAvailable() : -1;
 }
 
