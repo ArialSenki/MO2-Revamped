@@ -1765,8 +1765,26 @@ void DownloadQueue::watchTick()
   // what browsers write while downloading: never touched
   static const QStringList unfinished = {".crdownload", ".part", ".partial", ".download",
                                          ".opdownload", ".tmp", ".!ut"};
+  // the folder and the folders right in it: download managers (Internet
+  // Download Manager, browsers' own rules) sort what they save into
+  // Downloads\Compressed and the like. Not the list's own downloads folder
+  // when it is one of them
+  QFileInfoList files = QDir(m_watchFolder).entryInfoList(QDir::Files);
+  const QString own = QDir::cleanPath(m_folder);
+  for (const QFileInfo& sub :
+       QDir(m_watchFolder).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    const QString path = QDir::cleanPath(sub.absoluteFilePath());
+    if (sub.isSymLink() || sub.isJunction() ||
+        (!own.isEmpty() && (path.compare(own, Qt::CaseInsensitive) == 0 ||
+                            own.startsWith(path + u'/', Qt::CaseInsensitive) ||
+                            path.startsWith(own + u'/', Qt::CaseInsensitive)))) {
+      continue;
+    }
+    files += QDir(path).entryInfoList(QDir::Files);
+  }
+
   QHash<QString, QPair<qint64, qint64>> settling;
-  for (const QFileInfo& fi : QDir(m_watchFolder).entryInfoList(QDir::Files)) {
+  for (const QFileInfo& fi : files) {
     const QString name = fi.fileName().toLower();
     if (std::any_of(unfinished.begin(), unfinished.end(), [&](const QString& s) {
           return name.endsWith(s);
