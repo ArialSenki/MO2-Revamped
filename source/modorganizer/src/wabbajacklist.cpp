@@ -639,6 +639,16 @@ Archive toArchive(const json::object& o)
     if (a.url.isEmpty()) {
       a.url = str(s, "URL");
     }
+    if (a.source == Source::Http) {
+      if (const json::value* h = s.if_contains("Headers"); h != nullptr && h->is_array()) {
+        for (const auto& v : h->get_array()) {
+          if (v.is_string()) {
+            a.headers.append(
+                QString::fromUtf8(v.get_string().data(), qsizetype(v.get_string().size())));
+          }
+        }
+      }
+    }
     break;
   }
   return a;

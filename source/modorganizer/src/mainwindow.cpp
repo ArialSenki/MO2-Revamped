@@ -1797,6 +1797,17 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       openWabbajackList(path);
     });
   });
+  // the Nexus files a Wabbajack list waits for (free accounts click them)
+  m_OrganizerCore.setWabbajackClaims([this](const QString& url) {
+    return m_WabbajackDialog && m_WabbajackDialog->claimNxm(url);
+  });
+  // a list whose downloads ran when MO2 closed opens again
+  QTimer::singleShot(0, this, [this] {
+    const QString resume = WabbajackDialog::resumeList();
+    if (!resume.isEmpty() && !m_WabbajackDialog) {
+      openWabbajackList(resume);
+    }
+  });
   // the file links a collection waits for start without a notice each
   m_OrganizerCore.setCollectionClaims([this](const QString& url) {
     return m_CollectionDialog && m_CollectionDialog->claims(url);
@@ -2003,6 +2014,11 @@ MainWindow::~MainWindow()
     // a window of its own, not a child of this one
     delete m_CollectionDialog.data();
     m_OrganizerCore.setWabbajackHandler({});
+    m_OrganizerCore.setWabbajackClaims({});
+    // closed first: a list still downloading is remembered for the next start
+    if (m_WabbajackDialog) {
+      m_WabbajackDialog->close();
+    }
     delete m_WabbajackDialog.data();
     cleanup();
 
@@ -5043,6 +5059,15 @@ void MainWindow::openWabbajackList(const QString& path)
 {
   if (m_WabbajackDialog) {
     if (QFileInfo(m_WabbajackDialog->path()) == QFileInfo(path)) {
+      m_WabbajackDialog->showNormal();
+      m_WabbajackDialog->raise();
+      m_WabbajackDialog->activateWindow();
+      return;
+    }
+    if (m_WabbajackDialog->isRunning()) {
+      QMessageBox::information(this, tr("Wabbajack list"),
+                               tr("Another list is downloading or checking its files. Pause "
+                                  "it and close its window first."));
       m_WabbajackDialog->showNormal();
       m_WabbajackDialog->raise();
       m_WabbajackDialog->activateWindow();

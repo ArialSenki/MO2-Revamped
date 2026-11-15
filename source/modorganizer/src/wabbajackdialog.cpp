@@ -37,7 +37,8 @@ using Wabbajack::Source;
 using Wabbajack::TypeCount;
 using Wabbajack::findGamePlugin;
 using Wabbajack::gameInfo;
-using Wabbajack::hashFile;
+using Wabbajack::DownloadQueue;
+using Wabbajack::isListFile;
 using Wabbajack::readModList;
 // Archive and ModList are names MO2 has already
 using WjArchive = Wabbajack::Archive;
@@ -48,6 +49,9 @@ namespace
 
 constexpr char FolderSetting[] = "Wabbajack/downloadsFolder";
 constexpr char FileSetting[]   = "Wabbajack/lastListFolder";
+constexpr char ResumeSetting[] = "Wabbajack/resumeList";
+constexpr char16_t NextGlyph   = 0xE8A7;  // OpenInNewWindow
+constexpr char16_t DownloadGlyph = 0xE896;  // Download
 
 constexpr char16_t FolderGlyph = 0xE8B7;  // Folder
 constexpr char16_t LinkGlyph   = 0xE8A7;  // OpenInNewWindow
@@ -99,7 +103,6 @@ WabbajackDialog::WabbajackDialog(OrganizerCore& core, const QString& path, QWidg
     : QDialog(nullptr, Qt::Window | Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                            Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint),
       m_core(core), m_path(path), m_anchor(anchor),
-      m_cancel(std::make_shared<std::atomic_bool>(false)),
       m_readCancel(std::make_shared<std::atomic_bool>(false))
 {
   setAttribute(Qt::WA_DeleteOnClose);
@@ -139,13 +142,51 @@ WabbajackDialog::WabbajackDialog(OrganizerCore& core, const QString& path, QWidg
 WabbajackDialog::~WabbajackDialog()
 {
   // the reading only holds its own copies: it is told to stop, not waited for
+  // (the queue, a child, stops its downloads and its hashing as it goes)
   m_readCancel->store(true);
-  cancelHashes();
+}
+
+bool WabbajackDialog::isRunning() const
+{
+  return m_queue != nullptr && (m_queue->isRunning() || m_queue->isChecking());
+}
+
+bool WabbajackDialog::claimNxm(const QString& url)
+{
+  if (m_queue == nullptr || !m_queue->claimNxm(url)) {
+    return false;
+  }
+  // the next page right away, as the collections do: one click per file
+  QTimer::singleShot(1500, this, [this] {
+    if (m_queue != nullptr && m_queue->isRunning()) {
+      m_queue->openNext();
+    }
+  });
+  return true;
+}
+
+QString WabbajackDialog::resumeList()
+{
+  const QString path = GlobalSettings::value(ResumeSetting).toString();
+  return isListFile(path) ? path : QString();
+}
+
+void WabbajackDialog::rememberResume(bool running)
+{
+  if (running) {
+    GlobalSettings::setValue(ResumeSetting, m_path);
+  } else if (GlobalSettings::value(ResumeSetting).toString() == m_path) {
+    GlobalSettings::remove(ResumeSetting);
+  }
 }
 
 void WabbajackDialog::reject()
 {
-  close();
+  // Escape closes the window, but never stops downloads by accident: those
+  // stop with Pause or the close button
+  if (!isRunning()) {
+    close();
+  }
 }
 
 QString WabbajackDialog::askFile(QWidget* parent)
@@ -203,6 +244,29 @@ void WabbajackDialog::setupUi()
   m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   footer->addWidget(m_status, 1);
 
+  m_retry = new QPushButton(tr("Retry failed"), this);
+  m_retry->setObjectName(QStringLiteral("wabbajackRetry"));
+  m_retry->setAutoDefault(false);
+  m_retry->setToolTip(tr("Tries every file that failed again."));
+  m_retry->hide();
+  m_next = new QPushButton(FluentIcons::glyph(NextGlyph), tr("Open next on Nexus"), this);
+  m_next->setObjectName(QStringLiteral("wabbajackNext"));
+  m_next->setAutoDefault(false);
+  m_next->setToolTip(tr("Opens the next file's page on Nexus. Press \"Slow download\" "
+                        "there and the file comes to MO2 Revamped; the next page opens "
+                        "by itself."));
+  m_next->hide();
+  m_download = new QPushButton(FluentIcons::glyph(DownloadGlyph), tr("Download"), this);
+  m_download->setObjectName(QStringLiteral("wabbajackDownload"));
+  m_download->setProperty("fluentPrimary", true);
+  m_download->setAutoDefault(false);
+  m_download->setMinimumWidth(110);
+  m_download->setEnabled(false);
+  m_download->setToolTip(tr("Downloads the archives from Nexus Mods, Wabbajack's servers "
+                            "and direct links into the downloads folder, checking each "
+                            "one's hash. Without Nexus Premium, each Nexus file is one "
+                            "click on its page."));
+
   m_install = new QPushButton(tr("Install"), this);
   m_install->setObjectName(QStringLiteral("wabbajackInstall"));
   m_install->setProperty("fluentPrimary", true);
@@ -210,16 +274,43 @@ void WabbajackDialog::setupUi()
   m_install->setMinimumWidth(102);
   m_install->setEnabled(false);
   m_install->setToolTip(tr("Installing Wabbajack lists comes in a coming version. For now "
-                           "this window shows what a list needs."));
+                           "this window downloads what a list needs."));
   m_close = new QPushButton(tr("Close"), this);
   m_close->setObjectName(QStringLiteral("wabbajackClose"));
   m_close->setAutoDefault(false);
   m_close->setMinimumWidth(102);
+  footer->addWidget(m_retry);
+  footer->addWidget(m_next);
+  footer->addWidget(m_download);
   footer->addWidget(m_install);
   footer->addWidget(m_close);
   outer->addLayout(footer);
 
   connect(m_close, &QPushButton::clicked, this, &QDialog::close);
+  connect(m_download, &QPushButton::clicked, this, [this] {
+    if (m_queue == nullptr) {
+      return;
+    }
+    if (m_queue->isRunning()) {
+      m_queue->pause();
+    } else {
+      m_queue->start();
+      if (m_queue->isRunning() && !m_queue->downloadsNexusByThemselves()) {
+        m_queue->openNext();
+      }
+    }
+    updateState();
+  });
+  connect(m_next, &QPushButton::clicked, this, [this] {
+    if (m_queue != nullptr && !m_queue->openNext()) {
+      m_status->setText(tr("No Nexus file waits for a click."));
+    }
+  });
+  connect(m_retry, &QPushButton::clicked, this, [this] {
+    if (m_queue != nullptr) {
+      m_queue->retryFailed();
+    }
+  });
 }
 
 QFrame* WabbajackDialog::createHeader()
@@ -296,6 +387,11 @@ QFrame* WabbajackDialog::createNeeds()
   m_needs->setTextFormat(Qt::RichText);
   m_needs->setTextInteractionFlags(Qt::TextSelectableByMouse);
   layout->addWidget(m_needs);
+
+  m_space = new QLabel(m_needsCard);
+  m_space->setWordWrap(true);
+  m_space->setTextFormat(Qt::PlainText);
+  layout->addWidget(m_space);
 
   m_notes = new QLabel(m_needsCard);
   m_notes->setObjectName(QStringLiteral("instanceDetailCaption"));
@@ -381,42 +477,37 @@ QFrame* WabbajackDialog::createArchives()
         this, tr("Downloads folder for Wabbajack lists"), m_folder->text());
     if (!dir.isEmpty()) {
       m_folder->setText(QDir::toNativeSeparators(dir));
-      GlobalSettings::setValue(FolderSetting, QDir::fromNativeSeparators(dir));
-      scanFolder();
+      emit m_folder->editingFinished();
     }
   });
   connect(m_folder, &QLineEdit::editingFinished, this, [this] {
-    GlobalSettings::setValue(FolderSetting, QDir::fromNativeSeparators(m_folder->text()));
-    scanFolder();
+    if (m_queue == nullptr) {
+      return;
+    }
+    const QString folder = QDir::fromNativeSeparators(m_folder->text().trimmed());
+    if (m_queue->setFolder(folder)) {
+      GlobalSettings::setValue(FolderSetting, folder);
+    } else {
+      m_folder->setText(QDir::toNativeSeparators(m_queue->folder()));
+    }
+    updateState();
   });
   connect(m_check, &QPushButton::clicked, this, [this] {
-    if (m_hasher != nullptr && m_hasher->isRunning()) {
-      cancelHashes();
-    } else {
-      checkHashes();
+    if (m_queue == nullptr) {
+      return;
     }
+    if (m_queue->isChecking()) {
+      m_queue->stopCheck();
+    } else {
+      m_queue->checkHashes();
+    }
+    updateState();
   });
-  // a link opens the archive's page, for the ones that have one
+  // a double click opens the archive's page, for the ones that have one
   connect(m_tree, &QTreeWidget::itemDoubleClicked, this,
           [this](QTreeWidgetItem* item, int) {
-            if (!m_list) {
-              return;
-            }
-            const int i = item->data(ColName, RowRole).toInt();
-            const WjArchive& a = m_list->archives[std::size_t(i)];
-            QString link;
-            if (a.source == Source::Nexus && a.modId > 0) {
-              const auto game = gameInfo(a.nexusGame);
-              const QString domain =
-                  game ? game->nexusDomain : a.nexusGame.toLower();
-              link = QStringLiteral("https://www.nexusmods.com/%1/mods/%2?tab=files")
-                         .arg(domain)
-                         .arg(a.modId);
-            } else if (a.source != Source::GoogleDrive && isWebLink(a.url)) {
-              link = a.url;
-            }
-            if (!link.isEmpty()) {
-              shell::Open(QUrl(link));
+            if (m_queue != nullptr) {
+              m_queue->openPage(item->data(ColName, RowRole).toInt());
             }
           });
 
@@ -462,7 +553,13 @@ void WabbajackDialog::closeEvent(QCloseEvent* e)
 {
   Settings::instance().geometry().saveGeometry(this);
   m_readCancel->store(true);
-  cancelHashes();
+  // nothing is lost: the downloads go on from where they were, and MO2 opens
+  // this list again at its next start
+  const bool wasRunning = m_queue != nullptr && m_queue->isRunning();
+  if (m_queue != nullptr) {
+    m_queue->pause();
+  }
+  rememberResume(wasRunning);
   QDialog::closeEvent(e);
 }
 
@@ -481,10 +578,24 @@ void WabbajackDialog::onRead()
     return;
   }
   m_list = std::make_shared<WjList>(std::move(*result));
-  m_states.assign(m_list->archives.size(), FileState::Unknown);
   showList();
+
+  m_queue = new DownloadQueue(m_list, gameDirectory(), this);
+  connect(m_queue, &DownloadQueue::entryChanged, this, [this](int i) {
+    updateRow(i);
+  });
+  connect(m_queue, &DownloadQueue::changed, this, [this] {
+    for (int i = 0; i < m_queue->count(); ++i) {
+      updateRow(i);
+    }
+    updateState();
+  });
+  connect(m_queue, &DownloadQueue::message, m_status, &QLabel::setText);
+
   fillTree();
-  scanFolder();
+  m_queue->setFolder(QDir::fromNativeSeparators(m_folder->text().trimmed()));
+  m_download->setEnabled(true);
+  updateState();
 }
 
 QString WabbajackDialog::gameDirectory() const
@@ -739,29 +850,6 @@ QString WabbajackDialog::sourceText(const WjArchive& a) const
   return a.sourceType.isEmpty() ? tr("Unknown") : a.sourceType;
 }
 
-QString WabbajackDialog::stateText(FileState s) const
-{
-  switch (s) {
-  case FileState::Unknown:
-    return {};
-  case FileState::Missing:
-    return tr("Not downloaded");
-  case FileState::Present:
-    return tr("In the folder");
-  case FileState::Verified:
-    return tr("In the folder, verified");
-  case FileState::WrongHash:
-    return tr("In the folder, but a different file");
-  case FileState::GameFound:
-    return tr("In the game, verified");
-  case FileState::GameDiffers:
-    return tr("In the game, but another version");
-  case FileState::GameMissing:
-    return tr("Not in the game folder");
-  }
-  return {};
-}
-
 void WabbajackDialog::fillTree()
 {
   const WjList& l = *m_list;
@@ -817,234 +905,53 @@ void WabbajackDialog::fillTree()
 
 void WabbajackDialog::updateRow(int row)
 {
-  if (row < 0 || std::size_t(row) >= m_items.size() || m_items[std::size_t(row)] == nullptr) {
+  if (m_queue == nullptr || row < 0 || std::size_t(row) >= m_items.size() ||
+      m_items[std::size_t(row)] == nullptr) {
     return;
   }
-  // Mod Organizer's own archive is never needed
-  m_items[std::size_t(row)]->setText(ColStatus,
-                                     m_list->archives[std::size_t(row)].isModOrganizer
-                                         ? tr("Not needed")
-                                         : stateText(m_states[std::size_t(row)]));
+  QTreeWidgetItem* item  = m_items[std::size_t(row)];
+  const auto& e          = m_queue->entry(row);
+  item->setText(ColStatus, m_queue->statusText(row));
+  item->setToolTip(ColStatus, plainTip(e.reason));
 }
 
-QString WabbajackDialog::gameFilePath(const QString& gameDir, const WjArchive& a) const
+void WabbajackDialog::updateState()
 {
-  const QString relative = QDir::fromNativeSeparators(a.gameFile);
-  if (gameDir.isEmpty() || relative.isEmpty() || QDir::isAbsolutePath(relative) ||
-      relative.contains(u':') || relative.split(u'/').contains(QStringLiteral(".."))) {
-    return {};
-  }
-  return QDir(gameDir).filePath(relative);
-}
-
-void WabbajackDialog::updateCount()
-{
-  if (!m_list) {
+  if (m_queue == nullptr) {
     return;
   }
-  int needed = 0, have = 0;
-  for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
-    const WjArchive& a = m_list->archives[i];
-    if (a.isModOrganizer) {
-      continue;
-    }
-    ++needed;
-    const FileState s = m_states[i];
-    if (s == FileState::Present || s == FileState::Verified || s == FileState::GameFound) {
-      ++have;
-    }
+  const int total = m_queue->downloadable();
+  const int done  = m_queue->done();
+  QString count   = tr("%1 of %2 downloaded").arg(done).arg(total);
+  const qint64 left = m_queue->remaining();
+  if (left > 0) {
+    count += QStringLiteral(" · ") + tr("%1 left").arg(localizedByteSize(left));
   }
-  m_count->setText(tr("%1 of %2 found").arg(have).arg(needed));
-}
+  m_count->setText(count);
 
-void WabbajackDialog::scanFolder()
-{
-  if (!m_list) {
-    return;
-  }
-  // what was found by hash in another folder says nothing of this one
-  const QString folder =
-      QDir::cleanPath(QDir::fromNativeSeparators(m_folder->text().trimmed()));
-  if (folder.compare(m_scannedFolder, Qt::CaseInsensitive) != 0) {
-    m_scannedFolder = folder;
-    for (std::size_t i = 0; i < m_states.size(); ++i) {
-      if (m_list->archives[i].source != Source::GameFile) {
-        m_states[i] = FileState::Unknown;
-      }
+  const qint64 free = m_queue->freeSpace();
+  if (free >= 0) {
+    QString space = tr("Free space in the downloads folder's drive: %1.")
+                        .arg(localizedByteSize(free));
+    if (left > free) {
+      space += QStringLiteral(" ") + tr("Not enough for the %1 still to download.")
+                                         .arg(localizedByteSize(left));
     }
+    m_space->setText(space);
+    m_space->show();
+  } else {
+    m_space->hide();
   }
 
-  // the names in the folder, once
-  QHash<QString, qint64> present;
-  const QDir dir(QDir::fromNativeSeparators(m_folder->text().trimmed()));
-  if (!m_folder->text().trimmed().isEmpty() && dir.exists()) {
-    for (const QFileInfo& fi : dir.entryInfoList(QDir::Files | QDir::Hidden)) {
-      present.insert(fi.fileName().toLower(), fi.size());
-    }
-  }
-  const QString gameDir = gameDirectory();
-
-  for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
-    const WjArchive& a = m_list->archives[i];
-    FileState& s     = m_states[i];
-    if (a.source == Source::GameFile) {
-      if (s == FileState::GameFound || s == FileState::GameDiffers) {
-        continue;  // known by hash already
-      }
-      const QString path = gameFilePath(gameDir, a);
-      const QFileInfo fi(path);
-      if (path.isEmpty() || !fi.isFile()) {
-        s = FileState::GameMissing;
-      } else if (a.size > 0 && fi.size() != a.size) {
-        s = FileState::GameDiffers;
-      } else {
-        s = FileState::Unknown;
-      }
-    } else {
-      const auto it = present.constFind(a.name.toLower());
-      if (it == present.constEnd() || (a.size > 0 && it.value() != a.size)) {
-        s = FileState::Missing;
-      } else if (s != FileState::Verified && s != FileState::WrongHash) {
-        s = FileState::Present;
-      }
-    }
-  }
-  for (int i = 0; i < int(m_states.size()); ++i) {
-    updateRow(i);
-  }
-  updateCount();
-}
-
-void WabbajackDialog::checkHashes()
-{
-  if (!m_list || (m_hasher != nullptr && m_hasher->isRunning())) {
-    return;
-  }
-  scanFolder();
-
-  struct Job
-  {
-    int row;
-    QString path;
-    uint64_t expected;
-    qint64 size;
-    bool game;
-  };
-  std::vector<Job> jobs;
-  const QDir dir(QDir::fromNativeSeparators(m_folder->text().trimmed()));
-  const QString gameDir = gameDirectory();
-  qint64 total          = 0;
-  for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
-    const WjArchive& a = m_list->archives[i];
-    if (a.isModOrganizer) {
-      continue;
-    }
-    const FileState s = m_states[i];
-    if (a.source == Source::GameFile) {
-      const QString path = gameFilePath(gameDir, a);
-      if (s == FileState::Unknown && !path.isEmpty()) {
-        jobs.push_back({int(i), path, a.hash, a.size, true});
-        total += a.size;
-      }
-    } else if (s == FileState::Present) {
-      jobs.push_back({int(i), dir.filePath(a.name), a.hash, a.size, false});
-      total += a.size;
-    }
-  }
-  if (jobs.empty()) {
-    m_status->setText(tr("Nothing to check: no archive of the list is in the folder."));
-    return;
-  }
-
-  m_cancel->store(false);
-  m_check->setText(tr("Stop"));
-  // the folder stays as it is while its files are read
-  m_folder->setEnabled(false);
-  m_chooseFolder->setEnabled(false);
-  m_status->setText(tr("Checking %n files…", nullptr, int(jobs.size())));
-
-  auto cancel = m_cancel;
-  QPointer<WabbajackDialog> self(this);
-  auto* watcher = new QFutureWatcher<void>(this);
-  m_hasher      = watcher;
-  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher] {
-    watcher->deleteLater();
-    if (m_hasher != watcher) {
-      return;  // an earlier check, stopped: a newer one runs
-    }
-    m_hasher = nullptr;
-    m_check->setText(tr("Check by hash"));
-    m_folder->setEnabled(true);
-    m_chooseFolder->setEnabled(true);
-    int wrong = 0, good = 0;
-    for (FileState s : m_states) {
-      if (s == FileState::WrongHash || s == FileState::GameDiffers) {
-        ++wrong;
-      } else if (s == FileState::Verified || s == FileState::GameFound) {
-        ++good;
-      }
-    }
-    if (m_cancel->load()) {
-      m_status->setText(tr("Check stopped."));
-    } else if (wrong > 0) {
-      m_status->setText(tr("%n files verified.", nullptr, good) + QStringLiteral(" ") +
-                        tr("%n don't match the list.", nullptr, wrong));
-    } else {
-      m_status->setText(tr("%n files verified.", nullptr, good));
-    }
-    updateCount();
-  });
-
-  // the window waits for this before it goes (cancelHashes()), so the raw
-  // pointer stays valid for the whole run; the QPointer is read on the UI thread
-  WabbajackDialog* dialog = this;
-  watcher->setFuture(QtConcurrent::run([jobs = std::move(jobs), cancel, self, dialog, total] {
-    qint64 done = 0;
-    for (const Job& j : jobs) {
-      if (cancel->load()) {
-        return;
-      }
-      const qint64 before = done;
-      std::optional<uint64_t> hash;
-      try {
-        hash = hashFile(j.path, cancel.get(), [&](qint64 n) {
-          done = before + n;
-        });
-      } catch (...) {
-        hash.reset();
-      }
-      done = before + j.size;
-      if (cancel->load()) {
-        return;
-      }
-      FileState state;
-      if (!hash) {
-        state = j.game ? FileState::GameMissing : FileState::Missing;
-      } else if (*hash == j.expected) {
-        state = j.game ? FileState::GameFound : FileState::Verified;
-      } else {
-        state = j.game ? FileState::GameDiffers : FileState::WrongHash;
-      }
-      const int percent = total > 0 ? int(done * 100 / total) : 100;
-      QMetaObject::invokeMethod(
-          dialog,
-          [self, row = j.row, state, percent] {
-            if (!self) {
-              return;
-            }
-            self->m_states[std::size_t(row)] = state;
-            self->updateRow(row);
-            self->m_status->setText(tr("Checking… %1%").arg(percent));
-          },
-          Qt::QueuedConnection);
-    }
-  }));
-}
-
-void WabbajackDialog::cancelHashes()
-{
-  m_cancel->store(true);
-  if (m_hasher != nullptr) {
-    m_hasher->waitForFinished();
-  }
+  const bool running  = m_queue->isRunning();
+  const bool checking = m_queue->isChecking();
+  m_download->setText(running ? tr("Pause") : tr("Download"));
+  m_download->setEnabled(!checking || running);
+  m_check->setText(checking ? tr("Stop") : tr("Check by hash"));
+  m_check->setEnabled(!running);
+  m_folder->setEnabled(!running && !checking);
+  m_chooseFolder->setEnabled(!running && !checking);
+  m_next->setVisible(running && !m_queue->downloadsNexusByThemselves() &&
+                     m_queue->countOf(DownloadQueue::Status::NeedsClick) > 0);
+  m_retry->setVisible(!running && m_queue->countOf(DownloadQueue::Status::Failed) > 0);
 }

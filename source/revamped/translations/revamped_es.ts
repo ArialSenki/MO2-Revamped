@@ -7537,6 +7537,14 @@ Error: %1</translation>
       <source>Shows what a .wabbajack file needs and which of its archives are already downloaded.</source>
       <translation>Muestra qué necesita un archivo .wabbajack y cuáles de sus archivos ya están descargados.</translation>
     </message>
+    <message>
+      <source>Wabbajack list</source>
+      <translation>Lista de Wabbajack</translation>
+    </message>
+    <message>
+      <source>Another list is downloading or checking its files. Pause it and close its window first.</source>
+      <translation>Otra lista se está descargando o comprobando sus archivos. Ponla en pausa y cierra su ventana primero.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -16865,10 +16873,6 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
       <translation>Instalar</translation>
     </message>
     <message>
-      <source>Installing Wabbajack lists comes in a coming version. For now this window shows what a list needs.</source>
-      <translation>La instalación de listas de Wabbajack llega en una próxima versión. Por ahora esta ventana muestra qué necesita una lista.</translation>
-    </message>
-    <message>
       <source>Close</source>
       <translation>Cerrar</translation>
     </message>
@@ -17147,77 +17151,60 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
       <translation>Desconocido</translation>
     </message>
     <message>
-      <source>Not downloaded</source>
-      <translation>Sin descargar</translation>
-    </message>
-    <message>
-      <source>In the folder</source>
-      <translation>En la carpeta</translation>
-    </message>
-    <message>
-      <source>In the folder, verified</source>
-      <translation>En la carpeta, verificado</translation>
-    </message>
-    <message>
-      <source>In the folder, but a different file</source>
-      <translation>En la carpeta, pero es otro archivo</translation>
-    </message>
-    <message>
-      <source>In the game, verified</source>
-      <translation>En el juego, verificado</translation>
-    </message>
-    <message>
-      <source>In the game, but another version</source>
-      <translation>En el juego, pero otra versión</translation>
-    </message>
-    <message>
-      <source>Not in the game folder</source>
-      <translation>No está en la carpeta del juego</translation>
-    </message>
-    <message>
-      <source>%1 of %2 found</source>
-      <translation>%1 de %2 encontrados</translation>
-    </message>
-    <message>
-      <source>Nothing to check: no archive of the list is in the folder.</source>
-      <translation>Nada que comprobar: ningún archivo de la lista está en la carpeta.</translation>
-    </message>
-    <message>
       <source>Stop</source>
       <translation>Detener</translation>
     </message>
-    <message numerus="yes">
-      <source>Checking %n files…</source>
-      <translation>
-        <numerusform>Comprobando %n archivo…</numerusform>
-        <numerusform>Comprobando %n archivos…</numerusform>
-      </translation>
+    <message>
+      <source>Retry failed</source>
+      <translation>Reintentar fallidos</translation>
     </message>
     <message>
-      <source>Check stopped.</source>
-      <translation>Comprobación detenida.</translation>
-    </message>
-    <message numerus="yes">
-      <source>%n files verified.</source>
-      <translation>
-        <numerusform>%n archivo verificado.</numerusform>
-        <numerusform>%n archivos verificados.</numerusform>
-      </translation>
+      <source>Tries every file that failed again.</source>
+      <translation>Vuelve a intentar cada archivo que falló.</translation>
     </message>
     <message>
-      <source>Checking… %1%</source>
-      <translation>Comprobando… %1%</translation>
-    </message>
-    <message numerus="yes">
-      <source>%n don't match the list.</source>
-      <translation>
-        <numerusform>%n no coincide con la lista.</numerusform>
-        <numerusform>%n no coinciden con la lista.</numerusform>
-      </translation>
+      <source>Open next on Nexus</source>
+      <translation>Abrir el siguiente en Nexus</translation>
     </message>
     <message>
-      <source>Not needed</source>
-      <translation>No hace falta</translation>
+      <source>Opens the next file's page on Nexus. Press "Slow download" there and the file comes to MO2 Revamped; the next page opens by itself.</source>
+      <translation>Abre la página del siguiente archivo en Nexus. Pulsa allí «Slow download» y el archivo llega a MO2 Revamped; la página siguiente se abre sola.</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Descargar</translation>
+    </message>
+    <message>
+      <source>Downloads the archives from Nexus Mods, Wabbajack's servers and direct links into the downloads folder, checking each one's hash. Without Nexus Premium, each Nexus file is one click on its page.</source>
+      <translation>Descarga los archivos de Nexus Mods, de los servidores de Wabbajack y de enlaces directos a la carpeta de descargas, comprobando el hash de cada uno. Sin Nexus Premium, cada archivo de Nexus es un clic en su página.</translation>
+    </message>
+    <message>
+      <source>Installing Wabbajack lists comes in a coming version. For now this window downloads what a list needs.</source>
+      <translation>La instalación de listas de Wabbajack llega en una próxima versión. Por ahora esta ventana descarga lo que necesita una lista.</translation>
+    </message>
+    <message>
+      <source>No Nexus file waits for a click.</source>
+      <translation>Ningún archivo de Nexus espera un clic.</translation>
+    </message>
+    <message>
+      <source>%1 of %2 downloaded</source>
+      <translation>%1 de %2 descargados</translation>
+    </message>
+    <message>
+      <source>%1 left</source>
+      <translation>faltan %1</translation>
+    </message>
+    <message>
+      <source>Free space in the downloads folder's drive: %1.</source>
+      <translation>Espacio libre en la unidad de la carpeta de descargas: %1.</translation>
+    </message>
+    <message>
+      <source>Not enough for the %1 still to download.</source>
+      <translation>No basta para los %1 que faltan por descargar.</translation>
+    </message>
+    <message>
+      <source>Pause</source>
+      <translation>Pausar</translation>
     </message>
   </context>
   <context>
@@ -17249,6 +17236,213 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
     <message>
       <source>its modlist is not valid JSON (%1)</source>
       <translation>su modlist no es JSON válido (%1)</translation>
+    </message>
+  </context>
+  <context>
+    <name>Wabbajack::DownloadQueue</name>
+    <message>
+      <source>%1/s</source>
+      <translation>%1/s</translation>
+    </message>
+    <message>
+      <source>Nothing to check: no archive of the list is in the folder.</source>
+      <translation>Nada que comprobar: ningún archivo de la lista está en la carpeta.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Checking %n files…</source>
+      <translation>
+        <numerusform>Comprobando %n archivo…</numerusform>
+        <numerusform>Comprobando %n archivos…</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Check stopped.</source>
+      <translation>Comprobación detenida.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files verified.</source>
+      <translation>
+        <numerusform>%n archivo verificado.</numerusform>
+        <numerusform>%n archivos verificados.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n don't match the list.</source>
+      <translation>
+        <numerusform>%n no coincide con la lista.</numerusform>
+        <numerusform>%n no coinciden con la lista.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Checking… %1%</source>
+      <translation>Comprobando… %1%</translation>
+    </message>
+    <message>
+      <source>Choose a downloads folder first.</source>
+      <translation>Elige antes una carpeta de descargas.</translation>
+    </message>
+    <message>
+      <source>The downloads folder can't be made: %1</source>
+      <translation>No se puede crear la carpeta de descargas: %1</translation>
+    </message>
+    <message>
+      <source>Not enough free space: the downloads need %1 and the drive has %2.</source>
+      <translation>No hay espacio suficiente: las descargas necesitan %1 y la unidad tiene %2.</translation>
+    </message>
+    <message>
+      <source>Every archive MO2 Revamped can download is here.</source>
+      <translation>Ya están todos los archivos que MO2 Revamped puede descargar.</translation>
+    </message>
+    <message>
+      <source>Paused. The downloads go on from where they were.</source>
+      <translation>En pausa. Las descargas siguen desde donde iban.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Downloads finished; %n failed.</source>
+      <translation>
+        <numerusform>Descargas terminadas; %n falló.</numerusform>
+        <numerusform>Descargas terminadas; %n fallaron.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Nexus's request limit was reached. Continue later; nothing is lost.</source>
+      <translation>Se alcanzó el límite de peticiones de Nexus. Sigue más tarde; no se pierde nada.</translation>
+    </message>
+    <message>
+      <source>Nexus gave no link to download it.</source>
+      <translation>Nexus no dio un enlace para descargarlo.</translation>
+    </message>
+    <message>
+      <source>The list gives this archive a name that can't be a file.</source>
+      <translation>La lista da a este archivo un nombre que no puede ser un archivo.</translation>
+    </message>
+    <message>
+      <source>%1 can't be written.</source>
+      <translation>No se puede escribir %1.</translation>
+    </message>
+    <message>
+      <source>The disk is full, or %1 can't be written.</source>
+      <translation>El disco está lleno, o no se puede escribir %1.</translation>
+    </message>
+    <message>
+      <source>The site sent a web page instead of the file: download it in the browser.</source>
+      <translation>La web envió una página en vez del archivo: descárgalo en el navegador.</translation>
+    </message>
+    <message>
+      <source>The download has another size than the list's (%1 instead of %2).</source>
+      <translation>La descarga tiene otro tamaño que el de la lista (%1 en vez de %2).</translation>
+    </message>
+    <message>
+      <source>The list gives this archive an address that isn't Wabbajack's.</source>
+      <translation>La lista da a este archivo una dirección que no es de Wabbajack.</translation>
+    </message>
+    <message>
+      <source>Wabbajack's servers describe another file than the list's.</source>
+      <translation>Los servidores de Wabbajack describen otro archivo que el de la lista.</translation>
+    </message>
+    <message>
+      <source>A part of the file kept arriving damaged.</source>
+      <translation>Una parte del archivo seguía llegando dañada.</translation>
+    </message>
+    <message>
+      <source>The downloaded file isn't the list's (its hash differs).</source>
+      <translation>El archivo descargado no es el de la lista (su hash es distinto).</translation>
+    </message>
+    <message>
+      <source>The downloaded file can't be read.</source>
+      <translation>No se puede leer el archivo descargado.</translation>
+    </message>
+    <message>
+      <source>%1 is in the way and can't be moved aside.</source>
+      <translation>%1 estorba y no se puede apartar.</translation>
+    </message>
+    <message>
+      <source>%1 can't be renamed.</source>
+      <translation>No se puede renombrar %1.</translation>
+    </message>
+    <message>
+      <source>Downloading %1%</source>
+      <translation>Descargando %1%</translation>
+    </message>
+    <message>
+      <source>Not downloaded (%1 already)</source>
+      <translation>Sin descargar (ya hay %1)</translation>
+    </message>
+    <message>
+      <source>Not downloaded</source>
+      <translation>Sin descargar</translation>
+    </message>
+    <message>
+      <source>In the folder</source>
+      <translation>En la carpeta</translation>
+    </message>
+    <message>
+      <source>In the folder, verified</source>
+      <translation>En la carpeta, verificado</translation>
+    </message>
+    <message>
+      <source>In the folder, but a different file</source>
+      <translation>En la carpeta, pero es otro archivo</translation>
+    </message>
+    <message>
+      <source>In the game, verified</source>
+      <translation>En el juego, verificado</translation>
+    </message>
+    <message>
+      <source>In the game, but another version</source>
+      <translation>En el juego, pero otra versión</translation>
+    </message>
+    <message>
+      <source>Not in the game folder</source>
+      <translation>No está en la carpeta del juego</translation>
+    </message>
+    <message>
+      <source>Waiting to try again (%1)</source>
+      <translation>Esperando para reintentar (%1)</translation>
+    </message>
+    <message>
+      <source>Waiting</source>
+      <translation>En espera</translation>
+    </message>
+    <message>
+      <source>Press Slow download on Nexus</source>
+      <translation>Pulsa Slow download en Nexus</translation>
+    </message>
+    <message>
+      <source>Asking for the file…</source>
+      <translation>Pidiendo el archivo…</translation>
+    </message>
+    <message>
+      <source>Checking its hash…</source>
+      <translation>Comprobando su hash…</translation>
+    </message>
+    <message>
+      <source>Failed: %1</source>
+      <translation>Falló: %1</translation>
+    </message>
+    <message>
+      <source>Download it in the browser</source>
+      <translation>Descárgalo en el navegador</translation>
+    </message>
+    <message>
+      <source>Not needed</source>
+      <translation>No hace falta</translation>
+    </message>
+    <message>
+      <source>Unknown source</source>
+      <translation>Origen desconocido</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped doesn't download from this address.</source>
+      <translation>MO2 Revamped no descarga de esta dirección.</translation>
+    </message>
+    <message>
+      <source>Another archive of the list has the same name.</source>
+      <translation>Otro archivo de la lista tiene el mismo nombre.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't answer.</source>
+      <translation>Nexus no respondió.</translation>
     </message>
   </context>
 </TS>

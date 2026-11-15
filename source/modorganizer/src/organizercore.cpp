@@ -395,6 +395,11 @@ void OrganizerCore::setWabbajackHandler(std::function<void(const QString&)> hand
   }
 }
 
+void OrganizerCore::setWabbajackClaims(std::function<bool(const QString&)> claims)
+{
+  m_WabbajackClaims = std::move(claims);
+}
+
 void OrganizerCore::requestWabbajackList(const QString& path)
 {
   log::debug("wabbajack list requested: {}", path);
@@ -415,6 +420,11 @@ void OrganizerCore::downloadRequestedNXM(const QString& url)
 
   // MO2 Revamped: without the link's key and expiry
   log::debug("download requested: {}", url.section(QLatin1Char('?'), 0, 0));
+  // MO2 Revamped: a file a Wabbajack list waits for goes to its folder
+  if (m_WabbajackClaims && m_WabbajackClaims(url)) {
+    log::debug("taken by the Wabbajack list's downloads");
+    return;
+  }
   if (nexusApi()) {
     m_PendingDownloads.append(url);
   } else {

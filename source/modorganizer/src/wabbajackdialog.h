@@ -5,6 +5,7 @@
 // it needs, its archives and which of them are already in a downloads folder.
 // Reading the list and checking files by hash run off the UI thread.
 
+#include "wabbajackdownloads.h"
 #include "wabbajacklist.h"
 
 #include <QDialog>
@@ -33,6 +34,15 @@ public:
   ~WabbajackDialog() override;
 
   QString path() const { return m_path; }
+  bool isRunning() const;
+
+  // an nxm link from the browser for a file the list waits for (a free
+  // account); false when it isn't one
+  bool claimNxm(const QString& url);
+
+  // the list that was downloading when MO2 closed, empty when none; MO2 opens
+  // it again at its start
+  static QString resumeList();
 
   // asks for a .wabbajack file; empty when none was chosen
   static QString askFile(QWidget* parent);
@@ -43,36 +53,18 @@ protected:
   void reject() override;
 
 private:
-  enum class FileState
-  {
-    Unknown,     // not looked at yet
-    Missing,     // not in the folder
-    Present,     // a file of that name and size is there
-    Verified,    // and its hash is the list's
-    WrongHash,   // a file of that name, but not that file
-    GameFound,   // a game file, with the list's hash
-    GameDiffers, // a game file, but another version of it
-    GameMissing  // the game file isn't there
-  };
-
   OrganizerCore& m_core;
   QString m_path;
   QPointer<QWidget> m_anchor;
 
   std::shared_ptr<Wabbajack::ModList> m_list;
-  std::vector<FileState> m_states;
+  Wabbajack::DownloadQueue* m_queue = nullptr;
   QFutureWatcher<std::optional<Wabbajack::ModList>>* m_reader = nullptr;
+  QString m_readError;
   // the reading stops when the window closes; nothing waits for it
   std::shared_ptr<std::atomic_bool> m_readCancel;
   // the tree's item of each archive, by its index in the list
   std::vector<QTreeWidgetItem*> m_items;
-  // the folder the states were found in: another one starts over
-  QString m_scannedFolder;
-  QString m_readError;
-
-  // the hash check running in the background
-  QFutureWatcher<void>* m_hasher = nullptr;
-  std::shared_ptr<std::atomic_bool> m_cancel;
 
   QLabel* m_image;
   QLabel* m_name;
@@ -89,7 +81,11 @@ private:
   QLineEdit* m_folder;
   QPushButton* m_chooseFolder;
   QPushButton* m_check;
+  QLabel* m_space;
   QLabel* m_status;
+  QPushButton* m_retry;
+  QPushButton* m_next;
+  QPushButton* m_download;
   QPushButton* m_install;
   QPushButton* m_close;
 
@@ -103,20 +99,13 @@ private:
   void showList();
   void fillTree();
   void updateRow(int row);
-  void updateCount();
-
-  // by name and size, at once
-  void scanFolder();
-  // by hash: the files found in the folder and the game's files
-  void checkHashes();
-  void cancelHashes();
+  // the count, the free space and the buttons
+  void updateState();
+  // the window was closed while downloads ran: they go on next time
+  void rememberResume(bool running);
 
   QString gameDirectory() const;
-  // the archive's file in the game folder; empty when the list's path would
-  // lead out of it
-  QString gameFilePath(const QString& gameDir, const Wabbajack::Archive& a) const;
   QString sourceText(const Wabbajack::Archive& a) const;
-  QString stateText(FileState s) const;
 };
 
 #endif  // WABBAJACKDIALOG_H

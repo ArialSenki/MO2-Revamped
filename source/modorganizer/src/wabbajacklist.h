@@ -110,6 +110,7 @@ struct Archive
   // the file id for Google Drive
   QString url;
   QString prompt;  // Manual: the author's words
+  QStringList headers;  // Http: "Name: value" the site wants
 
   // a game file
   QString game;
