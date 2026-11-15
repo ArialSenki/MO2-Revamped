@@ -3,7 +3,11 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QHash>
+#include <queue>
 #include <QRegularExpression>
+#include <bit>
+#include <memory>
 #include <QSet>
 #include <algorithm>
 #include <map>
@@ -342,64 +346,101 @@ std::vector<int> CollectionManifest::installOrder() const
   return order;
 }
 
+struct ModFinder
+{
+  // in mods[] order, so the first match is the same as a scan's
+  QHash<int, std::vector<int>> byFileId;
+  QHash<QString, int> byTag;
+  QHash<QString, int> byMd5;
+  QHash<QString, int> byExpression;
+  QHash<QString, std::vector<int>> byLogicalName;
+  QHash<QString, int> byName;
+};
+
+const ModFinder& CollectionManifest::finder() const
+{
+  if (!m_finder || m_finderSize != mods.size()) {
+    auto f = std::make_shared<ModFinder>();
+    for (const auto& m : mods) {
+      f->byFileId[m.fileId].push_back(m.index);
+      if (!f->byTag.contains(m.tag)) {
+        f->byTag.insert(m.tag, m.index);
+      }
+      const QString md5 = m.md5.toCaseFolded();
+      if (!f->byMd5.contains(md5)) {
+        f->byMd5.insert(md5, m.index);
+      }
+      if (!m.fileExpression.isEmpty()) {
+        const QString e = m.fileExpression.toCaseFolded();
+        if (!f->byExpression.contains(e)) {
+          f->byExpression.insert(e, m.index);
+        }
+      }
+      f->byLogicalName[m.logicalFilename.toCaseFolded()].push_back(m.index);
+      const QString name = m.name.toCaseFolded();
+      if (!f->byName.contains(name)) {
+        f->byName.insert(name, m.index);
+      }
+    }
+    m_finder     = std::move(f);
+    m_finderSize = mods.size();
+  }
+  return *m_finder;
+}
+
 int CollectionManifest::findMod(const ModReference& ref) const
 {
+  const ModFinder& f = finder();
+
   if (ref.fileId > 0) {
-    for (const auto& m : mods) {
-      if (m.fileId == ref.fileId && (ref.modId <= 0 || m.modId == ref.modId)) {
-        return m.index;
+    const auto it = f.byFileId.constFind(ref.fileId);
+    if (it != f.byFileId.constEnd()) {
+      for (int index : it.value()) {
+        if (ref.modId <= 0 || mods[index].modId == ref.modId) {
+          return index;
+        }
       }
     }
   }
 
   if (!ref.tag.isEmpty()) {
-    for (const auto& m : mods) {
-      if (m.tag == ref.tag) {
-        return m.index;
-      }
+    const auto it = f.byTag.constFind(ref.tag);
+    if (it != f.byTag.constEnd()) {
+      return it.value();
     }
   }
 
   if (!ref.md5.isEmpty()) {
-    for (const auto& m : mods) {
-      if (m.md5.compare(ref.md5, Qt::CaseInsensitive) == 0) {
-        return m.index;
-      }
+    const auto it = f.byMd5.constFind(ref.md5.toCaseFolded());
+    if (it != f.byMd5.constEnd()) {
+      return it.value();
     }
   }
 
   if (!ref.fileExpression.isEmpty()) {
-    for (const auto& m : mods) {
-      if (!m.fileExpression.isEmpty() &&
-          m.fileExpression.compare(ref.fileExpression, Qt::CaseInsensitive) == 0) {
-        return m.index;
-      }
+    const auto it = f.byExpression.constFind(ref.fileExpression.toCaseFolded());
+    if (it != f.byExpression.constEnd()) {
+      return it.value();
     }
   }
 
   // another version of the same file: the one with the version asked for, or
   // the only one
   if (!ref.logicalFileName.isEmpty()) {
-    int found = -1;
-    for (const auto& m : mods) {
-      if (m.logicalFilename.compare(ref.logicalFileName, Qt::CaseInsensitive) == 0) {
-        if (!ref.versionMatch.isEmpty() && m.version == ref.versionMatch) {
-          return m.index;
-        }
-        if (found < 0) {
-          found = m.index;
+    const auto it = f.byLogicalName.constFind(ref.logicalFileName.toCaseFolded());
+    if (it != f.byLogicalName.constEnd() && !it.value().empty()) {
+      for (int index : it.value()) {
+        if (!ref.versionMatch.isEmpty() && mods[index].version == ref.versionMatch) {
+          return index;
         }
       }
-    }
-    if (found >= 0) {
-      return found;
+      return it.value().front();
     }
 
     // a bundled mod is referred to by its name
-    for (const auto& m : mods) {
-      if (m.name.compare(ref.logicalFileName, Qt::CaseInsensitive) == 0) {
-        return m.index;
-      }
+    const auto byName = f.byName.constFind(ref.logicalFileName.toCaseFolded());
+    if (byName != f.byName.constEnd()) {
+      return byName.value();
     }
   }
 
@@ -409,13 +450,16 @@ int CollectionManifest::findMod(const ModReference& ref) const
 namespace
 {
 
-// the strongly connected components of the graph (Tarjan's algorithm, without
-// recursion: a plugin list can be long); each component's nodes by position
-std::vector<std::vector<int>> stronglyConnected(const std::vector<std::set<int>>& next)
+// the strongly connected components of the graph among the active nodes
+// (Tarjan's algorithm, without recursion: a plugin list can be long); each
+// component's nodes by position. Successor lists are kept ascending, so the
+// walk is the same as over ordered sets
+std::vector<std::vector<int>> stronglyConnected(const std::vector<std::vector<int>>& next,
+                                                const std::vector<char>& active)
 {
   const int n = static_cast<int>(next.size());
   std::vector<int> index(n, -1), low(n, 0);
-  std::vector<bool> onStack(n, false);
+  std::vector<char> onStack(n, 0);
   std::vector<int> stack;
   std::vector<std::vector<int>> components;
   int counter = 0;
@@ -423,28 +467,31 @@ std::vector<std::vector<int>> stronglyConnected(const std::vector<std::set<int>>
   struct Frame
   {
     int node;
-    std::set<int>::const_iterator it;
+    size_t it;
   };
 
+  std::vector<Frame> frames;
   for (int start = 0; start < n; ++start) {
-    if (index[start] >= 0) {
+    if (!active[start] || index[start] >= 0) {
       continue;
     }
-    std::vector<Frame> frames;
     auto enter = [&](int v) {
       index[v] = low[v] = counter++;
       stack.push_back(v);
-      onStack[v] = true;
-      frames.push_back({v, next[v].begin()});
+      onStack[v] = 1;
+      frames.push_back({v, 0});
     };
     enter(start);
 
     while (!frames.empty()) {
-      Frame& f = frames.back();
+      Frame& f    = frames.back();
       const int v = f.node;
-      if (f.it != next[v].end()) {
-        const int w = *f.it;
+      if (f.it < next[v].size()) {
+        const int w = next[v][f.it];
         ++f.it;
+        if (!active[w]) {
+          continue;
+        }
         if (index[w] < 0) {
           enter(w);
         } else if (onStack[w]) {
@@ -459,7 +506,7 @@ std::vector<std::vector<int>> stronglyConnected(const std::vector<std::set<int>>
         do {
           w = stack.back();
           stack.pop_back();
-          onStack[w] = false;
+          onStack[w] = 0;
           component.push_back(w);
         } while (w != v);
         std::sort(component.begin(), component.end());
@@ -476,84 +523,110 @@ std::vector<std::vector<int>> stronglyConnected(const std::vector<std::set<int>>
   return components;
 }
 
+void eraseSorted(std::vector<int>& list, int value)
+{
+  const auto it = std::lower_bound(list.begin(), list.end(), value);
+  if (it != list.end() && *it == value) {
+    list.erase(it);
+  }
+}
+
 }  // namespace
 
 SortResult stableTopologicalSort(const std::vector<int>& nodes,
                                  const std::vector<std::pair<int, int>>& edges)
 {
   SortResult result;
+  const int n = static_cast<int>(nodes.size());
 
-  std::map<int, int> position;
-  for (int i = 0; i < static_cast<int>(nodes.size()); ++i) {
-    position.emplace(nodes[i], i);
+  QHash<int, int> position;
+  position.reserve(n);
+  for (int i = 0; i < n; ++i) {
+    if (!position.contains(nodes[i])) {
+      position.insert(nodes[i], i);
+    }
   }
 
-  // by position: the successors and predecessors of each node
-  std::vector<std::set<int>> next(nodes.size());
-  std::vector<std::set<int>> prev(nodes.size());
+  // by position: the successors and predecessors of each node, ascending and
+  // without repeats
+  std::vector<std::vector<int>> next(n), prev(n);
   for (const auto& [a, b] : edges) {
-    auto ia = position.find(a);
-    auto ib = position.find(b);
-    if (ia == position.end() || ib == position.end() || ia->second == ib->second) {
+    const auto ia = position.constFind(a);
+    const auto ib = position.constFind(b);
+    if (ia == position.constEnd() || ib == position.constEnd() || ia.value() == ib.value()) {
       continue;
     }
-    next[ia->second].insert(ib->second);
-    prev[ib->second].insert(ia->second);
+    next[ia.value()].push_back(ib.value());
+    prev[ib.value()].push_back(ia.value());
+  }
+  for (int i = 0; i < n; ++i) {
+    std::sort(next[i].begin(), next[i].end());
+    next[i].erase(std::unique(next[i].begin(), next[i].end()), next[i].end());
+    std::sort(prev[i].begin(), prev[i].end());
+    prev[i].erase(std::unique(prev[i].begin(), prev[i].end()), prev[i].end());
   }
 
   // cycles are broken only inside the components that have them: at the
   // component's earliest node, by dropping the edges into it from the
-  // component. Until no component has a cycle left
+  // component. Until no component has a cycle left. Breaking edges only
+  // splits components, so each pass looks only at the last pass's cyclic ones
+  std::vector<char> active(n, 1);
   for (;;) {
     bool cyclic = false;
-    for (const auto& component : stronglyConnected(next)) {
+    std::vector<char> nextActive(n, 0);
+    for (const auto& component : stronglyConnected(next, active)) {
       if (component.size() < 2) {
         continue;
       }
-      cyclic        = true;
-      const int p   = component.front();
-      const std::set<int> members(component.begin(), component.end());
-      for (auto it = prev[p].begin(); it != prev[p].end();) {
-        if (members.count(*it)) {
-          result.broken.emplace_back(nodes[*it], nodes[p]);
-          next[*it].erase(p);
-          it = prev[p].erase(it);
+      cyclic      = true;
+      const int p = component.front();
+      for (int m : component) {
+        nextActive[m] = 1;
+      }
+      std::vector<int> keep;
+      keep.reserve(prev[p].size());
+      for (int from : prev[p]) {
+        if (std::binary_search(component.begin(), component.end(), from)) {
+          result.broken.emplace_back(nodes[from], nodes[p]);
+          eraseSorted(next[from], p);
         } else {
-          ++it;
+          keep.push_back(from);
         }
       }
+      prev[p] = std::move(keep);
     }
     if (!cyclic) {
       break;
     }
+    active = std::move(nextActive);
   }
 
-  for (int a = 0; a < static_cast<int>(nodes.size()); ++a) {
+  for (int a = 0; a < n; ++a) {
     for (int b : next[a]) {
       result.kept.emplace_back(nodes[a], nodes[b]);
     }
   }
 
   // Kahn's algorithm, always taking the earliest node that is free
-  std::set<int> ready;
-  for (int i = 0; i < static_cast<int>(nodes.size()); ++i) {
-    if (prev[i].empty()) {
-      ready.insert(i);
+  std::vector<int> waiting(n);
+  std::priority_queue<int, std::vector<int>, std::greater<int>> ready;
+  for (int i = 0; i < n; ++i) {
+    waiting[i] = static_cast<int>(prev[i].size());
+    if (waiting[i] == 0) {
+      ready.push(i);
     }
   }
 
+  result.order.reserve(n);
   while (!ready.empty()) {
-    const int p = *ready.begin();
-    ready.erase(ready.begin());
+    const int p = ready.top();
+    ready.pop();
     result.order.push_back(nodes[p]);
-
-    for (int n : next[p]) {
-      prev[n].erase(p);
-      if (prev[n].empty()) {
-        ready.insert(n);
+    for (int s : next[p]) {
+      if (--waiting[s] == 0) {
+        ready.push(s);
       }
     }
-    next[p].clear();
   }
 
   return result;
@@ -592,158 +665,248 @@ SortResult sortModsByRules(const CollectionManifest& manifest,
 GroupResult groupByCategory(const SortResult& sorted,
                             const std::function<QString(int)>& category,
                             const std::function<bool(int, int)>& conflicts,
-                            const std::function<int(int)>& position)
+                            const std::function<int(int)>& position,
+                            const std::vector<std::pair<int, int>>* conflictPairs)
 {
   GroupResult result;
+  const int n = static_cast<int>(sorted.order.size());
+
+  // past this size the analysis is skipped: the order the rules give, flat
+  if (n > MaxGroupedMods) {
+    result.order = sorted.order;
+    return result;
+  }
+
+  // nodes by their place in the sorted order, which is a topological order of
+  // the kept edges: every kept edge goes forward in it
+  QHash<int, int> at;
+  at.reserve(n);
+  for (int i = 0; i < n; ++i) {
+    at.insert(sorted.order[i], i);
+  }
+  struct Edge
+  {
+    int u, v;
+  };
+  std::vector<Edge> kept;
+  kept.reserve(sorted.kept.size());
+  for (const auto& [a, b] : sorted.kept) {
+    const auto ia = at.constFind(a);
+    const auto ib = at.constFind(b);
+    if (ia != at.constEnd() && ib != at.constEnd()) {
+      kept.push_back({ia.value(), ib.value()});
+    }
+  }
 
   // only the rules on a path between two mods that share a file change what
   // the game sees: A before B before C, with A and C sharing one, keeps both
-  std::vector<std::pair<int, int>> edges;
-  if (!conflicts) {
-    edges = sorted.kept;
+  std::vector<Edge> edges;
+  if (!conflicts && conflictPairs == nullptr) {
+    edges = kept;
   } else {
-    const int n = static_cast<int>(sorted.order.size());
-    std::map<int, int> at;
-    for (int i = 0; i < n; ++i) {
-      at[sorted.order[i]] = i;
+    // bit sets: what each node reaches (itself included), and the files it
+    // shares with nodes it reaches
+    const int words = (n + 63) / 64;
+    using Bits      = std::vector<quint64>;
+    auto test       = [](const quint64* b, int i) {
+      return (b[i >> 6] >> (i & 63)) & 1u;
+    };
+    auto set = [](quint64* b, int i) {
+      b[i >> 6] |= quint64(1) << (i & 63);
+    };
+    Bits desc(static_cast<size_t>(n) * words, 0);
+    Bits shares(static_cast<size_t>(n) * words, 0);
+    std::vector<std::vector<int>> next(n), prev(n);
+    for (const auto& e : kept) {
+      next[e.u].push_back(e.v);
+      prev[e.v].push_back(e.u);
     }
-    std::vector<std::vector<int>> next(n);
-    for (const auto& [a, b] : sorted.kept) {
-      auto ia = at.find(a);
-      auto ib = at.find(b);
-      if (ia != at.end() && ib != at.end()) {
-        next[ia->second].push_back(ib->second);
-      }
-    }
-    // what each node reaches (itself included); the sorted order is a
-    // topological order of the kept edges, so from the end
-    std::vector<std::vector<bool>> reach(n, std::vector<bool>(n, false));
     for (int i = n - 1; i >= 0; --i) {
-      reach[i][i] = true;
+      quint64* d = &desc[static_cast<size_t>(i) * words];
+      set(d, i);
       for (int j : next[i]) {
-        for (int k = 0; k < n; ++k) {
-          if (reach[j][k]) {
-            reach[i][k] = true;
-          }
+        const quint64* s = &desc[static_cast<size_t>(j) * words];
+        for (int w = 0; w < words; ++w) {
+          d[w] |= s[w];
         }
       }
     }
-    // the pairs that conflict and are ordered by the rules
-    std::vector<std::vector<int>> conflictsWith(n);
-    for (int x = 0; x < n; ++x) {
-      for (int y = 0; y < n; ++y) {
-        if (x != y && reach[x][y] && conflicts(sorted.order[x], sorted.order[y])) {
-          conflictsWith[x].push_back(y);
-        }
-      }
-    }
-    for (const auto& e : sorted.kept) {
-      auto iu = at.find(e.first);
-      auto iv = at.find(e.second);
-      if (iu == at.end() || iv == at.end()) {
-        continue;
-      }
-      const int u = iu->second, v = iv->second;
-      bool relevant = false;
-      for (int x = 0; x < n && !relevant; ++x) {
-        if (!reach[x][u]) {
+    if (conflictPairs != nullptr) {
+      for (const auto& [a, b] : *conflictPairs) {
+        const auto ia = at.constFind(a);
+        const auto ib = at.constFind(b);
+        if (ia == at.constEnd() || ib == at.constEnd() || ia.value() == ib.value()) {
           continue;
         }
-        for (int y : conflictsWith[x]) {
-          if (reach[v][y]) {
-            relevant = true;
-            break;
+        const int x = ia.value(), y = ib.value();
+        if (test(&desc[static_cast<size_t>(x) * words], y)) {
+          set(&shares[static_cast<size_t>(x) * words], y);
+        }
+        if (test(&desc[static_cast<size_t>(y) * words], x)) {
+          set(&shares[static_cast<size_t>(y) * words], x);
+        }
+      }
+    } else {
+      // only the pairs the rules order are asked about
+      for (int x = 0; x < n; ++x) {
+        const quint64* d = &desc[static_cast<size_t>(x) * words];
+        for (int w = 0; w < words; ++w) {
+          quint64 bits = d[w];
+          while (bits != 0) {
+            const int y = w * 64 + static_cast<int>(std::countr_zero(bits));
+            bits &= bits - 1;
+            if (y != x && conflicts(sorted.order[x], sorted.order[y])) {
+              set(&shares[static_cast<size_t>(x) * words], y);
+            }
           }
         }
       }
-      if (relevant) {
-        edges.push_back(e);
+    }
+    // what the node and every node before it share with nodes after them
+    for (int u = 0; u < n; ++u) {
+      quint64* c = &shares[static_cast<size_t>(u) * words];
+      for (int p : prev[u]) {
+        const quint64* s = &shares[static_cast<size_t>(p) * words];
+        for (int w = 0; w < words; ++w) {
+          c[w] |= s[w];
+        }
+      }
+    }
+    for (const auto& e : kept) {
+      const quint64* c = &shares[static_cast<size_t>(e.u) * words];
+      const quint64* d = &desc[static_cast<size_t>(e.v) * words];
+      for (int w = 0; w < words; ++w) {
+        if (c[w] & d[w]) {
+          edges.push_back(e);
+          break;
+        }
       }
     }
   }
 
   // the collection's own order (its phases and mods[]), else the sorted one
-  std::map<int, int> sortedPos;
-  for (int i = 0; i < static_cast<int>(sorted.order.size()); ++i) {
-    sortedPos[sorted.order[i]] = i;
+  std::vector<int> pos(n);
+  for (int i = 0; i < n; ++i) {
+    pos[i] = position ? position(sorted.order[i]) : i;
   }
-  auto posOf = [&](int node) {
-    return position ? position(node) : sortedPos[node];
-  };
 
-  std::set<int> moved;  // to the group at the end, in the rules' order
+  // each node's group, by name without case
+  std::vector<int> groupOf(n);
+  std::vector<QString> names(n);
+  QHash<QString, int> groupIds;
+  int groupCount = 0;
+  for (int i = 0; i < n; ++i) {
+    names[i]          = category(sorted.order[i]);
+    const QString key = names[i].toCaseFolded();
+    auto it           = groupIds.constFind(key);
+    if (it == groupIds.constEnd()) {
+      it = groupIds.insert(key, groupCount++);
+    }
+    groupOf[i] = it.value();
+  }
+  std::vector<std::vector<int>> members(groupCount);
+  for (int i = 0; i < n; ++i) {
+    members[groupOf[i]].push_back(i);
+  }
+  std::vector<std::vector<std::pair<int, int>>> inside(groupCount);
+  for (const auto& e : edges) {
+    if (groupOf[e.u] == groupOf[e.v]) {
+      inside[groupOf[e.u]].emplace_back(e.u, e.v);
+    }
+  }
+
+  // each pass moves the one mod a rule puts out of order to the group at the
+  // end; only the group that lost it is ordered again
+  std::vector<bool> moved(n, false);
+  std::vector<std::vector<int>> groupOrder(groupCount);
+  std::vector<bool> dirty(groupCount, true);
+  std::vector<int> place(n);
+
   for (;;) {
     // the groups in the order their first mod comes
-    std::vector<std::pair<QString, std::vector<int>>> groups;
-    for (int node : sorted.order) {
-      if (moved.count(node)) {
-        continue;
-      }
-      const QString name = category(node);
-      auto it = std::find_if(groups.begin(), groups.end(), [&name](const auto& g) {
-        return g.first.compare(name, Qt::CaseInsensitive) == 0;
-      });
-      if (it == groups.end()) {
-        groups.push_back({name, {node}});
-      } else {
-        it->second.push_back(node);
+    std::vector<int> groupsInOrder;
+    std::vector<bool> seen(groupCount, false);
+    for (int i = 0; i < n; ++i) {
+      if (!moved[i] && !seen[groupOf[i]]) {
+        seen[groupOf[i]] = true;
+        groupsInOrder.push_back(groupOf[i]);
       }
     }
 
     // in each group the collection's order, moved only by the rules inside it
-    for (auto& g : groups) {
-      std::stable_sort(g.second.begin(), g.second.end(), [&](int a, int b) {
-        return posOf(a) < posOf(b);
-      });
-      const std::set<int> members(g.second.begin(), g.second.end());
-      std::vector<std::pair<int, int>> inside;
-      for (const auto& e : edges) {
-        if (members.count(e.first) && members.count(e.second)) {
-          inside.push_back(e);
+    for (int g : groupsInOrder) {
+      if (!dirty[g]) {
+        continue;
+      }
+      std::vector<int> list;
+      for (int i : members[g]) {
+        if (!moved[i]) {
+          list.push_back(i);
         }
       }
-      g.second = stableTopologicalSort(g.second, inside).order;
+      std::stable_sort(list.begin(), list.end(), [&pos](int a, int b) {
+        return pos[a] < pos[b];
+      });
+      groupOrder[g] = stableTopologicalSort(list, inside[g]).order;
+      dirty[g]      = false;
     }
 
-    std::vector<int> overflow;
-    for (int node : sorted.order) {
-      if (moved.count(node)) {
-        overflow.push_back(node);
+    int k = 0;
+    for (int g : groupsInOrder) {
+      for (int i : groupOrder[g]) {
+        place[i] = k++;
       }
     }
-
-    std::vector<int> order;
-    for (const auto& g : groups) {
-      order.insert(order.end(), g.second.begin(), g.second.end());
-    }
-    order.insert(order.end(), overflow.begin(), overflow.end());
-
-    std::map<int, int> at;
-    for (int i = 0; i < static_cast<int>(order.size()); ++i) {
-      at[order[i]] = i;
+    for (int i = 0; i < n; ++i) {
+      if (moved[i]) {
+        place[i] = k++;
+      }
     }
 
     // a rule the grouping breaks: the mod that must come later goes to the
     // end, after everything it has to follow
-    bool broken = false;
-    for (const auto& [a, b] : edges) {
-      auto ia = at.find(a);
-      auto ib = at.find(b);
-      if (ia != at.end() && ib != at.end() && ia->second > ib->second) {
+    int toMove = -1;
+    for (const auto& e : edges) {
+      if (place[e.u] > place[e.v]) {
         // within the end group the sorted order holds every rule
-        moved.insert(moved.count(b) ? a : b);
-        broken = true;
+        toMove = moved[e.v] ? e.u : e.v;
         break;
       }
     }
-    if (broken) {
+    if (toMove >= 0) {
+      moved[toMove]          = true;
+      dirty[groupOf[toMove]] = true;
       continue;
     }
 
-    result.grouped  = true;
-    result.groups   = std::move(groups);
-    result.overflow = std::move(overflow);
-    result.order    = std::move(order);
+    for (int g : groupsInOrder) {
+      // a group is named after its first mod that stayed in it
+      QString name;
+      for (int i : members[g]) {
+        if (!moved[i]) {
+          name = names[i];
+          break;
+        }
+      }
+      std::vector<int> nodes;
+      nodes.reserve(groupOrder[g].size());
+      for (int i : groupOrder[g]) {
+        nodes.push_back(sorted.order[i]);
+      }
+      result.groups.push_back({name, std::move(nodes)});
+    }
+    for (int i = 0; i < n; ++i) {
+      if (moved[i]) {
+        result.overflow.push_back(sorted.order[i]);
+      }
+    }
+    result.order.reserve(n);
+    for (const auto& g : result.groups) {
+      result.order.insert(result.order.end(), g.second.begin(), g.second.end());
+    }
+    result.order.insert(result.order.end(), result.overflow.begin(),
+                        result.overflow.end());
+    result.grouped = true;
     return result;
   }
 }

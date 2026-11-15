@@ -13,7 +13,9 @@
 #include <QElapsedTimer>
 #include <QJsonObject>
 #include <QFile>
+#include <QHash>
 #include <QObject>
+#include <QSet>
 #include <QPointer>
 #include <QTimer>
 #include <boost/signals2/connection.hpp>
@@ -260,6 +262,13 @@ private:
   // the category separators made for this collection: category to name
   QJsonObject m_categorySeparatorNames;
   int m_overflowCount = 0;  // mods put in the group at the end
+  mutable bool m_stateDirty = false;
+  mutable QTimer m_saveTimer;
+  QHash<int, int> m_rowByFileId;
+  QSet<QString> m_modFolders;  // the mods folder's folders, lowercase
+  bool m_modFoldersRead = false;
+  std::vector<std::pair<int, int>> m_conflictPairs;
+  bool m_conflictsReady = false;
   QString m_profileName;
   QString m_separatorName;
   bool m_autoOpen      = true;
@@ -308,6 +317,13 @@ private:
 
   void loadState();
   void saveState() const;
+  void flushState() const;
+  void writeState() const;
+  void onDownloadUpdate(int index);
+  std::vector<QStringList> otherProfileModLists() const;
+  // pairs of mods (indexes of mods[]) that have a file in common
+  static std::vector<std::pair<int, int>>
+  sharedFilePairs(const std::vector<std::pair<int, QString>>& folders);
   QJsonObject stateObject() const;
 
   void scheduleScan();
@@ -316,7 +332,8 @@ private:
   void handleStalled(int row, int download);
   void retryDownload(int row, int fileId);
   int stalledDownload(const Entry& e) const;
-  bool separatorEmptyEverywhere(const QString& internalName) const;
+  bool separatorEmptyEverywhere(const QString& internalName,
+                                const std::vector<QStringList>& otherProfiles) const;
   void pumpInstall();
   bool installEntry(int row);
   bool installBundle(int row);
@@ -342,7 +359,7 @@ private:
   void applyPlugins();
 
   void setStatus(int row, Status s, const QString& reason = {});
-  QString uniqueModName(int row) const;
+  QString uniqueModName(int row, const QSet<QString>& taken) const;
   QString nexusPage(const Entry& e) const;
   QString domainOf(const Entry& e) const;
   bool isFinished(const Entry& e) const;

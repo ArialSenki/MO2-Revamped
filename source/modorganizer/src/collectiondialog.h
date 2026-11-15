@@ -10,6 +10,7 @@
 
 #include <QElapsedTimer>
 #include <QDialog>
+#include <QTimer>
 #include <QPointer>
 #include <functional>
 #include <optional>
@@ -66,6 +67,9 @@ private:
   QPushButton* m_update = nullptr;
   QPushButton* m_retryFailed = nullptr;
   bool m_built = false;
+  QTimer m_changeTimer;
+  bool m_rowsLocked = false;
+  bool m_rowsDrawn  = false;
 
   QLabel* m_name;
   QLabel* m_caption;

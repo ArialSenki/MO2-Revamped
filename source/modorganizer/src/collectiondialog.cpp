@@ -133,7 +133,15 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
     });
   }
 
-  connect(m_session, &CollectionSession::changed, this, &CollectionDialog::onChanged);
+  // many changes in a moment show once
+  m_changeTimer.setSingleShot(true);
+  m_changeTimer.setInterval(150);
+  connect(&m_changeTimer, &QTimer::timeout, this, &CollectionDialog::onChanged);
+  connect(m_session, &CollectionSession::changed, this, [this] {
+    if (!m_changeTimer.isActive()) {
+      m_changeTimer.start();
+    }
+  });
   connect(m_session, &CollectionSession::entryChanged, this,
           &CollectionDialog::onEntryChanged);
   connect(m_session, &CollectionSession::finished, this, [this] {
@@ -1109,8 +1117,12 @@ void CollectionDialog::updateButtons()
     }
   }
 
-  // the rows' boxes lock while it runs
-  if (m_built) {
+  // the rows' boxes lock while it runs: every row only when that changes;
+  // a row's own changes come through entryChanged()
+  const bool rowsLocked = stage == Stage::Running;
+  if (m_built && (rowsLocked != m_rowsLocked || !m_rowsDrawn)) {
+    m_rowsLocked = rowsLocked;
+    m_rowsDrawn  = true;
     QSignalBlocker block(m_tree);
     for (int row = 0; row < m_tree->topLevelItemCount(); ++row) {
       updateRow(m_tree->topLevelItem(row), row);

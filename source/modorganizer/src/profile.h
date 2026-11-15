@@ -322,6 +322,11 @@ public:
   //
   bool setModPriority(unsigned int index, int& newPriority);
 
+  // MO2 Revamped: the mods given, in this order, moved to the end of the
+  // order, as setModPriority(index, MaximumPriority) for each in turn would,
+  // with one update of the indexes (a collection orders thousands)
+  void moveModsToEnd(const std::vector<unsigned int>& indexes);
+
   /**
    * @brief determine if a mod is enabled
    *

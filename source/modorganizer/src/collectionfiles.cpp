@@ -1,5 +1,6 @@
 #include "collectionfiles.h"
 
+#include <QHash>
 #include <QRegularExpression>
 #include <QStringDecoder>
 #include <filesystem>
@@ -786,27 +787,49 @@ RevisionDiff diffRevisions(const std::vector<RevisionFile>& before,
   std::vector<bool> usedBefore(before.size(), false);
   std::vector<bool> usedAfter(after.size(), false);
 
+  // the earlier files by file id and by mod id, in their order: the first
+  // one not taken yet is the one a scan would find
+  QHash<int, std::vector<int>> beforeByFile, beforeByMod;
+  for (int b = 0; b < static_cast<int>(before.size()); ++b) {
+    beforeByFile[before[b].fileId].push_back(b);
+    beforeByMod[before[b].modId].push_back(b);
+  }
+  auto firstFree = [&usedBefore](std::vector<int>& list, size_t& from) {
+    while (from < list.size() && usedBefore[list[from]]) {
+      ++from;
+    }
+    return from < list.size() ? list[from] : -1;
+  };
+  QHash<int, size_t> fileFrom, modFrom;
+
   // the same file
   for (int a = 0; a < static_cast<int>(after.size()); ++a) {
-    for (int b = 0; b < static_cast<int>(before.size()); ++b) {
-      if (!usedBefore[b] && after[a].fileId > 0 && after[a].fileId == before[b].fileId) {
-        d.same.emplace_back(b, a);
-        usedBefore[b] = usedAfter[a] = true;
-        break;
-      }
+    if (after[a].fileId <= 0) {
+      continue;
+    }
+    auto it = beforeByFile.find(after[a].fileId);
+    if (it == beforeByFile.end()) {
+      continue;
+    }
+    const int b = firstFree(it.value(), fileFrom[after[a].fileId]);
+    if (b >= 0) {
+      d.same.emplace_back(b, a);
+      usedBefore[b] = usedAfter[a] = true;
     }
   }
   // the same mod with another file (an update)
   for (int a = 0; a < static_cast<int>(after.size()); ++a) {
-    if (usedAfter[a]) {
+    if (usedAfter[a] || after[a].modId <= 0) {
       continue;
     }
-    for (int b = 0; b < static_cast<int>(before.size()); ++b) {
-      if (!usedBefore[b] && after[a].modId > 0 && after[a].modId == before[b].modId) {
-        d.changed.emplace_back(b, a);
-        usedBefore[b] = usedAfter[a] = true;
-        break;
-      }
+    auto it = beforeByMod.find(after[a].modId);
+    if (it == beforeByMod.end()) {
+      continue;
+    }
+    const int b = firstFree(it.value(), modFrom[after[a].modId]);
+    if (b >= 0) {
+      d.changed.emplace_back(b, a);
+      usedBefore[b] = usedAfter[a] = true;
     }
   }
   for (int a = 0; a < static_cast<int>(after.size()); ++a) {
