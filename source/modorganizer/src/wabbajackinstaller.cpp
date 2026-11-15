@@ -1163,6 +1163,22 @@ InstallResult Installer::run()
       if (m_textures > 0) {
         m_result.notes.append(tr("%n textures resized.", nullptr, m_textures));
       }
+      // folders the author leaves to be copied by hand (into the game's folder,
+      // usually), as the list's guide says: Wabbajack doesn't copy them either
+      QStringList byHand;
+      for (const QString& dir :
+           QDir(m_plan.installFolder).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (dir.startsWith(u"__") ||
+            dir.compare(u"Game Folder Files", Qt::CaseInsensitive) == 0 ||
+            dir.compare(u"Manual Game Files", Qt::CaseInsensitive) == 0) {
+          byHand.append(dir);
+        }
+      }
+      if (!byHand.isEmpty()) {
+        m_result.notes.append(
+            tr("The list leaves files for you to copy by hand, as its guide says: %1.")
+                .arg(byHand.join(QStringLiteral(", "))));
+      }
     }
   } catch (const std::bad_alloc&) {
     m_result.error = tr("Not enough memory.");

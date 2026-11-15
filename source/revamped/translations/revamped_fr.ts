@@ -17734,5 +17734,9 @@ Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
       <source>the texture's size isn't possible</source>
       <translation>la taille de la texture n'est pas possible</translation>
     </message>
+    <message>
+      <source>The list leaves files for you to copy by hand, as its guide says: %1.</source>
+      <translation>La liste laisse des fichiers à copier à la main, comme l'explique son guide : %1.</translation>
+    </message>
   </context>
 </TS>

@@ -17831,5 +17831,9 @@ Vuelve a iniciar el juego; si un mod sigue fuera, reinstálalo.</translation>
       <source>the texture's size isn't possible</source>
       <translation>el tamaño de la textura no es posible</translation>
     </message>
+    <message>
+      <source>The list leaves files for you to copy by hand, as its guide says: %1.</source>
+      <translation>La lista deja archivos para que los copies a mano, como dice su guía: %1.</translation>
+    </message>
   </context>
 </TS>
