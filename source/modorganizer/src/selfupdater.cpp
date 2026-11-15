@@ -255,6 +255,26 @@ void SelfUpdater::onReleases(const QJsonArray& releases)
   // each of them changed, so someone who skipped a few still reads it all
   std::map<VersionInfo, ReleaseInfo, std::greater<>> newer;
   VersionInfo newest;
+
+  // a development build's number sorts below the beta it was made from
+  // (1.1.0-dev.1 counts as an alpha), but it carries all of that beta: a beta
+  // or a release is newer for it only when it came out after it. A dev build
+  // that was never published (a local one) is offered dev builds only
+  const bool devBuild = buildChannel() == UpdateChannel::Dev;
+  QDateTime ownPublished;
+  if (devBuild) {
+    for (const QJsonValue& releaseVal : releases) {
+      QString tag = releaseVal.toObject()["tag_name"].toString();
+      if (tag.startsWith(u'v') || tag.startsWith(u'V')) {
+        tag = tag.mid(1);
+      }
+      if (tag.compare(revampedVersionString(), Qt::CaseInsensitive) == 0) {
+        ownPublished = QDateTime::fromString(
+            releaseVal.toObject()["published_at"].toString(), Qt::ISODate);
+      }
+    }
+  }
+
   for (const QJsonValue& releaseVal : releases) {
     const QJsonObject release = releaseVal.toObject();
     if (release["draft"].toBool()) {
@@ -273,6 +293,11 @@ void SelfUpdater::onReleases(const QJsonArray& releases)
     info.channel    = channelOf(info.tag, info.prerelease);
     if (!info.version.isValid() ||
         static_cast<int>(info.channel) > static_cast<int>(channel)) {
+      continue;
+    }
+    if (devBuild && info.channel != UpdateChannel::Dev &&
+        (!ownPublished.isValid() || !info.published.isValid() ||
+         info.published <= ownPublished)) {
       continue;
     }
 
