@@ -175,7 +175,6 @@ mo2_add_filter(NAME src/dialogs GROUPS
 	selectiondialog
 	syncoverwritedialog
 	transfersavesdialog
-	waitingonclosedialog
 )
 
 mo2_add_filter(NAME src/downloads GROUPS

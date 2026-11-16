@@ -9,7 +9,7 @@ the first argument:
   preview.png    -> every icon size on light and dark, to look at
 
 Needs Python 3.12 and the PyQt6 that ships with MO2's Python plugin; point
-MO2_QT_BIN at Qt 6.7's bin folder and MO2_PYQT_LIBS at plugin_python/libs:
+MO2_QT_BIN at Qt 6.12's bin folder and MO2_PYQT_LIBS at plugin_python/libs:
   py -3.12 -I make_logo.py <output folder>
 """
 
@@ -17,7 +17,7 @@ import os
 import struct
 import sys
 
-os.add_dll_directory(os.environ.get("MO2_QT_BIN", r"D:\mo2build\Qt\6.7.1\msvc2019_64\bin"))
+os.add_dll_directory(os.environ.get("MO2_QT_BIN", r"D:\mo2build\Qt\6.12.0\msvc2022_64\bin"))
 sys.path.insert(
     0, os.environ.get("MO2_PYQT_LIBS", r"D:\mo2build\test-instance\plugins\plugin_python\libs"))
 

@@ -13679,6 +13679,14 @@ Revisa las opciones del juego antes de jugar.</translation>
       <source>This plugin is past the game's limit of regular plugins, so the game won't load it. Turn off some plugins, or use light (ESL) versions where a mod has them.</source>
       <translation>Este plugin supera el límite de plugins normales del juego, así que el juego no lo cargará. Desactiva algunos plugins o usa versiones ligeras (ESL) donde un mod las tenga.</translation>
     </message>
+    <message>
+      <source>This plugin is past the game's limit of 256 medium plugins, so the game won't load it. Turn off some medium plugins.</source>
+      <translation>Este plugin pasa del límite del juego de 256 plugins medianos, así que el juego no lo cargará. Desactiva algunos plugins medianos.</translation>
+    </message>
+    <message>
+      <source>This plugin is past the game's limit of 4096 light plugins, so the game won't load it. Turn off some light plugins.</source>
+      <translation>Este plugin pasa del límite del juego de 4096 plugins ligeros, así que el juego no lo cargará. Desactiva algunos plugins ligeros.</translation>
+    </message>
   </context>
   <context>
     <name>ModInfoRegular</name>
@@ -16853,6 +16861,10 @@ Instala .NET Desktop Runtime 8 para Windows x64 desde {0} y vuelve a abrir BG3 M
     <message>
       <source>The download stopped; trying again (%1 of %2).</source>
       <translation>La descarga se detuvo; se vuelve a intentar (%1 de %2).</translation>
+    </message>
+    <message>
+      <source>The mod's archive has unsafe file names.</source>
+      <translation>El archivo del mod tiene nombres de archivo no seguros.</translation>
     </message>
   </context>
   <context>

@@ -36,6 +36,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <report.h>
 #include <safewritefile.h>
 #include <utility.h>
+#include <unordered_set>
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -278,6 +279,16 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  // MO2 Revamped: the archives sorted by their lower-case name, so a plugin's
+  // ("Name*.bsa") are found by a binary search, not by comparing every plugin
+  // with every archive
+  std::vector<std::pair<QString, QString>> archivesByName;  // lower case, as it is
+  archivesByName.reserve(archiveCandidates.size());
+  for (const QString& archive : archiveCandidates) {
+    archivesByName.emplace_back(archive.toLower(), archive);
+  }
+  std::sort(archivesByName.begin(), archivesByName.end());
+
   for (const auto& [filename, current] : availablePlugins) {
     if (m_ESPsByName.contains(filename)) {
       continue;
@@ -301,10 +312,11 @@ void PluginList::refresh(const QString& profileName,
       QString iniPath = baseName + ".ini";
       bool hasIni     = baseDirectory.findFile(ToWString(iniPath)).get() != nullptr;
       std::set<QString> loadedArchives;
-      for (const auto& archiveName : archiveCandidates) {
-        if (archiveName.startsWith(baseName, Qt::CaseInsensitive)) {
-          loadedArchives.insert(archiveName);
-        }
+      const QString prefix = baseName.toLower();
+      for (auto it = std::lower_bound(archivesByName.begin(), archivesByName.end(),
+                                      std::make_pair(prefix, QString()));
+           it != archivesByName.end() && it->first.startsWith(prefix); ++it) {
+        loadedArchives.insert(it->second);
       }
 
       QString originName    = ToQString(origin.getName());
@@ -327,8 +339,14 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  // MO2 Revamped: by name without case, as m_ESPsByName has them: a plugin
+  // whose file differs only in case from the known name stays
+  std::unordered_set<QString> available;
+  for (const auto& [filename, current] : availablePlugins) {
+    available.insert(filename.toLower());
+  }
   for (const auto& espName : m_ESPsByName) {
-    if (!availablePlugins.contains(espName.first)) {
+    if (!available.contains(espName.first.toLower())) {
       m_ESPs[espName.second].name = "";
     }
   }
@@ -411,15 +429,19 @@ void PluginList::fixPluginRelationships()
 {
   TimeThis timer("PluginList::fixPluginRelationships");
 
+  // MO2 Revamped: by reference, and the indices rebuilt (and the view told)
+  // once at the end, not after every move: the batch keeps the priority index
+  // in step as it goes, as shiftPluginsPriority does
   // Count the types of plugins
   int masterCount = 0;
-  for (auto plugin : m_ESPs) {
+  for (const auto& plugin : m_ESPs) {
     if (plugin.hasLightExtension || plugin.hasMasterExtension ||
         plugin.isMasterFlagged) {
       masterCount++;
     }
   }
 
+  bool moved = false;
   // Ensure masters are up top and normal plugins are down below
   for (int i = 0; i < m_ESPs.size(); i++) {
     ESPInfo& plugin = m_ESPs[i];
@@ -427,12 +449,14 @@ void PluginList::fixPluginRelationships()
         plugin.isMasterFlagged) {
       if (plugin.priority > masterCount) {
         int newPriority = masterCount + 1;
-        setPluginPriority(i, newPriority);
+        setPluginPriority(i, newPriority, false, true);
+        moved = true;
       }
     } else {
       if (plugin.priority < masterCount) {
         int newPriority = masterCount + 1;
-        setPluginPriority(i, newPriority);
+        setPluginPriority(i, newPriority, false, true);
+        moved = true;
       }
     }
   }
@@ -441,14 +465,22 @@ void PluginList::fixPluginRelationships()
   for (int i = 0; i < m_ESPs.size(); i++) {
     ESPInfo& plugin = m_ESPs[i];
     int newPriority = plugin.priority;
-    for (auto master : plugin.masters) {
+    for (const auto& master : plugin.masters) {
       auto iter = m_ESPsByName.find(master);
       if (iter != m_ESPsByName.end()) {
         newPriority = std::max(newPriority, m_ESPs[iter->second].priority);
       }
     }
     if (newPriority != plugin.priority) {
-      setPluginPriority(i, newPriority);
+      setPluginPriority(i, newPriority, false, true);
+      moved = true;
+    }
+  }
+
+  if (moved) {
+    updateIndices();
+    if (!m_ResettingModel) {
+      emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
     }
   }
 }
@@ -618,6 +650,11 @@ void PluginList::shiftPluginsPriority(const QModelIndexList& indices, int offset
   }
 
   refreshLoadOrder();
+  // MO2 Revamped: saved, as a drag or "Send to" saves; a program started
+  // outside MO2 (xEdit, LOOT) reads plugins.txt and loadorder.txt
+  if (moved) {
+    emit writePluginsList();
+  }
 }
 
 void PluginList::toggleState(const QModelIndexList& indices)
@@ -1229,6 +1266,8 @@ void PluginList::generatePluginIndexes()
                             .arg(ESHpos, 2, 16, QChar('0'))
                             .arg(numESHs % 256, 2, 16, QChar('0'))
                             .toUpper();
+      // MO2 Revamped: the game takes 256 medium plugins
+      m_ESPs[i].overIndexLimit = numESHs >= 256;
       ++numESHs;
 
     } else if (lightPluginsSupported &&
@@ -1238,6 +1277,8 @@ void PluginList::generatePluginIndexes()
                             .arg(ESLpos, 2, 16, QChar('0'))
                             .arg(numESLs % 4096, 3, 16, QChar('0'))
                             .toUpper();
+      // MO2 Revamped: and 4096 light ones
+      m_ESPs[i].overIndexLimit = numESLs >= 4096;
       ++numESLs;
     } else {
       const int regularIndex = l - numESHs - numESLs - numSkipped;
@@ -1500,10 +1541,21 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
   }
 
   if (esp.overIndexLimit) {
+    auto limits = m_Organizer.gameFeatures().gameFeature<GamePlugins>();
+    const bool light =
+        limits && limits->lightPluginsAreSupported() &&
+        (esp.hasLightExtension || esp.isLightFlagged);
+    const bool medium =
+        limits && limits->mediumPluginsAreSupported() && esp.isMediumFlagged;
     toolTip += "<br><br><b>" +
-               tr("This plugin is past the game's limit of regular plugins, so the "
-                  "game won't load it. Turn off some plugins, or use light (ESL) "
-                  "versions where a mod has them.") +
+               (medium ? tr("This plugin is past the game's limit of 256 medium plugins, "
+                            "so the game won't load it. Turn off some medium plugins.")
+                : light
+                    ? tr("This plugin is past the game's limit of 4096 light plugins, "
+                         "so the game won't load it. Turn off some light plugins.")
+                    : tr("This plugin is past the game's limit of regular plugins, so "
+                         "the game won't load it. Turn off some plugins, or use light "
+                         "(ESL) versions where a mod has them.")) +
                "</b>";
   }
 

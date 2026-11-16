@@ -743,6 +743,12 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
   // write it back after the new one has read the stale file
   if (m_CurrentProfile != nullptr) {
     m_CurrentProfile->writeModlistNow(true);
+    // MO2 Revamped: and the plugin list's, into this profile's plugins.txt,
+    // now even while a refresh runs (it would then wait, and find another
+    // profile current)
+    m_SavePluginListNow = true;
+    m_PluginListsWriter.writeImmediately(true);
+    m_SavePluginListNow = false;
   }
 
   // first: one that can't be read throws here, and the current one stays
@@ -2319,10 +2325,20 @@ bool OrganizerCore::saveCurrentLists()
 
 void OrganizerCore::savePluginList()
 {
-  onNextRefresh(
-      [this]() {
+  // MO2 Revamped: a save that waits for a refresh is for the profile that was
+  // current then; after a switch, the list it would write is that profile's
+  // and the files are the new one's
+  const QString profile =
+      m_CurrentProfile != nullptr ? m_CurrentProfile->absolutePath() : QString();
+  const auto save = [this, profile]() {
         if (m_LastRefreshFailed) {
           log::warn("not saving the plugin list after a failed directory update");
+          return;
+        }
+        if (m_CurrentProfile == nullptr ||
+            m_CurrentProfile->absolutePath().compare(profile, Qt::CaseInsensitive) != 0) {
+          log::warn("not saving the plugin list of profile '{}' into another one",
+                    profile);
           return;
         }
 
@@ -2343,8 +2359,13 @@ void OrganizerCore::savePluginList()
                 qApp->activeWindow());
           }
         }
-      },
-      RefreshCallbackGroup::CORE, RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
+  };
+  if (m_SavePluginListNow) {
+    save();
+  } else {
+    onNextRefresh(save, RefreshCallbackGroup::CORE,
+                  RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
+  }
 }
 
 void OrganizerCore::saveCurrentProfile()

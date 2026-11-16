@@ -5,6 +5,7 @@
 #include "utility.h"
 #include <filesystem>
 #include <map>
+#include <unordered_map>
 
 #include "iplugingame.h"
 #include "moddatachecker.h"
@@ -151,6 +152,20 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
     std::vector<FileEntryPtr> files = origin.getFiles();
     std::map<const DirectoryEntry*, bool> checkedDirs;
 
+    // MO2 Revamped: the mod of each other origin, looked up once per origin,
+    // not once per overlapping file (a name conversion and a locked map
+    // lookup each, millions of them in a big list)
+    std::unordered_map<int, unsigned int> indexOfOrigin;
+    const auto modIndexOf = [&](int originID, FilesOrigin& other) {
+      auto found = indexOfOrigin.find(originID);
+      if (found == indexOfOrigin.end()) {
+        found = indexOfOrigin
+                    .emplace(originID, ModInfo::getIndex(ToQString(other.getName())))
+                    .first;
+      }
+      return found->second;
+    };
+
     // for all files in this origin
     for (FileEntryPtr file : files) {
 
@@ -187,7 +202,7 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
         if (file->getOrigin() != origin.getID()) {
           FilesOrigin& altOrigin =
               m_Core.directoryStructure()->getOriginByID(file->getOrigin());
-          unsigned int altIndex = ModInfo::getIndex(ToQString(altOrigin.getName()));
+          unsigned int altIndex = modIndexOf(file->getOrigin(), altOrigin);
           if (altIndex == UINT_MAX) {
             // MO2 Revamped: not a mod (the game folder), nothing to list
           } else if (!file->isFromArchive()) {
@@ -212,8 +227,7 @@ ModInfoWithConflictInfo::Conflicts ModInfoWithConflictInfo::doConflictCheck() co
               (altInfo.originID() != origin.getID())) {
             FilesOrigin& altOrigin =
                 m_Core.directoryStructure()->getOriginByID(altInfo.originID());
-            QString altOriginName = ToQString(altOrigin.getName());
-            unsigned int altIndex = ModInfo::getIndex(altOriginName);
+            unsigned int altIndex = modIndexOf(altInfo.originID(), altOrigin);
             if (altIndex == UINT_MAX) {
               continue;
             }

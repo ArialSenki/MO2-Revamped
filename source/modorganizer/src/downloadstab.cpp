@@ -39,8 +39,6 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
     refresh();
   });
   connect(ui.list, SIGNAL(installDownload(int)), &m_core, SLOT(installDownload(int)));
-  connect(ui.list, SIGNAL(queryInfo(int)), m_core.downloadManager(),
-          SLOT(queryInfo(int)));
   connect(ui.list, SIGNAL(queryInfoMd5(int)), m_core.downloadManager(),
           SLOT(queryInfoMd5(int)));
   connect(ui.list, SIGNAL(visitOnNexus(int)), m_core.downloadManager(),

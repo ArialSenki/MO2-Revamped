@@ -193,15 +193,15 @@ public:
   void setOutputDirectory(const QString& outputDirectory, const bool refresh = true);
 
   /**
-   * @brief disables feedback from the downlods fileSystemWhatcher untill
-   *disableDownloadsWatcherEnd() is called
+   * @brief disables feedback from the downloads file system watcher until
+   *endDisableDirWatcher() is called
    *
    **/
   static void startDisableDirWatcher();
 
   /**
-   * @brief re-enables feedback from the downlods fileSystemWhatcher after
-   *disableDownloadsWatcherStart() was called
+   * @brief re-enables feedback from the downloads file system watcher after
+   *startDisableDirWatcher() was called
    **/
   static void endDisableDirWatcher();
 

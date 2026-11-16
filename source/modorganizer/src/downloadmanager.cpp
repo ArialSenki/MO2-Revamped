@@ -1219,6 +1219,10 @@ void DownloadManager::resumeDownloadInt(int index)
         ((info->m_Urls.size() == 1) && (info->m_Urls[0].size() == 0))) {
       emit showMessage(
           tr("No known download urls. Sorry, this download can't be resumed."));
+      // MO2 Revamped: a failed one stops here: paused, not "Retrying…" for good
+      if (info->m_State == STATE_ERROR) {
+        setState(info, STATE_PAUSED);
+      }
       return;
     }
     if (info->m_State == STATE_ERROR) {

@@ -5922,22 +5922,22 @@ void MainWindow::nxmTrackedModsAvailable(QVariant userData, QVariant resultData,
     gameNames[game->gameNexusName()] = game->gameShortName();
   }
 
+  // MO2 Revamped: the tracked mods in a set, read once, not the whole reply
+  // converted again for each mod
+  std::set<std::pair<QString, int>> tracked;
+  for (const auto& item : resultData.toList()) {
+    const auto results = item.toMap();
+    tracked.emplace(gameNames.value(results["domain_name"].toString()).toLower(),
+                    results["mod_id"].toInt());
+  }
+
   for (unsigned int i = 0; i < ModInfo::getNumMods(); i++) {
     auto modInfo = ModInfo::getByIndex(i);
     if (modInfo->nexusId() <= 0)
       continue;
 
-    bool found       = false;
-    auto resultsList = resultData.toList();
-    for (auto item : resultsList) {
-      auto results = item.toMap();
-      if ((gameNames[results["domain_name"].toString()].compare(
-               modInfo->gameName(), Qt::CaseInsensitive) == 0) &&
-          (results["mod_id"].toInt() == modInfo->nexusId())) {
-        found = true;
-        break;
-      }
-    }
+    const bool found =
+        tracked.count({modInfo->gameName().toLower(), modInfo->nexusId()}) > 0;
 
     modInfo->setIsTracked(found);
     modInfo->saveMeta();

@@ -64,6 +64,18 @@ QString GameFallout3::identifyGamePath() const
         result = startPath.absoluteFilePath(subDirs.first());
     }
   }
+  // MO2 Revamped: GOG, then a Steam library (the Bethesda key is only written
+  // once the game has run)
+  if (result.isEmpty()) {
+    result = findInRegistry(HKEY_LOCAL_MACHINE, L"Software\\GOG.com\\Games\\1454315831",
+                            L"path");
+  }
+  if (result.isEmpty()) {
+    result = parseSteamLocation("22370", "Fallout 3 goty");
+  }
+  if (result.isEmpty()) {
+    result = parseSteamLocation("22300", "Fallout 3");
+  }
   return result;
 }
 
@@ -173,9 +185,16 @@ QString GameFallout3::steamAPPId() const
 {
   if (selectedVariant() == "Game Of The Year") {
     return "22370";
-  } else {
-    return "22300";
   }
+  // MO2 Revamped: Steam only sells the Game Of The Year edition (22300 is
+  // delisted); an install Steam has as that one is that one, whatever edition
+  // was picked
+  const QDir steamapps(gameDirectory().absoluteFilePath("../.."));
+  if (QFileInfo::exists(steamapps.absoluteFilePath("appmanifest_22370.acf")) &&
+      !QFileInfo::exists(steamapps.absoluteFilePath("appmanifest_22300.acf"))) {
+    return "22370";
+  }
+  return "22300";
 }
 
 QStringList GameFallout3::primaryPlugins() const
@@ -227,5 +246,10 @@ int GameFallout3::nexusGameID() const
 
 QString GameFallout3::getLauncherName() const
 {
+  // MO2 Revamped: Steam's Game Of The Year edition has Fallout3Launcher.exe,
+  // older installs FalloutLauncher.exe
+  if (QFileInfo(gameDirectory().absoluteFilePath("Fallout3Launcher.exe")).isFile()) {
+    return "Fallout3Launcher.exe";
+  }
   return "FalloutLauncher.exe";
 }

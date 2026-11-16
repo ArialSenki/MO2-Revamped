@@ -95,6 +95,9 @@ struct CollectionMod
 
   // the category the curator's Vortex had for it (details.category), a name
   QString category;
+  // Vortex's mod type (details.type): "dinput" and "enb" go to the game's
+  // folder; empty for a normal mod
+  QString deployType;
 
   // the installer choices, as collection.json has them (null when none)
   QJsonValue choices;

@@ -89,7 +89,8 @@ std::unique_ptr<GamebryoSaveGame::DataFields> SkyrimSESaveGame::fetchDataFields(
   //  SE has an additional uin16_t for compression
   //  SE uses an alpha channel, whereas LE does not
   uint16_t compressionType = 0;
-  if (version == 12) {
+  // MO2 Revamped: from 12 on, not only 12
+  if (version >= 12) {
     file.read(compressionType);
     alpha = true;
   }

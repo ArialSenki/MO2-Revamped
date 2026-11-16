@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_WIN32_EXECUTABLE ON)
 
-find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 6.12 REQUIRED COMPONENTS Core Gui Widgets)
 
 qt_add_executable(MO2RevampedSetupQt
     main.cpp

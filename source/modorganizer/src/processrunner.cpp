@@ -710,9 +710,12 @@ ProcessRunner& ProcessRunner::setFromFileOrExecutable(
     // a profile that can't be read leaves the current one's settings; run()
     // reports the missing profile as before
     try {
+      // only read: the full constructor repairs and migrates a profile that
+      // isn't the current one (saves folders, archive invalidation in its
+      // INI), and makes one that doesn't exist
       overrideProfile = std::make_unique<Profile>(
           QDir(m_core.settings().paths().profiles() + "/" + profileOverride),
-          m_core.managedGame(), m_core.gameFeatures());
+          m_core.managedGame(), m_core.gameFeatures(), Profile::ReadOnly{});
     } catch (const std::exception& e) {
       log::warn("profile '{}' can't be read: {}", profileOverride, e.what());
       overrideProfile.reset();
