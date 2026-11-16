@@ -15,7 +15,11 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 **Latest: [v1.1.0-beta.12](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.12)**
 — `MO2-Revamped-Setup-1.1.0-beta.12.exe` with its `SHA256SUMS.txt`. It is a beta:
 the newest version. It downloads and installs Nexus collections (modlists), into
-a new instance or profile, with their FOMOD choices, order and categories. Cyberpunk 2077 (Cyber Engine Tweaks, RED4ext and its plugins)
+a new instance or profile, with their FOMOD choices, order, categories, patches
+and file overrides. A mod's `Root` folder (the layout many Wabbajack lists use)
+reaches the game folder without the Root Builder plugin. Skyrim SE, Fallout 4,
+New Vegas, Fallout 3 and Baldur's Gate 3 get a round of fixes, and Settings has
+an interface size and grey text for OLED screens. Cyberpunk 2077 (Cyber Engine Tweaks, RED4ext and its plugins)
 and Baldur's Gate 3 (Script Extender, .pak mods) now work with mods, the setup
 removes everything on uninstall, and Elden Ring and Nightreign get fixes for
 closing and starting the game and for saves. Script extenders and the borderless
@@ -43,6 +47,22 @@ has silent switches for scripted installs (`/S`, `/dir=`, `/uninstall`, ...).
 
 ## What's new in the 1.1.0 betas
 
+- **Nexus collections:** download and install a collection (Premium downloads
+  everything by itself), with its FOMOD choices, order, category separators,
+  binary patches, exact copies of the author's install, file overrides and INI
+  tweaks; update it to a new revision or browse collections from MO2.
+- **Root folders without Root Builder:** script extender loaders, ENB, ReShade
+  and DXVK DLLs from a mod's `Root` folder load from the mod where that's
+  reliable; otherwise they're copied for the run and put back when the game
+  closes, or on MO2's next start.
+- **Skyrim SE, Fallout 4, New Vegas, Fallout 3:** saves in local time, FOSE
+  co-saves, GOG and any-Steam-library detection, DLC and Creation Club plugins
+  shown again; faster plugin list and conflicts with thousands of mods.
+- **Baldur's Gate 3:** mods laid out for other MO2 plugins (Wabbajack lists),
+  loose folders, profile saves on a first start, a check for the .NET runtime
+  BG3 Mod Manager needs, and a quicker start.
+- **Interface size** (80 to 125%) and **grey text for OLED screens**.
+- **Linux / Steam Deck:** no crash at start under Wine or Proton.
 - **More games tested with mods:** Skyrim Special Edition, Fallout 4, Fallout 3
   and New Vegas (script extenders, borderless window), Cyberpunk 2077 (CET,
   RED4ext, ArchiveXL, TweakXL, without copying anything into the game folder)
