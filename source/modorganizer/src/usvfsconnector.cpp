@@ -243,7 +243,8 @@ void UsvfsConnector::updateMapping(const MappingType& mapping)
   const auto end  = std::chrono::high_resolution_clock::now();
   const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  log::debug("VFS mappings updated, linked {} dirs and {} files in {}ms", dirs, files,
+  // MO2 Revamped: at info, so a slow start can be traced from a user's log
+  log::info("VFS mappings updated, linked {} dirs and {} files in {}ms", dirs, files,
              time.count());
 }
 
