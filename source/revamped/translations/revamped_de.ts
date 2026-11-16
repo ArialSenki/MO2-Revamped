@@ -10847,6 +10847,10 @@ Firefox.exe</translation>
       <source>These changes apply when Mod Organizer starts again.</source>
       <translation>Diese Änderungen gelten, wenn Mod Organizer neu startet.</translation>
     </message>
+    <message>
+      <source>%1 notices weren't shown while the collection installed. They're in MO2's log.</source>
+      <translation>%1 Hinweise wurden während der Installation der Sammlung nicht angezeigt. Sie stehen im Protokoll von MO2.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

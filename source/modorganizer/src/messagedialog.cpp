@@ -332,6 +332,8 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   if (qApp->property("mo2r.collectionQuiet").toBool()) {
     // still in the log, where a user looking for it finds it
     log::info("notice not shown while a collection installs: {}", text);
+    qApp->setProperty("mo2r.collectionQuietHidden",
+                      qApp->property("mo2r.collectionQuietHidden").toInt() + 1);
     return;
   }
   // the same while a Wabbajack list downloads or installs
