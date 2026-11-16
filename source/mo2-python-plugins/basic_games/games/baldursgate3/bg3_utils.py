@@ -2,10 +2,10 @@ import functools
 import html
 import os
 import threading
+import time
 import shutil
 import typing
 from pathlib import Path
-from time import sleep
 from xml.sax.saxutils import escape
 
 from PyQt6.QtCore import (
@@ -14,7 +14,6 @@ from PyQt6.QtCore import (
     QEventLoop,
     QRunnable,
     Qt,
-    QThread,
     QThreadPool,
     qInfo,
     qWarning,
@@ -243,6 +242,8 @@ class BG3Utils:
         threadpool = QThreadPool.globalInstance()
         if threadpool is None:
             return False
+        # MO2 Revamped: the paks found now are the file mapper's for this start
+        keep_pak_scans(True)
         metadata: dict[str, str] = {}
         failed: list[str] = []
         lock = threading.Lock()
@@ -268,28 +269,33 @@ class BG3Utils:
         for mod in active_mods:
             if progress.wasCanceled():
                 qWarning("processing canceled by user")
+                keep_pak_scans(False)
+                forget_pak_scans()
                 return False
             threadpool.start(QRunnable.create(retrieve_mod_metadata_in_new_thread(mod)))
-        count = 0
         num_active_mods = len(active_mods)
-        # big paks take a while on their first parse: up to 3 s each, 30 s at
-        # least (the progress window can still be cancelled)
-        total_intervals_to_wait = (num_active_mods * 30) + 300
+        # big paks take a while on their first parse: 6 s each, 60 s at least
+        # (the progress window can still be cancelled)
+        deadline = time.monotonic() + num_active_mods * 6 + 60
+
         def done_count() -> int:
             with lock:
                 return len(metadata)
 
+        # MO2 Revamped: short waits (it was up to 200 ms a turn, the last one
+        # added to every start), the window still painting meanwhile
         while done_count() < num_active_mods:
             progress.setValue(done_count())
-            QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 100)
-            count += 1
-            if count == total_intervals_to_wait or progress.wasCanceled():
+            QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 10)
+            if time.monotonic() > deadline or progress.wasCanceled():
                 with lock:
                     remaining_mods = {mod.name() for mod in active_mods} - set(metadata)
                 qWarning(f"processing did not finish in time for: {remaining_mods}")
                 progress.close()
                 break
-            QThread.msleep(100)
+            time.sleep(0.015)  # lets the worker threads run (the GIL)
+        # a thread still running past the wait doesn't leave a scan behind
+        keep_pak_scans(False)
         canceled = progress.wasCanceled()
         progress.setValue(num_active_mods)
         QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 100)
@@ -332,7 +338,8 @@ class BG3Utils:
         )
         self.modsettings_backup.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(self.modsettings_path, self.modsettings_backup)
-        sleep(0.5)
+        # MO2 Revamped: no fixed half-second wait here; the file is written
+        # and closed already
         return True
 
     def root_builder_enabled(self) -> bool:
@@ -391,15 +398,51 @@ class BG3Utils:
 _game_binaries = {"bg3.exe", "bg3_dx11.exe", "larilauncher.exe"}
 
 
-def mod_paks(modpath: Path) -> list[Path]:
-    """MO2 Revamped: a mod's paks, wherever they are in it. They all go to the
-    documents' Mods folder by name, so of two with one name (two FOMOD
-    options' folders) only the last in path order is the mod's, for the file
-    mapper and the load order alike."""
+# MO2 Revamped: a mod's paks as the load order found them just before the
+# program starts, kept for the file mapper of the same start (one walk of each
+# mod's folder instead of two); see scan_mod_paks and mod_paks
+_pak_scans: dict[str, tuple[float, list[Path]]] = {}
+_pak_scan_lifetime = 60.0
+_keeping_pak_scans = False
+
+
+def keep_pak_scans(keep: bool) -> None:
+    """MO2 Revamped: scans are kept only while the load order is made for a
+    start, and dropped when that starts again or the mapper is done."""
+    global _keeping_pak_scans
+    _keeping_pak_scans = keep
+    if keep:
+        _pak_scans.clear()
+
+
+def forget_pak_scans() -> None:
+    _pak_scans.clear()
+
+
+def scan_mod_paks(modpath: Path) -> list[Path]:
+    """MO2 Revamped: a mod's paks, wherever they are in it, read from disk now.
+    They all go to the documents' Mods folder by name, so of two with one name
+    (two FOMOD options' folders) only the last in path order is the mod's, for
+    the file mapper and the load order alike."""
     by_name: dict[str, Path] = {}
-    for pak in sorted(modpath.rglob("*.pak")):
+    found: list[Path] = []
+    for root, _, files in os.walk(modpath):
+        found.extend(Path(root, f) for f in files if f.casefold().endswith(".pak"))
+    for pak in sorted(found):
         by_name[pak.name.casefold()] = pak
-    return sorted(by_name.values())
+    paks = sorted(by_name.values())
+    if _keeping_pak_scans:
+        _pak_scans[str(modpath)] = (time.monotonic(), paks)
+    return paks
+
+
+def mod_paks(modpath: Path) -> list[Path]:
+    """MO2 Revamped: the paks the load order read for this start (taken once),
+    or read from disk."""
+    scan = _pak_scans.pop(str(modpath), None)
+    if scan is not None and time.monotonic() - scan[0] < _pak_scan_lifetime:
+        return scan[1]
+    return scan_mod_paks(modpath)
 
 
 def runs_the_game(exec_path: str) -> bool:

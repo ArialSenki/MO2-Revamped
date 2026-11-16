@@ -13,5 +13,5 @@ class BG3ToolReparsePakMetadata(BG3ToolPlugin):
         game_plugin = self._organizer.managedGame()
         if isinstance(game_plugin, BG3Game):
             game_plugin.utils.construct_modsettings_xml(
-                exec_path="bin/bg3", force_reparse_metadata=True
+                exec_path="bin/bg3.exe", force_reparse_metadata=True
             )
