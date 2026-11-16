@@ -27,8 +27,9 @@ window were tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Veg
 
 On Nexus Mods: the [main page](https://www.nexusmods.com/eldenring/mods/11314), and pages for
 [Skyrim Special Edition](https://www.nexusmods.com/skyrimspecialedition/mods/199388),
-[Fallout 4](https://www.nexusmods.com/fallout4/mods/111513) and
-[Baldur's Gate 3](https://www.nexusmods.com/baldursgate3/mods/26688).
+[Fallout 4](https://www.nexusmods.com/fallout4/mods/111513),
+[Baldur's Gate 3](https://www.nexusmods.com/baldursgate3/mods/26688) and
+[Cyberpunk 2077](https://www.nexusmods.com/cyberpunk2077/mods/38714).
 
 The last stable release, [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2),
 remains available, as do [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
