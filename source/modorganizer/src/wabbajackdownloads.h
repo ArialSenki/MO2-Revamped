@@ -24,13 +24,10 @@
 #include "wabbajacklist.h"
 
 #include <QElapsedTimer>
-#include <QFile>
 #include <QFutureWatcher>
 #include <QHash>
-#include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QObject>
-#include <QPointer>
 #include <QTimer>
 #include <QUrl>
 
@@ -112,6 +109,10 @@ public:
     int retries = 0;   // tries after a failure, in this run
     QElapsedTimer retryAt;
     QElapsedTimer requestedAt;  // a Nexus link asked for
+    // the part file went on from an earlier try: a wrong hash may be a bad
+    // join, so the file is downloaded once more from the start
+    bool resumed   = false;
+    bool restarted = false;  // that new start was made, in this run
   };
 
   DownloadQueue(std::shared_ptr<const ModList> list, QString gameDirectory,
@@ -151,6 +152,9 @@ public:
   qint64 freeSpace() const;
   // what is left to download, in bytes
   qint64 remaining() const;
+  // what the drive still has to hold: remaining() less the part files of
+  // Wabbajack's servers, which are made at their full size at once
+  qint64 spaceNeeded() const;
   int countOf(Status s) const;
   // the archives the downloads folder has to hold, and how many are there
   int downloadable() const;
@@ -201,8 +205,10 @@ private:
 
   QFutureWatcher<void>* m_hasher = nullptr;
   std::shared_ptr<std::atomic_bool> m_cancelHash;
-  // the hashes of downloads and of resumed parts: stopped on pause and exit
-  std::shared_ptr<std::atomic_bool> m_cancelWork;
+  // files of the folder that are there but can't be read (held open by
+  // another program): failed until their size or time changes, so a start
+  // doesn't read them again and again. Lowercase path -> size, time
+  QHash<QString, QPair<qint64, qint64>> m_unreadable;
   // the Nexus API requests waited for: request id -> archive
   QHash<int, int> m_linkRequests;
   QTimer m_pump;
@@ -214,6 +220,17 @@ private:
   QHash<QString, qint64> m_seen;  // files of the watched folder looked at, and when changed
   // size and time of the candidates at the last tick: taken when unchanged
   QHash<QString, QPair<qint64, qint64>> m_settling;
+  // the hashes of the watched files read, by path, size and time: a file that
+  // isn't one of the list's isn't read again
+  struct WatchedHash
+  {
+    qint64 size     = 0;
+    qint64 modified = 0;
+    uint64_t hash   = 0;
+  };
+  QHash<QString, WatchedHash> m_watchHashes;
+  // one retry of the next adoption while a hash check runs, not one per call
+  QTimer m_adoptRetry;
   struct Adoption
   {
     QString path;
@@ -228,6 +245,7 @@ private:
       std::make_shared<std::atomic_bool>(false);
 
   void scanFolder();
+  bool isUnreadable(int i) const;
   void hashJobs(std::vector<std::pair<int, QString>> jobs, bool thenDownload);
   void pumpQueue();
   bool canDownload(int i) const;
@@ -253,6 +271,9 @@ private:
   bool belongsInFolder(int i) const;
   void watchTick();
   void nextAdoption();
+  // a candidate's hash read in place: copied in only when it is a row's
+  void adoptHashed(Adoption job, std::optional<uint64_t> hash);
+  void copyAdopted(Adoption job, int row);
   void failDownload(int i, const QString& reason, bool retry = true);
   void verifyDownload(int i);
   void cancelJob(int i);

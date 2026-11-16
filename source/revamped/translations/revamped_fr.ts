@@ -17402,8 +17402,14 @@ Installez .NET Desktop Runtime 8 pour Windows x64 depuis {0}, puis relancez BG3 
     <message>
       <source>The list runs the game from its own copy, %1, but the game isn't there yet: the instance uses your game folder. Once you have copied the game there as the list's guide says, set gamePath in the instance's ModOrganizer.ini to that folder.</source>
       <translation>La liste lance le jeu depuis sa propre copie, %1, mais le jeu n'y est pas encore : l'instance utilise votre dossier du jeu. Une fois le jeu copié là comme le dit le guide de la liste, indiquez ce dossier dans gamePath du ModOrganizer.ini de l'instance.</translation>
+    </message>
+    <message>
       <source>Programs that were on the list author's computer, left out: %1. Add your own copy in Edit programs if you need it.</source>
       <translation>Programmes qui étaient sur l'ordinateur de l'auteur de la liste, non repris : %1. Ajoutez votre propre copie dans Modifier les programmes si vous en avez besoin.</translation>
+    </message>
+    <message>
+      <source>Programs of the list that run from elsewhere on this PC: %1.</source>
+      <translation>Programmes de la liste lancés depuis un autre endroit de ce PC : %1.</translation>
     </message>
   </context>
   <context>
@@ -17703,6 +17709,26 @@ Installez .NET Desktop Runtime 8 pour Windows x64 depuis {0}, puis relancez BG3 
       <source>Network error: %1</source>
       <translation>Erreur réseau : %1</translation>
     </message>
+    <message>
+      <source>The file is there but can't be read: another program may have it open.</source>
+      <translation>Le fichier est là mais ne peut pas être lu : un autre programme l'a peut-être ouvert.</translation>
+    </message>
+    <message>
+      <source>The server didn't go on from where the download stopped.</source>
+      <translation>Le serveur n'a pas repris là où le téléchargement s'était arrêté.</translation>
+    </message>
+    <message>
+      <source>The downloaded file isn't the list's; it downloads again from the start.</source>
+      <translation>Le fichier téléchargé n'est pas celui de la liste ; il se retélécharge depuis le début.</translation>
+    </message>
+    <message>
+      <source>The download was sent on to an address on this computer or its local network; MO2 Revamped doesn't follow it.</source>
+      <translation>Le téléchargement a été redirigé vers une adresse de cet ordinateur ou de son réseau local ; MO2 Revamped ne la suit pas.</translation>
+    </message>
+    <message>
+      <source>The download was sent on to an address that isn't secure (http instead of https).</source>
+      <translation>Le téléchargement a été redirigé vers une adresse non sécurisée (http au lieu de https).</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack::Installer</name>
@@ -17887,6 +17913,22 @@ Installez .NET Desktop Runtime 8 pour Windows x64 depuis {0}, puis relancez BG3 
     <message>
       <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. MO2 Revamped puts them in place each time the game starts and takes them out when it closes; nothing has to be copied by hand.</source>
       <translation>Ces mods contiennent des programmes ou des DLL pour le dossier du jeu lui-même (dans leur dossier Root) : %1. MO2 Revamped les met en place à chaque lancement du jeu et les retire à sa fermeture ; rien n'est à copier à la main.</translation>
+    </message>
+    <message>
+      <source>the list gives it a hash that isn't one</source>
+      <translation>la liste lui donne un hash qui n'en est pas un</translation>
+    </message>
+    <message>
+      <source>the list gives its archive %1 a hash that isn't one</source>
+      <translation>la liste donne à son archive %1 un hash qui n'en est pas un</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be taken out of its archive</source>
+      <translation>%1 n'a pas pu être extrait de son archive</translation>
+    </message>
+    <message>
+      <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. They have to be put in the game's folder, with Root Builder or by hand.</source>
+      <translation>Ces mods ont des programmes ou des DLL pour le dossier du jeu lui-même (dans leur dossier Root) : %1. Il faut les mettre dans le dossier du jeu, avec Root Builder ou à la main.</translation>
     </message>
   </context>
   <context>
@@ -18099,6 +18141,14 @@ Installez .NET Desktop Runtime 8 pour Windows x64 depuis {0}, puis relancez BG3 
     <message>
       <source>%1 can't be replaced (another program has it open); the downloaded file is kept as %2.</source>
       <translation>%1 ne peut pas être remplacé (un autre programme l'a ouvert) ; le fichier téléchargé est gardé sous %2.</translation>
+    </message>
+    <message>
+      <source>The list's file on Wabbajack's server isn't the version the gallery shows; try Refresh.</source>
+      <translation>Le fichier de la liste sur le serveur de Wabbajack n'est pas la version que montre la galerie ; essayez Actualiser.</translation>
+    </message>
+    <message>
+      <source>The list's file arrived damaged (its hash differs).</source>
+      <translation>Le fichier de la liste est arrivé endommagé (son hash diffère).</translation>
     </message>
   </context>
 </TS>

@@ -8,10 +8,15 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QDir>
+#include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
+#include <QHostAddress>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QNetworkReply>
+#include <QPointer>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
@@ -200,6 +205,34 @@ bool isAllowedHeader(const QString& name)
          !lower.startsWith(u"proxy-");
 }
 
+// an address on this computer or its local network: a list's direct download
+// never goes there (a router's page, a local service), nor is sent on there.
+// Only the name or the number in the address: a public name that resolves to
+// a local number isn't seen
+bool isLocalAddress(const QUrl& url)
+{
+  const QString host = url.host().toLower();
+  if (host.isEmpty() || host == u"localhost" || host.endsWith(u".localhost") ||
+      host.endsWith(u".local")) {
+    return true;
+  }
+  QHostAddress address;
+  if (!address.setAddress(host)) {
+    return false;  // a name
+  }
+  bool v4          = false;
+  const quint32 ip = address.toIPv4Address(&v4);  // also ::ffff:a.b.c.d
+  if (v4) {
+    const quint32 a = ip >> 24, b = (ip >> 16) & 0xff;
+    return a == 0 || a == 10 || a == 127 || (a == 169 && b == 254) ||
+           (a == 172 && b >= 16 && b < 32) || (a == 192 && b == 168);
+  }
+  const Q_IPV6ADDR v6 = address.toIPv6Address();
+  return address.isLoopback() || address == QHostAddress(QHostAddress::AnyIPv6) ||
+         (v6[0] == 0xfe && (v6[1] & 0xc0) == 0x80) ||  // fe80::/10, link-local
+         (v6[0] & 0xfe) == 0xfc;                       // fc00::/7, the local ones
+}
+
 }  // namespace
 
 // ---- the hash cache -------------------------------------------------------
@@ -219,7 +252,8 @@ HashCache::HashCache(const QString& folder)
     const QJsonObject o = it.value().toObject();
     bool ok             = false;
     const uint64_t hash = hashFromBase64(o.value("h").toString(), &ok);
-    if (ok) {
+    // files that are gone are left out here, once per folder, not at every save
+    if (ok && QFileInfo::exists(it.key())) {
       m_known.insert(it.key(), Known{qint64(o.value("s").toDouble()),
                                      qint64(o.value("m").toDouble()), hash});
     }
@@ -258,10 +292,6 @@ void HashCache::save()
   }
   QJsonObject all;
   for (auto it = m_known.constBegin(); it != m_known.constEnd(); ++it) {
-    // files that are gone are left out
-    if (!QFileInfo::exists(it.key())) {
-      continue;
-    }
     all.insert(it.key(), QJsonObject{{"s", double(it->size)},
                                      {"m", double(it->modified)},
                                      {"h", hashToBase64(it->hash)}});
@@ -304,6 +334,7 @@ struct DownloadQueue::Job
   std::vector<Part> parts;
   std::size_t part = 0;  // the part being downloaded
   int partRetries  = 0;
+  bool partFailed  = false;  // a part failed: the next ones go over HTTP/1.1
   QByteArray partData;
 
   // its hashing off the window's thread stops with the job (a pause, then
@@ -319,8 +350,7 @@ DownloadQueue::DownloadQueue(std::shared_ptr<const ModList> list, QString gameDi
     : QObject(parent), m_list(std::move(list)), m_gameDirectory(std::move(gameDirectory)),
       m_entries(m_list->archives.size()), m_badName(m_list->archives.size()),
       m_cache(std::make_unique<HashCache>()),
-      m_cancelHash(std::make_shared<std::atomic_bool>(false)),
-      m_cancelWork(std::make_shared<std::atomic_bool>(false))
+      m_cancelHash(std::make_shared<std::atomic_bool>(false))
 {
   // the names: each one a file of the folder, and two archives never one file
   QSet<QString> seen;
@@ -349,6 +379,9 @@ DownloadQueue::DownloadQueue(std::shared_ptr<const ModList> list, QString gameDi
   connect(&m_saveCache, &QTimer::timeout, this, [this] {
     m_cache->save();
   });
+  m_adoptRetry.setInterval(1000);
+  m_adoptRetry.setSingleShot(true);
+  connect(&m_adoptRetry, &QTimer::timeout, this, &DownloadQueue::nextAdoption);
 
   auto& nexus = NexusInterface::instance();
   connect(&nexus, &NexusInterface::nxmApiV2Available, this, &DownloadQueue::onApiResult);
@@ -360,8 +393,8 @@ DownloadQueue::DownloadQueue(std::shared_ptr<const ModList> list, QString gameDi
 DownloadQueue::~DownloadQueue()
 {
   m_cancelHash->store(true);
-  m_cancelWork->store(true);
   m_watch.stop();
+  m_adoptRetry.stop();
   m_cancelAdopt->store(true);
   if (m_hasher != nullptr) {
     m_hasher->waitForFinished();
@@ -415,8 +448,22 @@ bool DownloadQueue::setFolder(const QString& folder)
     m_cache->save();
     m_folder = clean;
     m_cache  = std::make_unique<HashCache>(m_folder);
+    m_unreadable.clear();
     for (Entry& e : m_entries) {
       e = Entry{};
+    }
+    // copies a closed window left half made; not one written in the last
+    // minutes (another list's window on the same folder may be copying)
+    if (!m_folder.isEmpty()) {
+      const QDateTime old = QDateTime::currentDateTime().addSecs(-600);
+      QDirIterator it(QDir(stateFolder(m_folder)).filePath("adopting"),
+                      QDir::Files | QDir::Hidden);
+      while (it.hasNext()) {
+        const QFileInfo fi = it.nextFileInfo();
+        if (fi.lastModified() < old) {
+          QFile::remove(fi.absoluteFilePath());
+        }
+      }
     }
   }
   scanFolder();
@@ -450,7 +497,7 @@ bool DownloadQueue::canDownload(int i) const
     const QUrl url(a.url);
     const QString scheme = url.scheme().toLower();
     return url.isValid() && (scheme == u"http" || scheme == u"https") &&
-           !url.host().isEmpty();
+           !url.host().isEmpty() && !isLocalAddress(url);
   }
   case Source::WabbajackCdn:
     return isWabbajackCdnHost(cdnUrl(a.url));
@@ -459,13 +506,20 @@ bool DownloadQueue::canDownload(int i) const
   }
 }
 
+bool DownloadQueue::isUnreadable(int i) const
+{
+  return m_unreadable.contains(QDir::cleanPath(pathOf(i)).toLower());
+}
+
+// called only while no run goes (setFolder, checkHashes and start refuse one),
+// so no entry here belongs to a download
 void DownloadQueue::scanFolder()
 {
-  QHash<QString, qint64> present;
+  QHash<QString, QFileInfo> present;
   const QDir dir(m_folder);
   if (!m_folder.isEmpty() && dir.exists()) {
     for (const QFileInfo& fi : dir.entryInfoList(QDir::Files | QDir::Hidden)) {
-      present.insert(fi.fileName().toLower(), fi.size());
+      present.insert(fi.fileName().toLower(), fi);
     }
   }
 
@@ -473,13 +527,7 @@ void DownloadQueue::scanFolder()
     const int i      = int(n);
     const Archive& a = m_list->archives[n];
     Entry& e         = m_entries[n];
-    // a run's own entries stay as they are while it runs
-    if (m_jobs.count(i) > 0 ||
-        (m_running && (e.status == Status::Queued || e.status == Status::NeedsClick ||
-                       e.status == Status::Requesting || e.status == Status::Failed))) {
-      continue;
-    }
-    e.total = a.size;
+    e.total          = a.size;
     e.reason.clear();
 
     if (a.isModOrganizer) {
@@ -507,7 +555,18 @@ void DownloadQueue::scanFolder()
     }
 
     const auto it = present.constFind(a.name.toLower());
-    if (it != present.constEnd() && (a.size <= 0 || it.value() == a.size)) {
+    if (it != present.constEnd() && (a.size <= 0 || it->size() == a.size)) {
+      // one that couldn't be read stays failed until it changes
+      const QString key = QDir::cleanPath(pathOf(i)).toLower();
+      if (const auto u = m_unreadable.find(key); u != m_unreadable.end()) {
+        if (*u == qMakePair(it->size(), it->lastModified().toMSecsSinceEpoch())) {
+          e.status = Status::Failed;
+          e.reason = tr("The file is there but can't be read: another program may have it "
+                        "open.");
+          continue;
+        }
+        m_unreadable.erase(u);
+      }
       if (const auto h = m_cache->find(pathOf(i))) {
         e.status = *h == a.hash ? Status::Verified : Status::WrongHash;
       } else if (e.status != Status::Verified && e.status != Status::WrongHash) {
@@ -642,14 +701,25 @@ void DownloadQueue::hashJobs(std::vector<std::pair<int, QString>> jobs, bool the
             const Archive& a = queue->m_list->archives[std::size_t(row)];
             const bool game  = a.source == Source::GameFile;
             Status s;
-            if (!hash) {
+            QString reason;
+            const QFileInfo fi(path);
+            if (!hash && !game && fi.isFile()) {
+              // there but not readable (held open, no permission): failed, and
+              // not read again until it changes, or a start would loop
+              queue->m_unreadable.insert(
+                  QDir::cleanPath(path).toLower(),
+                  qMakePair(fi.size(), fi.lastModified().toMSecsSinceEpoch()));
+              s      = Status::Failed;
+              reason = tr("The file is there but can't be read: another program may "
+                          "have it open.");
+            } else if (!hash) {
               s = game ? Status::GameMissing : Status::Missing;
             } else {
               queue->m_cache->store(path, *hash);
               s = *hash == a.hash ? (game ? Status::GameFound : Status::Verified)
                                   : (game ? Status::GameDiffers : Status::WrongHash);
             }
-            queue->setStatus(row, s);
+            queue->setStatus(row, s, reason);
             emit queue->message(tr("Checking… %1%").arg(percent));
           },
           Qt::QueuedConnection);
@@ -684,6 +754,28 @@ qint64 DownloadQueue::remaining() const
     if (belongsInFolder(int(n)) && e.status != Status::Verified) {
       left += qMax<qint64>(0, m_list->archives[n].size - e.received);
     }
+  }
+  return left;
+}
+
+qint64 DownloadQueue::spaceNeeded() const
+{
+  qint64 left = 0;
+  for (std::size_t n = 0; n < m_entries.size(); ++n) {
+    const Entry& e = m_entries[n];
+    if (!belongsInFolder(int(n)) || e.status == Status::Verified) {
+      continue;
+    }
+    const Archive& a = m_list->archives[n];
+    qint64 have      = e.received;
+    if (a.source == Source::WabbajackCdn) {
+      // made at its full size when it began, whatever came of it
+      const QFileInfo part(partPath(int(n)));
+      if (part.isFile()) {
+        have = qMax(have, part.size());
+      }
+    }
+    left += qMax<qint64>(0, a.size - have);
   }
   return left;
 }
@@ -751,6 +843,7 @@ void DownloadQueue::start()
   // files found by name and size are read first: they may be the right ones
   std::vector<std::pair<int, QString>> unchecked;
   for (std::size_t n = 0; n < m_entries.size(); ++n) {
+    // (one that couldn't be read is Failed here, not read again)
     if (m_entries[n].status == Status::Present && canDownload(int(n))) {
       unchecked.emplace_back(int(n), pathOf(int(n)));
     }
@@ -767,7 +860,7 @@ void DownloadQueue::start()
   }
 
   const qint64 free   = freeSpace();
-  const qint64 needed = remaining();
+  const qint64 needed = spaceNeeded();
   if (free >= 0 && needed > free) {
     emit message(tr("Not enough free space: the downloads need %1 and the drive has %2.")
                      .arg(localizedByteSize(needed))
@@ -780,14 +873,16 @@ void DownloadQueue::start()
   for (std::size_t n = 0; n < m_entries.size(); ++n) {
     Entry& e         = m_entries[n];
     const Archive& a = m_list->archives[n];
-    if (!canDownload(int(n)) || e.status == Status::Verified || m_jobs.count(int(n)) > 0) {
+    // a file there that can't be read: a download would only meet it again
+    if (!canDownload(int(n)) || e.status == Status::Verified || m_jobs.count(int(n)) > 0 ||
+        (e.status == Status::Failed && isUnreadable(int(n)))) {
       continue;
     }
-    e.retries = 0;
+    e.retries   = 0;
+    e.restarted = false;
     e.reason.clear();
     e.status = (a.source == Source::Nexus && !premium) ? Status::NeedsClick : Status::Queued;
     ++queued;
-    emit entryChanged(int(n));
   }
 
   if (queued == 0) {
@@ -796,7 +891,6 @@ void DownloadQueue::start()
     return;
   }
   m_running = true;
-  m_cancelWork->store(false);
   m_pump.start();
   log::info("wabbajack: downloading {} archives of '{}' to {}", queued, m_list->name,
             m_folder);
@@ -810,7 +904,6 @@ void DownloadQueue::pause()
   m_running             = false;
   m_pump.stop();
   m_cancelHash->store(true);
-  m_cancelWork->store(true);
   std::vector<int> busy;
   for (auto& [i, job] : m_jobs) {
     busy.push_back(i);
@@ -828,7 +921,6 @@ void DownloadQueue::pause()
       e.received = part.isFile() && m_list->archives[n].source != Source::WabbajackCdn
                        ? qMin(part.size(), m_list->archives[n].size)
                        : 0;
-      emit entryChanged(int(n));
     }
   }
   m_linkRequests.clear();
@@ -841,14 +933,20 @@ void DownloadQueue::pause()
 
 void DownloadQueue::retryFailed()
 {
+  bool any = false;
   for (std::size_t n = 0; n < m_entries.size(); ++n) {
     Entry& e = m_entries[n];
     if (e.status == Status::Failed) {
       e.status  = Status::Missing;
       e.retries = 0;
       e.reason.clear();
-      emit entryChanged(int(n));
+      // a file that couldn't be read is read once more
+      m_unreadable.remove(QDir::cleanPath(pathOf(int(n))).toLower());
+      any = true;
     }
+  }
+  if (any) {
+    emit changed();
   }
   start();
 }
@@ -1170,6 +1268,7 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
   Entry& e   = m_entries[std::size_t(i)];
   e.received = have;
   e.total    = a.size;
+  e.resumed  = have > 0;  // the part holds an earlier try's bytes
 
   if (a.size > 0 && have == a.size) {
     // all here already: only its hash is left
@@ -1203,6 +1302,10 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
   if (have > 0) {
     r.setRawHeader("Range", QByteArray("bytes=") + QByteArray::number(have) + "-");
   }
+  // each redirect is looked at before it is followed: never to this computer
+  // or the local network, never from https down to http
+  r.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                 QNetworkRequest::UserVerifiedRedirectPolicy);
 
   const quint64 id     = job->id;
   QNetworkReply* reply = m_network.get(r);
@@ -1213,6 +1316,28 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
   m_jobs[i]      = std::move(job);
   setStatus(i, Status::Downloading);
 
+  connect(reply, &QNetworkReply::redirected, this, [this, i, id, reply](const QUrl& to) {
+    Job* j = jobOf(i, id);
+    if (j == nullptr || j->reply != reply) {
+      return;
+    }
+    const QUrl from = reply->url();
+    if (isLocalAddress(to)) {
+      failDownload(i, tr("The download was sent on to an address on this computer or its "
+                         "local network; MO2 Revamped doesn't follow it."),
+                   false);
+      return;
+    }
+    if (from.scheme().compare("https", Qt::CaseInsensitive) == 0 &&
+        to.scheme().compare("https", Qt::CaseInsensitive) != 0) {
+      failDownload(i, tr("The download was sent on to an address that isn't secure "
+                         "(http instead of https)."),
+                   false);
+      return;
+    }
+    emit reply->redirectAllowed();
+  });
+
   connect(reply, &QNetworkReply::metaDataChanged, this, [this, i, id, reply] {
     Job* j = jobOf(i, id);
     if (j == nullptr || j->reply != reply) {
@@ -1220,18 +1345,41 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
     }
     const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (j->offset > 0 && code == 200) {
-      // the server sends the whole file again: start over
+      // the server sends the whole file again (it ignored the range): started
+      // over, unless the answer clearly isn't the file (a page, or a length
+      // that isn't the list's). Refused, the part goes too, so the next try
+      // doesn't ask for the same range again; the size and hash checks still
+      // catch a wrong file sent without a length
+      const qint64 size  = m_list->archives[std::size_t(i)].size;
+      const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
+      bool known         = false;
+      const qint64 length =
+          reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(&known);
+      if ((known && size > 0 && length != size) || type.startsWith(u"text/") ||
+          type.startsWith(u"application/json")) {
+        const QString part = j->file.fileName();
+        cancelJob(i);
+        QFile::remove(part);
+        m_entries[std::size_t(i)].received = 0;
+        failDownload(i, tr("The server didn't go on from where the download stopped."));
+        return;
+      }
       j->file.resize(0);
       j->file.seek(0);
-      j->offset                          = 0;
-      j->speedFrom                       = 0;
-      m_entries[std::size_t(i)].received = 0;
+      j->offset    = 0;
+      j->speedFrom = 0;
+      Entry& e     = m_entries[std::size_t(i)];
+      e.received   = 0;
+      e.resumed    = false;  // all of it from this answer
     } else if (code == 206) {
       // the rest from where the part file ends, or nothing of it
       static const QRegularExpression range(QStringLiteral("^bytes\\s+(\\d+)-"));
       const auto m = range.match(QString::fromLatin1(reply->rawHeader("Content-Range")));
       if (!m.hasMatch() || m.captured(1).toLongLong() != j->offset) {
-        QFile::remove(j->file.fileName());
+        // the job closes the part file first: it can't be removed while open
+        const QString part = j->file.fileName();
+        cancelJob(i);
+        QFile::remove(part);
         m_entries[std::size_t(i)].received = 0;
         failDownload(i, tr("The server sent another part of the file than the one asked for."));
       }
@@ -1299,8 +1447,10 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
     j->file.close();
     const Archive& a   = m_list->archives[std::size_t(i)];
     const qint64 size  = j->file.size();
-    const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString();
-    if (a.size > 0 && size < a.size && !type.startsWith(u"text/html")) {
+    const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
+    // a page or an error in JSON: not the file
+    const bool notFile = type.startsWith(u"text/") || type.startsWith(u"application/json");
+    if (a.size > 0 && size < a.size && !notFile) {
       // the connection ended before the end, "without error" (a reset HTTP/2
       // stream): what came stays, and the next try goes on from there
       log::warn("wabbajack: '{}' ended at {} of {} bytes (HTTP/2 {})", a.name, size, a.size,
@@ -1313,7 +1463,7 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
       QFile::remove(j->file.fileName());
       m_entries[std::size_t(i)].received = 0;
       // what came isn't the file: asking again brings the same
-      failDownload(i, type.startsWith(u"text/html")
+      failDownload(i, notFile
                           ? tr("The site sent a web page instead of the file: download "
                                "it in the browser.")
                           : tr("The download has another size than the list's (%1 "
@@ -1415,6 +1565,7 @@ void DownloadQueue::startCdnParts(int i, quint64 id)
   Entry& e           = m_entries[std::size_t(i)];
   e.received         = 0;
   e.total            = a.size;
+  e.resumed          = false;  // until parts of an earlier try are found good
   setStatus(i, Status::Downloading);
 
   auto begin = [this, i, id] {
@@ -1473,6 +1624,7 @@ void DownloadQueue::startCdnParts(int i, quint64 id)
       j->parts[n].done = good[n];
       if (good[n]) {
         e.received += j->parts[n].size;
+        e.resumed = true;
       }
     }
     emit entryChanged(i);
@@ -1513,8 +1665,13 @@ void DownloadQueue::nextCdnPart(int i, quint64 id)
   }
 
   const Job::Part& p = j->parts[j->part];
-  QNetworkReply* reply =
-      m_network.get(request(QUrl(j->cdnBase + QStringLiteral("/parts/%1").arg(p.index))));
+  QNetworkRequest r  = request(QUrl(j->cdnBase + QStringLiteral("/parts/%1").arg(p.index)));
+  // after a failure of this file, a connection of its own over HTTP/1.1, as
+  // a direct download's retry: a shared HTTP/2 one may be what broke
+  if (j->partFailed || m_entries[std::size_t(i)].retries > 0) {
+    r.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+  }
+  QNetworkReply* reply = m_network.get(r);
   j->reply = reply;
   j->partData.clear();
 
@@ -1558,6 +1715,7 @@ void DownloadQueue::nextCdnPart(int i, quint64 id)
     if (!good) {
       e.received -= j->partData.size();
       j->partData.clear();
+      j->partFailed = true;
       if (++j->partRetries > MaxPartRetries) {
         j->file.close();
         failDownload(i, reply->error() != QNetworkReply::NoError
@@ -1618,7 +1776,19 @@ void DownloadQueue::verifyDownload(int i)
     }
     if (*hash != a.hash) {
       QFile::remove(part);
-      m_entries[std::size_t(i)].received = 0;
+      Entry& e   = m_entries[std::size_t(i)];
+      e.received = 0;
+      if (e.resumed && !e.restarted) {
+        // it went on from an earlier try: the join may be what is wrong, so
+        // once more from the start
+        e.resumed   = false;
+        e.restarted = true;
+        // not one of the network retries: it always gets its go
+        e.retries = qMin(e.retries, MaxRetries - 1);
+        failDownload(i, tr("The downloaded file isn't the list's; it downloads again from "
+                           "the start."));
+        return;
+      }
       // the source has another file than the list's: asking again brings it again
       failDownload(i, tr("The downloaded file isn't the list's (its hash differs)."), false);
       return;
@@ -1850,7 +2020,9 @@ void DownloadQueue::nextAdoption()
   }
   // a hash check or a download writes the same entries: it goes first
   if (isChecking()) {
-    QTimer::singleShot(1000, this, &DownloadQueue::nextAdoption);
+    if (!m_adoptRetry.isActive()) {
+      m_adoptRetry.start();
+    }
     return;
   }
   Adoption job = m_adoptQueue.front();
@@ -1865,75 +2037,140 @@ void DownloadQueue::nextAdoption()
     return;
   }
 
-  // copied into the downloads folder's own place first, then that copy is
-  // hashed: off the window's thread, and what is hashed is what is kept. The
-  // user's file is only read
+  m_adopting = true;
+
+  // a file read before, unchanged since: its hash is known
+  const QFileInfo fi(job.path);
+  const qint64 size     = fi.size();
+  const qint64 modified = fi.lastModified().toMSecsSinceEpoch();
+  const auto known      = m_watchHashes.constFind(QDir::cleanPath(job.path).toLower());
+  if (known != m_watchHashes.constEnd() && known->size == size &&
+      known->modified == modified) {
+    const uint64_t hash = known->hash;
+    QTimer::singleShot(0, this, [this, job, hash] {
+      adoptHashed(job, hash);
+    });
+    return;
+  }
+
+  // the user's file hashed where it is first, only read: copied in only when
+  // it is one of the list's, so a browser's other downloads aren't copied
+  auto cancel   = m_cancelAdopt;
+  auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
+  connect(watcher, &QFutureWatcherBase::finished, this,
+          [this, watcher, job, size, modified] {
+            watcher->deleteLater();
+            const auto hash = watcher->result();
+            // kept when the file didn't change while it was read
+            const QFileInfo now(job.path);
+            if (hash && now.size() == size &&
+                now.lastModified().toMSecsSinceEpoch() == modified) {
+              m_watchHashes.insert(QDir::cleanPath(job.path).toLower(),
+                                   WatchedHash{size, modified, *hash});
+            }
+            adoptHashed(job, hash);
+          });
+  const QString source = job.path;
+  watcher->setFuture(QtConcurrent::run([source, cancel]() -> std::optional<uint64_t> {
+    const LowPriority low(LowPriority::Mode::Background);
+    try {
+      return hashFile(source, cancel.get());
+    } catch (...) {
+      return std::nullopt;
+    }
+  }));
+}
+
+void DownloadQueue::adoptHashed(Adoption job, std::optional<uint64_t> hash)
+{
+  if (!hash) {
+    m_adopting = false;
+    // read again at the next tick (the browser or an antivirus held it)
+    m_seen.remove(job.path);
+    if (job.byUser) {
+      emit message(tr("%1 can't be read.").arg(QDir::toNativeSeparators(job.path)));
+    }
+    nextAdoption();
+    return;
+  }
+
+  int matched = -1;
+  bool taken  = false;  // the right file, but its entry was filled meanwhile
+  for (int i : job.rows) {
+    if (m_list->archives[std::size_t(i)].hash == *hash) {
+      if (isChecking()) {
+        // a hash check began meanwhile: the file is taken at a later tick
+        m_seen.remove(job.path);
+        taken = true;
+      } else if (canAdopt(i)) {
+        matched = i;
+      } else {
+        taken = true;
+      }
+      break;
+    }
+  }
+  if (matched < 0 || m_folder.isEmpty()) {
+    m_adopting = false;
+    if (job.byUser && !taken) {
+      emit message(tr("%1 isn't the list's %2 (its hash differs).")
+                       .arg(QFileInfo(job.path).fileName(),
+                            m_list->archives[std::size_t(job.rows.front())].name));
+    }
+    emit changed();
+    nextAdoption();
+    return;
+  }
+  copyAdopted(job, matched);
+}
+
+void DownloadQueue::copyAdopted(Adoption job, int row)
+{
+  // copied into the downloads folder's own place, hashed on the way: what is
+  // kept is what was checked, even if the user's file changed since its read
   const QString aside = QDir(stateFolder(m_folder)).filePath("adopting");
   QDir().mkpath(aside);
   const QString copy = QDir(aside).filePath(QString::number(++m_adopted));
   QFile::remove(copy);
 
-  m_adopting    = true;
   auto cancel   = m_cancelAdopt;
   auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
-  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, job, copy] {
+  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, job, row, copy] {
     watcher->deleteLater();
-    m_adopting      = false;
-    const auto hash = watcher->result();
-    if (!hash) {
+    m_adopting       = false;
+    const auto hash  = watcher->result();
+    const Archive& a = m_list->archives[std::size_t(row)];
+    if (!hash || *hash != a.hash || isChecking() || !canAdopt(row)) {
       QFile::remove(copy);
-      // read again at the next tick (the browser or an antivirus held it)
+      // changed meanwhile, held, or a check or the user filled the entry:
+      // looked at again at a later tick
       m_seen.remove(job.path);
-      if (job.byUser) {
+      m_watchHashes.remove(QDir::cleanPath(job.path).toLower());
+      if (job.byUser && !hash) {
         emit message(tr("%1 can't be read.").arg(QDir::toNativeSeparators(job.path)));
-      }
-      nextAdoption();
-      return;
-    }
-
-    int matched = -1;
-    bool taken  = false;  // the right file, but its entry was filled meanwhile
-    for (int i : job.rows) {
-      if (m_list->archives[std::size_t(i)].hash == *hash) {
-        if (isChecking()) {
-          // a hash check began meanwhile: the file is taken at a later tick
-          m_seen.remove(job.path);
-          taken = true;
-        } else if (canAdopt(i)) {
-          matched = i;
-        } else {
-          taken = true;
-        }
-        break;
-      }
-    }
-    if (matched < 0) {
-      QFile::remove(copy);
-      if (job.byUser && !taken) {
+      } else if (job.byUser && *hash != a.hash) {
         emit message(tr("%1 isn't the list's %2 (its hash differs).")
-                         .arg(QFileInfo(job.path).fileName(),
-                              m_list->archives[std::size_t(job.rows.front())].name));
+                         .arg(QFileInfo(job.path).fileName(), a.name));
       }
       emit changed();
       nextAdoption();
       return;
     }
 
-    const Archive& a   = m_list->archives[std::size_t(matched)];
-    const QString part = partPath(matched);
+    const QString part = partPath(row);
     QFile::remove(part);  // ours: an unfinished download of the same archive
     QString problem;
     if (!QFile::rename(copy, part)) {
       QFile::remove(copy);
       problem = tr("%1 can't be written.").arg(QDir::toNativeSeparators(part));
     } else {
-      problem = putInPlace(matched);
+      problem = putInPlace(row);
     }
     if (problem.isEmpty()) {
       emit message(tr("%1 was taken from %2.")
                        .arg(a.name, QDir::toNativeSeparators(QFileInfo(job.path).absolutePath())));
     } else {
-      setStatus(matched, Status::Failed, problem);
+      setStatus(row, Status::Failed, problem);
     }
     emit changed();
     nextAdoption();

@@ -118,6 +118,9 @@ enum class Source
 struct Archive
 {
   uint64_t hash = 0;
+  // the list gives a Hash that isn't one (not an absent one): its files can't
+  // be checked, so they aren't installed
+  bool badHash = false;
   QString name;  // the file name in the downloads folder
   qint64 size = 0;
   QString meta;  // the .meta the list writes for it
@@ -172,6 +175,9 @@ struct Directive
 {
   DirectiveType type = DirectiveType::Unknown;
   uint64_t hash      = 0;
+  // the list gives a Hash (or an archive's) that isn't one: an absent Hash
+  // only skips the check, a damaged one mustn't
+  bool badHash = false;
   qint64 size        = 0;
   QString to;  // relative to the install folder, with backslashes
 
@@ -183,7 +189,6 @@ struct Directive
   // InlineFile, RemappedInlineFile, ArchiveMeta, PropertyFile: SourceDataID;
   // PatchedFromArchive and MergedPatch: PatchID; CreateBSA: TempID
   QString dataId;
-  uint64_t fromHash = 0;  // PatchedFromArchive: the file the patch applies to
 
   // CreateBSA's State and FileStates, TransformedTexture's ImageState and
   // MergedPatch's Sources, as written (compact JSON), for the phases that use them
@@ -207,7 +212,6 @@ struct ModList
   QString version;
   QString wabbajackVersion;
   QString game;  // Wabbajack's name, e.g. SkyrimSpecialEdition
-  QStringList otherGames;
   QString website;
   QString readme;
   QString community;

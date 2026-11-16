@@ -16,6 +16,7 @@
 #include <QPointer>
 #include <QStringList>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -28,7 +29,6 @@ class IPluginGame;
 class QCheckBox;
 class QCloseEvent;
 class QComboBox;
-class QFile;
 class QLabel;
 class QLineEdit;
 class QNetworkReply;
@@ -77,6 +77,8 @@ private:
   std::function<bool(const QString&)> m_inUse;
   // the check of a list file already here (2: no second click meanwhile)
   QPointer<QObject> m_checking;
+  // stops that check's read when the window closes
+  std::shared_ptr<std::atomic_bool> m_checkCancel;
   QString m_listsFolder;
   QNetworkAccessManager m_network;
   std::vector<Entry> m_entries;

@@ -66,6 +66,8 @@ constexpr char GameSetting[]       = "Wabbajack/browserGame";
 constexpr int EntryRole = Qt::UserRole + 1;
 constexpr int SortRole  = Qt::UserRole + 2;
 constexpr int PartTries = 3;
+// a gallery card is a few hundred KB: a thumbnail larger than this is dropped
+constexpr qint64 MaxImageBytes = 8 * 1024 * 1024;
 
 enum Column
 {
@@ -160,6 +162,14 @@ struct ListBrowser::Download
   qint64 done       = 0;
   QPointer<QNetworkReply> reply;
   bool cancelled = false;
+  // what the gallery says the file is (0 / not known when it doesn't say)
+  qint64 gallerySize    = 0;
+  uint64_t galleryHash  = 0;
+  bool galleryHashKnown = false;
+  // the whole file's hash, read part by part as they come in order
+  XxHash64 whole;
+  uint64_t fileHash  = 0;
+  bool fileHashKnown = false;
 };
 
 ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* managedGame,
@@ -186,6 +196,17 @@ ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* man
 
 ListBrowser::~ListBrowser()
 {
+  if (m_checkCancel) {
+    m_checkCancel->store(true);
+  }
+  // an abort sends finished at once: none of the handlers runs on a window
+  // being destroyed
+  if (m_download) {
+    m_download->cancelled = true;
+  }
+  for (QNetworkReply* reply : m_network.findChildren<QNetworkReply*>()) {
+    reply->disconnect(this);
+  }
   if (m_download && m_download->reply) {
     m_download->reply->abort();
   }
@@ -617,12 +638,18 @@ void ListBrowser::loadImage(QTreeWidgetItem* item, const QString& url)
   }
   m_imagesAsked.insert(url);
   QNetworkReply* reply = m_network.get(request(QUrl(url)));
+  // stopped as soon as it is too large, not read whole first
+  connect(reply, &QNetworkReply::downloadProgress, this, [reply](qint64 received, qint64) {
+    if (received > MaxImageBytes) {
+      reply->abort();
+    }
+  });
   connect(reply, &QNetworkReply::finished, this, [this, reply, url] {
     reply->deleteLater();
     QImage image;
     // a picture of a few hundred KB at most: a gallery card
     if (reply->error() != QNetworkReply::NoError ||
-        reply->bytesAvailable() > 8 * 1024 * 1024 || !image.loadFromData(reply->readAll())) {
+        reply->bytesAvailable() > MaxImageBytes || !image.loadFromData(reply->readAll())) {
       return;
     }
     const QPixmap pixmap = QPixmap::fromImage(
@@ -708,7 +735,8 @@ void ListBrowser::updateButtons()
                         isWabbajackCdnHost(cdnUrl(e->download)));
   m_install->setText(fetching ? tr("Downloading the list…") : tr("Open the list"));
   m_refresh->setEnabled(!fetching && m_pending <= 0);
-  m_close->setText(fetching ? tr("Stop") : tr("Close"));
+  // a check of a file already here just ends with the window
+  m_close->setText(m_download != nullptr ? tr("Stop") : tr("Close"));
 }
 
 // ---- the list's file --------------------------------------------------------
@@ -738,13 +766,21 @@ void ListBrowser::install()
   const uint64_t want = hashFromBase64(e->hash, &ok);
   if (existing.isFile() && ok && e->size > 0 && existing.size() == e->size) {
     m_status->setText(tr("Checking the list's file that is already here…"));
+    // the watcher is the window's child: deleted with it, so this never runs
+    // after; closeEvent disconnects it for the time the window is closing
     auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
     m_checking    = watcher;
+    auto cancel   = std::make_shared<std::atomic_bool>(false);
+    m_checkCancel = cancel;
     updateButtons();
     const Entry copy = *e;
     connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, copy, target, want] {
       watcher->deleteLater();
       m_checking.clear();
+      m_checkCancel.reset();
+      if (!isVisible()) {
+        return;  // closed meanwhile
+      }
       const auto hash = watcher->result();
       if (hash && *hash == want) {
         m_status->setText(tr("Opening %1…").arg(copy.title));
@@ -763,10 +799,10 @@ void ListBrowser::install()
       }
       startDownload(copy, to);
     });
-    watcher->setFuture(QtConcurrent::run([target]() -> std::optional<uint64_t> {
+    watcher->setFuture(QtConcurrent::run([target, cancel]() -> std::optional<uint64_t> {
       const LowPriority low(LowPriority::Mode::Background);
       try {
-        return hashFile(target);
+        return hashFile(target, cancel.get());
       } catch (...) {
         return std::nullopt;
       }
@@ -787,6 +823,8 @@ void ListBrowser::startDownload(const Entry& e, const QString& target)
   m_download->title  = e.title;
   m_download->target = target;
   m_download->base   = cdnUrl(e.download);
+  m_download->gallerySize = e.size;
+  m_download->galleryHash = hashFromBase64(e.hash, &m_download->galleryHashKnown);
   m_progress->setRange(0, 0);
   m_progress->show();
   m_status->setText(tr("Downloading %1's file…").arg(e.title));
@@ -832,7 +870,19 @@ void ListBrowser::startDownload(const Entry& e, const QString& target)
                                "Revamped doesn't understand."));
       return;
     }
-    m_download->total = size;
+    // the server's file is the one the gallery shows, when both say
+    bool hashKnown       = false;
+    const uint64_t hash  = hashFromBase64(d.value("Hash").toString(), &hashKnown);
+    const Download& down = *m_download;
+    if ((down.gallerySize > 0 && size != down.gallerySize) ||
+        (hashKnown && down.galleryHashKnown && hash != down.galleryHash)) {
+      finishDownload(false, tr("The list's file on Wabbajack's server isn't the version the "
+                               "gallery shows; try Refresh."));
+      return;
+    }
+    m_download->fileHash      = hashKnown ? hash : down.galleryHash;
+    m_download->fileHashKnown = hashKnown || down.galleryHashKnown;
+    m_download->total         = size;
     m_download->file.setFileName(m_download->target + QStringLiteral(".mo2r-part"));
     if (!m_download->file.open(QIODevice::WriteOnly) || !m_download->file.resize(size)) {
       finishDownload(false, tr("%1 can't be written.")
@@ -849,6 +899,11 @@ void ListBrowser::nextPart()
   Download& d = *m_download;
   if (d.index >= d.parts.size()) {
     d.file.close();
+    // each part was checked; the whole too, read as the parts came in order
+    if (d.fileHashKnown && d.whole.digest() != d.fileHash) {
+      finishDownload(false, tr("The list's file arrived damaged (its hash differs)."));
+      return;
+    }
     if ((QFileInfo::exists(d.target) && !QFile::remove(d.target)) ||
         !QFile::rename(d.file.fileName(), d.target)) {
       // the whole file came, checked: it stays, under its part name
@@ -906,6 +961,7 @@ void ListBrowser::nextPart()
                                 .arg(QDir::toNativeSeparators(d.file.fileName())));
       return;
     }
+    d.whole.update(data.constData(), std::size_t(data.size()));
     d.done += size;
     d.tries = 0;
     ++d.index;
@@ -941,6 +997,16 @@ void ListBrowser::finishDownload(bool ok, const QString& error, bool keepPart)
 
 void ListBrowser::closeEvent(QCloseEvent* e)
 {
+  // a check of a file already here ends with the window: its answer opens
+  // nothing once the window is closed
+  if (m_checking) {
+    m_checking->disconnect(this);
+    m_checking.clear();
+    if (m_checkCancel) {
+      m_checkCancel->store(true);
+      m_checkCancel.reset();
+    }
+  }
   // the first close stops a download; the window stays
   if (m_download) {
     m_download->cancelled = true;

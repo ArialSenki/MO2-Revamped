@@ -8,7 +8,6 @@
 #include <log.h>
 
 #include <QDir>
-#include <QDirIterator>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
@@ -46,11 +45,31 @@ QString tr(const char* text, const char* disambiguation = nullptr, int n = -1)
 }
 
 // files Wabbajack itself doesn't hold to the list's hash: lists compiled before
-// modlist.txt's hash was fixed, and the screen size it writes into the prefs
+// modlist.txt's hash was fixed, and the screen size it writes into the prefs.
+// Only a profile's own: the same names elsewhere are checked
 bool isKnownModified(const QString& to)
 {
-  const QString name = QFileInfo(QString(to).replace(u'\\', u'/')).fileName().toLower();
-  return name == u"modlist.txt" || name == u"skyrimprefs.ini";
+  const QString path = QString(to).replace(u'\\', u'/').toLower();
+  if (!path.startsWith(u"profiles/")) {
+    return false;
+  }
+  const QString name = QFileInfo(path).fileName();
+  return name == u"modlist.txt" || name.endsWith(u"prefs.ini");
+}
+
+// the name a directive type is reported by when it isn't installed
+QString typeName(DirectiveType type)
+{
+  switch (type) {
+  case DirectiveType::ArchiveMeta:
+    return QStringLiteral("ArchiveMeta");
+  case DirectiveType::PropertyFile:
+    return QStringLiteral("PropertyFile");
+  case DirectiveType::MergedPatch:
+    return QStringLiteral("MergedPatch");
+  default:
+    return QStringLiteral("Unknown");
+  }
 }
 
 // a path inside an archive, as the list writes it and as archives list it:
@@ -462,6 +481,10 @@ private:
     const Directive* d = nullptr;
     QStringList rest;  // the paths still to go inside archives
     QString out;       // where this level's file goes
+    // its hash already checked while it was copied: no second read
+    bool verified = false;
+    // already failed (and counted) while it was copied
+    bool done = false;
   };
 
   const InstallPlan& m_plan;
@@ -479,11 +502,18 @@ private:
   QElapsedTimer m_shown;
   QSet<QString> m_plugins;
   int m_textures = 0;
+  // folders made already: a list writes hundreds of thousands of files into
+  // far fewer folders
+  QSet<QString> m_folders;
 
   bool cancelled() const { return m_cancel.load(); }
   void report(const QString& text, bool force = false);
   void fail(const Directive& d, const QString& why);
   QString stageFile();
+  // the folder a file goes into, made once
+  void makeFolderFor(const QString& file);
+  // a file copied whole and checked on the way; the bad copy removed
+  bool copyChecked(const Directive& d, const QString& source, const QString& target);
 
   // where a directive's file goes; empty when it isn't written (Mod
   // Organizer's own, or a path that would lead out of the folder)
@@ -512,15 +542,47 @@ void Installer::report(const QString& text, bool force)
 void Installer::fail(const Directive& d, const QString& why)
 {
   ++m_result.failed;
-  if (m_result.failures.size() < ListedFailures) {
-    m_result.failures.append(QStringLiteral("%1: %2").arg(d.to, why));
+  // the summary keeps them all; a broken list fails every file, so the log
+  // keeps the first and run() the total
+  m_result.failures.append(QStringLiteral("%1: %2").arg(d.to, why));
+  if (m_result.failed <= ListedFailures) {
+    log::warn("wabbajack install: {}: {}", d.to, why);
   }
-  log::warn("wabbajack install: {}: {}", d.to, why);
 }
 
 QString Installer::stageFile()
 {
   return QDir(m_stage).filePath(QString::number(++m_staged));
+}
+
+void Installer::makeFolderFor(const QString& file)
+{
+  const QString folder = QFileInfo(file).absolutePath();
+  if (!m_folders.contains(folder) && QDir().mkpath(folder)) {
+    m_folders.insert(folder);
+  }
+}
+
+bool Installer::copyChecked(const Directive& d, const QString& source, const QString& target)
+{
+  const auto hash = copyFile(source, target, &m_cancel);
+  if (!hash) {
+    QFile::remove(target);
+    if (!cancelled()) {
+      fail(d, tr("it can't be copied"));
+    }
+    return false;
+  }
+  if (d.hash != 0 && *hash != d.hash) {
+    QFile::remove(target);
+    fail(d, tr("its hash isn't the list's"));
+    return false;
+  }
+  if (d.hash == 0 && !QFileInfo(target).isFile()) {
+    fail(d, tr("it wasn't written"));
+    return false;
+  }
+  return true;
 }
 
 QString Installer::targetOf(const Directive& d, bool* skipped)
@@ -626,8 +688,18 @@ void Installer::installArchives()
   std::map<uint64_t, std::vector<Item>> byArchive;
   std::map<QString, int> unsupported;
   for (const Directive& d : m_list->directives) {
-    if (d.type == DirectiveType::MergedPatch) {
-      ++unsupported[QStringLiteral("MergedPatch")];
+    // the types installed here, by installInline and by buildBsas; any other
+    // is reported, its size counted so the progress still reaches the end
+    if (d.type == DirectiveType::ArchiveMeta || d.type == DirectiveType::PropertyFile) {
+      // the archives' .meta files go with the downloads, and the property files
+      // are the list's banner and readme: nothing of the install
+      m_done += d.size;
+      continue;
+    }
+    if (d.type != DirectiveType::FromArchive && d.type != DirectiveType::PatchedFromArchive &&
+        d.type != DirectiveType::TransformedTexture && d.type != DirectiveType::InlineFile &&
+        d.type != DirectiveType::RemappedInlineFile && d.type != DirectiveType::CreateBSA) {
+      ++unsupported[typeName(d.type)];
       m_done += d.size;
       continue;
     }
@@ -639,6 +711,11 @@ void Installer::installArchives()
     const QString path = targetOf(d, &skipped);
     if (skipped) {
       ++m_result.modOrganizer;
+      m_done += d.size;
+      continue;
+    }
+    if (d.badHash) {
+      fail(d, tr("the list gives it a hash that isn't one"));
       m_done += d.size;
       continue;
     }
@@ -660,6 +737,14 @@ void Installer::installArchives()
     const int index      = m_list->archiveByHash.value(hash, -1);
     const QString name =
         index >= 0 ? m_list->archives[std::size_t(index)].name : hashToBase64(hash);
+    if (index >= 0 && m_list->archives[std::size_t(index)].badHash) {
+      // its download couldn't be checked against the list
+      for (const Item& item : items) {
+        fail(*item.d, tr("the list gives its archive %1 a hash that isn't one").arg(name));
+        m_done += item.d->size;
+      }
+      continue;
+    }
     if (source.isEmpty() || !QFileInfo(source).isFile()) {
       for (const Item& item : items) {
         fail(*item.d, tr("its archive %1 isn't there").arg(name));
@@ -678,6 +763,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
   if (depth > 4) {
     for (const Item& item : items) {
       fail(*item.d, tr("its archive is inside too many others"));
+      m_done += item.d->size;
     }
     return;
   }
@@ -712,11 +798,9 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
       finishItem(Item{item->d, {}, path});
       continue;
     }
-    QDir().mkpath(QFileInfo(item->out).absolutePath());
+    makeFolderFor(item->out);
     QFile::remove(item->out);
-    if (!QFile::copy(path, item->out)) {
-      fail(*item->d, tr("it can't be copied"));
-    } else if (verify(*item->d, item->out)) {
+    if (copyChecked(*item->d, path, item->out)) {
       ++m_result.written;
     }
     m_done += item->d->size;
@@ -735,7 +819,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
         leaf->out = stageFile();
         n.outputs.push_back(leaf->out);
       } else {
-        QDir().mkpath(QFileInfo(leaf->out).absolutePath());
+        makeFolderFor(leaf->out);
         n.outputs.push_back(leaf->out);
       }
     }
@@ -747,6 +831,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
 
   QSet<QString> found;
   QHash<QString, QString> reasons;  // why an entry couldn't be taken out
+  bool extractFailed = false;       // 7z said something went wrong
   if (isBethesdaArchive(path)) {
     BsaHandle handle;
     bsa_archive_t archive = handle.archive;
@@ -756,6 +841,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
       for (const Item& item : items) {
         if (!item.rest.isEmpty()) {
           fail(*item.d, tr("its archive can't be read: %1").arg(bsaMessage(loaded)));
+          m_done += item.d->size;
         }
       }
       return;
@@ -766,16 +852,47 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
       }
       const std::wstring inner = QString(n.name).replace(u'/', u'\\').toStdWString();
       const std::wstring first = QDir::toNativeSeparators(n.outputs.front()).toStdWString();
-      QDir().mkpath(QFileInfo(n.outputs.front()).absolutePath());
+      makeFolderFor(n.outputs.front());
       const bsa_result_message_t r = bsa_extract_file(archive, inner.c_str(), first.c_str());
       if (r.code != BSA_RESULT_NONE) {
         reasons.insert(key, bsaMessage(r));
         continue;
       }
+      // the other outputs are copies, hashed on the way: the hash of the
+      // extracted file, so the files taken as they are need no second read.
+      // outputs[i] is leaves[i]'s, the archive inside comes last
+      std::optional<uint64_t> content;
       for (std::size_t i = 1; i < n.outputs.size(); ++i) {
-        QDir().mkpath(QFileInfo(n.outputs[i]).absolutePath());
+        makeFolderFor(n.outputs[i]);
         QFile::remove(n.outputs[i]);
-        QFile::copy(n.outputs.front(), n.outputs[i]);
+        const auto hash = copyFile(n.outputs.front(), n.outputs[i], &m_cancel);
+        if (hash) {
+          content = hash;
+          continue;
+        }
+        QFile::remove(n.outputs[i]);
+        if (i < n.leaves.size() && !cancelled()) {
+          fail(*n.leaves[i]->d, tr("it can't be copied"));
+          m_done += n.leaves[i]->d->size;
+          n.leaves[i]->done = true;
+        }
+      }
+      for (std::size_t i = 0; content && i < n.leaves.size(); ++i) {
+        Item* leaf = n.leaves[i];
+        if (leaf->done || leaf->d->type != DirectiveType::FromArchive) {
+          continue;  // a staged file is patched or made into a texture first
+        }
+        if (leaf->d->hash == 0 || *content == leaf->d->hash) {
+          leaf->verified = true;
+        } else {
+          // the extracted one stays as before; a bad copy goes
+          if (i > 0) {
+            QFile::remove(leaf->out);
+          }
+          fail(*leaf->d, tr("its hash isn't the list's"));
+          m_done += leaf->d->size;
+          leaf->done = true;
+        }
       }
       found.insert(key);
     }
@@ -786,6 +903,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
       for (const Item& item : items) {
         if (!item.rest.isEmpty()) {
           fail(*item.d, tr("its archive can't be opened"));
+          m_done += item.d->size;
         }
       }
       return;
@@ -814,6 +932,7 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
     if (!archive->extract(QDir::toNativeSeparators(m_plan.installFolder).toStdWString(),
                           progress, {}, {})) {
       log::warn("wabbajack install: extracting {} reported an error", path);
+      extractFailed = true;
     }
     archive->close();
   }
@@ -838,6 +957,17 @@ void Installer::processArchive(const QString& path, std::vector<Item> items, int
       continue;
     }
     for (Item* leaf : n.leaves) {
+      if (leaf->done) {
+        continue;
+      }
+      // a texture isn't checked by hash: a source 7z didn't write fails here,
+      // not as a texture that can't be read
+      if (extractFailed && leaf->d->type == DirectiveType::TransformedTexture &&
+          !QFileInfo(leaf->out).isFile()) {
+        fail(*leaf->d, tr("%1 couldn't be taken out of its archive").arg(n.name));
+        m_done += leaf->d->size;
+        continue;
+      }
       finishItem(*leaf);
     }
     if (!n.deeper.empty()) {
@@ -865,7 +995,7 @@ void Installer::finishItem(const Item& item)
     bool skipped         = false;
     const QString target = targetOf(d, &skipped);
     QString why;
-    QDir().mkpath(QFileInfo(target).absolutePath());
+    makeFolderFor(target);
     const bool patched =
         isPlainId(d.dataId) &&
         applyPatch(item.out, QDir(m_inline).filePath(d.dataId.toLower()), target, d.size, &why);
@@ -884,7 +1014,7 @@ void Installer::finishItem(const Item& item)
   } else if (d.type == DirectiveType::TransformedTexture) {
     bool skipped         = false;
     const QString target = targetOf(d, &skipped);
-    QDir().mkpath(QFileInfo(target).absolutePath());
+    makeFolderFor(target);
     QString why;
     const QJsonObject state = QJsonDocument::fromJson(d.extra).object().value("ImageState").toObject();
     const bool made         = transformTexture(item.out, target, state, &why);
@@ -897,7 +1027,7 @@ void Installer::finishItem(const Item& item)
     } else {
       fail(d, why);
     }
-  } else if (verify(d, item.out)) {
+  } else if (item.verified || verify(d, item.out)) {
     ++m_result.written;
   }
   m_done += d.size;
@@ -928,31 +1058,46 @@ void Installer::setScreenSize()
     }
   };
 
-  // the profiles' prefs (SkyrimPrefs.ini, Fallout4Prefs.ini...) and Oblivion.ini
-  const QString profiles = installPath(m_plan.installFolder, QStringLiteral("profiles"));
-  QDirIterator it(profiles, QDir::Files, QDirIterator::Subdirectories);
-  while (it.hasNext()) {
-    const QString path = it.next();
-    const QString name = it.fileName().toLower();
-    if (name.endsWith(u"prefs.ini") || name == u"oblivion.ini") {
-      rewrite(path, [&](QString& text) {
-        // both or neither: a prefs file without them keeps the game's default
-        if (!text.contains(u"iSize W", Qt::CaseInsensitive) ||
-            !text.contains(u"iSize H", Qt::CaseInsensitive)) {
-          return false;
-        }
-        const bool w = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize W"), width);
-        const bool h = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize H"), height);
-        return w || h;
-      });
+  // the files are the list's own: found among its directives, not by walking
+  // the mods' folders (hundreds of thousands of files)
+  QStringList prefs, tweaks;
+  QSet<QString> seen;
+  for (const Directive& d : m_list->directives) {
+    if (d.modOrganizerFile) {
+      continue;
+    }
+    const QString to    = QString(d.to).replace(u'/', u'\\').toLower();
+    const QString first = to.section(u'\\', 0, 0);
+    const QString name  = to.section(u'\\', -1);
+    const bool prefsFile =
+        first == u"profiles" && (name.endsWith(u"prefs.ini") || name == u"oblivion.ini");
+    const bool tweaksFile = first == u"mods" && name == u"ssedisplaytweaks.ini";
+    if ((!prefsFile && !tweaksFile) || seen.contains(to)) {
+      continue;
+    }
+    seen.insert(to);
+    const QString path = installPath(m_plan.installFolder, d.to);
+    if (!path.isEmpty()) {
+      (prefsFile ? prefs : tweaks).append(path);
     }
   }
+
+  // the profiles' prefs (SkyrimPrefs.ini, Fallout4Prefs.ini...) and Oblivion.ini
+  for (const QString& path : prefs) {
+    rewrite(path, [&](QString& text) {
+      // both or neither: a prefs file without them keeps the game's default
+      if (!text.contains(u"iSize W", Qt::CaseInsensitive) ||
+          !text.contains(u"iSize H", Qt::CaseInsensitive)) {
+        return false;
+      }
+      const bool w = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize W"), width);
+      const bool h = setIniValue(text, QStringLiteral("Display"), QStringLiteral("iSize H"), height);
+      return w || h;
+    });
+  }
   // SSE Display Tweaks, in whichever mod it is
-  const QString mods = installPath(m_plan.installFolder, QStringLiteral("mods"));
-  QDirIterator tweaks(mods, {QStringLiteral("SSEDisplayTweaks.ini")}, QDir::Files,
-                      QDirIterator::Subdirectories);
-  while (tweaks.hasNext()) {
-    rewrite(tweaks.next(), [&](QString& text) {
+  for (const QString& path : tweaks) {
+    rewrite(path, [&](QString& text) {
       return setIniValue(text, QStringLiteral("Render"), QStringLiteral("Resolution"),
                          width + u'x' + height);
     });
@@ -1011,11 +1156,16 @@ void Installer::installInline()
       m_done += d.size;
       continue;
     }
+    if (d.badHash) {
+      fail(d, tr("the list gives it a hash that isn't one"));
+      m_done += d.size;
+      continue;
+    }
     if (target.isEmpty()) {
       fail(d, tr("its path leads out of the install folder"));
       continue;
     }
-    QDir().mkpath(QFileInfo(target).absolutePath());
+    makeFolderFor(target);
     QSaveFile out(target);
     if (!out.open(QIODevice::WriteOnly) || out.write(data) != data.size() || !out.commit()) {
       fail(d, tr("it can't be written"));
@@ -1055,8 +1205,14 @@ void Installer::buildBsas()
     if (skipped) {
       continue;
     }
+    if (d.badHash) {
+      fail(d, tr("the list gives it a hash that isn't one"));
+      m_done += d.size;
+      continue;
+    }
     if (target.isEmpty() || root.isEmpty()) {
       fail(d, tr("its path leads out of the install folder"));
+      m_done += d.size;
       continue;
     }
     report(tr("Building %1…").arg(QFileInfo(target).fileName()), true);
@@ -1079,6 +1235,7 @@ void Installer::buildBsas()
     }
     if (archiveType == baNone) {
       fail(d, tr("the archive's kind (%1) isn't known").arg(type));
+      m_done += d.size;
       continue;
     }
 
@@ -1089,7 +1246,15 @@ void Installer::buildBsas()
         type.startsWith(u"BSAState") ? (quint32(state.value("ArchiveFlags").toDouble()) & 0x4) != 0
                                      : true;
     bool allCompressed = archiveCompressed;
-    for (const QJsonValue& v : extra.value("FileStates").toArray()) {
+
+    // the files in one pass: whether each is compressed, and where it is
+    DdsInfo dds;
+    BsaEntries entryList;
+    bsa_entry_list_t entries = entryList.list;
+    std::vector<std::pair<std::wstring, std::wstring>> files;
+    bool missing = false;
+    const QJsonArray fileStates = extra.value("FileStates").toArray();
+    for (const QJsonValue& v : fileStates) {
       const QJsonObject f = v.toObject();
       const bool compressed =
           type.startsWith(u"BSAState")
@@ -1097,17 +1262,8 @@ void Installer::buildBsas()
               : f.value("Compressed").toBool(true);
       if (!compressed) {
         allCompressed = false;
-        break;
       }
-    }
-
-    DdsInfo dds;
-    BsaEntries entryList;
-    bsa_entry_list_t entries = entryList.list;
-    std::vector<std::pair<std::wstring, std::wstring>> files;
-    bool missing = false;
-    for (const QJsonValue& v : extra.value("FileStates").toArray()) {
-      const QString inner = v.toObject().value("Path").toString().replace(u'/', u'\\');
+      const QString inner  = f.value("Path").toString().replace(u'/', u'\\');
       const QString source = installPath(root, inner);
       if (source.isEmpty() || !QFileInfo(source).isFile()) {
         missing = true;
@@ -1120,10 +1276,11 @@ void Installer::buildBsas()
     }
     if (missing) {
       fail(d, tr("a file that goes into it wasn't installed"));
+      m_done += d.size;
       continue;
     }
 
-    QDir().mkpath(QFileInfo(target).absolutePath());
+    makeFolderFor(target);
     QFile::remove(target);
     BsaHandle handle;
     bsa_archive_t archive = handle.archive;
@@ -1156,12 +1313,14 @@ void Installer::buildBsas()
     if (r.code != BSA_RESULT_NONE) {
       QFile::remove(target);
       fail(d, tr("it can't be built: %1").arg(bsaMessage(r)));
+      m_done += d.size;
       continue;
     }
-    // Wabbajack doesn't check a built archive's hash either: its files were
+    // Wabbajack doesn't check a built archive's hash either: its files were.
+    // Only the list's size counts: the built file's isn't in the total
     ++m_result.written;
     ++built;
-    m_done += QFileInfo(target).size();
+    m_done += d.size;
   }
   if (built > 0) {
     m_result.notes.append(tr("%n BSA archives built.", nullptr, built));
@@ -1227,10 +1386,11 @@ InstallResult Installer::run()
             tr("The list leaves files for you to copy by hand, as its guide says: %1.")
                 .arg(byHand.join(QStringLiteral(", "))));
       }
-      // Root Builder's layout: a mod's Root/ goes to the game's folder. Its
-      // programs and DLLs (nvse_loader.exe, d3d9.dll) are handled when a
-      // program starts (forced loads, the import table, or a copy put back
-      // afterwards); the summary only names those mods
+      // Root Builder's layout: a mod's Root/ goes to the game's folder. When
+      // MO2 maps the Root folders itself, its programs and DLLs (nvse_loader.exe,
+      // d3d9.dll) are handled when a program starts (forced loads, the import
+      // table, or a copy put back afterwards); otherwise they're the user's to
+      // place. The summary names those mods
       QStringList rootMods;
       const QDir mods(installPath(m_plan.installFolder, QStringLiteral("mods")));
       for (const QString& mod : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -1248,12 +1408,18 @@ InstallResult Installer::run()
           }
         }
       }
-      if (!rootMods.isEmpty()) {
+      if (!rootMods.isEmpty() && m_plan.rootHandledByMo2) {
         m_result.notes.append(
             tr("These mods have programs or DLLs for the game's own folder (in their "
                "Root folder): %1. MO2 Revamped puts them in place each time the game "
                "starts and takes them out when it closes; nothing has to be copied by "
                "hand.")
+                .arg(rootMods.join(QStringLiteral(", "))));
+      } else if (!rootMods.isEmpty()) {
+        m_result.notes.append(
+            tr("These mods have programs or DLLs for the game's own folder (in their "
+               "Root folder): %1. They have to be put in the game's folder, with Root "
+               "Builder or by hand.")
                 .arg(rootMods.join(QStringLiteral(", "))));
       }
     }
@@ -1289,6 +1455,12 @@ InstallResult Installer::run()
   if (m_result.ok) {
     m_done = m_total;
   }
+  if (m_result.failed > ListedFailures) {
+    log::warn("wabbajack install: {} files failed in all, the first {} logged",
+              m_result.failed, ListedFailures);
+  } else if (m_result.failed > 0) {
+    log::warn("wabbajack install: {} files failed", m_result.failed);
+  }
   report(tr("Done."), true);
   return m_result;
 }
@@ -1319,12 +1491,18 @@ QString installPath(const QString& installFolder, const QString& relative)
   static const QRegularExpression device(
       QStringLiteral("^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\..*)?$"),
       QRegularExpression::CaseInsensitiveOption);
+  // an 8.3 short name (MO2R-I~1) reaches a folder by another name: the
+  // install's own one among them
+  static const QRegularExpression shortName(
+      QStringLiteral(R"(^[^.~\s]{1,6}~[0-9]{1,6}(\.[^.]{0,3})?$)"),
+      QRegularExpression::CaseInsensitiveOption);
   const QStringList parts = r.split(u'/');
   if (parts.front().compare(QString::fromLatin1(StateName), Qt::CaseInsensitive) == 0) {
     return {};
   }
   for (const QString& part : parts) {
-    if (part == u".." || device.match(part.trimmed()).hasMatch()) {
+    if (part == u".." || device.match(part.trimmed()).hasMatch() ||
+        shortName.match(part).hasMatch()) {
       return {};
     }
   }

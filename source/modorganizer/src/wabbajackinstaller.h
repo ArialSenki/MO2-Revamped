@@ -49,6 +49,8 @@ struct InstallPlan
   // the screen the game's prefs get, as Wabbajack writes it; 0 leaves them
   int screenWidth  = 0;
   int screenHeight = 0;
+  // MO2 maps the mods' Root/ folders to the game folder itself (no Root Builder)
+  bool rootHandledByMo2 = true;
 };
 
 struct InstallResult

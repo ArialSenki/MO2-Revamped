@@ -10,8 +10,10 @@
 #include "wabbajacklist.h"
 
 #include <QDialog>
+#include <QElapsedTimer>
 #include <QFutureWatcher>
 #include <QPointer>
+#include <QSet>
 
 #include <atomic>
 #include <memory>
@@ -24,6 +26,7 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QSettings;
+class QTimer;
 class QTreeWidget;
 class QTreeWidgetItem;
 
@@ -53,12 +56,20 @@ public:
   // asks for a .wabbajack file; empty when none was chosen
   static QString askFile(QWidget* parent);
 
+  // a question, menu or file dialog of this window is open: closing the
+  // window now would delete it under that loop
+  bool hasModalOpen() const { return m_modals > 0; }
+
 protected:
   void closeEvent(QCloseEvent* e) override;
   // Escape closes the window like its close button (and so deletes it)
   void reject() override;
 
 private:
+  // counts a modal loop of this window while it runs (see hasModalOpen())
+  class ModalScope;
+  int m_modals = 0;
+
   OrganizerCore& m_core;
   QString m_path;
   QPointer<QWidget> m_anchor;
@@ -71,12 +82,31 @@ private:
   std::shared_ptr<std::atomic_bool> m_readCancel;
   // the tree's item of each archive, by its index in the list
   std::vector<QTreeWidgetItem*> m_items;
+  // the rows changed since the last refresh, and whether all of them did
+  QSet<int> m_changedRows;
+  bool m_refreshAll = false;
+  QTimer* m_refresh = nullptr;
+
+  // the list's game, looked up once the list is read
+  MOBase::IPluginGame* m_game = nullptr;
+  QString m_gameDirectory;
+
+  // the free space and the browser folder's watch, read at most every few
+  // seconds: for the folders they were read for
+  QElapsedTimer m_spaceAge;
+  qint64 m_spaceNeeded = 0;
+  QString m_spaceFolders;
+  qint64 m_freeSpace = -1;
+  bool m_watching    = false;
 
   // the install running in the background, and where it goes
   QFutureWatcher<Wabbajack::InstallResult>* m_installer = nullptr;
   std::shared_ptr<std::atomic_bool> m_installCancel;
   QString m_instanceName;
   QString m_installFolder;
+  // the instance of an earlier install into this folder that didn't finish,
+  // known before this install writes its finished marker
+  bool m_sameInstall = false;
 
   QLabel* m_image;
   QLabel* m_name;
@@ -136,6 +166,8 @@ private:
   // the list's programs, fixed for this PC (see the .cpp)
   void importExecutables(QSettings& from, QSettings& to, const MOBase::IPluginGame* game,
                          QStringList* notes) const;
+  // summary.txt in the install's state folder: the lines, then every failure
+  void writeSummary(const QStringList& lines, const Wabbajack::InstallResult& r) const;
   QString sourceText(const Wabbajack::Archive& a) const;
 };
 

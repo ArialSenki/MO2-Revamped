@@ -15,7 +15,6 @@
 #include <QSet>
 #include <QTemporaryDir>
 
-#include <algorithm>
 #include <cstring>
 
 // boost::json, header-only: its sources are compiled here, once. It uses only
@@ -618,15 +617,24 @@ qint64 num(const json::object& o, std::string_view key)
   return 0;
 }
 
-bool flag(const json::object& o, std::string_view key)
+// a hash the list gives; *bad set when it gives one that isn't (not a string,
+// or not 8 bytes of Base64). Absent or null: 0, nothing to check, as before
+uint64_t hashOf(const json::object& o, std::string_view key, bool* bad)
 {
   const json::value* v = o.if_contains(key);
-  return v != nullptr && v->is_bool() && v->get_bool();
-}
-
-uint64_t hashOf(const json::object& o, std::string_view key)
-{
-  return hashFromBase64(str(o, key));
+  if (v == nullptr || v->is_null()) {
+    return 0;
+  }
+  bool ok = false;
+  const uint64_t h =
+      v->is_string() ? hashFromBase64(QString::fromUtf8(v->get_string().data(),
+                                                        qsizetype(v->get_string().size())),
+                                      &ok)
+                     : 0;
+  if (!ok) {
+    *bad = true;
+  }
+  return h;
 }
 
 QByteArray compact(const json::object& o, std::initializer_list<std::string_view> keys)
@@ -647,7 +655,7 @@ QByteArray compact(const json::object& o, std::initializer_list<std::string_view
 Archive toArchive(const json::object& o)
 {
   Archive a;
-  a.hash = hashOf(o, "Hash");
+  a.hash = hashOf(o, "Hash", &a.badHash);
   a.name = str(o, "Name");
   a.size = num(o, "Size");
   a.meta = str(o, "Meta");
@@ -720,7 +728,7 @@ Directive toDirective(const json::object& o)
 {
   Directive d;
   d.type = directiveType(baseType(str(o, "$type")));
-  d.hash = hashOf(o, "Hash");
+  d.hash = hashOf(o, "Hash", &d.badHash);
   d.size = num(o, "Size");
   d.to   = str(o, "To");
   d.to.replace(u'/', u'\\');
@@ -729,12 +737,20 @@ Directive toDirective(const json::object& o)
     const json::array& parts = p->get_array();
     for (std::size_t i = 0; i < parts.size(); ++i) {
       if (!parts[i].is_string()) {
+        // the archive's hash must be one: without it the file can't be found
+        if (i == 0) {
+          d.badHash = true;
+        }
         continue;
       }
       const auto& s = parts[i].get_string();
       const QString part = QString::fromUtf8(s.data(), qsizetype(s.size()));
       if (i == 0) {
-        d.archiveHash = hashFromBase64(part);
+        bool ok       = false;
+        d.archiveHash = hashFromBase64(part, &ok);
+        if (!ok) {
+          d.badHash = true;
+        }
       } else {
         d.archivePath.append(part);
       }
@@ -749,8 +765,7 @@ Directive toDirective(const json::object& o)
     d.dataId = str(o, "SourceDataID");
     break;
   case DirectiveType::PatchedFromArchive:
-    d.dataId   = str(o, "PatchID");
-    d.fromHash = hashOf(o, "FromHash");
+    d.dataId = str(o, "PatchID");
     break;
   case DirectiveType::MergedPatch:
     d.dataId = str(o, "PatchID");
@@ -933,13 +948,6 @@ std::optional<ModList> readModList(const QString& path, QString* error,
       list.community = text();
     } else if (key == "IsNSFW") {
       list.nsfw = v.is_bool() && v.get_bool();
-    } else if (key == "OtherGames" && v.is_array()) {
-      for (const auto& g : v.get_array()) {
-        if (g.is_string()) {
-          list.otherGames.append(QString::fromUtf8(g.get_string().data(),
-                                                   qsizetype(g.get_string().size())));
-        }
-      }
     }
   };
 

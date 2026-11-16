@@ -5088,9 +5088,12 @@ void MainWindow::browseWabbajackLists()
       [this](const QString& path) {
         // the list an open window or a paused install of this instance reads
         const QFileInfo file(path);
-        return (m_WabbajackDialog && QFileInfo(m_WabbajackDialog->path()) == file) ||
-               (!WabbajackDialog::resumeList().isEmpty() &&
-                QFileInfo(WabbajackDialog::resumeList()) == file);
+        if (m_WabbajackDialog && QFileInfo(m_WabbajackDialog->path()) == file) {
+          return true;
+        }
+        // it reads the instance's ini: once
+        const QString resume = WabbajackDialog::resumeList();
+        return !resume.isEmpty() && QFileInfo(resume) == file;
       },
       this);
   m_WabbajackBrowser = browser;
@@ -5123,12 +5126,39 @@ void MainWindow::openWabbajackList(const QString& path)
       m_WabbajackDialog->activateWindow();
       return;
     }
+    if (m_WabbajackDialog->hasModalOpen() || QApplication::activeModalWidget() != nullptr) {
+      // closing it now would delete it under its own question or menu: the
+      // new list waits, and opens once that is answered
+      const bool waiting = !m_WabbajackPending.isEmpty();
+      m_WabbajackPending = path;
+      m_WabbajackDialog->raise();
+      if (!waiting) {
+        openPendingWabbajackList();
+      }
+      return;
+    }
     m_WabbajackDialog->close();
   }
   m_WabbajackDialog = new WabbajackDialog(m_OrganizerCore, path, this);
   m_WabbajackDialog->show();
   m_WabbajackDialog->raise();
   m_WabbajackDialog->activateWindow();
+}
+
+void MainWindow::openPendingWabbajackList()
+{
+  QTimer::singleShot(300, this, [this] {
+    if (m_WabbajackPending.isEmpty()) {
+      return;
+    }
+    if (m_WabbajackDialog &&
+        (m_WabbajackDialog->hasModalOpen() || QApplication::activeModalWidget() != nullptr)) {
+      openPendingWabbajackList();
+      return;
+    }
+    // as if asked now: the open window may have started an install meanwhile
+    openWabbajackList(std::exchange(m_WabbajackPending, QString()));
+  });
 }
 
 void MainWindow::askForCollection()
