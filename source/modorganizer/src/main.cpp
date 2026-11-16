@@ -616,16 +616,23 @@ int run(int argc, char* argv[])
 
   // MO2 Revamped: the interface size chosen in Settings, on top of Windows'
   // own scaling; a QT_SCALE_FACTOR set by the user wins
+  bool scaleSetHere = false;
   if (qEnvironmentVariableIsEmpty("QT_SCALE_FACTOR")) {
     const int scale = GlobalSettings::interfaceScaleBeforeApplication();
     if (scale != 100) {
       qputenv("QT_SCALE_FACTOR", QByteArray::number(scale / 100.0, 'f', 2));
+      scaleSetHere = true;
     }
   }
 
   // from MO2 8016e77 (#2283): obsolete Qt::AA_EnableHighDpiScaling removed
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
+  // MO2 Revamped: Qt has read it; the programs MO2 starts (LOOT, Qt tools)
+  // inherit its environment and would be scaled too
+  if (scaleSetHere) {
+    qunsetenv("QT_SCALE_FACTOR");
+  }
   writeStartupDiagnosticEvent("startup.qapplication.ready");
 
   // MO2 Revamped: text in grey, without ClearType's coloured edges (OLED)

@@ -279,6 +279,16 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  // MO2 Revamped: the archives sorted by their lower-case name, so a plugin's
+  // ("Name*.bsa") are found by a binary search, not by comparing every plugin
+  // with every archive
+  std::vector<std::pair<QString, QString>> archivesByName;  // lower case, as it is
+  archivesByName.reserve(archiveCandidates.size());
+  for (const QString& archive : archiveCandidates) {
+    archivesByName.emplace_back(archive.toLower(), archive);
+  }
+  std::sort(archivesByName.begin(), archivesByName.end());
+
   for (const auto& [filename, current] : availablePlugins) {
     if (m_ESPsByName.contains(filename)) {
       continue;
@@ -302,10 +312,11 @@ void PluginList::refresh(const QString& profileName,
       QString iniPath = baseName + ".ini";
       bool hasIni     = baseDirectory.findFile(ToWString(iniPath)).get() != nullptr;
       std::set<QString> loadedArchives;
-      for (const auto& archiveName : archiveCandidates) {
-        if (archiveName.startsWith(baseName, Qt::CaseInsensitive)) {
-          loadedArchives.insert(archiveName);
-        }
+      const QString prefix = baseName.toLower();
+      for (auto it = std::lower_bound(archivesByName.begin(), archivesByName.end(),
+                                      std::make_pair(prefix, QString()));
+           it != archivesByName.end() && it->first.startsWith(prefix); ++it) {
+        loadedArchives.insert(it->second);
       }
 
       QString originName    = ToQString(origin.getName());
@@ -418,15 +429,19 @@ void PluginList::fixPluginRelationships()
 {
   TimeThis timer("PluginList::fixPluginRelationships");
 
+  // MO2 Revamped: by reference, and the indices rebuilt (and the view told)
+  // once at the end, not after every move: the batch keeps the priority index
+  // in step as it goes, as shiftPluginsPriority does
   // Count the types of plugins
   int masterCount = 0;
-  for (auto plugin : m_ESPs) {
+  for (const auto& plugin : m_ESPs) {
     if (plugin.hasLightExtension || plugin.hasMasterExtension ||
         plugin.isMasterFlagged) {
       masterCount++;
     }
   }
 
+  bool moved = false;
   // Ensure masters are up top and normal plugins are down below
   for (int i = 0; i < m_ESPs.size(); i++) {
     ESPInfo& plugin = m_ESPs[i];
@@ -434,12 +449,14 @@ void PluginList::fixPluginRelationships()
         plugin.isMasterFlagged) {
       if (plugin.priority > masterCount) {
         int newPriority = masterCount + 1;
-        setPluginPriority(i, newPriority);
+        setPluginPriority(i, newPriority, false, true);
+        moved = true;
       }
     } else {
       if (plugin.priority < masterCount) {
         int newPriority = masterCount + 1;
-        setPluginPriority(i, newPriority);
+        setPluginPriority(i, newPriority, false, true);
+        moved = true;
       }
     }
   }
@@ -448,14 +465,22 @@ void PluginList::fixPluginRelationships()
   for (int i = 0; i < m_ESPs.size(); i++) {
     ESPInfo& plugin = m_ESPs[i];
     int newPriority = plugin.priority;
-    for (auto master : plugin.masters) {
+    for (const auto& master : plugin.masters) {
       auto iter = m_ESPsByName.find(master);
       if (iter != m_ESPsByName.end()) {
         newPriority = std::max(newPriority, m_ESPs[iter->second].priority);
       }
     }
     if (newPriority != plugin.priority) {
-      setPluginPriority(i, newPriority);
+      setPluginPriority(i, newPriority, false, true);
+      moved = true;
+    }
+  }
+
+  if (moved) {
+    updateIndices();
+    if (!m_ResettingModel) {
+      emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
     }
   }
 }
