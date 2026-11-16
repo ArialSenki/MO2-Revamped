@@ -21,9 +21,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define SPAWN_H
 
 #define WIN32_LEAN_AND_MEAN
+#include "importpatch.h"
 #include <QDir>
 #include <QFileInfo>
+#include <functional>
 #include <tchar.h>
+#include <vector>
 #include <windows.h>
 
 class Settings;
@@ -52,6 +55,14 @@ struct SpawnParameters
   bool hooked   = false;
   HANDLE stdOut = INVALID_HANDLE_VALUE;
   HANDLE stdErr = INVALID_HANDLE_VALUE;
+
+  // MO2 Revamped: DLLs of the mods' Root folders the program's import table
+  // loads from the mod (rootlaunch.h); the process is patched before it runs.
+  // If the patch fails, importPatchFailed() (the copy fallback) runs and the
+  // program starts again unpatched
+  std::vector<ImportPatch::Redirect> importRedirects;
+  std::vector<ImportPatch::Preload> importPreloads;
+  std::function<void()> importPatchFailed;
 };
 
 bool checkSteam(QWidget* parent, const SpawnParameters& sp, const QDir& gameDirectory,

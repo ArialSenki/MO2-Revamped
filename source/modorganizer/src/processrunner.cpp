@@ -14,6 +14,7 @@
 #include <log.h>
 #include <report.h>
 #include <scopeguard.h>
+#include <QMessageBox>
 
 using namespace MOBase;
 
@@ -874,6 +875,25 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   const auto* game = m_core.managedGame();
   auto& settings   = m_core.settings();
 
+  // MO2 Revamped: the files of the mods' Root folders the VFS can't serve
+  // (rootlaunch.h): a script extender's loader replaced by the game exe and a
+  // forced load, proxy DLLs through the import table, or the copy fallback
+  const RootLaunch::Plan rootPlan = m_core.planRootLaunch(m_profileName, m_sp.binary);
+  if (!rootPlan.runBinary.isEmpty()) {
+    log::info("root launch: starting {} instead of {}",
+              QDir::toNativeSeparators(rootPlan.runBinary),
+              QDir::toNativeSeparators(m_sp.binary.absoluteFilePath()));
+    m_sp.binary           = QFileInfo(rootPlan.runBinary);
+    m_sp.currentDirectory = rootPlan.runDirectory.isEmpty()
+                                ? m_sp.binary.absoluteDir()
+                                : QDir(rootPlan.runDirectory);
+  }
+  if (!rootPlan.forcedLoadLibrary.isEmpty()) {
+    m_forcedLibraries.append(
+        ExecutableForcedLoadSetting(rootPlan.forcedLoadProcess, rootPlan.forcedLoadLibrary)
+            .withEnabled(true));
+  }
+
   // these questions come before the plugins prepare the launch: a plugin that
   // hides saves for it gives up when the game doesn't appear in a few seconds
 
@@ -923,9 +943,53 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
     return Error;
   }
 
+  // MO2 Revamped: the Root files copied for this run (taken out once the last
+  // program in the VFS ends), and the import table patch spawn() applies
+  if (!rootPlan.copies.empty()) {
+    m_core.deployRootCopies(rootPlan.copies);
+  }
+
+  // the program to start is one of those copies (an extender's loader): if it
+  // didn't arrive, the start is stopped with the reason rather than "file not
+  // found"
+  if (!rootPlan.runBinary.isEmpty() && !QFileInfo::exists(m_sp.binary.absoluteFilePath())) {
+    log::error("root launch: {} couldn't be copied into the game folder",
+               QDir::toNativeSeparators(m_sp.binary.absoluteFilePath()));
+    QMessageBox::warning(
+        parent, QObject::tr("Can't start %1").arg(m_sp.binary.fileName()),
+        QObject::tr("%1 couldn't be copied from the mod's Root folder into the game "
+                    "folder, so it can't start. The reason is in MO2's log.")
+            .arg(m_sp.binary.fileName()));
+    return Error;
+  }
+
+  // from here until the program is up, the copies count as in use; after it,
+  // its handle does (the restore timer starts then)
+  m_core.beginRootRun();
+  ON_BLOCK_EXIT([&] {
+    m_core.endRootRun(m_handle.get());
+  });
+
   // if the executable is inside the mods folder another instance of
   // ModOrganizer.exe is spawned instead to launch it
+  const QString plannedBinary = m_sp.binary.absoluteFilePath();
   adjustForVirtualized(game, m_sp, settings);
+
+  // only the exe the plan read is patched, not MO2's own helper
+  if (rootPlan.patches()) {
+    if (m_sp.binary.absoluteFilePath().compare(plannedBinary, Qt::CaseInsensitive) == 0) {
+      m_sp.importRedirects   = rootPlan.redirects;
+      m_sp.importPreloads    = rootPlan.preloads;
+      m_sp.importPatchFailed = [this, files = rootPlan.patchFallback] {
+        m_core.deployRootCopies(files);
+      };
+    } else {
+      log::warn("root launch: {} starts through MO2's helper, its imports can't be "
+                "patched; using the copy fallback",
+                QDir::toNativeSeparators(plannedBinary));
+      m_core.deployRootCopies(rootPlan.patchFallback);
+    }
+  }
 
   // MO2 Revamped: the older games don't declare DPI awareness; with Windows'
   // scaling above 100% Windows would stretch their full-screen window, drawn at

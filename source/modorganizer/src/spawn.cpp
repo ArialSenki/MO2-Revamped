@@ -513,7 +513,14 @@ DWORD spawn(const SpawnParameters& sp, HANDLE& processHandle)
     }
   };
 
-  success = create(CREATE_BREAKAWAY_FROM_JOB);
+  // MO2 Revamped: a program whose import table loads DLLs from the mods' Root
+  // folders is created suspended (usvfs is injected then too) and patched
+  // before its first instruction
+  const bool patchImports =
+      sp.hooked && (!sp.importRedirects.empty() || !sp.importPreloads.empty());
+  const DWORD suspend = patchImports ? CREATE_SUSPENDED : 0;
+
+  success = create(CREATE_BREAKAWAY_FROM_JOB | suspend);
   auto e  = GetLastError();
 
   // MO2 Revamped: when MO2 runs inside a job that doesn't allow breaking away
@@ -521,13 +528,65 @@ DWORD spawn(const SpawnParameters& sp, HANDLE& processHandle)
   if (!success && e == ERROR_ACCESS_DENIED) {
     log::debug("breaking away from MO2's job was refused, starting the program "
                "inside it");
-    success = create(0);
+    success = create(suspend);
     e       = GetLastError();
   }
   env::setPath(oldPath);
 
   if (!success) {
     return e;
+  }
+
+  if (patchImports) {
+    QString error;
+    if (ImportPatch::patchSuspendedProcess(pi.hProcess, sp.importRedirects,
+                                           sp.importPreloads, &error)) {
+      for (const auto& r : sp.importRedirects) {
+        log::info("root launch: {} imports {} from {}", sp.binary.fileName(), r.dllName,
+                  QDir::toNativeSeparators(r.path));
+      }
+      for (const auto& p : sp.importPreloads) {
+        log::info("root launch: {} imports {} first", sp.binary.fileName(),
+                  QDir::toNativeSeparators(p.path));
+      }
+      if (::ResumeThread(pi.hThread) == DWORD(-1)) {
+        // never left suspended for MO2 to wait on
+        const auto resumeError = ::GetLastError();
+        log::error("root launch: {} can't be resumed after the import patch",
+                   sp.binary.fileName());
+        ::TerminateProcess(pi.hProcess, 1);
+        ::CloseHandle(pi.hThread);
+        ::CloseHandle(pi.hProcess);
+        return resumeError;
+      }
+    } else {
+      // it never ran: ended, the files copied instead, and started again
+      log::warn("root launch: the import table of {} can't be patched ({}), using "
+                "the copy fallback",
+                sp.binary.fileName(), error);
+      const bool ended = ::TerminateProcess(pi.hProcess, 1) &&
+                         ::WaitForSingleObject(pi.hProcess, 5000) == WAIT_OBJECT_0;
+      const auto endError = ::GetLastError();
+      ::CloseHandle(pi.hThread);
+      ::CloseHandle(pi.hProcess);
+      if (!ended) {
+        // a second copy of the game next to a suspended one: no
+        log::error("root launch: the unpatched {} can't be ended, not starting it "
+                   "again",
+                   sp.binary.fileName());
+        return endError != ERROR_SUCCESS ? endError : DWORD(ERROR_TIMEOUT);
+      }
+
+      if (sp.importPatchFailed) {
+        sp.importPatchFailed();
+      }
+
+      SpawnParameters unpatched = sp;
+      unpatched.importRedirects.clear();
+      unpatched.importPreloads.clear();
+      unpatched.importPatchFailed = nullptr;
+      return spawn(unpatched, processHandle);
+    }
   }
 
   processHandle = pi.hProcess;

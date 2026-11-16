@@ -155,10 +155,35 @@ OrganizerCore::OrganizerCore(Settings& settings)
           [this](auto const&... args) {
             m_PluginSettingChanged(args...);
           });
+
+  // MO2 Revamped: the Root files' launch decisions and copies, in MO2's log
+  RootCopy::setLogger([](bool warning, const QString& message) {
+    if (warning) {
+      log::warn("{}", message);
+    } else {
+      log::info("{}", message);
+    }
+  });
+  m_RootCopyTimer = new QTimer(this);
+  m_RootCopyTimer->setInterval(5000);
+  connect(m_RootCopyTimer, &QTimer::timeout, this, [this] {
+    restoreRootCopies();
+  });
 }
 
 OrganizerCore::~OrganizerCore()
 {
+  // MO2 Revamped: the game folder as it was; if a program still runs in the
+  // VFS, the next start restores it
+  if (!restoreRootCopies()) {
+    log::warn("root copy: files copied into the game folder stay until the next "
+              "start, a program still runs or uses them");
+  }
+  for (HANDLE h : m_RootRunHandles) {
+    ::CloseHandle(h);
+  }
+  m_RootRunHandles.clear();
+
   m_RefresherThread.exit();
   m_RefresherThread.wait();
 
@@ -276,6 +301,9 @@ void OrganizerCore::setUserInterface(IUserInterface* ui)
   m_Updater.setUserInterface(w);
   m_UILocker.setUserInterface(w);
   m_DownloadManager.setParentWidget(w);
+
+  // MO2 Revamped: a restore on start that left files is told once there's a window
+  showRootConflictNotice();
 
   checkForUpdates();
 }
@@ -502,6 +530,13 @@ bool OrganizerCore::bootstrap()
 
   if (!checkPathSymlinks()) {
     return false;
+  }
+
+  // MO2 Revamped: copies a crash left in the game folder come out first
+  if (QFileInfo(rootCopyBase()).isDir()) {
+    log::info("root copy: the last session left copies in the game folder, "
+              "restoring it");
+    restoreRootCopies();
   }
 
   if (!cycleDiagnostics()) {
@@ -2346,6 +2381,10 @@ void OrganizerCore::afterRun(const QFileInfo& binary, DWORD exitCode)
     QFile::remove(m_CurrentProfile->getLoadOrderFileName());
   }
 
+  // MO2 Revamped: the copy fallback's files out of the game folder, once the
+  // last program in the VFS has ended (a changed one goes to Overwrite/Root)
+  restoreRootCopies();
+
   // MO2 Revamped: the Overwrite/Root that fileMapping() made, if nothing went
   // there (rmdir only removes an empty folder) and no other program still
   // running in the VFS can write there
@@ -2398,6 +2437,284 @@ static bool modsUseRootFolder(const IPluginGame* game)
   static const QStringList dataFolders = {QStringLiteral("."), QStringLiteral("Data"),
                                           QStringLiteral("Data Files")};
   return dataFolders.contains(relative, Qt::CaseInsensitive);
+}
+
+// MO2 Revamped: where what a program writes to the game folder lands in Overwrite:
+// Overwrite/Root, or Overwrite itself where the data folder is the game folder
+// (fileMapping() maps them so)
+static QString overwriteGameRoot(const Settings& settings, const IPluginGame* game)
+{
+  const bool dataIsRoot =
+      QDir::cleanPath(game->dataDirectory().absolutePath())
+          .compare(QDir::cleanPath(game->gameDirectory().absolutePath()),
+                   Qt::CaseInsensitive) == 0;
+  return dataIsRoot ? settings.paths().overwrite()
+                    : settings.paths().overwrite() + QStringLiteral("/Root");
+}
+
+RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
+                                               const QFileInfo& binary)
+{
+  const IPluginGame* game = managedGame();
+  if (game == nullptr || m_PluginContainer == nullptr ||
+      rootBuilderEnabled(*m_PluginContainer) || !modsUseRootFolder(game)) {
+    return {};
+  }
+
+  waitForDirectoryRefresh();
+
+  // the run's profile's Root folders in fileMapping()'s order, lowest first,
+  // and Overwrite/Root last
+  RootLaunch::Input in;
+  Profile profile(QDir(m_Settings.paths().profiles() + "/" + profileName), game,
+                  gameFeatures());
+  for (const auto& mod : profile.getActiveMods()) {
+    if (std::get<0>(mod).compare("overwrite", Qt::CaseInsensitive) == 0) {
+      continue;
+    }
+    const unsigned int index = ModInfo::getIndex(std::get<0>(mod));
+    if (index == UINT_MAX) {
+      continue;
+    }
+    ModInfo::Ptr modPtr = ModInfo::getByIndex(index);
+    const QString root  = std::get<1>(mod) + QStringLiteral("/Root");
+    if (modPtr->isRegular() && QFileInfo(root).isDir()) {
+      in.rootFolders.append(QDir::cleanPath(root));
+    }
+  }
+  const QString overwriteRoot = overwriteGameRoot(m_Settings, game);
+  if (QFileInfo(overwriteRoot).isDir() &&
+      !QDir(overwriteRoot).isEmpty(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden)) {
+    in.rootFolders.append(QDir::cleanPath(overwriteRoot));
+  }
+  if (in.rootFolders.isEmpty()) {
+    return {};
+  }
+
+  in.gameDir     = game->gameDirectory().absolutePath();
+  in.gameBinary  = game->binaryName();
+  in.gameVersion = game->gameVersion();
+  in.runBinary   = binary.absoluteFilePath();
+  return RootLaunch::plan(in);
+}
+
+QString OrganizerCore::rootCopyBase() const
+{
+  return m_Settings.paths().base() + QStringLiteral("/rootcopy-backup");
+}
+
+QString OrganizerCore::rootCopyStateDir() const
+{
+  QString name = m_GamePlugin ? m_GamePlugin->gameShortName() : QString();
+  if (name.isEmpty() || !MOBase::validFileName(name)) {
+    name = QStringLiteral("game");
+  }
+  return rootCopyBase() + "/" + name;
+}
+
+bool OrganizerCore::deployRootCopies(const std::vector<RootCopy::File>& files)
+{
+  const IPluginGame* game = managedGame();
+  if (files.empty() || game == nullptr) {
+    return true;
+  }
+
+  // an earlier run's copies go first once nothing runs any more; while a
+  // program still runs, these are added to them
+  restoreRootCopies();
+
+  for (const auto& f : files) {
+    log::info("root copy: {} from {} ({})", f.relativePath,
+              QDir::toNativeSeparators(f.source), f.reason);
+  }
+
+  const QString gameDir = game->gameDirectory().absolutePath();
+  const auto result     = RootCopy::deploy(files, gameDir, rootCopyStateDir(),
+                                           overwriteGameRoot(m_Settings, game));
+
+  if (result.notWritable) {
+    if (!m_RootCopyNoticeShown) {
+      m_RootCopyNoticeShown = true;
+      MessageDialog::showMessage(
+          tr("MO2 can't write to the game folder (%1), so the files from the mods' "
+             "Root folders that must be real files there (script extender, ENB, "
+             "ReShade, DXVK and similar) weren't copied. The game starts without "
+             "them. Move the game out of Program Files, or give your account write "
+             "access to its folder.")
+              .arg(QDir::toNativeSeparators(gameDir)),
+          qApp->activeWindow());
+    }
+    return false;
+  }
+
+  // the restore timer starts once the program is up (endRootRun())
+  return result.error.isEmpty() && result.failed == 0;
+}
+
+void OrganizerCore::beginRootRun()
+{
+  ++m_RootRunsActive;
+}
+
+void OrganizerCore::endRootRun(HANDLE process)
+{
+  if (m_RootRunsActive > 0) {
+    --m_RootRunsActive;
+  }
+
+  // the started program counts as running while its handle is alive, and for
+  // a while after (a loader that exits once it has started the game, before
+  // usvfs lists the game)
+  if (process != nullptr && process != INVALID_HANDLE_VALUE) {
+    HANDLE copy = nullptr;
+    if (::DuplicateHandle(::GetCurrentProcess(), process, ::GetCurrentProcess(), &copy,
+                          SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, 0)) {
+      m_RootRunHandles.push_back(copy);
+    }
+    m_RootRunGrace.start();
+  }
+
+  if (QFileInfo(rootCopyBase()).isDir() && m_RootCopyTimer &&
+      !m_RootCopyTimer->isActive()) {
+    m_RootCopyTimer->setInterval(5000);
+    m_RootCopyTimer->start();
+  }
+}
+
+// MO2 Revamped: whether a program still runs in the VFS; Steam and its
+// helpers, started hooked by a game, can stay for hours and don't count. A
+// failed query counts as running: the copies are never taken out because of
+// an error
+static std::optional<bool> vfsProgramsRunning()
+{
+  static const QStringList ignored = {
+      "Steam.exe",          "steamwebhelper.exe",       "SteamService.exe",
+      "GameOverlayUI.exe",  "GameOverlayUI64.exe",      "steamerrorreporter.exe",
+      "steamerrorreporter64.exe"};
+
+  // polled every few seconds while copies are out: only the rights to read a
+  // process' state, and nothing logged per process
+  size_t count  = 0;
+  DWORD* buffer = nullptr;
+  if (!::usvfsGetVFSProcessList2(&count, &buffer)) {
+    log::debug("root copy: the VFS process list can't be read, taken as running");
+    return std::nullopt;
+  }
+  const std::vector<DWORD> pids(buffer, buffer + count);
+  std::free(buffer);
+
+  const DWORD self = ::GetCurrentProcessId();
+  for (const DWORD pid : pids) {
+    if (pid == self) {
+      continue;
+    }
+    HANDLE h = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (h == nullptr) {
+      // there, but not ours to open (elevated): it counts
+      if (::GetLastError() == ERROR_ACCESS_DENIED) {
+        return true;
+      }
+      continue;
+    }
+    DWORD code = 0;
+    wchar_t path[MAX_PATH * 2];
+    DWORD size       = DWORD(std::size(path));
+    const bool alive = ::GetExitCodeProcess(h, &code) && code == STILL_ACTIVE;
+    QString name;
+    if (alive && ::QueryFullProcessImageNameW(h, 0, path, &size)) {
+      name = QFileInfo(QString::fromWCharArray(path, int(size))).fileName();
+    }
+    ::CloseHandle(h);
+    if (alive && !ignored.contains(name, Qt::CaseInsensitive)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool OrganizerCore::rootProgramsRunning()
+{
+  return RootCopy::programsRunning(
+      m_RootRunsActive, m_RootRunHandles,
+      m_RootRunGrace.isValid() ? m_RootRunGrace.elapsed() : -1, 15000,
+      [] {
+        return vfsProgramsRunning();
+      });
+}
+void OrganizerCore::showRootConflictNotice()
+{
+  if (!m_RootConflictNoticePending || m_UserInterface == nullptr) {
+    return;
+  }
+  m_RootConflictNoticePending = false;
+  MessageDialog::showMessage(
+      tr("Some files MO2 copied into the game folder (%1) were changed by something "
+         "else while they were there, perhaps a game update. MO2 left them as they "
+         "are and kept its backups of the game's own files in %2. The files are named "
+         "in MO2's log; check them, or let Steam verify the game's files.")
+          .arg(m_RootConflictFiles.join(", "),
+               QDir::toNativeSeparators(rootCopyBase())),
+      m_UserInterface->mainWindow());
+}
+
+bool OrganizerCore::restoreRootCopies()
+{
+  const QString base = rootCopyBase();
+  QStringList states;
+  for (const QString& dir : QDir(base).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (RootCopy::hasManifest(base + "/" + dir)) {
+      states.append(base + "/" + dir);
+    }
+  }
+
+  if (states.isEmpty()) {
+    if (m_RootCopyTimer) {
+      m_RootCopyTimer->stop();
+    }
+    QDir().rmdir(base);
+    return true;
+  }
+
+  // not while a program in the VFS can still use them; tried again
+  if (rootProgramsRunning()) {
+    if (m_RootCopyTimer && !m_RootCopyTimer->isActive()) {
+      m_RootCopyTimer->setInterval(5000);
+      m_RootCopyTimer->start();
+    }
+    return false;
+  }
+
+  if (m_RootCopyTimer) {
+    m_RootCopyTimer->stop();
+  }
+
+  bool done    = true;
+  bool pending = false;
+  for (const QString& state : states) {
+    const auto result = RootCopy::restore(state);
+    if (result.pending > 0 || result.conflicts > 0 || !result.error.isEmpty()) {
+      done = false;
+    }
+    if (result.pending > 0) {
+      pending = true;
+    }
+    // told once per session; the files stay in the manifest, untouched
+    if (result.conflicts > 0 && !m_RootConflictNoticeShown) {
+      m_RootConflictNoticeShown   = true;
+      m_RootConflictNoticePending = true;
+      m_RootConflictFiles         = result.conflictFiles;
+    }
+  }
+  showRootConflictNotice();
+
+  if (done) {
+    QDir().rmdir(base);
+  } else if (pending && m_RootCopyTimer) {
+    // a file still in use (by a program outside the VFS): tried again later
+    m_RootCopyTimer->setInterval(30000);
+    m_RootCopyTimer->start();
+  }
+  return done;
 }
 
 std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,

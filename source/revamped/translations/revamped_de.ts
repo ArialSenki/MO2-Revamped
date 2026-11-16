@@ -8960,6 +8960,14 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>Some files MO2 copied into the game folder (%1) were changed by something else while they were there, perhaps a game update. MO2 left them as they are and kept its backups of the game's own files in %2. The files are named in MO2's log; check them, or let Steam verify the game's files.</source>
+      <translation>Einige Dateien, die MO2 in den Spielordner (%1) kopiert hat, wurden dort von etwas anderem geändert, vielleicht durch ein Spielupdate. MO2 hat sie so gelassen und bewahrt seine Sicherungen der eigenen Spieldateien in %2 auf. Die Dateien stehen im Protokoll von MO2; prüfe sie oder lass Steam die Spieldateien überprüfen.</translation>
+    </message>
+    <message>
+      <source>MO2 can't write to the game folder (%1), so the files from the mods' Root folders that must be real files there (script extender, ENB, ReShade, DXVK and similar) weren't copied. The game starts without them. Move the game out of Program Files, or give your account write access to its folder.</source>
+      <translation>MO2 kann nicht in den Spielordner (%1) schreiben, daher wurden die Dateien aus den Root-Ordnern der Mods, die dort als echte Dateien liegen müssen (Script Extender, ENB, ReShade, DXVK und Ähnliches), nicht kopiert. Das Spiel startet ohne sie. Verschiebe das Spiel aus „Programme“ heraus oder gib deinem Konto Schreibzugriff auf seinen Ordner.</translation>
+    </message>
+    <message>
       <source>Nexus sign-in</source>
       <translation>Nexus-Anmeldung</translation>
     </message>
@@ -9791,6 +9799,14 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
+      <translation>%1 konnte nicht aus dem Root-Ordner der Mod in den Spielordner kopiert werden und kann daher nicht starten. Der Grund steht im Protokoll von MO2.</translation>
+    </message>
+    <message>
+      <source>Can't start %1</source>
+      <translation>%1 kann nicht gestartet werden</translation>
+    </message>
     <message>
       <source>Connect to Nexus</source>
       <translation>Mit Nexus verbinden</translation>
