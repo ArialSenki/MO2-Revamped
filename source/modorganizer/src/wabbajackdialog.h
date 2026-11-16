@@ -23,6 +23,7 @@ class QHBoxLayout;
 class QLabel;
 class QLineEdit;
 class QPushButton;
+class QSettings;
 class QTreeWidget;
 class QTreeWidgetItem;
 
@@ -131,6 +132,9 @@ private:
   void setQuiet(bool quiet);
   // the new instance, with the list's own settings; false with a message
   bool makeInstance(const Wabbajack::InstallResult& result, QString* dataPath);
+  // the list's programs, fixed for this PC (see the .cpp)
+  void importExecutables(QSettings& from, QSettings& to,
+                         const MOBase::IPluginGame* game) const;
   QString sourceText(const Wabbajack::Archive& a) const;
 };
 

@@ -1374,6 +1374,96 @@ bool WabbajackDialog::sameInstall(const QString& instanceFolder, const QString& 
   return !base.isEmpty() && base.compare(QDir::cleanPath(installFolder), Qt::CaseInsensitive) == 0;
 }
 
+void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
+                                        const IPluginGame* game) const
+{
+  // the list's programs, as they work on this PC: the magic paths are already
+  // this PC's; what still points at the author's machine (a working folder on
+  // their drive), at the author's own MO2 (its Explorer++, not installed) or at
+  // a folder instead of a program is fixed or left out
+  const QString install = QDir::cleanPath(m_installFolder);
+  const QString gameDir = QDir::cleanPath(gameDirectory());
+  const QString appDir  = QDir::cleanPath(QCoreApplication::applicationDirPath());
+
+  // "<game>\Data" in the author's programs is the game plugin's data folder
+  // here: Baldur's Gate 3's is the game folder itself
+  QString dataHere;
+  if (game != nullptr && !gameDir.isEmpty()) {
+    const QString pluginGame = QDir::cleanPath(game->gameDirectory().absolutePath());
+    const QString pluginData = QDir::cleanPath(game->dataDirectory().absolutePath());
+    if (!pluginGame.isEmpty() && pluginData.startsWith(pluginGame, Qt::CaseInsensitive)) {
+      const QString rel = pluginData.mid(pluginGame.size());
+      dataHere          = QDir::cleanPath(gameDir + rel);
+    }
+  }
+  const QString dataThere = QDir::cleanPath(gameDir + QStringLiteral("/Data"));
+  auto remapData = [&](QString text) {
+    if (dataHere.isEmpty() || dataHere.compare(dataThere, Qt::CaseInsensitive) == 0) {
+      return text;
+    }
+    for (const QString& form : {QDir::toNativeSeparators(dataThere), dataThere}) {
+      text.replace(form, form.contains(u'\\') ? QDir::toNativeSeparators(dataHere) : dataHere,
+                   Qt::CaseInsensitive);
+    }
+    return text;
+  };
+
+  struct Program
+  {
+    QHash<QString, QVariant> values;
+  };
+  std::vector<Program> programs;
+  const int count = from.beginReadArray("customExecutables");
+  for (int i = 0; i < count; ++i) {
+    from.setArrayIndex(i);
+    Program p;
+    for (const QString& key : from.childKeys()) {
+      p.values.insert(key, from.value(key));
+    }
+    const QString title = p.values.value("title").toString();
+    QString binary =
+        QDir::cleanPath(QDir::fromNativeSeparators(p.values.value("binary").toString()));
+    // a program of the author's MO2 (Explorer++): this MO2's own copy
+    if (!QFileInfo(binary).isFile() &&
+        binary.startsWith(install + u'/', Qt::CaseInsensitive)) {
+      const QString mine = QDir(appDir).filePath(binary.mid(install.size() + 1));
+      if (QFileInfo(mine).isFile()) {
+        binary = mine;
+      }
+    }
+    if (!QFileInfo(binary).isFile()) {
+      log::info("wabbajack: the list's program '{}' left out: {} isn't a program here", title,
+                binary);
+      continue;
+    }
+    p.values.insert("binary", binary);
+    const QString work = p.values.value("workingDirectory").toString();
+    if (!work.isEmpty() && !QFileInfo(remapData(work)).isDir()) {
+      // the author's own folder ("D:\SteamLibrary\..."): MO2 starts it in the
+      // program's folder
+      log::info("wabbajack: '{}' starts in its own folder, not the author's {}", title, work);
+      p.values.insert("workingDirectory", QString());
+    } else if (!work.isEmpty()) {
+      p.values.insert("workingDirectory", remapData(work));
+    }
+    p.values.insert("arguments", remapData(p.values.value("arguments").toString()));
+    programs.push_back(std::move(p));
+  }
+  from.endArray();
+  if (programs.empty()) {
+    return;
+  }
+  to.remove("customExecutables");
+  to.beginWriteArray("customExecutables", int(programs.size()));
+  for (int i = 0; i < int(programs.size()); ++i) {
+    to.setArrayIndex(i);
+    for (auto it = programs[i].values.constBegin(); it != programs[i].values.constEnd(); ++it) {
+      to.setValue(it.key(), it.value());
+    }
+  }
+  to.endArray();
+}
+
 bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QString* dataPath)
 {
   IPluginGame* game =
@@ -1483,15 +1573,7 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
     if (!profile.isEmpty() && result.profiles.contains(profile, Qt::CaseInsensitive)) {
       to.setValue("selected_profile", from.value("selected_profile"));
     }
-    from.beginGroup("customExecutables");
-    const QStringList keys = from.allKeys();
-    from.endGroup();
-    if (!keys.isEmpty()) {
-      to.remove("customExecutables");
-      for (const QString& key : keys) {
-        to.setValue("customExecutables/" + key, from.value("customExecutables/" + key));
-      }
-    }
+    importExecutables(from, to, game);
     to.sync();
   }
 
