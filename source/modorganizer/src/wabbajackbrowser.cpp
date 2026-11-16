@@ -1,6 +1,7 @@
 #include "wabbajackbrowser.h"
 
 #include "fluenticons.h"
+#include "screenfitter.h"
 #include "settings.h"
 #include "wabbajackdownloads.h"
 #include "wabbajacklist.h"
@@ -18,6 +19,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QJsonDocument>
@@ -158,6 +161,16 @@ ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* man
 {
   m_listsFolder = QDir(downloadsFolder).filePath(QStringLiteral("Wabbajack lists"));
   setupUi();
+  // its size by the screen it is on, also when it is moved to another one
+  auto* fitter            = new ScreenFitter(this, QSize(820, 560));
+  const QWidget* anchor   = parentWidget();
+  QScreen* screen = anchor != nullptr ? anchor->screen() : QGuiApplication::primaryScreen();
+  if (screen != nullptr) {
+    const bool overWindow = anchor != nullptr && anchor->isVisible() &&
+                            !anchor->isMinimized();
+    fitter->place(screen, overWindow ? anchor->frameGeometry().center()
+                                     : screen->availableGeometry().center());
+  }
   loadGallery(false);
 }
 
@@ -174,7 +187,6 @@ void ListBrowser::setupUi()
   setAttribute(Qt::WA_DeleteOnClose);
   setWindowTitle(tr("Wabbajack lists"));
   setWindowFlag(Qt::WindowMaximizeButtonHint);
-  resize(1100, 700);
 
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(16, 16, 16, 12);

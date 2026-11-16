@@ -1,5 +1,7 @@
 #include "wabbajackdialog.h"
 
+#include "screenfitter.h"
+
 #include "createinstancedialog.h"
 #include "downloadmanager.h"
 #include "instancemanager.h"
@@ -625,30 +627,26 @@ void WabbajackDialog::placeWindow()
     return;
   }
   const QRect available = screen->availableGeometry();
-  const QSize least     = QSize(900, 680).boundedTo(available.size());
-  setMinimumSize(least);
+  const QSize least(900, 680);
+  // its size by the screen it is on, also when it is moved to another one
+  auto* fitter = new ScreenFitter(this, least);
+  setMinimumSize(least.boundedTo(available.size()));
 
   if (Settings::instance().geometry().restoreGeometry(this) &&
       QGuiApplication::screenAt(geometry().center()) == screen &&
-      available.contains(geometry().center()) && width() >= least.width() &&
-      height() >= least.height()) {
-    resize(size().boundedTo(available.size()));
+      available.contains(geometry().center()) &&
+      width() >= least.boundedTo(available.size()).width() &&
+      height() >= least.boundedTo(available.size()).height()) {
+    // where the user left it; the size older versions saved (most of a 2K
+    // screen) comes down to this screen's
+    resize(size().boundedTo(ScreenFitter::wantedSize(available, least)));
     return;
   }
 
-  QSize wanted(available.width() * 65 / 100, available.height() * 85 / 100);
-  wanted = wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
-  resize(wanted);
   const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
-  const QPoint middle = overWindow ? anchor->frameGeometry().center() : available.center();
-  QPoint pos(middle.x() - wanted.width() / 2, middle.y() - wanted.height() / 2);
-  pos.setX(qBound(available.left(), pos.x(),
-                  qMax(available.left(), available.right() - wanted.width() - 16)));
-  pos.setY(qBound(available.top(), pos.y(),
-                  qMax(available.top(), available.bottom() - wanted.height() - 40)));
-  move(pos);
+  fitter->place(screen, overWindow ? anchor->frameGeometry().center() : available.center());
 }
 
 void WabbajackDialog::closeEvent(QCloseEvent* e)
