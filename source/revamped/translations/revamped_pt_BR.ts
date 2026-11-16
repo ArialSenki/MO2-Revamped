@@ -17697,8 +17697,8 @@ Instale o .NET Desktop Runtime 8 para Windows x64 em {0} e depois abra o BG3 Mod
       <translation>A lista deixa arquivos para você copiar à mão, como diz o guia dela: %1.</translation>
     </message>
     <message>
-      <source>These mods have programs or DLLs for the game's own folder (in their Root folder), which the game only finds as real files there: %1. Copy the files in each Root folder to the game's folder, or use Root Builder.</source>
-      <translation>Estes mods têm programas ou DLLs para a própria pasta do jogo (na pasta Root deles), que o jogo só encontra se estiverem mesmo lá: %1. Copie os arquivos de cada pasta Root para a pasta do jogo, ou use o Root Builder.</translation>
+      <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. MO2 Revamped puts them in place each time the game starts and takes them out when it closes; nothing has to be copied by hand.</source>
+      <translation>Estes mods têm programas ou DLLs para a própria pasta do jogo (na pasta Root deles): %1. O MO2 Revamped os coloca no lugar toda vez que o jogo inicia e os retira quando ele fecha; não é preciso copiar nada à mão.</translation>
     </message>
   </context>
   <context>

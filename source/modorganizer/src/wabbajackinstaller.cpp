@@ -1227,11 +1227,10 @@ InstallResult Installer::run()
             tr("The list leaves files for you to copy by hand, as its guide says: %1.")
                 .arg(byHand.join(QStringLiteral(", "))));
       }
-      // Root Builder's layout: a mod's Root/ goes to the game's folder. MO2
-      // Revamped gives it to the game through its virtual folder, but a program
-      // started from there (nvse_loader.exe, a patched game exe) and the DLLs
-      // the game loads as it starts (d3d9.dll, d3d11.dll, dxgi.dll) have to
-      // be real files in the game's folder
+      // Root Builder's layout: a mod's Root/ goes to the game's folder. Its
+      // programs and DLLs (nvse_loader.exe, d3d9.dll) are handled when a
+      // program starts (forced loads, the import table, or a copy put back
+      // afterwards); the summary only names those mods
       QStringList rootMods;
       const QDir mods(installPath(m_plan.installFolder, QStringLiteral("mods")));
       for (const QString& mod : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -1252,9 +1251,9 @@ InstallResult Installer::run()
       if (!rootMods.isEmpty()) {
         m_result.notes.append(
             tr("These mods have programs or DLLs for the game's own folder (in their "
-               "Root folder), which the game only finds as real files there: %1. "
-               "Copy the files in each Root folder to the game's folder, or use "
-               "Root Builder.")
+               "Root folder): %1. MO2 Revamped puts them in place each time the game "
+               "starts and takes them out when it closes; nothing has to be copied by "
+               "hand.")
                 .arg(rootMods.join(QStringLiteral(", "))));
       }
     }
@@ -1310,6 +1309,11 @@ QString installPath(const QString& installFolder, const QString& relative)
 {
   QString r = QString(relative).replace(u'\\', u'/');
   if (r.isEmpty() || QDir::isAbsolutePath(r) || r.contains(u':') || r.startsWith(u'/')) {
+    return {};
+  }
+  // MO2 Revamped: and the collections' rules: no characters Windows refuses,
+  // no part ending in a dot or a space, no CONIN$, CONOUT$, CLOCK$ or COM¹
+  if (!Collections::isSafeRelativePath(r)) {
     return {};
   }
   static const QRegularExpression device(

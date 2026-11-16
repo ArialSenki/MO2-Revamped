@@ -114,9 +114,6 @@ enum class Source
   Unknown
 };
 
-// whether MO2 Revamped can get the archive by itself (once the phase that
-// does it is there), or the user has to fetch it in a browser
-bool isAutomatic(Source s);
 
 struct Archive
 {

@@ -848,19 +848,6 @@ bool isListFile(const QString& path)
   return path.endsWith(u".wabbajack", Qt::CaseInsensitive) && QFileInfo(path).isFile();
 }
 
-bool isAutomatic(Source s)
-{
-  switch (s) {
-  case Source::Nexus:
-  case Source::GameFile:
-  case Source::Http:
-  case Source::WabbajackCdn:
-    return true;
-  default:
-    return false;
-  }
-}
-
 qint64 ModList::downloadSize() const
 {
   qint64 total = 0;
