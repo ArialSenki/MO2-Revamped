@@ -55,6 +55,8 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
         # MO2 Revamped: from MO2 cc5c3f2
         self._register_feature(BasicLocalSavegames(self))
         organizer.onAboutToRun(self.utils.construct_modsettings_xml)
+        # MO2 Revamped: BG3 Mod Manager needs the .NET 8 Desktop Runtime
+        organizer.onAboutToRun(self.utils.check_dotnet8_before_run)
         organizer.onFinishedRun(self._on_finished_run)
         organizer.onUserInterfaceInitialized(self.utils.on_user_interface_initialized)
         organizer.modList().onModInstalled(self.utils.on_mod_installed)
@@ -130,25 +132,35 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
         if self.utils.force_load_dlls:
             qInfo("detecting dlls in enabled mods")
             libs: set[str] = set()
-            tree: mobase.IFileTree | mobase.FileTreeEntry | None = (
-                self._organizer.virtualFileTree().find("bin")
-            )
-            if type(tree) is not mobase.IFileTree:
+            # MO2 Revamped: without Root Builder, a mod's Root/bin is the game's
+            # bin too (OrganizerCore::fileMapping)
+            bin_paths = ["bin"]
+            if not self.utils.root_builder_enabled():
+                bin_paths.append("Root/bin")
+            for bin_path in bin_paths:
+                tree: mobase.IFileTree | mobase.FileTreeEntry | None = (
+                    self._organizer.virtualFileTree().find(bin_path)
+                )
+                if type(tree) is not mobase.IFileTree:
+                    continue
+
+                def find_dlls(
+                    _: Any,
+                    entry: mobase.FileTreeEntry,
+                    tree: mobase.IFileTree = tree,
+                ) -> mobase.IFileTree.WalkReturn:
+                    relpath = entry.pathFrom(tree)
+                    if (
+                        relpath
+                        and entry.hasSuffix("dll")
+                        and relpath not in self._base_dlls
+                    ):
+                        libs.add(relpath)
+                    return mobase.IFileTree.WalkReturn.CONTINUE
+
+                tree.walk(find_dlls)
+            if not libs:
                 return efls
-
-            def find_dlls(
-                _: Any, entry: mobase.FileTreeEntry
-            ) -> mobase.IFileTree.WalkReturn:
-                relpath = entry.pathFrom(tree)
-                if (
-                    relpath
-                    and entry.hasSuffix("dll")
-                    and relpath not in self._base_dlls
-                ):
-                    libs.add(relpath)
-                return mobase.IFileTree.WalkReturn.CONTINUE
-
-            tree.walk(find_dlls)
             exes = self.executables()
             qDebug(f"dlls to force load: {libs}")
             efls = efls + [

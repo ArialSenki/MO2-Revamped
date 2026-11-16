@@ -17,7 +17,7 @@ from ..basic_features.basic_save_game_info import (
     BasicGameSaveGameInfo,
     format_date,
 )
-from ..basic_features.utils import is_directory
+from ..basic_features.utils import is_directory, root_builder_enabled
 from ..basic_game import BasicGame
 
 
@@ -360,7 +360,7 @@ class Cyberpunk2077Game(BasicGame):
         )
         self._register_feature(
             CyberpunkModDataChecker(
-                lambda: self._organizer.isPluginEnabled("Root Builder")
+                lambda: root_builder_enabled(self._organizer)
             )
         )
 
@@ -511,12 +511,17 @@ class Cyberpunk2077Game(BasicGame):
             efls = super().executableForcedLoads()
         except AttributeError:
             efls = []
-        if self._organizer.isPluginEnabled("Root Builder"):
+        if root_builder_enabled(self._organizer):
             return efls
         tree = self._organizer.virtualFileTree()
         process = Path(self.binaryName()).name
         for relative in self._forced_loaders:
-            if tree.find(relative) is not None:
+            # MO2 Revamped: a mod's root/ is the game folder too (Wabbajack
+            # lists made with Root Builder keep the loaders in root/bin/x64)
+            if (
+                tree.find(relative) is not None
+                or tree.find(f"root/{relative}") is not None
+            ):
                 efls.append(
                     mobase.ExecutableForcedLoadSetting(
                         process, self.gameDirectory().absoluteFilePath(relative)

@@ -10,6 +10,15 @@ import mobase
 
 from . import bg3_utils
 
+_top_level_data_folders = {f.casefold() for f in bg3_utils.top_level_data_folders}
+
+
+def _subfolders(path: Path) -> list[Path]:
+    try:
+        return [e for e in path.iterdir() if e.is_dir()]
+    except OSError:
+        return []
+
 
 class BG3FileMapper(mobase.IPluginFileMapper):
     current_mappings: list[mobase.Mapping] = []
@@ -34,12 +43,23 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         )
         docs_path_mods = self.doc_path / "Mods"
         docs_path_se = self.doc_path / "Script Extender"
+        game_data = Path(
+            self._utils._organizer.managedGame().gameDirectory().absolutePath()
+        ) / "Data"
+        # MO2 Revamped: without Root Builder, MO2 maps each mod's Root/ to the
+        # game folder itself (OrganizerCore::fileMapping)
+        root_bin = "bin" if self._utils.root_builder_enabled() else "Root/bin"
         for mod in active_mods:
             modpath = Path(mod.absolutePath())
             self.map_files(modpath, dest=docs_path_mods, pattern="*.pak", rel=False)
             self.map_files(modpath / "Script Extender", dest=docs_path_se)
+            # MO2 Revamped: the unofficial BG3 plugin's folder for the same files
+            self.map_files(modpath / bg3_utils.se_config_folder, dest=docs_path_se)
+            self.map_data_folders(modpath, game_data, root_bin != "bin")
             if self._utils.convert_yamls_to_json:
                 self.map_files(modpath / "bin", only_convert=True)
+                if root_bin != "bin":
+                    self.map_files(modpath / root_bin, only_convert=True)
             progress.setValue(progress.value() + 1)
             QApplication.processEvents()
             if progress.wasCanceled():
@@ -55,6 +75,9 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         (self._utils.overwrite_path / "Mods").mkdir(parents=True, exist_ok=True)
         (self._utils.overwrite_path / "GMCampaigns").mkdir(parents=True, exist_ok=True)
         self.map_files(self._utils.overwrite_path)
+        # MO2 Revamped: Overwrite's Data/ stays above the mods' (map_data_folders)
+        if (self._utils.overwrite_path / "Data").is_dir():
+            self.map_folder(self._utils.overwrite_path / "Data", game_data)
         self.create_mapping(
             self._utils.modsettings_path,
             self.doc_path
@@ -122,6 +145,42 @@ class BG3FileMapper(mobase.IPluginFileMapper):
             return
         for file in found_jsons:
             self.create_mapping(file, dest / dest_func(file))
+
+    def map_data_folders(self, modpath: Path, game_data: Path, map_root: bool):
+        """MO2 Revamped: Data/... and the game folders a mod has at its top level
+        (Public/, Generated/, Video/, Mods/<folder>/... as Wabbajack lists leave
+        them) go to <game>/Data, in the mods' order so the higher mod wins.
+
+        Data/ is MO2's own mapping too; it's mapped here again so a top-level
+        folder of a lower mod doesn't win over a higher mod's Data/ (or Root/Data/,
+        which MO2 maps to the game folder when Root Builder is off). Folders are
+        mapped whole, like MO2 maps the mods, so nothing is made in the game's
+        own folder."""
+        for entry in _subfolders(modpath):
+            name = entry.name.casefold()
+            if name == "data":
+                self.map_folder(entry, game_data)
+            elif name == "root" and map_root:
+                for sub in _subfolders(entry):
+                    if sub.name.casefold() == "data":
+                        self.map_folder(sub, game_data)
+            elif name == "mods":
+                # its paks go to the documents' Mods folder (see mappings()),
+                # its folders (loose mods, ModBrowser/GUI/...) to Data/Mods
+                for folder in _subfolders(entry):
+                    self.map_folder(folder, game_data / "Mods" / folder.name)
+            elif name in _top_level_data_folders:
+                self.map_folder(entry, game_data / entry.name)
+
+    def map_folder(self, folder: Path, dest: Path):
+        self.current_mappings.append(
+            mobase.Mapping(
+                source=str(folder),
+                destination=str(dest),
+                is_directory=True,
+                create_target=False,
+            )
+        )
 
     def create_mapping(self, file: Path, dest: Path):
         bg3_utils.create_dir_if_needed(dest)
