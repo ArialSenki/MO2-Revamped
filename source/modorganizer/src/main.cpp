@@ -612,6 +612,15 @@ int run(int argc, char* argv[])
   // must be after logging
   TimeThis tt("main() multiprocess");
 
+  // MO2 Revamped: the interface size chosen in Settings, on top of Windows'
+  // own scaling; a QT_SCALE_FACTOR set by the user wins
+  if (qEnvironmentVariableIsEmpty("QT_SCALE_FACTOR")) {
+    const int scale = GlobalSettings::interfaceScaleBeforeApplication();
+    if (scale != 100) {
+      qputenv("QT_SCALE_FACTOR", QByteArray::number(scale / 100.0, 'f', 2));
+    }
+  }
+
   // from MO2 8016e77 (#2283): obsolete Qt::AA_EnableHighDpiScaling removed
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);

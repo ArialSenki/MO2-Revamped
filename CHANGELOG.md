@@ -140,6 +140,21 @@ the list brings.
   it no longer has go to the Recycle Bin after asking.
 - Browse collections: Nexus or Tools > Browse collections lists the game's
   collections, with search and sorting.
+- Each mod goes under a separator for its category, in the collection's own
+  order; only mods whose order rules cross categories and share files go to
+  "Patches and overrides" at the end. Separators are made the same way for a
+  new instance, a new profile or the current one, without duplicates.
+- Failed downloads are retried on their own (three times) and there's a Retry
+  failed button; no sound for each file while a collection installs.
+- Much faster with large lists (thousands of mods): ordering, grouping and the
+  download checks no longer freeze the window.
+
+### Linux and Steam Deck
+
+- MO2 no longer crashes at start under Wine or Proton (PortProton, Steam Deck)
+  when Qt has no screen yet. If it still fails for you, please send the crash
+  dump MO2 writes (ModOrganizer-*.dmp).
+
 - Safety fixes from an audit: patches can't write outside their memory or use
   it all, curator text can't load files from your PC or the network, nothing is
   applied to your own mods after a Merge, and the Nexus button opens Nexus in

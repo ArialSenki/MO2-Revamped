@@ -32,7 +32,10 @@ using namespace MOBase;
 PreviewGenerator::PreviewGenerator(const PluginContainer& pluginContainer)
     : m_PluginContainer(pluginContainer)
 {
-  m_MaxSize = QGuiApplication::primaryScreen()->size() * 0.8;
+  // MO2 Revamped: Wine/Proton (a Steam Deck under gamescope) can start with no
+  // screen yet; MO2 crashed here before its first window
+  const QScreen* screen = QGuiApplication::primaryScreen();
+  m_MaxSize = (screen != nullptr ? screen->size() : QSize(1920, 1080)) * 0.8;
 }
 
 bool PreviewGenerator::previewSupported(const QString& fileExtension,
