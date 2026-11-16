@@ -15872,16 +15872,16 @@ Start the game again; if a mod stays out, reinstall it.</source>
 Riavvia il gioco; se una mod resta fuori, reinstallala.</translation>
     </message>
     <message>
-      <source>BG3 Mod Manager needs .NET 8</source>
-      <translation>BG3 Mod Manager richiede .NET 8</translation>
+      <source>BG3 Mod Manager needs .NET {0}</source>
+      <translation>BG3 Mod Manager richiede .NET {0}</translation>
     </message>
     <message>
-      <source>BG3 Mod Manager needs the .NET 8 Desktop Runtime, which isn't installed on this PC, so it will close with an error as it starts.
+      <source>BG3 Mod Manager needs the .NET {1} Desktop Runtime, which isn't installed on this PC, so it will close with an error as it starts.
 
-Install the .NET Desktop Runtime 8 for Windows x64 from {0}, then run BG3 Mod Manager again.</source>
-      <translation>BG3 Mod Manager richiede .NET 8 Desktop Runtime, che non è installato su questo PC, quindi si chiuderà con un errore all'avvio.
+Install the .NET Desktop Runtime {1} for Windows x64 from {0}, then run BG3 Mod Manager again.</source>
+      <translation>BG3 Mod Manager richiede .NET {1} Desktop Runtime, che non è installato su questo PC, quindi si chiuderà con un errore all'avvio.
 
-Installa .NET Desktop Runtime 8 per Windows x64 da {0}, poi avvia di nuovo BG3 Mod Manager.</translation>
+Installa .NET Desktop Runtime {1} per Windows x64 da {0}, poi avvia di nuovo BG3 Mod Manager.</translation>
     </message>
     <message>
       <source>Start anyway</source>

@@ -56,7 +56,7 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
         self._register_feature(BasicLocalSavegames(self))
         organizer.onAboutToRun(self.utils.construct_modsettings_xml)
         # MO2 Revamped: BG3 Mod Manager needs the .NET 8 Desktop Runtime
-        organizer.onAboutToRun(self.utils.check_dotnet8_before_run)
+        organizer.onAboutToRun(self.utils.check_dotnet_before_run)
         organizer.onFinishedRun(self._on_finished_run)
         organizer.onUserInterfaceInitialized(self.utils.on_user_interface_initialized)
         organizer.modList().onModInstalled(self.utils.on_mod_installed)
@@ -131,7 +131,9 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
             efls = []
         if self.utils.force_load_dlls:
             qInfo("detecting dlls in enabled mods")
-            libs: set[str] = set()
+            # MO2 Revamped: one entry per DLL whatever the case of its name
+            # (two mods with NativeMods\X.dll and nativemods\x.dll)
+            libs: dict[str, str] = {}
             # MO2 Revamped: without Root Builder, a mod's Root/bin is the game's
             # bin too (OrganizerCore::fileMapping)
             bin_paths = ["bin"]
@@ -155,7 +157,7 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                         and entry.hasSuffix("dll")
                         and relpath.casefold() not in self._base_dlls
                     ):
-                        libs.add(relpath)
+                        libs.setdefault(relpath.casefold(), relpath)
                     return mobase.IFileTree.WalkReturn.CONTINUE
 
                 tree.walk(find_dlls)
@@ -169,12 +171,12 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                 for exe in self.executables()
                 if exe.binary().fileName().casefold() != launcher
             ]
-            qDebug(f"dlls to force load: {libs}")
+            qDebug(f"dlls to force load: {list(libs.values())}")
             efls = efls + [
                 mobase.ExecutableForcedLoadSetting(
                     exe.binary().fileName(), lib
                 ).withEnabled(True)
-                for lib in libs
+                for lib in libs.values()
                 for exe in exes
             ]
         return efls
@@ -193,6 +195,9 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
     def _on_finished_run(self, exec_path: str, exit_code: int):
         from .baldursgate3 import bg3_utils
 
+        # MO2 Revamped: a start that stopped before the mapper doesn't leave its
+        # pak scans for a later one
+        bg3_utils.forget_pak_scans()
         if not bg3_utils.runs_the_game(exec_path):
             # MO2 Revamped: the empty folders the mappings made in Overwrite,
             # after any program (BG3 Mod Manager, a tool); the real Documents
@@ -253,22 +258,31 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
         self._remove_empty_folders()
 
     def _remove_empty_folders(self, documents: bool = True):
+        """MO2 Revamped: the folders the file mapper made for the program
+        (created_dirs) and Overwrite/Data/Mods, if they're still empty, the
+        deepest first. Empty folders of the user's own, in Overwrite or in
+        Documents, stay (all of both were swept). Documents' only after the
+        game: it may be running on its own after another program."""
+        overwrite = self.utils.overwrite_path
+        candidates = set(self.created_dirs) | {
+            overwrite / "Data" / "Mods",
+            overwrite / "Data",
+        }
+        removed: list[Path] = []
+        for folder in sorted(candidates, key=lambda f: len(f.parts), reverse=True):
+            in_documents = folder.is_relative_to(self.doc_path)
+            if in_documents and not documents:
+                continue
+            if folder in (overwrite, self.doc_path):
+                continue
+            try:
+                folder.rmdir()
+                removed.append(folder)
+            except FileNotFoundError:
+                pass
+            except OSError:
+                pass  # not empty: what's in it is the program's or the user's
+            self.created_dirs.discard(folder)
         cat = QLoggingCategory.defaultCategory()
-        folders = {self.utils.overwrite_path}
-        if documents:
-            folders.add(self.doc_path)
-        for fdir in folders:
-            removed: set[Path] = set()
-            # MO2 Revamped: the deepest folders first, and never the root itself
-            for folder in sorted(
-                fdir.walk(top_down=False), key=lambda f: len(f[0].parts), reverse=True
-            ):
-                if folder[0] == fdir:
-                    continue
-                try:
-                    folder[0].rmdir()
-                    removed.add(folder[0])
-                except OSError:
-                    pass
-            if cat is not None and cat.isDebugEnabled() and len(removed) > 0:
-                qDebug(f"cleaned empty dirs from {fdir} {removed}")
+        if cat is not None and cat.isDebugEnabled() and removed:
+            qDebug(f"cleaned the empty folders the mappings made: {removed}")

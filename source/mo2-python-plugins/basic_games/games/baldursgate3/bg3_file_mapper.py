@@ -16,13 +16,18 @@ _top_level_data_folders = {f.casefold() for f in bg3_utils.top_level_data_folder
 
 def _subfolders(path: Path) -> list[Path]:
     try:
-        return [e for e in path.iterdir() if e.is_dir()]
+        with os.scandir(path) as it:
+            return [Path(e.path) for e in it if e.is_dir()]
     except OSError:
         return []
 
 
 class BG3FileMapper(mobase.IPluginFileMapper):
     current_mappings: list[mobase.Mapping] = []
+    # MO2 Revamped: the folders the mappings made that weren't there before,
+    # in Overwrite and Documents; the game plugin removes them once the program
+    # is done, if they're still empty (BG3Game._remove_empty_folders)
+    created_dirs: set[Path] = set()
 
     def __init__(self, utils: bg3_utils.BG3Utils, doc_dir: Callable[[], QDir]):
         super().__init__()
@@ -79,24 +84,15 @@ class BG3FileMapper(mobase.IPluginFileMapper):
                 return self.current_mappings
         # MO2 Revamped: the load order's scans are used up (bg3_utils.mod_paks)
         bg3_utils.forget_pak_scans()
-        (self._utils.overwrite_path / "Script Extender").mkdir(
-            parents=True, exist_ok=True
-        )
-        (self._utils.overwrite_path / "Stats").mkdir(parents=True, exist_ok=True)
-        (self._utils.overwrite_path / "Temp").mkdir(parents=True, exist_ok=True)
-        (self._utils.overwrite_path / "LevelCache").mkdir(parents=True, exist_ok=True)
-        (self._utils.overwrite_path / "Stats").mkdir(parents=True, exist_ok=True)
-        (self._utils.overwrite_path / "Mods").mkdir(parents=True, exist_ok=True)
-        (self._utils.overwrite_path / "GMCampaigns").mkdir(parents=True, exist_ok=True)
+        for folder in ("Script Extender", "Stats", "Temp", "LevelCache", "Mods", "GMCampaigns"):
+            self._make_dir(self._utils.overwrite_path / folder)
         # MO2 Revamped: usvfs only maps a folder into a folder it has in its
         # tree, and when no mod has Data/ it checks <Overwrite>/Data in place of
         # the game's Data ("Overwrite\Data doesn't exist"), so the Public/,
         # Generated/, Video/ and Mods/<folder> mappings below were dropped. MO2
         # maps Overwrite to the game folder, so these empty folders put Data and
         # Data/Mods in the tree; _on_finished_run removes them if still empty.
-        (self._utils.overwrite_path / "Data" / "Mods").mkdir(
-            parents=True, exist_ok=True
-        )
+        self._make_dir(self._utils.overwrite_path / "Data" / "Mods")
         # Overwrite/Data is the game's (mapped below), not the documents'
         self.map_files(self._utils.overwrite_path, skip_top=frozenset({"data"}))
         # MO2 Revamped: Overwrite's Data/ stays above the mods' (map_data_folders)
@@ -128,6 +124,9 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         only_convert: bool = False,
         skip_top: frozenset[str] = frozenset(),
     ):
+        # MO2 Revamped: most mods have no "Script Extender" or SE_CONFIG folder
+        if not path.is_dir():
+            return
         dest = dest if dest else self.doc_path
         dest_func: Callable[[Path], str] = (
             (lambda f: os.path.relpath(f, path)) if rel else lambda f: f.name
@@ -209,14 +208,26 @@ class BG3FileMapper(mobase.IPluginFileMapper):
             )
         )
 
-    def create_mapping(self, file: Path, dest: Path):
-        # MO2 Revamped: each folder made once per start, not once per file
+    def _make_dir(self, folder: Path) -> None:
+        """MO2 Revamped: the folder and its missing parents, made once per start
+        (not once per file), noting which ones weren't there (created_dirs)."""
         made = getattr(self, "_made_dirs", None)
-        key = dest if "." not in dest.name[1:] else dest.parent
-        if made is None or key not in made:
-            bg3_utils.create_dir_if_needed(dest)
-            if made is not None:
-                made.add(key)
+        if made is not None and folder in made:
+            return
+        missing: list[Path] = []
+        current = folder
+        while not current.exists() and current.parent != current:
+            missing.append(current)
+            current = current.parent
+        folder.mkdir(parents=True, exist_ok=True)
+        type(self).created_dirs.update(missing)
+        if made is not None:
+            made.add(folder)
+
+    def create_mapping(self, file: Path, dest: Path):
+        # as create_dir_if_needed did: dest itself, or for a name with
+        # a dot (a file) its parent
+        self._make_dir(dest if "." not in dest.name[1:] else dest.parent)
 
         self.current_mappings.append(
             mobase.Mapping(
