@@ -27,10 +27,29 @@ from . import bg3_utils
 # added its own again), and stopped on the duplicate it had made itself, which
 # left the mod out of the load order. Keys keep their case now, duplicates
 # don't stop the reading, and a key written twice in two cases keeps MO2's.
-def read_meta_ini(path: Path) -> configparser.ConfigParser:
+def _new_config() -> configparser.ConfigParser:
     config = configparser.ConfigParser(interpolation=None, strict=False)
     config.optionxform = str  # type: ignore[assignment, method-assign]
-    config.read(path, encoding="utf-8-sig")
+    return config
+
+
+def read_meta_ini(path: Path) -> configparser.ConfigParser:
+    # MO2 Revamped: a file that isn't UTF-8 throughout, or with keys before its
+    # first section (QSettings' [General] left out), is read anyway instead of
+    # leaving the mod out of the load order: bytes that aren't UTF-8 are kept
+    # as they are (surrogateescape, written back the same in write_meta_ini)
+    try:
+        text = path.read_bytes().decode("utf-8", errors="surrogateescape")
+    except OSError:
+        text = ""
+    if text.startswith("\ufeff"):
+        text = text[1:]
+    config = _new_config()
+    try:
+        config.read_string(text, source=str(path))
+    except configparser.MissingSectionHeaderError:
+        config = _new_config()
+        config.read_string("[General]\n" + text, source=str(path))
     _unescape_sections(config)
     for section in config.sections():
         seen: dict[str, str] = {}
@@ -111,7 +130,7 @@ def write_meta_ini(config: configparser.ConfigParser, path: Path) -> None:
     out.optionxform = str  # type: ignore[assignment, method-assign]
     for section in config.sections():
         out[qsettings_escape(section)] = dict(config[section])
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8", errors="surrogateescape") as f:
         out.write(f)
 
 
@@ -155,13 +174,20 @@ def _plain_value(value: str) -> str:
 
 def _subfolders(path: Path) -> list[Path]:
     try:
-        return [e for e in path.iterdir() if e.is_dir()]
+        with os.scandir(path) as it:
+            return [Path(e.path) for e in it if e.is_dir()]
     except OSError:
         return []
 
 
+def _text(value: str) -> str:
+    # a byte that wasn't UTF-8 (read_meta_ini) as U+FFFD, not a lone surrogate
+    # that can't be written into modsettings.lsx
+    return value.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
+
+
 def _keys(section: configparser.SectionProxy) -> dict[str, str]:
-    return {key.lower(): _plain_value(value) for key, value in section.items()}
+    return {key.lower(): _text(_plain_value(value)) for key, value in section.items()}
 
 
 def _is_override(keys: dict[str, str]) -> bool:
@@ -226,11 +252,12 @@ class BG3PakParser:
     def _folder_pattern(self):
         return re.compile("Data|Script Extender|bin|Mods", re.IGNORECASE)
 
-    def get_metadata_for_files_in_mod(
-        self, mod: mobase.IModInterface, force_reparse_metadata: bool
-    ):
-        # MO2 Revamped: the mod's folder walked once and its meta.ini read once
-        # (it was read again for every pak and every top-level folder)
+    def prepare(
+        self, mod: mobase.IModInterface
+    ) -> tuple[list[Path], configparser.ConfigParser | None]:
+        """MO2 Revamped: the mod's paks and packable folders (one walk of its
+        folder) and its meta.ini (read once; it was read again for every pak and
+        every top-level folder), or no config when there's nothing to read."""
         modpath = Path(mod.absolutePath())
         files = bg3_utils.scan_mod_paks(modpath)
         if self._utils.autobuild_paks:
@@ -241,13 +268,53 @@ class BG3PakParser:
                 and f.name.casefold() not in self._mapped_folder_names
             ]
         if not files:
-            return {mod.name(): ""}
-        config = read_meta_ini(modpath / "meta.ini")
-        return {
-            mod.name(): "".join(
+            return [], None
+        return sorted(files), read_meta_ini(modpath / "meta.ini")
+
+    @staticmethod
+    def needs_divine(
+        files: list[Path],
+        config: configparser.ConfigParser | None,
+        force_reparse_metadata: bool,
+    ) -> bool:
+        """MO2 Revamped: whether reading the mod may run Divine (a pak with no
+        entry of this plugin's in meta.ini, a folder to pack): such mods go to
+        the worker threads, the others are read right away."""
+        if config is None:
+            return False
+        if force_reparse_metadata:
+            return True
+        return any(
+            not f.name.endswith("pak") or not _has_cached_entry(config, f)
+            for f in files
+        )
+
+    def metadata_from(
+        self,
+        mod: mobase.IModInterface,
+        files: list[Path],
+        config: configparser.ConfigParser | None,
+        force_reparse_metadata: bool,
+    ) -> str:
+        if config is None:
+            return ""
+        try:
+            return "".join(
                 self._get_metadata_for_file(mod, file, force_reparse_metadata, config)
-                for file in sorted(files)
+                for file in files
             )
+        finally:
+            # MO2 Revamped: meta.ini written once for the mod, not once per pak
+            if getattr(config, "_mo2r_changed", False):
+                write_meta_ini(config, Path(mod.absolutePath()) / "meta.ini")
+                config._mo2r_changed = False  # type: ignore[attr-defined]
+
+    def get_metadata_for_files_in_mod(
+        self, mod: mobase.IModInterface, force_reparse_metadata: bool
+    ):
+        files, config = self.prepare(mod)
+        return {
+            mod.name(): self.metadata_from(mod, files, config, force_reparse_metadata)
         }
 
     def _get_metadata_for_file(
@@ -320,12 +387,9 @@ class BG3PakParser:
                         if self._utils.extract_full_package:
                             Path(str(meta_file)[:-4]).unlink(missing_ok=True)
             elif file.is_dir():
-                if self._folder_pattern.fullmatch(file.name):
-                    return ""
-                # MO2 Revamped: game folders at the mod's top level (Generated/
-                # holds Public/...) are mapped to Data/, not packed
-                if file.name.casefold() in self._mapped_folder_names:
-                    return ""
+                # MO2 Revamped: prepare() leaves out the folders that aren't
+                # packed (Data, bin, ..., and the game folders at the mod's top
+                # level, which are mapped to Data/)
                 for folder in bg3_utils.loose_file_folders:
                     if next(file.glob(f"{folder}/*"), False):
                         break
@@ -473,7 +537,8 @@ class BG3PakParser:
                     section["Folder"] = ini_value(folder_name)
         else:
             config[file.name]["override"] = "True"
-        write_meta_ini(config, meta_ini)
+        # MO2 Revamped: written once for the mod (metadata_from)
+        config._mo2r_changed = True  # type: ignore[attr-defined]
         return get_module_short_desc(config, file)
 
 
