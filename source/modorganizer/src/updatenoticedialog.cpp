@@ -237,8 +237,7 @@ QString shownVersion(const QString& tag)
 
 QString UpdateNoticeDialog::nexusPageUrl()
 {
-  return QStringLiteral("https://www.nexusmods.com/eldenring/mods/%1")
-      .arg(MO2R_NEXUS_MOD_ID);
+  return QStringLiteral(MO2R_NEXUS_PAGE_URL);
 }
 
 UpdateNoticeDialog::UpdateNoticeDialog(
