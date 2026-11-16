@@ -277,6 +277,7 @@ CollectionSession::~CollectionSession()
 {
   if (m_stage == Stage::Running) {
     qApp->setProperty(QuietProperty, QVariant());
+    qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
   }
   for (auto& c : m_connections) {
     c.disconnect();
@@ -1979,17 +1980,19 @@ QString CollectionSession::folderFingerprint(const QString& modName) const
       .arg(meta.value("installationFile").toString());
 }
 
-QStringList CollectionSession::approvedNow() const
+QStringList CollectionSession::approvedFor(const QString& modName) const
 {
-  // only folders that are still the ones the user said yes to
-  QStringList names;
-  for (auto it = m_approved.begin(); it != m_approved.end(); ++it) {
-    const QString now = folderFingerprint(it.key());
-    if (!now.isEmpty() && now == it.value().toString()) {
-      names.append(it.key());
-    }
+  // only a folder that is still the one the user said yes to
+  const QString key = modName.toLower();
+  const auto it     = m_approved.constFind(key);
+  if (key.isEmpty() || it == m_approved.constEnd()) {
+    return {};
   }
-  return names;
+  const QString now = folderFingerprint(key);
+  if (now.isEmpty() || now != it.value().toString()) {
+    return {};
+  }
+  return {key};
 }
 
 bool CollectionSession::askAboutExisting()
@@ -2360,9 +2363,11 @@ bool CollectionSession::installEntry(int row)
   InstallationManager* im = m_core.installationManager();
   const QString choices   = mod.choicesJson();
 
-  // the approved folders and the preset are for this install only, whatever
-  // way it ends
-  im->setApprovedReplacements(approvedNow());
+  // the approved folder and the preset are for this install only, whatever
+  // way it ends. Read once, before the folder changes: only the folder this
+  // install writes to
+  const QStringList approvedBefore = approvedFor(e.modName);
+  im->setApprovedReplacements(approvedBefore);
   qApp->setProperty(PresetResultProperty, QVariant());
   qApp->setProperty(PresetProperty, choices.isEmpty() ? QVariant() : QVariant(choices));
   // installers that only ask for the mod's name take the collection's
@@ -2379,7 +2384,6 @@ bool CollectionSession::installEntry(int row)
   ModInfo::Ptr installed;
   QString error;
   QSet<QString> existingBefore;
-  QStringList approvedBefore;
   try {
     // which folders were there (read once, then kept as installs add to it),
     // and which the user said may be replaced
@@ -2391,7 +2395,6 @@ bool CollectionSession::installEntry(int row)
       m_modFoldersRead = true;
     }
     existingBefore = m_modFolders;
-    approvedBefore = approvedNow();
     installed = m_core.installArchive(e.archive, -1, false, nullptr, e.modName);
   } catch (const std::exception& ex) {
     error = QString::fromUtf8(ex.what());
@@ -2506,7 +2509,7 @@ bool CollectionSession::installBundle(int row)
   IModInterface* created = nullptr;
   {
     InstallationManager* im = m_core.installationManager();
-    im->setApprovedReplacements(approvedNow());
+    im->setApprovedReplacements(approvedFor(e.modName));
     const auto reset = qScopeGuard([im] {
       im->setApprovedReplacements({});
     });
@@ -2660,7 +2663,7 @@ bool CollectionSession::installRootMod(int row, bool* handled)
 
   // an installed mod set aside by Replace comes back if this fails; the
   // folders the user said may be replaced, before this one changes
-  const QStringList approvedBefore = approvedNow();
+  const QStringList approvedBefore = approvedFor(e.modName);
   GuessedValue<QString> name(e.modName, GUESS_USER);
   IModInterface* created = nullptr;
   {
@@ -2796,6 +2799,22 @@ struct WaitGuard
   WaitGuard& operator=(const WaitGuard&) = delete;
   int& m_n;
 };
+
+// MO2 Revamped: runs job on a worker thread; events (not the user's) run
+// meanwhile, and the window waits to close (CollectionDialog::closeEvent) so
+// the session isn't deleted here
+void runOnWorker(int& waiting, std::function<void()> job)
+{
+  QEventLoop wait;
+  std::unique_ptr<QThread> worker(QThread::create(std::move(job)));
+  QObject::connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
+  worker->start();
+  {
+    const WaitGuard guard(waiting);
+    wait.exec(QEventLoop::ExcludeUserInputEvents);
+  }
+  worker->wait();
+}
 }  // namespace
 
 void CollectionSession::postInstall(int row)
@@ -2821,30 +2840,57 @@ void CollectionSession::postInstall(int row)
 
   // binary patches, from patches/<mod>/<file>.diff in the collection's archive
   if (!mod.patches.empty()) {
+    // only this mod's own folder of the archive (named by the collection's
+    // mod, or by the mod's folder in MO2)
+    const QString ownPrefix    = "patches/" + normalizedPath(mod.name) + "/";
+    const QString folderPrefix = "patches/" + normalizedPath(e.modName) + "/";
     QTemporaryDir temp;
     std::vector<std::pair<QString, QString>> diffs;
     if (temp.isValid()) {
       extractArchiveFiles(
-          [](const QString& path) {
-            return path.startsWith(QStringLiteral("patches/"), Qt::CaseInsensitive) &&
-                   path.endsWith(QStringLiteral(".diff"), Qt::CaseInsensitive);
+          [&ownPrefix, &folderPrefix](const QString& path) {
+            const QString n = normalizedPath(path);
+            return (n.startsWith(ownPrefix) || n.startsWith(folderPrefix)) &&
+                   n.endsWith(QStringLiteral(".diff"));
           },
           temp.path(), &diffs);
     }
 
-    int applied = 0;
-    for (const auto& [file, crcText] : mod.patches) {
+    // what can be told without reading the files, here; the reading, the
+    // checksum and the patching on a worker thread
+    struct PatchJob
+    {
+      size_t slot = 0;
+      QString file;      // as the collection names it
+      QString target;    // the mod's file
+      QString diffFile;  // extracted
+      quint32 expected = 0;
+      enum Result
+      {
+        Applied,
+        Missing,
+        TooLarge,
+        WrongFile,
+        Failed,
+        NotWritten
+      } result = Failed;
+      QString why;
+    };
+    std::vector<QString> patchNotes(mod.patches.size());
+    auto jobs = std::make_shared<std::vector<PatchJob>>();
+    for (size_t i = 0; i < mod.patches.size(); ++i) {
+      const auto& [file, crcText] = mod.patches[i];
       const QString relative = place(QString(file).replace('\\', '/'));
       if (!isSafeRelativePath(relative)) {
-        e.notes.append(tr("Patch not applied to %1: unsafe file name.").arg(file));
+        patchNotes[i] = tr("Patch not applied to %1: unsafe file name.").arg(file);
         continue;
       }
       // as Vortex: a patch needs the CRC of the file it was made for
       const auto expected = parseCrc(crcText);
       if (!expected) {
-        e.notes.append(tr("Patch not applied to %1: the collection gives no valid "
-                          "checksum for it.")
-                           .arg(file));
+        patchNotes[i] = tr("Patch not applied to %1: the collection gives no valid "
+                           "checksum for it.")
+                            .arg(file);
         continue;
       }
       // and comes from this mod's own folder of the archive only
@@ -2863,47 +2909,89 @@ void CollectionSession::postInstall(int row)
         }
       }
       if (diffFile.isEmpty()) {
-        e.notes.append(
+        patchNotes[i] =
             tr("Patch not applied to %1: it is missing from the collection's archive.")
-                .arg(file));
+                .arg(file);
         continue;
       }
+      PatchJob job;
+      job.slot     = i;
+      job.file     = file;
+      job.target   = dir.filePath(relative);
+      job.diffFile = diffFile;
+      job.expected = *expected;
+      jobs->push_back(std::move(job));
+    }
 
-      QFile original(dir.filePath(relative));
-      QFile diff(diffFile);
-      if (!original.open(QIODevice::ReadOnly) || !diff.open(QIODevice::ReadOnly)) {
-        e.notes.append(tr("Patch not applied to %1: the file is missing.").arg(file));
-        continue;
+    if (!jobs->empty()) {
+      runOnWorker(m_waiting, [jobs] {
+        for (PatchJob& job : *jobs) {
+          QFile original(job.target);
+          QFile diff(job.diffFile);
+          if (!original.open(QIODevice::ReadOnly) || !diff.open(QIODevice::ReadOnly)) {
+            job.result = PatchJob::Missing;
+            continue;
+          }
+          // read whole: not for a file past the patcher's limit
+          if (original.size() > MaxPatchedSize ||
+              !patchSizeAllowed(diff.size(), original.size())) {
+            job.result = PatchJob::TooLarge;
+            continue;
+          }
+          const QByteArray before = original.readAll();
+          original.close();
+          if (job.expected != crc32(before)) {
+            job.result = PatchJob::WrongFile;
+            continue;
+          }
+          QByteArray after;
+          if (!bspatch(before, diff.readAll(), after, &job.why)) {
+            job.result = PatchJob::Failed;
+            continue;
+          }
+          // replaced at once, or the original stays
+          QSaveFile out(job.target);
+          if (!out.open(QIODevice::WriteOnly) || out.write(after) != after.size() ||
+              !out.commit()) {
+            job.result = PatchJob::NotWritten;
+            continue;
+          }
+          job.result = PatchJob::Applied;
+        }
+      });
+    }
+
+    int applied = 0;
+    for (const PatchJob& job : *jobs) {
+      QString& note = patchNotes[job.slot];
+      switch (job.result) {
+      case PatchJob::Applied:
+        ++applied;
+        break;
+      case PatchJob::Missing:
+        note = tr("Patch not applied to %1: the file is missing.").arg(job.file);
+        break;
+      case PatchJob::TooLarge:
+        note = tr("Patch not applied to %1: the patch or the file is too large.")
+                   .arg(job.file);
+        break;
+      case PatchJob::WrongFile:
+        note = tr("Patch not applied to %1: the file isn't the one the patch "
+                  "was made for.")
+                   .arg(job.file);
+        break;
+      case PatchJob::Failed:
+        note = tr("Patch not applied to %1: %2").arg(job.file, job.why);
+        break;
+      case PatchJob::NotWritten:
+        note = tr("Patch not applied to %1: the file couldn't be written.").arg(job.file);
+        break;
       }
-      // read whole: not for a file past the patcher's limit
-      if (original.size() > MaxPatchedSize || !patchSizeAllowed(diff.size(), original.size())) {
-        e.notes.append(tr("Patch not applied to %1: the patch or the file is too large.")
-                           .arg(file));
-        continue;
+    }
+    for (const QString& note : patchNotes) {
+      if (!note.isEmpty()) {
+        e.notes.append(note);
       }
-      const QByteArray before = original.readAll();
-      original.close();
-      if (*expected != crc32(before)) {
-        e.notes.append(tr("Patch not applied to %1: the file isn't the one the patch "
-                          "was made for.")
-                           .arg(file));
-        continue;
-      }
-      QByteArray after;
-      QString why;
-      if (!bspatch(before, diff.readAll(), after, &why)) {
-        e.notes.append(tr("Patch not applied to %1: %2").arg(file, why));
-        continue;
-      }
-      // replaced at once, or the original stays
-      QSaveFile out(dir.filePath(relative));
-      if (!out.open(QIODevice::WriteOnly) || out.write(after) != after.size() ||
-          !out.commit()) {
-        e.notes.append(tr("Patch not applied to %1: the file couldn't be written.")
-                           .arg(file));
-        continue;
-      }
-      ++applied;
     }
     if (applied > 0) {
       e.notes.append(tr("%n file(s) patched.", "", applied));
@@ -2921,25 +3009,20 @@ void CollectionSession::postInstall(int row)
         present.append(relative);
       }
     }
-    // the MD5s the list asks for, on a worker thread: big files take long, and
-    // the window keeps painting meanwhile
-    QHash<QString, QString> presentByKey;
-    for (const QString& p : present) {
-      presentByKey.insert(normalizedPath(p), p);
-    }
+    // the MD5s the list asks for, on one worker thread: big files take long,
+    // and the window keeps painting meanwhile. Which files: a first comparison
+    // that only notes the files it asks for (the listed ones and those the
+    // installer may have moved); what it asks doesn't depend on the answers
     QStringList toHash;
-    for (const auto& h : listed) {
-      const auto it = presentByKey.constFind(normalizedPath(h.path));
-      if (!h.md5.isEmpty() && it != presentByKey.constEnd()) {
-        toHash.append(it.value());
-      }
-    }
+    compareFileList(listed, present, [&toHash](const QString& relative) {
+      toHash.append(relative);
+      return QString();
+    });
     toHash.removeDuplicates();
     auto sums = std::make_shared<QHash<QString, QString>>();
     if (!toHash.isEmpty()) {
       const QString root = dir.path();
-      QEventLoop wait;
-      std::unique_ptr<QThread> worker(QThread::create([root, toHash, sums] {
+      runOnWorker(m_waiting, [root, toHash, sums] {
         const QDir d(root);
         for (const QString& relative : toHash) {
           QFile f(d.filePath(relative));
@@ -2951,47 +3034,10 @@ void CollectionSession::postInstall(int row)
           }
           sums->insert(relative, sum);
         }
-      }));
-      connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
-      worker->start();
-      {
-        // MO2 Revamped: events run meanwhile; the window waits to close
-        // (CollectionDialog::closeEvent) so this session isn't deleted here
-        const WaitGuard waiting(m_waiting);
-        wait.exec(QEventLoop::ExcludeUserInputEvents);
-      }
-      worker->wait();
+      });
     }
-    // a file the installer moved (compareFileList) is hashed here, on demand:
-    // there are few of them
-    const auto md5Of = [this, &sums, &dir](const QString& relative) {
-      const auto it = sums->constFind(relative);
-      if (it != sums->constEnd()) {
-        return it.value();
-      }
-      // on a worker thread like the ones above: a moved pak can be big
-      auto sum = std::make_shared<QString>();
-      const QString path = dir.filePath(relative);
-      QEventLoop wait;
-      std::unique_ptr<QThread> worker(QThread::create([path, sum] {
-        QFile f(path);
-        if (f.open(QIODevice::ReadOnly)) {
-          QCryptographicHash hash(QCryptographicHash::Md5);
-          hash.addData(&f);
-          *sum = QString::fromLatin1(hash.result().toHex());
-        }
-      }));
-      connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
-      worker->start();
-      {
-        // MO2 Revamped: events run meanwhile; the window waits to close
-        // (CollectionDialog::closeEvent) so this session isn't deleted here
-        const WaitGuard waiting(m_waiting);
-        wait.exec(QEventLoop::ExcludeUserInputEvents);
-      }
-      worker->wait();
-      sums->insert(relative, *sum);
-      return *sum;
+    const auto md5Of = [&sums](const QString& relative) {
+      return sums->value(relative);
     };
     const auto result = compareFileList(listed, present, md5Of);
 
@@ -3047,6 +3093,35 @@ void CollectionSession::applyFileOverrides()
                       QDir(ModInfo::getByIndex(ModInfo::getIndex(e.modName))->absolutePath())};
   }
 
+  // whether a file is in a mod: asked on disk, until a mod has been asked
+  // about often (many overrides); then its files (normalized relative paths,
+  // hidden ones too) are read once and asked from that. A folder walk for a
+  // few lookups would cost more than it saves. Not the directory structure:
+  // its refresh after the new order has only been queued here, and it leaves
+  // out inactive mods and hidden files
+  constexpr int WalkAfterLookups = 64;
+  struct ModFiles
+  {
+    int lookups = 0;
+    bool cached = false;
+    QSet<QString> files;
+  };
+  std::map<int, ModFiles> filesOf;
+  const auto exists = [&filesOf, &placeOf](int row, const QString& key,
+                                           const QString& path) {
+    ModFiles& m = filesOf[row];
+    if (!m.cached && ++m.lookups > WalkAfterLookups) {
+      const QDir& dir = placeOf[row].second;
+      QDirIterator walk(dir.path(), QDir::Files | QDir::Hidden | QDir::System,
+                        QDirIterator::Subdirectories);
+      while (walk.hasNext()) {
+        m.files.insert(normalizedPath(dir.relativeFilePath(walk.next())));
+      }
+      m.cached = true;
+    }
+    return m.cached ? m.files.contains(key) : QFileInfo::exists(path);
+  };
+
   for (int winner : ours) {
     const Entry& w = m_entries[winner];
     if (modOf(w).fileOverrides.isEmpty()) {
@@ -3067,15 +3142,23 @@ void CollectionSession::applyFileOverrides()
         continue;
       }
       // the copies that would win over it by the order
+      const QString key = normalizedPath(relative);
       for (int other : ours) {
-        const Entry& o = m_entries[other];
-        Q_UNUSED(o);
         if (other == winner || placeOf[other].first <= winnerPriority) {
           continue;
         }
         const QString path = placeOf[other].second.filePath(relative);
-        if (QFile::exists(path) && !QFile::exists(path + ".mohidden") &&
-            QFile::rename(path, path + ".mohidden")) {
+        if (!exists(other, key, path) ||
+            exists(other, key + ".mohidden", path + ".mohidden")) {
+          continue;
+        }
+        if (QFile::rename(path, path + ".mohidden")) {
+          // a mod read into the cache keeps it as the disk is now
+          ModFiles& m = filesOf[other];
+          if (m.cached) {
+            m.files.remove(key);
+            m.files.insert(key + ".mohidden");
+          }
           ++hidden;
         }
       }
@@ -3364,6 +3447,46 @@ void CollectionSession::finalizeFailed(const QString& why)
   saveState();
 }
 
+bool CollectionSession::finalizeCanGoOn()
+{
+  // as installEntry(): still running, and still in the collection's profile.
+  // Otherwise nothing is applied; it pauses, and Continue does the ordering again
+  const Profile* current = m_core.currentProfile();
+  const bool otherProfile =
+      current == nullptr ||
+      current->name().compare(m_profileName, Qt::CaseInsensitive) != 0;
+  if (m_stage == Stage::Running && !otherProfile) {
+    return true;
+  }
+  log::debug("collection {}: ordering stopped ({})", m_link.slug,
+             otherProfile ? "another profile" : "not running");
+  m_finalizing     = false;
+  m_conflictsReady = false;
+  m_conflictPairs.clear();
+  m_loadingText.clear();
+  const bool wasRunning = m_stage == Stage::Running;
+  if (wasRunning) {
+    pause();
+  } else {
+    saveState();
+    emit changed();
+  }
+  if (wasRunning && otherProfile) {
+    // after the callback it may be called from (a refresh's)
+    QPointer<CollectionSession> self(this);
+    QTimer::singleShot(0, this, [self] {
+      if (self) {
+        QMessageBox::information(
+            qApp->activeWindow(), tr("Collection"),
+            tr("Another profile was selected. The collection is paused; "
+               "press Continue to resume it in \"%1\".")
+                .arg(self->m_profileName));
+      }
+    });
+  }
+  return false;
+}
+
 void CollectionSession::finalize()
 {
   if (m_finalizing) {
@@ -3389,21 +3512,23 @@ void CollectionSession::finalize()
     QThread* worker = QThread::create([folders, pairs] {
       *pairs = sharedFilePairs(folders);
     });
-    QPointer<CollectionSession> self(this);
-    connect(worker, &QThread::finished, this, [self, worker, pairs] {
-      worker->deleteLater();
-      if (!self) {
-        return;
-      }
-      self->m_conflictPairs  = std::move(*pairs);
-      self->m_conflictsReady = true;
-      self->m_finalizing     = false;
-      self->finalize();
+    // freed when it ends, even with the session gone
+    connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &QThread::finished, this, [this, pairs] {
+      m_conflictPairs  = std::move(*pairs);
+      m_conflictsReady = true;
+      m_finalizing     = false;
+      finalize();
     });
     worker->start();
     return;
   }
   m_conflictsReady = false;
+
+  // the session may have been paused, or the profile changed, meanwhile
+  if (!finalizeCanGoOn()) {
+    return;
+  }
 
   try {
     applyModOrder();
@@ -3420,7 +3545,7 @@ void CollectionSession::finalize()
   QPointer<CollectionSession> self(this);
   m_core.onNextRefresh(
       [self] {
-        if (!self) {
+        if (!self || !self->finalizeCanGoOn()) {
           return;
         }
         try {
@@ -3737,7 +3862,7 @@ void CollectionSession::applyModOrder()
         [&groupOf](int mod) {
           return groupOf[mod];
         },
-        {}, position, &m_conflictPairs);
+        position, &m_conflictPairs);
     // one section only: its separator would say nothing more
     const size_t sectionCount = grouped.groups.size() + (grouped.overflow.empty() ? 0 : 1);
     if (sectionCount < 2) {
@@ -3794,9 +3919,12 @@ void CollectionSession::applyModOrder()
         ++it;
       }
     }
+    // no refresh here: removeModsForce() forgets the mods (ModInfo's indexes
+    // rebuilt) and refreshes the profile's mod status, which is all the order
+    // below reads; finalize() refreshes once the order is in place. The
+    // directory structure is already being refreshed (the one above)
     if (!unused.isEmpty()) {
       m_core.modList()->removeModsForce(unused);
-      m_core.refresh();
     }
   }
 

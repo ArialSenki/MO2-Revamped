@@ -55,6 +55,11 @@ public:
   bool claims(const QString& nxmUrl) const;
   void setAutoStart(bool b);
 
+public slots:
+  // Esc: through closeEvent() too (since Qt 6.3 QDialog::reject() closes
+  // without one), so a running collection pauses and a wait isn't cut
+  void reject() override;
+
 protected:
   void closeEvent(QCloseEvent* e) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
@@ -70,6 +75,7 @@ private:
   QPushButton* m_update = nullptr;
   QPushButton* m_retryFailed = nullptr;
   bool m_built = false;
+  bool m_inCloseEvent = false;  // reject() from QDialog::closeEvent()
   QTimer m_changeTimer;
   bool m_rowsLocked = false;
   bool m_rowsDrawn  = false;
