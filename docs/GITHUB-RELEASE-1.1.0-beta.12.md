@@ -4,6 +4,34 @@ overrides, INI tweaks, updating a collection to a new revision and browsing
 collections from MO2, plus safety fixes from an audit of the feature.
 It also brings **Root folders without Root Builder**, fixes for **Skyrim Special Edition, Fallout 4, New Vegas and Fallout 3**, and a round of fixes for **Baldur's Gate 3** mods and lists.
 
+## Beta status: what works and in which games
+
+This is a **beta**. It works for daily use in the games below, but expect bugs:
+back up your saves and your mods folder first, and please report what fails.
+
+**Tested by hand with the real game and mods**
+
+- **Elden Ring** and **Elden Ring Nightreign** (the main games): DLL mods,
+  Reforged offline, Convergence, Seamless Co-op, Damage Competition, save isolation.
+- **Skyrim Special Edition** and **Fallout 4**: SKSE64 / F4SE and the borderless window.
+- **Fallout 3** and **Fallout: New Vegas**: FOSE / NVSE and the borderless window.
+- **Cyberpunk 2077** 2.5: CET, RED4ext, ArchiveXL, TweakXL, and two Nexus
+  collections installed from start to finish (10 and 364 mods).
+- **Baldur's Gate 3**: Script Extender, .pak mods, and a 259-mod list that
+  reached the main menu with Native Mod Loader.
+
+**Starts in MO2 with a test instance, not played with mods yet (may fail):**
+Oblivion, the original Skyrim, Enderal, Tale of Two Wastelands, Morrowind,
+Starfield and the VR versions.
+
+**New in this beta, not tested in a real game yet:** Root folders without Root
+Builder (the forced load, the DLL redirect and the copy fallback), and Nexus
+collections for Bethesda games and Baldur's Gate 3.
+
+**Not in this beta:** installing Wabbajack lists natively (a separate
+experimental build), the Microsoft Store / Game Pass editions, Linux beyond the
+start-up fix.
+
 ## Download
 
 - `MO2-Revamped-Setup-1.1.0-beta.12.exe`: run it and choose **Install MO2
