@@ -1187,6 +1187,18 @@ void WabbajackDialog::startInstall()
   QDir parent(downloads);
   parent.cdUp();
   auto* folder = new QLineEdit(QDir::toNativeSeparators(parent.filePath(defaultName)), &ask);
+  folder->setAccessibleName(tr("Install folder"));
+  // the folder follows the name until it is chosen or typed by hand
+  auto folderTouched = std::make_shared<bool>(false);
+  connect(folder, &QLineEdit::textEdited, &ask, [folderTouched] {
+    *folderTouched = true;
+  });
+  connect(name, &QLineEdit::textChanged, &ask, [=](const QString& text) {
+    QString fixed = text.trimmed();
+    if (!*folderTouched && !fixed.isEmpty() && fixDirectoryName(fixed)) {
+      folder->setText(QDir::toNativeSeparators(parent.filePath(fixed)));
+    }
+  });
   auto* choose = new QPushButton(FluentIcons::glyph(FolderGlyph), tr("Choose…"), &ask);
   choose->setAutoDefault(false);
   folderRow->addWidget(folder, 1);
@@ -1206,6 +1218,7 @@ void WabbajackDialog::startInstall()
     const QString dir = QFileDialog::getExistingDirectory(&ask, tr("Install folder"),
                                                           folder->text());
     if (!dir.isEmpty()) {
+      *folderTouched = true;
       folder->setText(QDir::toNativeSeparators(dir));
     }
   });
@@ -1482,6 +1495,37 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
       }
     }
     to.sync();
+  }
+
+  // the mod list as the author sees it: notes ("Optional") and categories
+  {
+    QSettings to(ci.iniPath, QSettings::IniFormat);
+    to.setValue("Settings/mo2r_list_columns", true);
+    to.sync();
+  }
+  // the list's own categories ("6," is its "User Interface"): MO2 reads them
+  // from the instance's folder, not from the install's
+  const QString categories = QDir(m_installFolder).filePath("categories.dat");
+  if (QFileInfo(categories).isFile() && !ci.dataPath.isEmpty()) {
+    const QString target = QDir(ci.dataPath).filePath("categories.dat");
+    QFile::remove(target);
+    if (!QFile::copy(categories, target)) {
+      log::warn("wabbajack: the list's categories couldn't be copied to {}", target);
+    }
+    // without a Nexus category map MO2 adds its default categories over the
+    // list's (its 7 became "Creatures, Mounts, & Vehicles"): an empty map,
+    // or the list's own
+    const QString map       = QDir(m_installFolder).filePath("nexuscatmap.dat");
+    const QString mapTarget = QDir(ci.dataPath).filePath("nexuscatmap.dat");
+    QFile::remove(mapTarget);
+    if (QFileInfo(map).isFile()) {
+      QFile::copy(map, mapTarget);
+    } else {
+      QFile empty(mapTarget);
+      if (!empty.open(QIODevice::WriteOnly)) {
+        log::warn("wabbajack: {} couldn't be written", mapTarget);
+      }
+    }
   }
   log::info("wabbajack: instance '{}' made for {}", m_instanceName, m_installFolder);
   return true;
