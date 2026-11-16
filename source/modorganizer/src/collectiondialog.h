@@ -28,6 +28,8 @@ class QTreeWidget;
 class QTreeWidgetItem;
 class QFrame;
 
+class QScreen;
+
 class CollectionDialog : public QDialog
 {
   Q_OBJECT
@@ -58,6 +60,7 @@ protected:
   bool eventFilter(QObject* watched, QEvent* event) override;
   void moveEvent(QMoveEvent* e) override;
   void resizeEvent(QResizeEvent* e) override;
+  void showEvent(QShowEvent* e) override;
 
 private:
   OrganizerCore& m_core;
@@ -107,6 +110,11 @@ private:
   void placeWindow();
   QElapsedTimer m_placedAt;
   bool m_userPlaced = false;
+  bool m_userResized   = false;
+  bool m_fitting       = false;
+  bool m_screenWatched = false;
+  QSize wantedSize(const QRect& available) const;
+  void fitToScreen(QScreen* screen);
   bool m_placing    = false;
   QFrame* createHeader();
   QFrame* createInstructions();

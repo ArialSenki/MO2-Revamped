@@ -10819,6 +10819,18 @@ Firefox.exe</translation>
       <source>The new interface size applies when Mod Organizer starts again.</source>
       <translation>Die neue Größe der Oberfläche gilt, wenn Mod Organizer neu startet.</translation>
     </message>
+    <message>
+      <source>Smooth text in grey (OLED screens)</source>
+      <translation>Text in Grau glätten (OLED-Bildschirme)</translation>
+    </message>
+    <message>
+      <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
+      <translation>Zeichnet Text ohne die farbigen Ränder von Windows, die auf OLED-Bildschirmen als farbiger Saum erscheinen. Gilt, wenn Mod Organizer neu startet.</translation>
+    </message>
+    <message>
+      <source>These changes apply when Mod Organizer starts again.</source>
+      <translation>Diese Änderungen gelten, wenn Mod Organizer neu startet.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

@@ -2,6 +2,7 @@
 #define SETTINGSDIALOGGENERAL_H
 
 class QComboBox;
+class QCheckBox;
 
 #include "plugincontainer.h"
 #include "settings.h"
@@ -17,6 +18,7 @@ public:
 
 private:
   QComboBox* m_scaleBox = nullptr;
+  QCheckBox* m_greyText = nullptr;
 
   void addLanguages();
   void selectLanguage();

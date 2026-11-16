@@ -984,6 +984,11 @@ public:
   // read before the QApplication exists, from the program's own folder
   static int interfaceScaleBeforeApplication();
 
+  // text smoothed in grey instead of ClearType's coloured edges, which fringe
+  // on OLED panels; applied when MO2 starts
+  static bool greyscaleText();
+  static void setGreyscaleText(bool on);
+
   static bool hideCategoryReminder();
   static void setHideCategoryReminder(bool b);
 
