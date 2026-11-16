@@ -616,10 +616,12 @@ int run(int argc, char* argv[])
 
   // MO2 Revamped: the interface size chosen in Settings, on top of Windows'
   // own scaling; a QT_SCALE_FACTOR set by the user wins
+  bool setScaleFactor = false;
   if (qEnvironmentVariableIsEmpty("QT_SCALE_FACTOR")) {
     const int scale = GlobalSettings::interfaceScaleBeforeApplication();
     if (scale != 100) {
       qputenv("QT_SCALE_FACTOR", QByteArray::number(scale / 100.0, 'f', 2));
+      setScaleFactor = true;
     }
   }
 
@@ -627,6 +629,12 @@ int run(int argc, char* argv[])
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
   writeStartupDiagnosticEvent("startup.qapplication.ready");
+
+  // MO2 Revamped: Qt has read it; programs started from here (LOOT, Qt tools)
+  // and MO2 itself after a restart mustn't inherit our size as the user's
+  if (setScaleFactor) {
+    qunsetenv("QT_SCALE_FACTOR");
+  }
 
   // MO2 Revamped: text in grey, without ClearType's coloured edges (OLED)
   if (GlobalSettings::greyscaleText()) {

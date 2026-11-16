@@ -109,6 +109,10 @@ public:
   const Collections::CollectionLink& link() const { return m_link; }
   int revision() const { return m_revision; }
   Stage stage() const { return m_stage; }
+
+  // MO2 Revamped: inside a wait that runs events (hashing a mod's files); the
+  // session mustn't be deleted until it returns
+  bool waiting() const { return m_waiting > 0; }
   QString loadingText() const { return m_loadingText; }
   QString errorText() const { return m_error; }
   const Collections::CollectionManifest& manifest() const { return m_manifest; }
@@ -208,6 +212,7 @@ signals:
   void finished();
 
 private:
+  int m_waiting = 0;
   OrganizerCore& m_core;
   Collections::CollectionLink m_link;
   int m_revision = -1;
