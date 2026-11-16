@@ -8984,6 +8984,14 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>Some files MO2 copied into the game folder (%1) were changed by something else while they were there, perhaps a game update. MO2 left them as they are and kept its backups of the game's own files in %2. The files are named in MO2's log; check them, or let Steam verify the game's files.</source>
+      <translation>Alguns arquivos que o MO2 copiou para a pasta do jogo (%1) foram alterados por outra coisa enquanto estavam lá, talvez uma atualização do jogo. O MO2 os deixou como estão e guardou os backups dos arquivos do próprio jogo em %2. Os arquivos estão no log do MO2; verifique-os ou peça à Steam para verificar os arquivos do jogo.</translation>
+    </message>
+    <message>
+      <source>MO2 can't write to the game folder (%1), so the files from the mods' Root folders that must be real files there (script extender, ENB, ReShade, DXVK and similar) weren't copied. The game starts without them. Move the game out of Program Files, or give your account write access to its folder.</source>
+      <translation>O MO2 não consegue gravar na pasta do jogo (%1), então os arquivos das pastas Root dos mods que precisam estar lá como arquivos reais (script extender, ENB, ReShade, DXVK e semelhantes) não foram copiados. O jogo inicia sem eles. Tire o jogo de Arquivos de Programas ou dê à sua conta permissão de gravação na pasta dele.</translation>
+    </message>
+    <message>
       <source>Nexus sign-in</source>
       <translation>Entrar no Nexus</translation>
     </message>
@@ -9815,6 +9823,14 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
+      <translation>Não foi possível copiar %1 da pasta Root do mod para a pasta do jogo, então ele não pode iniciar. O motivo está no log do MO2.</translation>
+    </message>
+    <message>
+      <source>Can't start %1</source>
+      <translation>Não é possível iniciar %1</translation>
+    </message>
     <message>
       <source>Overwrite</source>
       <translation>Overwrite</translation>

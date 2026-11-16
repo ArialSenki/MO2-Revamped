@@ -9180,6 +9180,14 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
   <context>
     <name>OrganizerCore</name>
     <message>
+      <source>Some files MO2 copied into the game folder (%1) were changed by something else while they were there, perhaps a game update. MO2 left them as they are and kept its backups of the game's own files in %2. The files are named in MO2's log; check them, or let Steam verify the game's files.</source>
+      <translation>Certains fichiers que MO2 avait copiés dans le dossier du jeu (%1) ont été modifiés par autre chose pendant qu'ils y étaient, peut-être une mise à jour du jeu. MO2 les a laissés tels quels et garde ses sauvegardes des fichiers du jeu dans %2. Les fichiers sont indiqués dans le journal de MO2 ; vérifiez-les, ou laissez Steam vérifier les fichiers du jeu.</translation>
+    </message>
+    <message>
+      <source>MO2 can't write to the game folder (%1), so the files from the mods' Root folders that must be real files there (script extender, ENB, ReShade, DXVK and similar) weren't copied. The game starts without them. Move the game out of Program Files, or give your account write access to its folder.</source>
+      <translation>MO2 ne peut pas écrire dans le dossier du jeu (%1) : les fichiers des dossiers Root des mods qui doivent y être de vrais fichiers (script extender, ENB, ReShade, DXVK et similaires) n'ont pas été copiés. Le jeu démarre sans eux. Déplacez le jeu hors de Program Files, ou donnez à votre compte l'accès en écriture à son dossier.</translation>
+    </message>
+    <message>
       <source>Nexus sign-in</source>
       <translation>Connexion à Nexus</translation>
     </message>
@@ -10077,6 +10085,14 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
+      <translation>%1 n'a pas pu être copié du dossier Root du mod vers le dossier du jeu, il ne peut donc pas démarrer. La raison figure dans le journal de MO2.</translation>
+    </message>
+    <message>
+      <source>Can't start %1</source>
+      <translation>Impossible de démarrer %1</translation>
+    </message>
     <message>
       <source>Overwrite</source>
       <translation>Overwrite</translation>

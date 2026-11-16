@@ -14,6 +14,7 @@
 #include "moshortcut.h"
 #include "pluginlist.h"
 #include "processrunner.h"
+#include "rootlaunch.h"
 #include "selfupdater.h"
 #include "settings.h"
 #include "uilocker.h"
@@ -32,8 +33,11 @@
 #include <QSettings>
 #include <QString>
 #include <QStringList>
+#include <QElapsedTimer>
 #include <QThread>
 #include <QVariant>
+
+class QTimer;
 
 class ModListSortProxy;
 class PluginListSortProxy;
@@ -309,6 +313,23 @@ public:
                  const QList<MOBase::ExecutableForcedLoadSetting>& forcedLibraries);
 
   void afterRun(const QFileInfo& binary, DWORD exitCode);
+
+  // MO2 Revamped: how the files of the mods' Root folders that the VFS can't
+  // serve reach the program (rootlaunch.h); empty when Root/ isn't mapped
+  RootLaunch::Plan planRootLaunch(const QString& profileName, const QFileInfo& binary);
+
+  // the copy fallback for a run; false when nothing could be copied (the
+  // game folder can't be written to: one notice per session)
+  bool deployRootCopies(const std::vector<RootCopy::File>& files);
+
+  // takes the copies out and restores the game's files once no program runs
+  // in the VFS; true when nothing is left in the game folder
+  bool restoreRootCopies();
+
+  // a launch from its copies to its start counts as running; endRootRun()
+  // takes the started process (or none) and starts the restore timer
+  void beginRootRun();
+  void endRootRun(HANDLE process);
 
   ProcessRunner::Results
   waitForAllUSVFSProcesses(UILocker::Reasons reason = UILocker::PreventExit);
@@ -632,6 +653,24 @@ private:
   // MO2 Revamped: plugins whose file time couldn't be set the last time the
   // load order was saved, so the user is told once per change
   QStringList m_UndatedPlugins;
+
+  // MO2 Revamped: the copy fallback's state (<instance>/rootcopy-backup/<game>),
+  // and the timer that restores it once the programs in the VFS end
+  QString rootCopyBase() const;
+  QString rootCopyStateDir() const;
+  QTimer* m_RootCopyTimer    = nullptr;
+  bool m_RootCopyNoticeShown = false;
+  // launches between their copies and their start, the processes they
+  // started, and when the last one started
+  int m_RootRunsActive = 0;
+  std::vector<HANDLE> m_RootRunHandles;
+  QElapsedTimer m_RootRunGrace;
+  // files restore left because something else changed them: told once
+  bool m_RootConflictNoticeShown   = false;
+  bool m_RootConflictNoticePending = false;
+  QStringList m_RootConflictFiles;
+  bool rootProgramsRunning();
+  void showRootConflictNotice();
 
   bool m_ArchivesInit;
 
