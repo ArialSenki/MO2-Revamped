@@ -25,6 +25,11 @@ removes everything on uninstall, and Elden Ring and Nightreign get fixes for
 closing and starting the game and for saves. Script extenders and the borderless
 window were tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas.
 
+On Nexus Mods: the [main page](https://www.nexusmods.com/eldenring/mods/11314), and pages for
+[Skyrim Special Edition](https://www.nexusmods.com/skyrimspecialedition/mods/199388),
+[Fallout 4](https://www.nexusmods.com/fallout4/mods/111513) and
+[Baldur's Gate 3](https://www.nexusmods.com/baldursgate3/mods/26688).
+
 The last stable release, [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2),
 remains available, as do [v1.0.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.1)
 and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
