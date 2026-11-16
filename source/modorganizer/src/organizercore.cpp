@@ -2378,6 +2378,19 @@ void OrganizerCore::afterRun(const QFileInfo& binary, DWORD exitCode)
     QFile::remove(m_CurrentProfile->getLoadOrderFileName());
   }
 
+  // MO2 Revamped: the Overwrite/Root that fileMapping() made, if nothing went
+  // there (rmdir only removes an empty folder) and no other program still
+  // running in the VFS can write there
+  {
+    const auto running = getRunningUSVFSProcesses();
+    for (HANDLE h : running) {
+      ::CloseHandle(h);
+    }
+    if (running.empty()) {
+      QDir(m_Settings.paths().overwrite()).rmdir(QStringLiteral("Root"));
+    }
+  }
+
   // what the program wrote isn't in a refresh that is already running
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;
@@ -2395,6 +2408,28 @@ void OrganizerCore::afterRun(const QFileInfo& binary, DWORD exitCode)
 ProcessRunner::Results OrganizerCore::waitForAllUSVFSProcesses(UILocker::Reasons reason)
 {
   return processRunner().waitForAllUSVFSProcessesWithLock(reason);
+}
+
+// MO2 Revamped: Root Builder's plugin name is "RootBuilder"; "Root Builder" is
+// its display name, kept in case a version names itself so
+static bool rootBuilderEnabled(const PluginContainer& plugins)
+{
+  return plugins.isEnabled(QStringLiteral("RootBuilder")) ||
+         plugins.isEnabled(QStringLiteral("Root Builder"));
+}
+
+// MO2 Revamped: whether a mod's Root/ folder is Root Builder's layout (files for
+// the game's own folder): only where the data folder is the game folder itself
+// (Baldur's Gate 3, Cyberpunk 2077) or the game's one data folder (Data in the
+// Bethesda games, Data Files in Morrowind). Where it holds one folder per mod
+// (Stardew Valley's Mods, Bannerlord's Modules, ...), root/ is mod content.
+static bool modsUseRootFolder(const IPluginGame* game)
+{
+  const QString relative = QDir::cleanPath(
+      game->gameDirectory().relativeFilePath(game->dataDirectory().absolutePath()));
+  static const QStringList dataFolders = {QStringLiteral("."), QStringLiteral("Data"),
+                                          QStringLiteral("Data Files")};
+  return dataFolders.contains(relative, Qt::CaseInsensitive);
 }
 
 std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
@@ -2415,6 +2450,18 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
     dataPaths.append(directory.absolutePath());
   }
 
+  // MO2 Revamped: a mod's Root/ folder (Root Builder's layout, which Wabbajack
+  // lists use) goes to the game's own folder, not the data folder; Root
+  // Builder, when it's there and on, deploys it itself
+  const bool mapRoot = !rootBuilderEnabled(*m_PluginContainer) && modsUseRootFolder(game);
+  const QString gameRoot =
+      QDir::toNativeSeparators(game->gameDirectory().absolutePath());
+  const bool dataIsRoot =
+      QDir::cleanPath(game->dataDirectory().absolutePath())
+          .compare(QDir::cleanPath(game->gameDirectory().absolutePath()),
+                   Qt::CaseInsensitive) == 0;
+  bool customOverwriteHasRoot = false;
+
   bool overwriteActive = false;
 
   for (const auto& mod : profile.getActiveMods()) {
@@ -2433,6 +2480,21 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
       for (auto dataPath : dataPaths) {
         result.insert(result.end(), {QDir::toNativeSeparators(std::get<1>(mod)),
                                      dataPath, true, createTarget});
+      }
+
+      // in the mods' order, so a higher mod's Root/ wins a conflict as its
+      // data files do; QFileInfo finds root/ and ROOT/ too
+      if (mapRoot) {
+        const QString rootPath = std::get<1>(mod) + QStringLiteral("/Root");
+        if (QFileInfo(rootPath).isDir()) {
+          // the program's mod for new files gets those in the game folder too
+          // (where the data folder is the game folder, its data mapping
+          // already is that)
+          const bool rootTarget = createTarget && !dataIsRoot;
+          result.push_back(
+              {QDir::toNativeSeparators(rootPath), gameRoot, true, rootTarget});
+          customOverwriteHasRoot |= rootTarget;
+        }
       }
     }
   }
@@ -2469,6 +2531,16 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
     result.insert(result.end(),
                   {QDir::toNativeSeparators(m_Settings.paths().overwrite()), dataPath,
                    true, customOverwrite.isEmpty()});
+  }
+
+  // MO2 Revamped: where the data folder isn't the game folder, what a program
+  // makes in the game folder (ReShade's ini and logs, ENB's cache) goes to
+  // Overwrite/Root instead of the real folder; afterRun() removes it if empty
+  if (mapRoot && !dataIsRoot) {
+    const QString overwriteRoot = m_Settings.paths().overwrite() + "/Root";
+    QDir().mkpath(overwriteRoot);
+    result.push_back({QDir::toNativeSeparators(overwriteRoot), gameRoot, true,
+                      customOverwrite.isEmpty() || !customOverwriteHasRoot});
   }
 
   for (MOBase::IPluginFileMapper* mapper :

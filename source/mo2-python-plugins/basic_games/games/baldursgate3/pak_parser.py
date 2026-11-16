@@ -99,6 +99,14 @@ class BG3PakParser:
         return f"{self._utils.tools_dir / 'Divine.exe'} -g bg3 -l info"
 
     @cached_property
+    def _mapped_folder_names(self) -> set[str]:
+        return {
+            f.casefold()
+            for f in bg3_utils.top_level_data_folders
+            | {"Root", bg3_utils.se_config_folder, bg3_utils.pak_files_folder}
+        }
+
+    @cached_property
     def _folder_pattern(self):
         return re.compile("Data|Script Extender|bin|Mods")
 
@@ -196,6 +204,10 @@ class BG3PakParser:
                             Path(str(meta_file)[:-4]).unlink(missing_ok=True)
             elif file.is_dir():
                 if self._folder_pattern.search(file.name):
+                    return ""
+                # MO2 Revamped: game folders at the mod's top level (Generated/
+                # holds Public/...) are mapped to Data/, not packed
+                if file.name.casefold() in self._mapped_folder_names:
                     return ""
                 for folder in bg3_utils.loose_file_folders:
                     if next(file.glob(f"{folder}/*"), False):

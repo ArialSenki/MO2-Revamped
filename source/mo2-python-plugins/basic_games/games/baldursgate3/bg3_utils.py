@@ -1,4 +1,6 @@
 import functools
+import html
+import os
 import threading
 import shutil
 import typing
@@ -17,9 +19,17 @@ from PyQt6.QtCore import (
     qInfo,
     qWarning,
 )
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog
+from PyQt6.QtWidgets import (
+    QApplication,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QProgressDialog,
+)
 
 import mobase
+
+from ...basic_features.utils import root_builder_enabled
 
 loose_file_folders = {
     "Public",
@@ -28,6 +38,21 @@ loose_file_folders = {
     "Localization",
     "ScriptExtender",
 }
+
+# MO2 Revamped: game folders that Wabbajack lists (made with the unofficial BG3
+# plugin, whose data folder is Data/) leave at a mod's top level; they're mapped
+# to <game>/Data at run time (see BG3FileMapper)
+top_level_data_folders = loose_file_folders | {"Video"}
+
+# MO2 Revamped: Script Extender's per-mod config folder of the unofficial BG3
+# plugin (SE_CONFIG/<mod>/... -> <documents>/Script Extender/<mod>/...) and its
+# folder for the paks (PAK_FILES/*.pak -> <documents>/Mods)
+se_config_folder = "SE_CONFIG"
+pak_files_folder = "PAK_FILES"
+
+# MO2 Revamped: BG3 Mod Manager is a .NET 8 desktop program
+_bg3mm_binary = "bg3modmanager.exe"
+_dotnet8_download_url = "https://dotnet.microsoft.com/download/dotnet/8.0"
 
 
 def get_node_string(
@@ -310,9 +335,75 @@ class BG3Utils:
         sleep(0.5)
         return True
 
+    def root_builder_enabled(self) -> bool:
+        return root_builder_enabled(self._organizer)
+
+    def check_dotnet8_before_run(
+        self,
+        exec_path: str = "",
+        working_dir: typing.Optional[QDir] = None,
+        args: str = "",
+    ) -> bool:
+        """MO2 Revamped: BG3 Mod Manager doesn't start without the .NET 8 Desktop
+        Runtime; say so before it runs, with the link to get it."""
+        if Path(exec_path).name.casefold() != _bg3mm_binary:
+            return True
+        if dotnet8_desktop_installed():
+            return True
+        qWarning(".NET 8 Desktop Runtime not found, BG3 Mod Manager needs it")
+        box = QMessageBox(self.main_window)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(
+            QApplication.translate("BG3Utils", "BG3 Mod Manager needs .NET 8")
+        )
+        text = QApplication.translate(
+            "BG3Utils",
+            "BG3 Mod Manager needs the .NET 8 Desktop Runtime, which isn't "
+            "installed on this PC, so it will close with an error as it starts."
+            "\n\nInstall the .NET Desktop Runtime 8 for Windows x64 from {0}, then "
+            "run BG3 Mod Manager again.",
+        )
+        link = f'<a href="{_dotnet8_download_url}">{_dotnet8_download_url}</a>'
+        box.setTextFormat(Qt.TextFormat.RichText)
+        box.setText(html.escape(text).replace("\n", "<br>").replace("{0}", link))
+        box.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        run_anyway = box.addButton(
+            QApplication.translate("BG3Utils", "Start anyway"),
+            QMessageBox.ButtonRole.AcceptRole,
+        )
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(cancel)
+        box.setEscapeButton(cancel)
+        # QLabel opens the link itself with TextBrowserInteraction only when
+        # openExternalLinks is on
+        for label in box.findChildren(QLabel):
+            label.setOpenExternalLinks(True)
+        box.exec()
+        return box.clickedButton() is run_anyway
+
     def on_mod_installed(self, mod: mobase.IModInterface) -> None:
         if self.lslib_retriever.download_lslib_if_missing():
             self._pak_parser.get_metadata_for_files_in_mod(mod, True)
+
+
+def dotnet8_desktop_installed() -> bool:
+    """MO2 Revamped: a Microsoft.WindowsDesktop.App 8.x folder in the machine's
+    .NET install (or the one DOTNET_ROOT names)."""
+    roots = [
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "dotnet",
+    ]
+    if os.environ.get("DOTNET_ROOT"):
+        roots.insert(0, Path(os.environ["DOTNET_ROOT"]))
+    for root in roots:
+        try:
+            if any(
+                d.is_dir()
+                for d in (root / "shared" / "Microsoft.WindowsDesktop.App").glob("8.*")
+            ):
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def create_dir_if_needed(path: Path) -> Path:
