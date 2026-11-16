@@ -225,18 +225,27 @@ bool WabbajackDialog::claimNxm(const QString& url)
   return true;
 }
 
+// the list to open again is the instance's own: one left running in an instance
+// of another game doesn't open in this one. Kept in the instance's ini
 QString WabbajackDialog::resumeList()
 {
-  const QString path = GlobalSettings::value(ResumeSetting).toString();
+  // older builds kept it for every instance at once
+  if (GlobalSettings::value(ResumeSetting).isValid()) {
+    GlobalSettings::remove(ResumeSetting);
+  }
+  const QSettings ini(Settings::instance().filename(), QSettings::IniFormat);
+  const QString path = ini.value(QStringLiteral("Settings/wabbajack_resume_list")).toString();
   return isListFile(path) ? path : QString();
 }
 
 void WabbajackDialog::rememberResume(bool running)
 {
+  QSettings ini(m_core.settings().filename(), QSettings::IniFormat);
+  const QString key = QStringLiteral("Settings/wabbajack_resume_list");
   if (running) {
-    GlobalSettings::setValue(ResumeSetting, m_path);
-  } else if (GlobalSettings::value(ResumeSetting).toString() == m_path) {
-    GlobalSettings::remove(ResumeSetting);
+    ini.setValue(key, m_path);
+  } else if (ini.value(key).toString() == m_path) {
+    ini.remove(key);
   }
 }
 
