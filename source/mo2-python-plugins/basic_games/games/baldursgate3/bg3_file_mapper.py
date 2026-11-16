@@ -74,7 +74,17 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         (self._utils.overwrite_path / "Stats").mkdir(parents=True, exist_ok=True)
         (self._utils.overwrite_path / "Mods").mkdir(parents=True, exist_ok=True)
         (self._utils.overwrite_path / "GMCampaigns").mkdir(parents=True, exist_ok=True)
-        self.map_files(self._utils.overwrite_path)
+        # MO2 Revamped: usvfs only maps a folder into a folder it has in its
+        # tree, and when no mod has Data/ it checks <Overwrite>/Data in place of
+        # the game's Data ("Overwrite\Data doesn't exist"), so the Public/,
+        # Generated/, Video/ and Mods/<folder> mappings below were dropped. MO2
+        # maps Overwrite to the game folder, so these empty folders put Data and
+        # Data/Mods in the tree; _on_finished_run removes them if still empty.
+        (self._utils.overwrite_path / "Data" / "Mods").mkdir(
+            parents=True, exist_ok=True
+        )
+        # Overwrite/Data is the game's (mapped below), not the documents'
+        self.map_files(self._utils.overwrite_path, skip_top=frozenset({"data"}))
         # MO2 Revamped: Overwrite's Data/ stays above the mods' (map_data_folders)
         if (self._utils.overwrite_path / "Data").is_dir():
             self.map_folder(self._utils.overwrite_path / "Data", game_data)
@@ -102,6 +112,7 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         pattern: str = "*",
         rel: bool = True,
         only_convert: bool = False,
+        skip_top: frozenset[str] = frozenset(),
     ):
         dest = dest if dest else self.doc_path
         dest_func: Callable[[Path], str] = (
@@ -109,6 +120,8 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         )
         found_jsons: set[Path] = set()
         for file in list(path.rglob(pattern)):
+            if skip_top and file.relative_to(path).parts[0].casefold() in skip_top:
+                continue
             if self._utils.convert_yamls_to_json and (
                 file.name.endswith(".yaml") or file.name.endswith(".yml")
             ):

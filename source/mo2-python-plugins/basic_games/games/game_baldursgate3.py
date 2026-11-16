@@ -161,7 +161,14 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                 tree.walk(find_dlls)
             if not libs:
                 return efls
-            exes = self.executables()
+            # MO2 Revamped: the game's two binaries only; Script Extender's
+            # DWrite.dll and the NativeMods DLLs went into the Larian Launcher too
+            launcher = self.getLauncherName().rsplit("/", 1)[-1].casefold()
+            exes = [
+                exe
+                for exe in self.executables()
+                if exe.binary().fileName().casefold() != launcher
+            ]
             qDebug(f"dlls to force load: {libs}")
             efls = efls + [
                 mobase.ExecutableForcedLoadSetting(

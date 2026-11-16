@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import mobase
 from PyQt6.QtCore import QDir
 
@@ -14,6 +16,17 @@ class BasicLocalSavegames(mobase.LocalSavegames):
         return self._game.savesDirectory().absolutePath()
 
     def mappings(self, profile_save_dir: QDir):
+        # MO2 Revamped: usvfs only maps the saves into a folder that exists
+        # ("...\Savegames doesn't exist" on a first start of Baldur's Gate 3,
+        # whose saves then went to the real folder, not the profile)
+        # (nothing is made inside the game's own folder)
+        parent = Path(self.game_save_dir()).parent
+        game_dir = Path(self._game.gameDirectory().absolutePath())
+        if not parent.is_relative_to(game_dir):
+            try:
+                parent.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                pass
         return [
             mobase.Mapping(
                 source=profile_save_dir.absolutePath(),
