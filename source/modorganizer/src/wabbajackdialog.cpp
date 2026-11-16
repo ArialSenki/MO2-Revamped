@@ -1397,13 +1397,22 @@ void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
     }
   }
   const QString dataThere = QDir::cleanPath(gameDir + QStringLiteral("/Data"));
+  // only when that Data folder isn't a real one here: Baldur's Gate 3 has a
+  // real <game>\Data (Gustav.pak, the mods' loose files), so a program's
+  // "...\Data\Gustav.pak" stays as it is
+  const bool remap = !dataHere.isEmpty() &&
+                     dataHere.compare(dataThere, Qt::CaseInsensitive) != 0 &&
+                     !QFileInfo(dataThere).isDir();
   auto remapData = [&](QString text) {
-    if (dataHere.isEmpty() || dataHere.compare(dataThere, Qt::CaseInsensitive) == 0) {
+    if (!remap) {
       return text;
     }
+    // the folder itself, not a longer name that starts like it ("Data2")
     for (const QString& form : {QDir::toNativeSeparators(dataThere), dataThere}) {
-      text.replace(form, form.contains(u'\\') ? QDir::toNativeSeparators(dataHere) : dataHere,
-                   Qt::CaseInsensitive);
+      const QRegularExpression path(
+          QRegularExpression::escape(form) + QStringLiteral(R"((?=$|[\\/"\s]))"),
+          QRegularExpression::CaseInsensitiveOption);
+      text.replace(path, form.contains(u'\\') ? QDir::toNativeSeparators(dataHere) : dataHere);
     }
     return text;
   };
