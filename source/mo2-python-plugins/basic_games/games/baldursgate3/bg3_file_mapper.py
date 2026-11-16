@@ -51,7 +51,9 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         root_bin = "bin" if self._utils.root_builder_enabled() else "Root/bin"
         for mod in active_mods:
             modpath = Path(mod.absolutePath())
-            self.map_files(modpath, dest=docs_path_mods, pattern="*.pak", rel=False)
+            # MO2 Revamped: the same paks the load order has (bg3_utils.mod_paks)
+            for pak in bg3_utils.mod_paks(modpath):
+                self.create_mapping(pak, docs_path_mods / pak.name)
             self.map_files(modpath / "Script Extender", dest=docs_path_se)
             # MO2 Revamped: the unofficial BG3 plugin's folder for the same files
             self.map_files(modpath / bg3_utils.se_config_folder, dest=docs_path_se)

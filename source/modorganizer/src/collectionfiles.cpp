@@ -2,6 +2,7 @@
 
 #include <QHash>
 #include <QRegularExpression>
+#include <QSet>
 #include <QStringDecoder>
 #include <filesystem>
 #include <algorithm>
@@ -626,6 +627,57 @@ FileListResult compareFileList(const std::vector<FileHash>& listed,
     if (!wanted.count(key)) {
       r.extra.append(original);
     }
+  }
+
+  // MO2 Revamped: a file the game plugin's installer moved into a folder
+  // (Baldur's Gate 3 puts a top-level DWrite.dll in bin/, Public/... in
+  // Data/Public/...) is listed at its old path and present at the new one, and
+  // hiding it as extra left the mod without it. It counts as the listed file
+  // when its path ends with the listed path, it's the only such file, and its
+  // MD5 is the listed one (when the list has one).
+  if (!r.missing.isEmpty() && !r.extra.isEmpty()) {
+    std::map<QString, const FileHash*> missingByKey;
+    const QSet<QString> missingPaths(r.missing.begin(), r.missing.end());
+    for (const auto& f : listed) {
+      if (missingPaths.contains(f.path)) {
+        missingByKey.emplace(normalizedPath(f.path), &f);
+      }
+    }
+    std::map<QString, QStringList> candidates;  // listed key -> extras ending so
+    for (const QString& e : r.extra) {
+      const QString n = normalizedPath(e);
+      for (qsizetype slash = n.indexOf('/'); slash >= 0; slash = n.indexOf('/', slash + 1)) {
+        const QString tail = n.mid(slash + 1);
+        if (missingByKey.count(tail)) {
+          candidates[tail].append(e);
+        }
+      }
+    }
+    QSet<QString> movedListed, movedPresent;
+    std::map<QString, int> claims;  // extra -> listed files it could be
+    for (const auto& [key, extras] : candidates) {
+      for (const QString& e : extras) {
+        ++claims[e];
+      }
+    }
+    for (const auto& [key, extras] : candidates) {
+      if (extras.size() != 1 || claims[extras.front()] != 1) {
+        continue;
+      }
+      const FileHash* f = missingByKey.at(key);
+      if (!f->md5.isEmpty() &&
+          (!md5Of || md5Of(extras.front()).compare(f->md5, Qt::CaseInsensitive) != 0)) {
+        continue;
+      }
+      movedListed.insert(f->path);
+      movedPresent.insert(extras.front());
+    }
+    r.missing.removeIf([&](const QString& p) {
+      return movedListed.contains(p);
+    });
+    r.extra.removeIf([&](const QString& p) {
+      return movedPresent.contains(p);
+    });
   }
   return r;
 }

@@ -232,7 +232,7 @@ class BG3Utils:
         force_reparse_metadata: bool = False,
     ) -> bool:
         if (
-            "bin/bg3" not in exec_path
+            not runs_the_game(exec_path)
             or not self.lslib_retriever.download_lslib_if_missing()
         ):
             return True
@@ -384,6 +384,26 @@ class BG3Utils:
     def on_mod_installed(self, mod: mobase.IModInterface) -> None:
         if self.lslib_retriever.download_lslib_if_missing():
             self._pak_parser.get_metadata_for_files_in_mod(mod, True)
+
+
+# MO2 Revamped: the programs that start the game with the mods' load order;
+# the Larian Launcher starts bin/bg3*.exe itself
+_game_binaries = {"bg3.exe", "bg3_dx11.exe", "larilauncher.exe"}
+
+
+def mod_paks(modpath: Path) -> list[Path]:
+    """MO2 Revamped: a mod's paks, wherever they are in it. They all go to the
+    documents' Mods folder by name, so of two with one name (two FOMOD
+    options' folders) only the last in path order is the mod's, for the file
+    mapper and the load order alike."""
+    by_name: dict[str, Path] = {}
+    for pak in sorted(modpath.rglob("*.pak")):
+        by_name[pak.name.casefold()] = pak
+    return sorted(by_name.values())
+
+
+def runs_the_game(exec_path: str) -> bool:
+    return Path(exec_path).name.casefold() in _game_binaries
 
 
 def dotnet8_desktop_installed() -> bool:

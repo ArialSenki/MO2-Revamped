@@ -120,6 +120,12 @@ def _changed_since(folder: Path, mtime: float) -> bool:
     from it. The old check's break only left the inner loop, so a pak, once
     built, was never built again after its files changed."""
     for root, _, files in folder.walk():
+        # a file deleted or renamed changes its folder's time
+        try:
+            if os.path.getmtime(root) > mtime:
+                return True
+        except OSError:
+            return True
         for f in files:
             try:
                 if os.path.getmtime(root / f) > mtime:
@@ -130,8 +136,25 @@ def _changed_since(folder: Path, mtime: float) -> bool:
     return False
 
 
+def ini_value(value: str) -> str:
+    """MO2 Revamped: a value as QSettings reads it back unchanged: quoted when
+    it has a "," (QSettings makes a list of it and writes it back as "a, b"),
+    a ";" (a comment), a quote, a backslash or spaces at its ends."""
+    if not any(c in value for c in ',;"\\') and value == value.strip():
+        return value
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _plain_value(value: str) -> str:
+    """MO2 Revamped: a quoted value (ini_value, or QSettings' own) as text."""
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return re.sub(r"\\(.)", r"\1", value[1:-1])
+    return value
+
+
+
 def _keys(section: configparser.SectionProxy) -> dict[str, str]:
-    return {key.lower(): value for key, value in section.items()}
+    return {key.lower(): _plain_value(value) for key, value in section.items()}
 
 
 def _is_override(keys: dict[str, str]) -> bool:
@@ -204,7 +227,7 @@ class BG3PakParser:
                 [
                     self._get_metadata_for_file(mod, file, force_reparse_metadata)
                     for file in sorted(
-                        list(Path(mod.absolutePath()).rglob("*.pak"))
+                        bg3_utils.mod_paks(Path(mod.absolutePath()))
                         + (
                             [
                                 f
@@ -411,11 +434,11 @@ class BG3PakParser:
                     )
                 if self._mod_cache[file]:
                     for key in self._types:
-                        section[key] = self.get_attr_value(root, key)
+                        section[key] = ini_value(self.get_attr_value(root, key))
                 else:
                     qInfo(f"pak {file.name} determined to be an override mod")
                     section["override"] = "True"
-                    section["Folder"] = folder_name
+                    section["Folder"] = ini_value(folder_name)
         else:
             config[file.name]["override"] = "True"
         write_meta_ini(config, meta_ini)
