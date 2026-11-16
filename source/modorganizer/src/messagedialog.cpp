@@ -30,6 +30,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QProgressDialog>
 #include <QScreen>
 #include <QTextLayout>
 #include <QTimer>
@@ -329,7 +330,17 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
 
   // MO2 Revamped: a collection running shows its own progress; hundreds of
   // notices, each with the system's sound, are only noise
-  if (qApp->property("mo2r.collectionQuiet").toBool()) {
+  // (a notice from the dialog the user has open in front, such as Settings'
+  // "applies when Mod Organizer starts again", is still shown; an
+  // installation's progress window is modal too, so the modal window alone
+  // doesn't let a notice through)
+  const QWidget* front = QApplication::activeModalWidget();
+  const bool fromFrontDialog = front != nullptr && reference != nullptr &&
+                               reference->window() == front->window() &&
+                               qobject_cast<const QProgressDialog*>(front) == nullptr;
+  // bringToFront is the caller saying the user must see it (only Settings)
+  if (qApp->property("mo2r.collectionQuiet").toBool() && !fromFrontDialog &&
+      !bringToFront) {
     // still in the log, where a user looking for it finds it
     log::info("notice not shown while a collection installs: {}", text);
     qApp->setProperty("mo2r.collectionQuietHidden",

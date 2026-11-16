@@ -153,7 +153,7 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                     if (
                         relpath
                         and entry.hasSuffix("dll")
-                        and relpath not in self._base_dlls
+                        and relpath.casefold() not in self._base_dlls
                     ):
                         libs.add(relpath)
                     return mobase.IFileTree.WalkReturn.CONTINUE
@@ -161,7 +161,14 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                 tree.walk(find_dlls)
             if not libs:
                 return efls
-            exes = self.executables()
+            # MO2 Revamped: the game's two binaries only; Script Extender's
+            # DWrite.dll and the NativeMods DLLs went into the Larian Launcher too
+            launcher = self.getLauncherName().rsplit("/", 1)[-1].casefold()
+            exes = [
+                exe
+                for exe in self.executables()
+                if exe.binary().fileName().casefold() != launcher
+            ]
             qDebug(f"dlls to force load: {libs}")
             efls = efls + [
                 mobase.ExecutableForcedLoadSetting(
@@ -178,10 +185,19 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
     @cached_property
     def _base_dlls(self) -> set[str]:
         base_bin = Path(self.gameDirectory().absoluteFilePath("bin"))
-        return {str(f.relative_to(base_bin)) for f in base_bin.glob("*.dll")}
+        # MO2 Revamped: Windows names, any case ("Bink2w64.dll" is the game's)
+        return {
+            str(f.relative_to(base_bin)).casefold() for f in base_bin.glob("*.dll")
+        }
 
     def _on_finished_run(self, exec_path: str, exit_code: int):
-        if "bin/bg3" not in exec_path:
+        from .baldursgate3 import bg3_utils
+
+        if not bg3_utils.runs_the_game(exec_path):
+            # MO2 Revamped: the empty folders the mappings made in Overwrite,
+            # after any program (BG3 Mod Manager, a tool); the real Documents
+            # folder only after the game, which may be running on its own now
+            self._remove_empty_folders(documents=False)
             return
         cat = QLoggingCategory.defaultCategory()
         self.utils.log_dir.mkdir(parents=True, exist_ok=True)
@@ -234,7 +250,14 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
                 qDebug(
                     f"cleaned the following folders due to them being older than {cutoff_time}: {removed}"
                 )
-        for fdir in {self.utils.overwrite_path, self.doc_path}:
+        self._remove_empty_folders()
+
+    def _remove_empty_folders(self, documents: bool = True):
+        cat = QLoggingCategory.defaultCategory()
+        folders = {self.utils.overwrite_path}
+        if documents:
+            folders.add(self.doc_path)
+        for fdir in folders:
             removed: set[Path] = set()
             # MO2 Revamped: the deepest folders first, and never the root itself
             for folder in sorted(

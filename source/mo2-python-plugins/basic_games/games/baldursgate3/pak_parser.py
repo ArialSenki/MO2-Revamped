@@ -31,6 +31,7 @@ def read_meta_ini(path: Path) -> configparser.ConfigParser:
     config = configparser.ConfigParser(interpolation=None, strict=False)
     config.optionxform = str  # type: ignore[assignment, method-assign]
     config.read(path, encoding="utf-8-sig")
+    _unescape_sections(config)
     for section in config.sections():
         seen: dict[str, str] = {}
         for key in list(config[section].keys()):
@@ -46,8 +47,114 @@ def read_meta_ini(path: Path) -> configparser.ConfigParser:
     return config
 
 
+_qsettings_escape_re = re.compile(r"%U([0-9A-Fa-f]{4})|%([0-9A-Fa-f]{2})|\\")
+
+
+def qsettings_unescape(name: str) -> str:
+    """MO2 Revamped: a group name as QSettings reads it ("Auto%20Wares.pak" is
+    "Auto Wares.pak", "\\" is "/")."""
+
+    def repl(m: re.Match[str]) -> str:
+        if m.group(0) == "\\":
+            return "/"
+        return chr(int(m.group(1) or m.group(2), 16))
+
+    # QSettings works in UTF-16 units: a character past U+FFFF is two %U
+    unescaped = _qsettings_escape_re.sub(repl, name)
+    return unescaped.encode("utf-16-le", "surrogatepass").decode(
+        "utf-16-le", "replace"
+    )
+
+
+def qsettings_escape(name: str) -> str:
+    """MO2 Revamped: a group name as QSettings writes it: letters, digits, "_",
+    "-" and "." as they are, "/" as "\\", the rest as %XX or %UXXXX."""
+    out: list[str] = []
+    for ch in name:
+        code = ord(ch)
+        if ch == "/":
+            out.append("\\")
+        elif (ch.isascii() and ch.isalnum()) or ch in "_-.":
+            out.append(ch)
+        elif code <= 0xFF:
+            out.append(f"%{code:02X}")
+        else:
+            units = ch.encode("utf-16-le", "surrogatepass")
+            for i in range(0, len(units), 2):
+                out.append(f"%U{int.from_bytes(units[i : i + 2], 'little'):04X}")
+    return "".join(out)
+
+
+def _unescape_sections(config: configparser.ConfigParser) -> None:
+    """MO2 Revamped: MO2 saves meta.ini with QSettings, which writes a pak's
+    section "[Auto Wares.pak]" as "[Auto%20Wares.pak]"; under the name the pak
+    has, this plugin didn't find its own entry again (the pak was read again on
+    every start) nor the entry a list author's tool left. Sections are kept by
+    their real names here; two copies of one (the old plain one this plugin
+    wrote next to MO2's) become one, the plain copy's keys winning."""
+    for section in list(config.sections()):
+        name = qsettings_unescape(section)
+        if name == section:
+            continue
+        items = dict(config[section])
+        config.remove_section(section)
+        if config.has_section(name):
+            items.update(dict(config[name]))
+            config.remove_section(name)
+        config[name] = items
+
+
+def write_meta_ini(config: configparser.ConfigParser, path: Path) -> None:
+    """MO2 Revamped: meta.ini with the section names as QSettings writes them,
+    so MO2 and this plugin keep one section per pak."""
+    out = configparser.ConfigParser(interpolation=None, strict=False)
+    out.optionxform = str  # type: ignore[assignment, method-assign]
+    for section in config.sections():
+        out[qsettings_escape(section)] = dict(config[section])
+    with open(path, "w", encoding="utf-8") as f:
+        out.write(f)
+
+
+def _changed_since(folder: Path, mtime: float) -> bool:
+    """MO2 Revamped: whether a file in the folder is newer than the pak built
+    from it. The old check's break only left the inner loop, so a pak, once
+    built, was never built again after its files changed."""
+    for root, _, files in folder.walk():
+        # a file deleted or renamed changes its folder's time
+        try:
+            if os.path.getmtime(root) > mtime:
+                return True
+        except OSError:
+            return True
+        for f in files:
+            try:
+                if os.path.getmtime(root / f) > mtime:
+                    return True
+            except OSError as e:
+                qDebug(f"Error accessing file {root / f}: {e}")
+                return True
+    return False
+
+
+def ini_value(value: str) -> str:
+    """MO2 Revamped: a value as QSettings reads it back unchanged: quoted when
+    it has a "," (QSettings makes a list of it and writes it back as "a, b"),
+    a ";" (a comment), a quote, a backslash or spaces at its ends."""
+    if not any(c in value for c in ',;"\\') and value == value.strip():
+        return value
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _plain_value(value: str) -> str:
+    """MO2 Revamped: a quoted value (ini_value, or QSettings' own) as text."""
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return re.sub(r"\\(.)", r"\1", value[1:-1])
+    return value
+
+
+
 def _keys(section: configparser.SectionProxy) -> dict[str, str]:
-    return {key.lower(): value for key, value in section.items()}
+    return {key.lower(): _plain_value(value) for key, value in section.items()}
 
 
 def _is_override(keys: dict[str, str]) -> bool:
@@ -106,9 +213,11 @@ class BG3PakParser:
             | {"Root", bg3_utils.se_config_folder, bg3_utils.pak_files_folder}
         }
 
+    # MO2 Revamped: the whole name, in any case ("Combined Hairs" or
+    # "ModDatabase" are packable folders, they only have "bin"/"Data" in them)
     @cached_property
     def _folder_pattern(self):
-        return re.compile("Data|Script Extender|bin|Mods")
+        return re.compile("Data|Script Extender|bin|Mods", re.IGNORECASE)
 
     def get_metadata_for_files_in_mod(
         self, mod: mobase.IModInterface, force_reparse_metadata: bool
@@ -118,7 +227,7 @@ class BG3PakParser:
                 [
                     self._get_metadata_for_file(mod, file, force_reparse_metadata)
                     for file in sorted(
-                        list(Path(mod.absolutePath()).rglob("*.pak"))
+                        bg3_utils.mod_paks(Path(mod.absolutePath()))
                         + (
                             [
                                 f
@@ -203,7 +312,7 @@ class BG3PakParser:
                         if self._utils.extract_full_package:
                             Path(str(meta_file)[:-4]).unlink(missing_ok=True)
             elif file.is_dir():
-                if self._folder_pattern.search(file.name):
+                if self._folder_pattern.fullmatch(file.name):
                     return ""
                 # MO2 Revamped: game folders at the mod's top level (Generated/
                 # holds Public/...) are mapped to Data/, not packed
@@ -230,18 +339,7 @@ class BG3PakParser:
                 build_pak = True
                 if pak_path.exists():
                     try:
-                        pak_creation_time = os.path.getmtime(pak_path)
-                        for root, _, files in file.walk():
-                            for f in files:
-                                file_path = root.joinpath(f)
-                                try:
-                                    if os.path.getmtime(file_path) > pak_creation_time:
-                                        break
-                                except OSError as e:
-                                    qDebug(f"Error accessing file {file_path}: {e}")
-                                    break
-                        else:
-                            build_pak = False
+                        build_pak = _changed_since(file, os.path.getmtime(pak_path))
                     except OSError as e:
                         qDebug(f"Error accessing file {pak_path}: {e}")
                         build_pak = False
@@ -336,15 +434,14 @@ class BG3PakParser:
                     )
                 if self._mod_cache[file]:
                     for key in self._types:
-                        section[key] = self.get_attr_value(root, key)
+                        section[key] = ini_value(self.get_attr_value(root, key))
                 else:
                     qInfo(f"pak {file.name} determined to be an override mod")
                     section["override"] = "True"
-                    section["Folder"] = folder_name
+                    section["Folder"] = ini_value(folder_name)
         else:
             config[file.name]["override"] = "True"
-        with open(meta_ini, "w+", encoding="utf-8") as f:
-            config.write(f)
+        write_meta_ini(config, meta_ini)
         return get_module_short_desc(config, file)
 
 

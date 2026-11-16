@@ -1237,5 +1237,15 @@ void CollectionDialog::closeEvent(QCloseEvent* e)
     // nothing is lost: it continues from the same place next time
     m_session->pause();
   }
+  // MO2 Revamped: closing deletes the window and its session; in the middle
+  // of a wait (CollectionSession::waiting) that would free it under its own
+  // feet, so the window closes once the wait is over
+  if (m_session->waiting()) {
+    e->ignore();
+    QTimer::singleShot(200, this, [this] {
+      close();
+    });
+    return;
+  }
   QDialog::closeEvent(e);
 }

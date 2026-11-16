@@ -72,7 +72,8 @@ struct FileListResult
 };
 
 // present: the mod's files (relative paths); md5Of gives a file's MD5, asked
-// only for the listed files that have one
+// for the listed files that have one, and for a file that may be one of them
+// moved by the installer
 FileListResult compareFileList(const std::vector<FileHash>& listed,
                                const QStringList& present,
                                const std::function<QString(const QString&)>& md5Of);

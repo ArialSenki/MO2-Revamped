@@ -43,6 +43,7 @@
 #include <QRegularExpression>
 #include <QCryptographicHash>
 #include <QEventLoop>
+#include <QSet>
 #include <QThread>
 #include <QDirIterator>
 #include <QSaveFile>
@@ -2606,6 +2607,19 @@ bool CollectionSession::extractArchiveFiles(
   return ok;
 }
 
+namespace
+{
+// MO2 Revamped: counts the session's nested waits (CollectionSession::waiting)
+struct WaitGuard
+{
+  explicit WaitGuard(int& n) : m_n(n) { ++m_n; }
+  ~WaitGuard() { --m_n; }
+  WaitGuard(const WaitGuard&)            = delete;
+  WaitGuard& operator=(const WaitGuard&) = delete;
+  int& m_n;
+};
+}  // namespace
+
 void CollectionSession::postInstall(int row)
 {
   Entry& e        = m_entries[row];
@@ -2751,11 +2765,44 @@ void CollectionSession::postInstall(int row)
       }));
       connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
       worker->start();
-      wait.exec(QEventLoop::ExcludeUserInputEvents);
+      {
+        // MO2 Revamped: events run meanwhile; the window waits to close
+        // (CollectionDialog::closeEvent) so this session isn't deleted here
+        const WaitGuard waiting(m_waiting);
+        wait.exec(QEventLoop::ExcludeUserInputEvents);
+      }
       worker->wait();
     }
-    const auto md5Of = [&sums](const QString& relative) {
-      return sums->value(relative);
+    // a file the installer moved (compareFileList) is hashed here, on demand:
+    // there are few of them
+    const auto md5Of = [this, &sums, &dir](const QString& relative) {
+      const auto it = sums->constFind(relative);
+      if (it != sums->constEnd()) {
+        return it.value();
+      }
+      // on a worker thread like the ones above: a moved pak can be big
+      auto sum = std::make_shared<QString>();
+      const QString path = dir.filePath(relative);
+      QEventLoop wait;
+      std::unique_ptr<QThread> worker(QThread::create([path, sum] {
+        QFile f(path);
+        if (f.open(QIODevice::ReadOnly)) {
+          QCryptographicHash hash(QCryptographicHash::Md5);
+          hash.addData(&f);
+          *sum = QString::fromLatin1(hash.result().toHex());
+        }
+      }));
+      connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
+      worker->start();
+      {
+        // MO2 Revamped: events run meanwhile; the window waits to close
+        // (CollectionDialog::closeEvent) so this session isn't deleted here
+        const WaitGuard waiting(m_waiting);
+        wait.exec(QEventLoop::ExcludeUserInputEvents);
+      }
+      worker->wait();
+      sums->insert(relative, *sum);
+      return *sum;
     };
     const auto result = compareFileList(mod.hashes, present, md5Of);
 
@@ -3072,10 +3119,16 @@ bool CollectionSession::removeDropped()
     if (!list.open(QIODevice::ReadOnly)) {
       continue;
     }
-    const QStringList lines = QString::fromUtf8(list.readAll()).split('\n');
+    // the profile's active mods, once, instead of a scan per removed mod
+    QSet<QString> active;
+    for (const QString& line : QString::fromUtf8(list.readAll()).split('\n')) {
+      const QString trimmed = line.trimmed();
+      if (trimmed.startsWith('+')) {
+        active.insert(trimmed.mid(1).toLower());
+      }
+    }
     for (const QString& name : present) {
-      if (lines.contains("+" + name, Qt::CaseInsensitive) ||
-          lines.contains("+" + name + "\r", Qt::CaseInsensitive)) {
+      if (active.contains(name.toLower())) {
         elsewhere.append(p);
         break;
       }

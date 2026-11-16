@@ -21,6 +21,9 @@ class BG3ModDataChecker(BasicModDataChecker):
                 move={
                     "Root/": "",  # root builder not needed
                     "*.dll": "bin/",
+                    # MO2 Revamped: a native mod's config goes with its DLL
+                    # (BG3WASD.dll + BG3WASD.toml at the archive's top level)
+                    "*.toml": "bin/",
                     "ScriptExtenderSettings.json": "bin/",
                 }
                 | {f: "Data/" for f in bg3_utils.loose_file_folders},
