@@ -12,8 +12,8 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.11](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.11)**
-— `MO2-Revamped-Setup-1.1.0-beta.11.exe` with its `SHA256SUMS.txt`. It is a beta:
+**Latest: [v1.1.0-beta.12](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.12)**
+— `MO2-Revamped-Setup-1.1.0-beta.12.exe` with its `SHA256SUMS.txt`. It is a beta:
 the newest version. It downloads and installs Nexus collections (modlists), into
 a new instance or profile, with their FOMOD choices, order, categories, patches
 and file overrides. A mod's `Root` folder (the layout many Wabbajack lists use)
@@ -30,9 +30,9 @@ On Nexus Mods: the [main page](https://www.nexusmods.com/eldenring/mods/11314), 
 [Fallout 4](https://www.nexusmods.com/fallout4/mods/111513) and
 [Baldur's Gate 3](https://www.nexusmods.com/baldursgate3/mods/26688).
 
-**Experimental: [v1.1.0-dev.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.2)**
-— `MO2-Revamped-Setup-1.1.0-dev.2.exe`. A separate test build. It has everything
-in the beta, plus native installation of **Wabbajack modlists**, which is still
+**Experimental: [v1.1.0-dev.3](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.3)**
+— `MO2-Revamped-Setup-1.1.0-dev.3.exe`. A separate test build. It has everything
+in beta 12, plus native installation of **Wabbajack modlists**, which is still
 being tested. Use the beta above if you want the safer version.
 
 The last stable release, [v1.0.2](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.2),
@@ -41,7 +41,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.11.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.12.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance

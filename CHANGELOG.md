@@ -1,5 +1,85 @@
 # Changelog
 
+## 1.1.0-dev.3 (experimental) — November 16, 2026
+
+**Experimental.** This build is 1.1.0 beta 12 plus **native installation of
+Wabbajack modlists**, which is still being tested. Beta 12 is the recommended
+version; use this build only to try Wabbajack lists. Since dev.2 it has the
+beta 12 changes and these fixes and features for Wabbajack lists.
+
+### Wabbajack lists
+
+- **Browse Wabbajack's gallery:** Tools > Wabbajack lists > Browse Wabbajack
+  lists… shows every list from Wabbajack's own gallery, as Browse collections
+  does for Nexus. It has search, the managed game first, and unofficial and
+  adult lists behind their own boxes, as in Wabbajack. Sizes and dates can be
+  sorted, and each list has its readme and links. **Open the list** downloads
+  the `.wabbajack` file from Wabbajack's servers, checks it and opens it; a
+  file already downloaded is checked and used again. Lists down for
+  maintenance or with failing archives are marked.
+- **The author's mod list as the author sees it:** the list's categories, the
+  Notes column (where authors write "Optional" and similar) and the mods'
+  colours now show in the new instance.
+- **Baldur's Gate 3 lists start with their mods in the load order.** Baldur's
+  Gate 3 Enhanced Edition started with only the base game: the list author's
+  cache entries and some `meta.ini` files weren't read. A `&` in a mod's name
+  no longer breaks `modsettings.lsx`.
+- **The list's programs work on this PC:**
+  - programs that point at a folder (Larian Launcher), or at a path on the
+    author's machine (the author's own xEdit), are left out, and the summary
+    names them;
+  - the list's "Explore Virtual Folder" used an Explorer++ that is never
+    installed, so MO2 Revamped's own is used;
+  - a working folder on the author's machine is dropped, and `<game>\Data` is
+    changed to the game's real data folder only when that folder doesn't
+    exist (Baldur's Gate 3 keeps it);
+  - a program the guide has you copy later, inside the install or the game
+    folder, is kept.
+- **Stock Game:** the list's own copy of the game becomes the instance's game
+  folder only when it really holds the game. Otherwise the real game folder is
+  used, and the summary says what to do once the guide has it filled.
+- **The right profile:** when the list names none of its profiles, the instance
+  starts with the list's first profile instead of an empty "Default".
+- **Root folders:** mods with a `Root` folder no longer show as having no valid
+  game data. MO2 Revamped puts their programs and DLLs in the game folder when
+  the game starts (see beta 12), and the summary says so.
+- **Windows that fit the screen:** the list window and the gallery open at a
+  size that fits the screen they are on, and refit when moved to another
+  screen. The very large size earlier versions saved is shrunk once.
+- **Paused lists:** the list to reopen is kept per instance, so a paused list
+  no longer opens in another instance. A list paused in dev.2 has to be opened
+  again by hand once.
+- **The install folder follows the instance name** until you pick a folder by
+  hand. Install paths follow the same rules as collections: no names Windows
+  refuses.
+- **Downloads:**
+  - a file another program keeps open stops as failed, with that reason,
+    instead of being checked again forever;
+  - a server that ignores where a paused download stopped starts it over, unless
+    what it sends clearly isn't the file;
+  - files from the browser are checked where they are, before being copied;
+  - downloads that redirect to an address on this PC or its local network, or
+    from https to http, are refused;
+  - the space part-downloads already use counts in the free-space check.
+- **Install checks:**
+  - whole files are checked by their hash while they are copied;
+  - a list that gives a file a broken hash fails that file instead of skipping
+    the check;
+  - parts of a list MO2 Revamped can't install yet are named in the summary;
+  - the summary lists every failure (the log keeps the first 200).
+- **Faster with big lists:** the window refreshes only the rows that changed,
+  and the free-space and game checks aren't repeated on every change.
+- **A list opened while the window has a question up** waits for the answer
+  instead of closing the window under it.
+- **Lists tested with this build** (installed in full with no failed files,
+  then the new instance opened in MO2 Revamped; none was played in game):
+  - Baldur's Gate 3 Enhanced Edition: 732 files, with its load order and
+    programs;
+  - Mini Wildlander (Skyrim SE): 216 files, with its rebuilt BSA and Stock Game;
+  - The Midnight Ride (Fallout 4): a 2.26 GB download paused and continued,
+    identical to the original;
+  - Viva New Vegas: opened and closed cleanly.
+
 ## 1.1.0-dev.2 (experimental) — November 15, 2026
 
 Fixes found by testing more Wabbajack lists after 1.1.0-dev.1. Everything in
