@@ -30,6 +30,16 @@ game folder stayed unchanged.
 
 C# script FOMODs don't take the collection's choices: their own window opens.
 
+## Also in this beta
+
+- Each mod goes under a separator for its category, in the collection's order.
+- Failed downloads are retried on their own, with a Retry failed button, and no
+  sound plays for each file.
+- Much faster with collections of thousands of mods.
+- **Linux / Steam Deck:** MO2 no longer crashes at start under Wine or Proton when
+  Qt has no screen yet. If it still fails, please send the `ModOrganizer-*.dmp`
+  crash dump.
+
 The full list is in the [changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.12/CHANGELOG.md).
 
 MO2 Revamped is an independent community edition of Mod Organizer 2. It is not
