@@ -54,7 +54,6 @@ enum class SourceType
 };
 
 SourceType sourceTypeFromString(const QString& s);
-QString sourceTypeToString(SourceType t);
 
 // a reference in a mod rule (Vortex's IModReference); any of these may be empty
 struct ModReference

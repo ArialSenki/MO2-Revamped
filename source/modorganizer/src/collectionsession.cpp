@@ -2435,8 +2435,6 @@ bool CollectionSession::installEntry(int row)
 namespace
 {
 
-// a path inside a bundle, relative to the mod's folder: no root, no drive, no
-// "..", no empty parts, nothing Windows would read as something else
 // whether target, once resolved, is inside base
 bool staysInside(const std::filesystem::path& base, const std::filesystem::path& target)
 {

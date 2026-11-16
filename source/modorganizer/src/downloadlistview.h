@@ -86,7 +86,6 @@ public:
 
 signals:
   void installDownload(int index);
-  void queryInfo(int index);
   void queryInfoMd5(int index);
   void removeDownload(int index, bool deleteFile);
   void restoreDownload(int index);

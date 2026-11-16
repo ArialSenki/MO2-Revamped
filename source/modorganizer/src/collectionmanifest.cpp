@@ -154,25 +154,6 @@ SourceType sourceTypeFromString(const QString& s)
   return SourceType::Unknown;
 }
 
-QString sourceTypeToString(SourceType t)
-{
-  switch (t) {
-  case SourceType::Nexus:
-    return QStringLiteral("nexus");
-  case SourceType::Bundle:
-    return QStringLiteral("bundle");
-  case SourceType::Direct:
-    return QStringLiteral("direct");
-  case SourceType::Browse:
-    return QStringLiteral("browse");
-  case SourceType::Manual:
-    return QStringLiteral("manual");
-  case SourceType::Unknown:
-    break;
-  }
-  return QStringLiteral("unknown");
-}
-
 QString CollectionMod::choicesJson() const
 {
   if (!hasContent(choices)) {
