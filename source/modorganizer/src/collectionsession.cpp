@@ -8,6 +8,7 @@
 #include "downloadmanager.h"
 #include "fluentdialogs.h"
 #include "installationmanager.h"
+#include "messagedialog.h"
 #include "modinfo.h"
 #include "categories.h"
 #include "modlist.h"
@@ -583,10 +584,24 @@ void CollectionSession::setSelected(int row, bool selected)
 
 void CollectionSession::setStage(Stage s)
 {
+  const bool wasRunning = m_stage == Stage::Running;
   m_stage = s;
   // the per-file notices (and their sound) stay quiet while it runs: the
   // window shows the progress
   qApp->setProperty(QuietProperty, s == Stage::Running ? QVariant(true) : QVariant());
+  // once it stops, one notice says how many were held back (unrelated
+  // downloads and Nexus errors among them), so none goes unnoticed
+  if (wasRunning && s != Stage::Running) {
+    const int hidden = qApp->property("mo2r.collectionQuietHidden").toInt();
+    qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+    if (hidden > 0) {
+      MessageDialog::showMessage(
+          QObject::tr("%1 notices weren't shown while the collection installed. "
+                      "They're in MO2's log.")
+              .arg(hidden),
+          nullptr);
+    }
+  }
   if (s == Stage::Running) {
     m_watchdog.start();
   } else {

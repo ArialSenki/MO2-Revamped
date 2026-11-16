@@ -511,16 +511,17 @@ class Cyberpunk2077Game(BasicGame):
             efls = super().executableForcedLoads()
         except AttributeError:
             efls = []
-        if root_builder_enabled(self._organizer):
-            return efls
+        # Root Builder deploys root/ as real files, which Windows loads by
+        # itself; loaders installed at the mod's top level (bin/x64) still
+        # need the forced load with it on
+        root_builder = root_builder_enabled(self._organizer)
         tree = self._organizer.virtualFileTree()
         process = Path(self.binaryName()).name
         for relative in self._forced_loaders:
             # MO2 Revamped: a mod's root/ is the game folder too (Wabbajack
             # lists made with Root Builder keep the loaders in root/bin/x64)
-            if (
-                tree.find(relative) is not None
-                or tree.find(f"root/{relative}") is not None
+            if tree.find(relative) is not None or (
+                not root_builder and tree.find(f"root/{relative}") is not None
             ):
                 efls.append(
                     mobase.ExecutableForcedLoadSetting(

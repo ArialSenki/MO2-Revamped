@@ -11275,6 +11275,10 @@ Esempio:
       <source>These changes apply when Mod Organizer starts again.</source>
       <translation>Queste modifiche si applicano quando Mod Organizer si riapre.</translation>
     </message>
+    <message>
+      <source>%1 notices weren't shown while the collection installed. They're in MO2's log.</source>
+      <translation>%1 avvisi non sono stati mostrati durante l'installazione della collezione. Sono nel registro di MO2.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

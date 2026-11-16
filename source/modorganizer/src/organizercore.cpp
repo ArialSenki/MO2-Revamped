@@ -2385,18 +2385,6 @@ void OrganizerCore::afterRun(const QFileInfo& binary, DWORD exitCode)
   // last program in the VFS has ended (a changed one goes to Overwrite/Root)
   restoreRootCopies();
 
-  // MO2 Revamped: the Overwrite/Root that fileMapping() made, if nothing went
-  // there (rmdir only removes an empty folder) and no other program still
-  // running in the VFS can write there
-  {
-    const auto running = getRunningUSVFSProcesses();
-    for (HANDLE h : running) {
-      ::CloseHandle(h);
-    }
-    if (running.empty()) {
-      QDir(m_Settings.paths().overwrite()).rmdir(QStringLiteral("Root"));
-    }
-  }
 
   // what the program wrote isn't in a refresh that is already running
   if (m_DirectoryUpdate) {
@@ -2439,7 +2427,7 @@ static bool modsUseRootFolder(const IPluginGame* game)
   return dataFolders.contains(relative, Qt::CaseInsensitive);
 }
 
-// MO2 Revamped: where what a program writes to the game folder lands in Overwrite:
+// MO2 Revamped: where the copy fallback keeps a Root file a program changed:
 // Overwrite/Root, or Overwrite itself where the data folder is the game folder
 // (fileMapping() maps them so)
 static QString overwriteGameRoot(const Settings& settings, const IPluginGame* game)
@@ -2741,11 +2729,6 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
   const bool mapRoot = !rootBuilderEnabled(*m_PluginContainer) && modsUseRootFolder(game);
   const QString gameRoot =
       QDir::toNativeSeparators(game->gameDirectory().absolutePath());
-  const bool dataIsRoot =
-      QDir::cleanPath(game->dataDirectory().absolutePath())
-          .compare(QDir::cleanPath(game->gameDirectory().absolutePath()),
-                   Qt::CaseInsensitive) == 0;
-  bool customOverwriteHasRoot = false;
 
   bool overwriteActive = false;
 
@@ -2772,13 +2755,10 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
       if (mapRoot) {
         const QString rootPath = std::get<1>(mod) + QStringLiteral("/Root");
         if (QFileInfo(rootPath).isDir()) {
-          // the program's mod for new files gets those in the game folder too
-          // (where the data folder is the game folder, its data mapping
-          // already is that)
-          const bool rootTarget = createTarget && !dataIsRoot;
-          result.push_back(
-              {QDir::toNativeSeparators(rootPath), gameRoot, true, rootTarget});
-          customOverwriteHasRoot |= rootTarget;
+          // never a target for new files: what a program makes in the game
+          // folder (script extender logs, ENB and ReShade caches) stays there,
+          // as without Root folders
+          result.push_back({QDir::toNativeSeparators(rootPath), gameRoot, true, false});
         }
       }
     }
@@ -2818,14 +2798,17 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
                    true, customOverwrite.isEmpty()});
   }
 
-  // MO2 Revamped: where the data folder isn't the game folder, what a program
-  // makes in the game folder (ReShade's ini and logs, ENB's cache) goes to
-  // Overwrite/Root instead of the real folder; afterRun() removes it if empty
-  if (mapRoot && !dataIsRoot) {
-    const QString overwriteRoot = m_Settings.paths().overwrite() + "/Root";
-    QDir().mkpath(overwriteRoot);
-    result.push_back({QDir::toNativeSeparators(overwriteRoot), gameRoot, true,
-                      customOverwrite.isEmpty() || !customOverwriteHasRoot});
+  // MO2 Revamped: files the copy fallback kept in Overwrite/Root (an ini a
+  // program changed) reach the game folder as the mods' Root files do; the
+  // folder isn't made here, so a plain run leaves no empty Overwrite/Root
+  if (mapRoot) {
+    const QString overwriteRoot = overwriteGameRoot(m_Settings, game);
+    if (QDir::cleanPath(overwriteRoot)
+                .compare(QDir::cleanPath(m_Settings.paths().overwrite()),
+                         Qt::CaseInsensitive) != 0 &&
+        QFileInfo(overwriteRoot).isDir()) {
+      result.push_back({QDir::toNativeSeparators(overwriteRoot), gameRoot, true, false});
+    }
   }
 
   for (MOBase::IPluginFileMapper* mapper :
