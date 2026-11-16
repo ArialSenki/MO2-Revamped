@@ -975,6 +975,15 @@ public:
   static QString systemLanguage();
 
 
+  // the size of the whole interface in percent (80, 90, 100, 110 or 125); it is
+  // applied when MO2 starts, through Qt's own scaling
+  static int interfaceScale();
+  static void setInterfaceScale(int percent);
+  static QList<int> interfaceScales();
+  static int normalizedInterfaceScale(int percent);
+  // read before the QApplication exists, from the program's own folder
+  static int interfaceScaleBeforeApplication();
+
   static bool hideCategoryReminder();
   static void setHideCategoryReminder(bool b);
 

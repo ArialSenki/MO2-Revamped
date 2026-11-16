@@ -11076,6 +11076,26 @@ Exemple :
       <source>Failed</source>
       <translation>Échec</translation>
     </message>
+    <message>
+      <source>Interface size</source>
+      <translation>Taille de l'interface</translation>
+    </message>
+    <message>
+      <source>%1% (normal)</source>
+      <translation>%1% (normale)</translation>
+    </message>
+    <message>
+      <source>%1%</source>
+      <translation>%1%</translation>
+    </message>
+    <message>
+      <source>Makes all of Mod Organizer's text, boxes and windows smaller or larger together. It applies when Mod Organizer starts again.</source>
+      <translation>Rend plus petits ou plus grands, ensemble, tous les textes, cadres et fenêtres de Mod Organizer. S'applique au prochain démarrage de Mod Organizer.</translation>
+    </message>
+    <message>
+      <source>The new interface size applies when Mod Organizer starts again.</source>
+      <translation>La nouvelle taille de l'interface s'applique au prochain démarrage de Mod Organizer.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

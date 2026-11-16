@@ -10763,6 +10763,26 @@ Firefox.exe</translation>
       <source>Failed</source>
       <translation>Fehlgeschlagen</translation>
     </message>
+    <message>
+      <source>Interface size</source>
+      <translation>Größe der Oberfläche</translation>
+    </message>
+    <message>
+      <source>%1% (normal)</source>
+      <translation>%1% (normal)</translation>
+    </message>
+    <message>
+      <source>%1%</source>
+      <translation>%1%</translation>
+    </message>
+    <message>
+      <source>Makes all of Mod Organizer's text, boxes and windows smaller or larger together. It applies when Mod Organizer starts again.</source>
+      <translation>Macht alle Texte, Felder und Fenster von Mod Organizer gemeinsam kleiner oder größer. Gilt, wenn Mod Organizer neu startet.</translation>
+    </message>
+    <message>
+      <source>The new interface size applies when Mod Organizer starts again.</source>
+      <translation>Die neue Größe der Oberfläche gilt, wenn Mod Organizer neu startet.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

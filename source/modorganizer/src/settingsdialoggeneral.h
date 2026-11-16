@@ -1,6 +1,8 @@
 #ifndef SETTINGSDIALOGGENERAL_H
 #define SETTINGSDIALOGGENERAL_H
 
+class QComboBox;
+
 #include "plugincontainer.h"
 #include "settings.h"
 #include "settingsdialog.h"
@@ -14,6 +16,8 @@ public:
   void update();
 
 private:
+  QComboBox* m_scaleBox = nullptr;
+
   void addLanguages();
   void selectLanguage();
 

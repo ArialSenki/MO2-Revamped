@@ -2466,9 +2466,8 @@ void GlobalSettings::setCurrentInstanceForInstallation(
 }
 
 // where the global settings file is, without opening it
-static QString globalSettingsPath()
+static QString globalSettingsPathFor(const QString& applicationDirectory)
 {
-  const QString applicationDirectory = QCoreApplication::applicationDirPath();
   const QDir localDirectory(applicationDirectory);
   const QString isolatedMarker =
       localDirectory.filePath("eldenring-only.portable");
@@ -2489,6 +2488,11 @@ static QString globalSettingsPath()
                  QStandardPaths::GenericDataLocation))
             .filePath("MO2 Revamped");
   return QDir(settingsDirectory).filePath("MO2-Revamped-Global.ini");
+}
+
+static QString globalSettingsPath()
+{
+  return globalSettingsPathFor(QCoreApplication::applicationDirPath());
 }
 
 QSettings GlobalSettings::settings()
@@ -2516,6 +2520,49 @@ void GlobalSettings::setValue(const QString& key, const QVariant& value)
 void GlobalSettings::remove(const QString& key)
 {
   settings().remove(key);
+}
+
+// MO2 Revamped: the size of the whole interface, in percent of Windows' own
+int GlobalSettings::interfaceScale()
+{
+  return normalizedInterfaceScale(value(QStringLiteral("interface_scale"), 100).toInt());
+}
+
+void GlobalSettings::setInterfaceScale(int percent)
+{
+  setValue(QStringLiteral("interface_scale"), normalizedInterfaceScale(percent));
+}
+
+int GlobalSettings::normalizedInterfaceScale(int percent)
+{
+  for (int allowed : interfaceScales()) {
+    if (allowed == percent) {
+      return percent;
+    }
+  }
+  return 100;
+}
+
+QList<int> GlobalSettings::interfaceScales()
+{
+  return {80, 90, 100, 110, 125};
+}
+
+int GlobalSettings::interfaceScaleBeforeApplication()
+{
+  // no QCoreApplication yet: its folder is the program's
+  wchar_t buffer[32768] = {};
+  const DWORD length = ::GetModuleFileNameW(nullptr, buffer, 32767);
+  if (length == 0) {
+    return 100;
+  }
+  const QString program = QString::fromWCharArray(buffer, static_cast<int>(length));
+  const QString path    = globalSettingsPathFor(QFileInfo(program).absolutePath());
+  if (!QFileInfo::exists(path)) {
+    return 100;
+  }
+  const QSettings file(path, QSettings::IniFormat);
+  return normalizedInterfaceScale(file.value(QStringLiteral("interface_scale"), 100).toInt());
 }
 
 bool GlobalSettings::developerMode()

@@ -13,6 +13,9 @@
 #include <QIcon>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QComboBox>
+#include <QGridLayout>
+#include "messagedialog.h"
 #include <QLayout>
 #include <QMainWindow>
 #include <QMessageBox>
@@ -86,6 +89,36 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   ui->languageBox->setMaxVisibleItems(8);
   addLanguages();
   selectLanguage();
+
+  // MO2 Revamped: the size of the whole interface, beside the language
+  if (auto* grid = qobject_cast<QGridLayout*>(ui->groupBox_61->layout())) {
+    auto* label = new QLabel(QObject::tr("Interface size"), ui->groupBox_61);
+    m_scaleBox  = new QComboBox(ui->groupBox_61);
+    m_scaleBox->setObjectName(QStringLiteral("interfaceScaleBox"));
+    m_scaleBox->setFixedWidth(260);
+    for (int percent : GlobalSettings::interfaceScales()) {
+      m_scaleBox->addItem(percent == 100 ? QObject::tr("%1% (normal)").arg(percent)
+                                         : QObject::tr("%1%").arg(percent),
+                          percent);
+    }
+    m_scaleBox->setCurrentIndex(m_scaleBox->findData(GlobalSettings::interfaceScale()));
+    const QString tip = QObject::tr(
+        "Makes all of Mod Organizer's text, boxes and windows smaller or larger "
+        "together. It applies when Mod Organizer starts again.");
+    m_scaleBox->setToolTip(tip);
+    label->setToolTip(tip);
+    label->setBuddy(m_scaleBox);
+    // a row of its own below the language, as "Versions to be notified of": the
+    // card's heading already moved the grid's first rows
+    auto* row       = new QWidget(ui->groupBox_61);
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(0, 6, 0, 0);
+    rowLayout->setSpacing(12);
+    rowLayout->addWidget(label);
+    rowLayout->addStretch(1);
+    rowLayout->addWidget(m_scaleBox);
+    grid->addWidget(row, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
+  }
 
   // download list
   ui->compactBox->setChecked(settings().interface().compactDownloads());
@@ -224,6 +257,17 @@ void GeneralSettingsTab::update()
   if (newLanguage != oldLanguage && ui->languageBox->currentIndex() != shownAtOpen) {
     settings().interface().setLanguage(newLanguage);
     emit settings().languageChanged(newLanguage);
+  }
+
+  // interface size: kept for the next start, which is when Qt applies it
+  if (m_scaleBox != nullptr) {
+    const int scale = m_scaleBox->currentData().toInt();
+    if (scale != GlobalSettings::interfaceScale()) {
+      GlobalSettings::setInterfaceScale(scale);
+      MessageDialog::showMessage(
+          QObject::tr("The new interface size applies when Mod Organizer starts again."),
+          parentWidget(), true);
+    }
   }
 
   // download list
