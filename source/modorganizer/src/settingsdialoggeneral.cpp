@@ -14,6 +14,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QCheckBox>
+#include <QFrame>
 #include <QComboBox>
 #include <QGridLayout>
 #include "messagedialog.h"
@@ -111,9 +112,11 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     label->setBuddy(m_scaleBox);
     // a row of its own below the language, as "Versions to be notified of": the
     // card's heading already moved the grid's first rows
-    auto* row       = new QWidget(ui->groupBox_61);
+    auto* row       = new QFrame(ui->groupBox_61);
+    // styled as the other settings rows ("Versions to be notified of")
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
     auto* rowLayout = new QHBoxLayout(row);
-    rowLayout->setContentsMargins(0, 6, 0, 0);
+    rowLayout->setContentsMargins(0, 0, 0, 0);
     rowLayout->setSpacing(12);
     rowLayout->addWidget(label);
     rowLayout->addStretch(1);
