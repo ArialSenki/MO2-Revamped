@@ -97,6 +97,8 @@ QStringList toStringList(InputIterator current, InputIterator end)
   return result;
 }
 
+static std::optional<bool> vfsProgramsRunning();
+
 OrganizerCore::OrganizerCore(Settings& settings)
     : m_UserInterface(nullptr), m_PluginContainer(nullptr), m_GamePlugin(nullptr),
       m_CurrentProfile(nullptr), m_Settings(settings),
@@ -174,8 +176,20 @@ OrganizerCore::OrganizerCore(Settings& settings)
 OrganizerCore::~OrganizerCore()
 {
   // MO2 Revamped: the game folder as it was; if a program still runs in the
-  // VFS, the next start restores it
-  if (!restoreRootCopies()) {
+  // VFS, the next start restores it. When the last program ended within 3 s
+  // of its start (a loader handing over to the game), the rest of the grace
+  // window (at most 15 s) is waited for the game to show up in the VFS; then,
+  // or right away otherwise, the VFS list decides alone
+  if (RootCopy::anyManifest(rootCopyBase()) && m_RootRunGrace.isValid() &&
+      RootCopy::endedWithin(m_RootLastRun, 3000)) {
+    while (m_RootRunGrace.elapsed() < 15000 &&
+           !RootCopy::programsRunning(0, m_RootRunHandles, -1, 0, [] {
+             return vfsProgramsRunning();
+           })) {
+      ::Sleep(250);
+    }
+  }
+  if (!restoreRootCopies(true)) {
     log::warn("root copy: files copied into the game folder stay until the next "
               "start, a program still runs or uses them");
   }
@@ -183,6 +197,10 @@ OrganizerCore::~OrganizerCore()
     ::CloseHandle(h);
   }
   m_RootRunHandles.clear();
+  if (m_RootLastRun != nullptr) {
+    ::CloseHandle(m_RootLastRun);
+    m_RootLastRun = nullptr;
+  }
 
   m_RefresherThread.exit();
   m_RefresherThread.wait();
@@ -533,7 +551,7 @@ bool OrganizerCore::bootstrap()
   }
 
   // MO2 Revamped: copies a crash left in the game folder come out first
-  if (QFileInfo(rootCopyBase()).isDir()) {
+  if (RootCopy::anyManifest(rootCopyBase())) {
     log::info("root copy: the last session left copies in the game folder, "
               "restoring it");
     restoreRootCopies();
@@ -2462,7 +2480,8 @@ static QString overwriteGameRoot(const Settings& settings, const IPluginGame* ga
 }
 
 RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
-                                               const QFileInfo& binary)
+                                               const QFileInfo& binary,
+                                               const QString& arguments)
 {
   const IPluginGame* game = managedGame();
   if (game == nullptr || m_PluginContainer == nullptr ||
@@ -2470,14 +2489,29 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
     return {};
   }
 
-  waitForDirectoryRefresh();
+  // only a program in the game folder, or one in a mod (a Root-only one): a
+  // tool in its own folder (LOOT, xEdit) needs nothing from Root
+  const QString gameDir = game->gameDirectory().absolutePath();
+  if (!RootLaunch::concerns(binary.absoluteFilePath(), gameDir, m_Settings.paths().mods(),
+                            m_Settings.paths().overwrite())) {
+    return {};
+  }
 
   // the run's profile's Root folders in fileMapping()'s order, lowest first,
-  // and Overwrite/Root last
+  // and Overwrite/Root last. The current profile's list as it is now (a mod
+  // switched just before Run included), another profile's read only
+  std::vector<std::tuple<QString, QString, int>> activeMods;
+  if (m_CurrentProfile != nullptr && m_CurrentProfile->name() == profileName) {
+    m_CurrentProfile->writeModlistNow(true);
+    activeMods = m_CurrentProfile->getActiveMods();
+  } else {
+    Profile other(QDir(m_Settings.paths().profiles() + "/" + profileName), game,
+                        gameFeatures(), Profile::ReadOnly{});
+    activeMods = other.getActiveMods();
+  }
+
   RootLaunch::Input in;
-  Profile profile(QDir(m_Settings.paths().profiles() + "/" + profileName), game,
-                  gameFeatures());
-  for (const auto& mod : profile.getActiveMods()) {
+  for (const auto& mod : activeMods) {
     if (std::get<0>(mod).compare("overwrite", Qt::CaseInsensitive) == 0) {
       continue;
     }
@@ -2500,13 +2534,13 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
     return {};
   }
 
-  in.gameDir     = game->gameDirectory().absolutePath();
-  in.gameBinary  = game->binaryName();
-  in.gameVersion = game->gameVersion();
-  in.runBinary   = binary.absoluteFilePath();
+  in.gameDir      = gameDir;
+  in.gameBinary   = game->binaryName();
+  in.gameVersion  = game->gameVersion();
+  in.runBinary    = binary.absoluteFilePath();
+  in.runArguments = arguments;
   return RootLaunch::plan(in);
 }
-
 QString OrganizerCore::rootCopyBase() const
 {
   return m_Settings.paths().base() + QStringLiteral("/rootcopy-backup");
@@ -2521,11 +2555,23 @@ QString OrganizerCore::rootCopyStateDir() const
   return rootCopyBase() + "/" + name;
 }
 
-bool OrganizerCore::deployRootCopies(const std::vector<RootCopy::File>& files)
+// MO2 Revamped: the other instances' copy state folders (global and portable
+// ones), so a file one of them copied into a shared game folder isn't taken
+// for the game's own
+static QStringList otherRootCopyStates(const QString& ownBase)
+{
+  const auto& instances = InstanceManager::singleton();
+  std::vector<QString> paths = instances.globalInstancePaths();
+  const auto portable        = instances.portableInstancePaths();
+  paths.insert(paths.end(), portable.begin(), portable.end());
+  return RootCopy::instanceStateDirs(paths, ownBase);
+}
+
+RootCopy::Result OrganizerCore::deployRootCopies(const std::vector<RootCopy::File>& files)
 {
   const IPluginGame* game = managedGame();
   if (files.empty() || game == nullptr) {
-    return true;
+    return {};
   }
 
   // an earlier run's copies go first once nothing runs any more; while a
@@ -2537,9 +2583,14 @@ bool OrganizerCore::deployRootCopies(const std::vector<RootCopy::File>& files)
               QDir::toNativeSeparators(f.source), f.reason);
   }
 
+  RootCopy::DeployOptions options;
+  options.othersRunning  = rootProgramsRunning();
+  options.otherStateDirs = otherRootCopyStates(rootCopyBase());
+  options.hashCache = m_Settings.paths().base() + QStringLiteral("/rootcopy-hashes.json");
+
   const QString gameDir = game->gameDirectory().absolutePath();
   const auto result     = RootCopy::deploy(files, gameDir, rootCopyStateDir(),
-                                           overwriteGameRoot(m_Settings, game));
+                                           overwriteGameRoot(m_Settings, game), options);
 
   if (result.notWritable) {
     if (!m_RootCopyNoticeShown) {
@@ -2553,11 +2604,10 @@ bool OrganizerCore::deployRootCopies(const std::vector<RootCopy::File>& files)
               .arg(QDir::toNativeSeparators(gameDir)),
           qApp->activeWindow());
     }
-    return false;
   }
 
   // the restore timer starts once the program is up (endRootRun())
-  return result.error.isEmpty() && result.failed == 0;
+  return result;
 }
 
 void OrganizerCore::beginRootRun()
@@ -2571,25 +2621,34 @@ void OrganizerCore::endRootRun(HANDLE process)
     --m_RootRunsActive;
   }
 
-  // the started program counts as running while its handle is alive, and for
-  // a while after (a loader that exits once it has started the game, before
-  // usvfs lists the game)
-  if (process != nullptr && process != INVALID_HANDLE_VALUE) {
+  // the ended ones closed
+  RootCopy::closeEnded(m_RootRunHandles);
+
+  // with copies out, the started program counts as running while its handle
+  // is alive, and for a while after (a loader that exits once it has started
+  // the game, before usvfs lists the game); without, nothing is kept
+  const bool copiesOut = RootCopy::anyManifest(rootCopyBase());
+  if (copiesOut && process != nullptr && process != INVALID_HANDLE_VALUE) {
     HANDLE copy = nullptr;
     if (::DuplicateHandle(::GetCurrentProcess(), process, ::GetCurrentProcess(), &copy,
                           SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, 0)) {
       m_RootRunHandles.push_back(copy);
     }
+    // the last one, kept to tell on exit how long it ran
+    if (m_RootLastRun != nullptr) {
+      ::CloseHandle(m_RootLastRun);
+      m_RootLastRun = nullptr;
+    }
+    ::DuplicateHandle(::GetCurrentProcess(), process, ::GetCurrentProcess(), &m_RootLastRun,
+                      SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, 0);
     m_RootRunGrace.start();
   }
 
-  if (QFileInfo(rootCopyBase()).isDir() && m_RootCopyTimer &&
-      !m_RootCopyTimer->isActive()) {
+  if (copiesOut && m_RootCopyTimer && !m_RootCopyTimer->isActive()) {
     m_RootCopyTimer->setInterval(5000);
     m_RootCopyTimer->start();
   }
 }
-
 // MO2 Revamped: whether a program still runs in the VFS; Steam and its
 // helpers, started hooked by a game, can stay for hours and don't count. A
 // failed query counts as running: the copies are never taken out because of
@@ -2641,11 +2700,11 @@ static std::optional<bool> vfsProgramsRunning()
   return false;
 }
 
-bool OrganizerCore::rootProgramsRunning()
+bool OrganizerCore::rootProgramsRunning(bool ignoreGrace)
 {
   return RootCopy::programsRunning(
       m_RootRunsActive, m_RootRunHandles,
-      m_RootRunGrace.isValid() ? m_RootRunGrace.elapsed() : -1, 15000,
+      (m_RootRunGrace.isValid() && !ignoreGrace) ? m_RootRunGrace.elapsed() : -1, 15000,
       [] {
         return vfsProgramsRunning();
       });
@@ -2666,7 +2725,7 @@ void OrganizerCore::showRootConflictNotice()
       m_UserInterface->mainWindow());
 }
 
-bool OrganizerCore::restoreRootCopies()
+bool OrganizerCore::restoreRootCopies(bool exiting)
 {
   const QString base = rootCopyBase();
   QStringList states;
@@ -2685,7 +2744,7 @@ bool OrganizerCore::restoreRootCopies()
   }
 
   // not while a program in the VFS can still use them; tried again
-  if (rootProgramsRunning()) {
+  if (rootProgramsRunning(exiting)) {
     if (m_RootCopyTimer && !m_RootCopyTimer->isActive()) {
       m_RootCopyTimer->setInterval(5000);
       m_RootCopyTimer->start();

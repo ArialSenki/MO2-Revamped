@@ -10214,6 +10214,10 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
+      <translation>%1 nella cartella del gioco è una copia che l'istanza di MO2 in %2 ha messo lì per il proprio avvio, quindi %3 non viene avviato con essa. Avvia quell'istanza una volta per ripristinare i suoi file, oppure rimuovi il file.</translation>
+    </message>
+    <message>
       <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
       <translation>Non è stato possibile copiare %1 dalla cartella Root della mod alla cartella del gioco, quindi non può avviarsi. Il motivo è nel registro di MO2.</translation>
     </message>

@@ -9800,6 +9800,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
+      <translation>%1 im Spielordner ist eine Kopie, die die MO2-Instanz in %2 für ihren eigenen Start dort abgelegt hat, daher wird %3 nicht damit gestartet. Starte diese Instanz einmal, damit sie ihre Dateien wiederherstellt, oder entferne die Datei.</translation>
+    </message>
+    <message>
       <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
       <translation>%1 konnte nicht aus dem Root-Ordner der Mod in den Spielordner kopiert werden und kann daher nicht starten. Der Grund steht im Protokoll von MO2.</translation>
     </message>

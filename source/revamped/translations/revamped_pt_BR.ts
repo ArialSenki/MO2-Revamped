@@ -9788,6 +9788,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
+      <translation>%1, na pasta do jogo, é uma cópia que a instância do MO2 em %2 colocou lá para a própria execução, então %3 não é iniciado com ela. Inicie essa instância uma vez para restaurar os arquivos dela, ou remova o arquivo.</translation>
+    </message>
+    <message>
       <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
       <translation>Não foi possível copiar %1 da pasta Root do mod para a pasta do jogo, então ele não pode iniciar. O motivo está no log do MO2.</translation>
     </message>
