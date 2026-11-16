@@ -10945,6 +10945,18 @@ Ejemplo:
       <source>The new interface size applies when Mod Organizer starts again.</source>
       <translation>El nuevo tamaño de la interfaz se aplica cuando Mod Organizer se vuelve a abrir.</translation>
     </message>
+    <message>
+      <source>Smooth text in grey (OLED screens)</source>
+      <translation>Suavizar el texto en gris (pantallas OLED)</translation>
+    </message>
+    <message>
+      <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
+      <translation>Dibuja el texto sin los bordes de color de Windows, que en las pantallas OLED se ven como un halo de color. Se aplica cuando Mod Organizer se vuelve a abrir.</translation>
+    </message>
+    <message>
+      <source>These changes apply when Mod Organizer starts again.</source>
+      <translation>Estos cambios se aplican cuando Mod Organizer se vuelve a abrir.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

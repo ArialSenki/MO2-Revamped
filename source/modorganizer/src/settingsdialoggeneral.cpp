@@ -13,6 +13,7 @@
 #include <QIcon>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QGridLayout>
 #include "messagedialog.h"
@@ -118,6 +119,16 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     rowLayout->addStretch(1);
     rowLayout->addWidget(m_scaleBox);
     grid->addWidget(row, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
+
+    // text in grey for OLED screens, where ClearType's colours fringe
+    m_greyText = new QCheckBox(QObject::tr("Smooth text in grey (OLED screens)"),
+                               ui->groupBox_61);
+    m_greyText->setObjectName(QStringLiteral("greyscaleTextBox"));
+    m_greyText->setChecked(GlobalSettings::greyscaleText());
+    m_greyText->setToolTip(QObject::tr(
+        "Draws text without Windows' coloured edges, which show as a coloured halo on "
+        "OLED screens. It applies when Mod Organizer starts again."));
+    grid->addWidget(m_greyText, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
   }
 
   // download list
@@ -260,14 +271,22 @@ void GeneralSettingsTab::update()
   }
 
   // interface size: kept for the next start, which is when Qt applies it
+  bool restartNeeded = false;
   if (m_scaleBox != nullptr) {
     const int scale = m_scaleBox->currentData().toInt();
     if (scale != GlobalSettings::interfaceScale()) {
       GlobalSettings::setInterfaceScale(scale);
-      MessageDialog::showMessage(
-          QObject::tr("The new interface size applies when Mod Organizer starts again."),
-          parentWidget(), true);
+      restartNeeded = true;
     }
+  }
+  if (m_greyText != nullptr && m_greyText->isChecked() != GlobalSettings::greyscaleText()) {
+    GlobalSettings::setGreyscaleText(m_greyText->isChecked());
+    restartNeeded = true;
+  }
+  if (restartNeeded) {
+    MessageDialog::showMessage(
+        QObject::tr("These changes apply when Mod Organizer starts again."),
+        parentWidget(), true);
   }
 
   // download list

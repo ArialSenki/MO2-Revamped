@@ -2565,6 +2565,16 @@ int GlobalSettings::interfaceScaleBeforeApplication()
   return normalizedInterfaceScale(file.value(QStringLiteral("interface_scale"), 100).toInt());
 }
 
+bool GlobalSettings::greyscaleText()
+{
+  return value(QStringLiteral("greyscale_text"), false).toBool();
+}
+
+void GlobalSettings::setGreyscaleText(bool on)
+{
+  setValue(QStringLiteral("greyscale_text"), on);
+}
+
 bool GlobalSettings::developerMode()
 {
   return value(QStringLiteral("developer_mode"), false).toBool();

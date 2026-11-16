@@ -1,4 +1,6 @@
 #include "commandline.h"
+#include <QApplication>
+#include <QFont>
 #include "env.h"
 #include "instancemanager.h"
 #include "loglist.h"
@@ -625,6 +627,14 @@ int run(int argc, char* argv[])
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
   writeStartupDiagnosticEvent("startup.qapplication.ready");
+
+  // MO2 Revamped: text in grey, without ClearType's coloured edges (OLED)
+  if (GlobalSettings::greyscaleText()) {
+    QFont font = QApplication::font();
+    font.setStyleStrategy(
+        QFont::StyleStrategy(font.styleStrategy() | QFont::NoSubpixelAntialias));
+    QApplication::setFont(font);
+  }
 
   // check if the command line wants to run something right now
   if (auto r = cl.runPostApplication(app)) {

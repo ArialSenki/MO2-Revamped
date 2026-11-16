@@ -20,6 +20,7 @@
 #include <QGuiApplication>
 #include <QRadioButton>
 #include <QScreen>
+#include <QWindow>
 #include <QCheckBox>
 #include <QClipboard>
 #include <QCloseEvent>
@@ -166,7 +167,7 @@ void CollectionDialog::placeWindow()
   const QRect available = screen->availableGeometry();
 
   // never smaller than this, never larger than the work area
-  const QSize least = QSize(960, 720).boundedTo(available.size());
+  const QSize least = QSize(900, 640).boundedTo(available.size());
   setMinimumSize(least);
 
   // where the user left it, when that is on the main window's monitor
@@ -187,9 +188,7 @@ void CollectionDialog::placeWindow()
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
   const QRect base      = available;
-  // wide enough for the table, tall enough for its rows under the options
-  QSize wanted(base.width() * 7 / 10, base.height() * 85 / 100);
-  wanted       = wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
+  const QSize wanted    = wantedSize(available);
   resize(wanted);
   const QPoint middle = overWindow ? anchor->frameGeometry().center() : base.center();
   QPoint pos(middle.x() - wanted.width() / 2, middle.y() - wanted.height() / 2);
@@ -239,9 +238,55 @@ void CollectionDialog::moveEvent(QMoveEvent* e)
 void CollectionDialog::resizeEvent(QResizeEvent* e)
 {
   QDialog::resizeEvent(e);
-  if (!m_placing && isVisible() && e->spontaneous()) {
-    m_userPlaced = true;
+  if (!m_placing && !m_fitting && isVisible() && e->spontaneous()) {
+    m_userPlaced  = true;
+    m_userResized = true;
   }
+}
+
+// MO2 Revamped: a size for the work area of one screen: large enough for the
+// table and the options, but not the whole of a 2K or 4K screen
+QSize CollectionDialog::wantedSize(const QRect& available) const
+{
+  const QSize least = QSize(900, 640).boundedTo(available.size());
+  QSize wanted(qMin(available.width() * 7 / 10, 1500),
+               qMin(available.height() * 8 / 10, 1000));
+  return wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
+}
+
+void CollectionDialog::showEvent(QShowEvent* e)
+{
+  QDialog::showEvent(e);
+  if (QWindow* window = windowHandle(); window != nullptr && !m_screenWatched) {
+    m_screenWatched = true;
+    connect(window, &QWindow::screenChanged, this, &CollectionDialog::fitToScreen);
+  }
+}
+
+// moved to another screen (a 2K one to a 1080p one): the window takes that
+// screen's size, or, once the user sized it, at least fits on it
+void CollectionDialog::fitToScreen(QScreen* screen)
+{
+  if (screen == nullptr || isMaximized() || isFullScreen()) {
+    return;
+  }
+  const QRect available = screen->availableGeometry();
+  const QSize least     = QSize(900, 640).boundedTo(available.size());
+  QSize size            = m_userResized ? this->size() : wantedSize(available);
+  size                  = size.boundedTo(available.size() - QSize(16, 40));
+  m_fitting             = true;
+  setMinimumSize(least);
+  if (size != this->size()) {
+    const QPoint middle = frameGeometry().center();
+    resize(size);
+    QPoint pos(middle.x() - size.width() / 2, middle.y() - size.height() / 2);
+    pos.setX(qBound(available.left(), pos.x(),
+                    qMax(available.left(), available.right() - size.width() - 16)));
+    pos.setY(qBound(available.top(), pos.y(),
+                    qMax(available.top(), available.bottom() - size.height() - 40)));
+    move(pos);
+  }
+  m_fitting = false;
 }
 
 bool CollectionDialog::claims(const QString& nxmUrl) const
