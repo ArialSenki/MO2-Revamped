@@ -1449,10 +1449,21 @@ void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
         binary = mine;
       }
     }
-    if (!QFileInfo(binary).isFile()) {
+    // a folder isn't a program (the author's "Larian Launcher" was the game
+    // folder); a program that isn't there yet stays when it belongs to the
+    // install or the game (a tool the guide has you copy, one made later);
+    // one elsewhere was on the author's machine
+    const QFileInfo program(binary);
+    const bool ours = binary.startsWith(install + u'/', Qt::CaseInsensitive) ||
+                      (!gameDir.isEmpty() &&
+                       binary.startsWith(gameDir + u'/', Qt::CaseInsensitive));
+    if (binary.isEmpty() || program.isDir() || (!program.isFile() && !ours)) {
       log::info("wabbajack: the list's program '{}' left out: {} isn't a program here", title,
                 binary);
       continue;
+    }
+    if (!program.isFile()) {
+      log::info("wabbajack: the list's program '{}' kept, {} isn't there yet", title, binary);
     }
     p.values.insert("binary", binary);
     const QString work = p.values.value("workingDirectory").toString();
@@ -1581,11 +1592,25 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
     QSettings to(ci.iniPath, QSettings::IniFormat);
 
     // QSettings reads the [General] section as its top-level keys
+    // the list's own copy of the game (its Stock Game), when it is one: the
+    // game plugin recognises it. A folder the guide has you fill by hand
+    // stays out until then, or the instance couldn't find its game
     const QString gamePath = from.value("gamePath").toString();
     if (!gamePath.isEmpty() && QFileInfo(gamePath).isDir() &&
         QDir::cleanPath(QDir::fromNativeSeparators(gamePath))
             .startsWith(m_installFolder + u'/', Qt::CaseInsensitive)) {
-      to.setValue("gamePath", from.value("gamePath"));
+      if (game->looksValid(QDir(gamePath))) {
+        to.setValue("gamePath", from.value("gamePath"));
+      } else {
+        m_instanceNote =
+            tr("The list runs the game from its own copy, %1, but the game isn't there "
+               "yet: the instance uses your game folder. Once you have copied the game there "
+               "as the list's guide says, set gamePath in the instance's ModOrganizer.ini "
+               "to that folder.")
+                .arg(QDir::toNativeSeparators(gamePath));
+        log::warn("wabbajack: {} isn't the game yet; the instance uses {}", gamePath,
+                  gameDirectory());
+      }
     }
     const QString profile = from.value("selected_profile").toString();
     if (!profile.isEmpty() && result.profiles.contains(profile, Qt::CaseInsensitive)) {
@@ -1599,6 +1624,13 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
   {
     QSettings to(ci.iniPath, QSettings::IniFormat);
     to.setValue("Settings/mo2r_list_columns", true);
+    // a profile of the list to start with when its ini names none MO2 has
+    // here ("Default" isn't one of the list's)
+    const QString selected = to.value("selected_profile").toString();
+    if (!result.profiles.isEmpty() &&
+        !result.profiles.contains(selected, Qt::CaseInsensitive)) {
+      to.setValue("selected_profile", result.profiles.front().toUtf8());
+    }
     to.sync();
   }
   // the list's own categories ("6," is its "User Interface"): MO2 reads them
@@ -1687,9 +1719,18 @@ void WabbajackDialog::onInstalled()
   }
 
   QString dataPath;
+  m_instanceNote.clear();
   if (!makeInstance(r, &dataPath)) {
     m_status->setText(tr("Installed, but the instance couldn't be made."));
     return;
+  }
+  if (!m_instanceNote.isEmpty()) {
+    // in the summary too, where the rest is
+    lines << m_instanceNote;
+    QFile f(QDir(installStateFolder(m_installFolder)).filePath("summary.txt"));
+    if (f.open(QIODevice::Append)) {
+      f.write(("\r\n" + m_instanceNote).toUtf8());
+    }
   }
   m_status->setText(tr("Installed into %1.").arg(QDir::toNativeSeparators(m_installFolder)));
 

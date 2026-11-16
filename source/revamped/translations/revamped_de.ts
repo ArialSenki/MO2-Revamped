@@ -17223,6 +17223,10 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
         <numerusform>%n Dateien müssen im Browser heruntergeladen werden: Doppelklick öffnet ihre Seite, danach die heruntergeladene Datei per Rechtsklick auswählen.</numerusform>
       </translation>
     </message>
+    <message>
+      <source>The list runs the game from its own copy, %1, but the game isn't there yet: the instance uses your game folder. Once you have copied the game there as the list's guide says, set gamePath in the instance's ModOrganizer.ini to that folder.</source>
+      <translation>Die Liste startet das Spiel aus ihrer eigenen Kopie, %1, aber das Spiel liegt dort noch nicht: die Instanz nutzt deinen Spielordner. Sobald du das Spiel laut Anleitung der Liste dorthin kopiert hast, trage diesen Ordner als gamePath in die ModOrganizer.ini der Instanz ein.</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack</name>

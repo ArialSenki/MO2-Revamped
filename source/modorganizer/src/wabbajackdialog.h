@@ -123,6 +123,8 @@ private:
   QString installProblem() const;
   // the window closes once the install has stopped
   bool m_closeAfterInstall = false;
+  // what the new instance does differently from the list (its Stock Game)
+  QString m_instanceNote;
   // asks for the instance's name and folder, then installs
   void startInstall();
   void onInstalled();
