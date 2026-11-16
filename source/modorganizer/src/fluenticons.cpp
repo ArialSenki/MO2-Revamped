@@ -90,7 +90,6 @@ const QHash<QString, Glyph>& glyphTable()
     add(":/MO/gui/contextmenu/", {
                                      {"all-mods.svg", 0xE8A9, Tone::Ink},
                                      {"categories.svg", 0xE8EC, Tone::Ink},
-                                     {"updates.svg", 0xE896, Tone::Ink},
                                      {"update-check.svg", 0xE895, Tone::Ink},
                                      {"enable.svg", 0xE73E, Tone::Ink},
                                      {"disable.svg", 0xE711, Tone::Ink},
@@ -149,7 +148,6 @@ const QHash<QString, Glyph>& glyphTable()
             {"about-revamped.svg", 0xE946, Tone::Ink},
             {"debug.svg", 0xEBE8, Tone::Muted},
             {"update.svg", 0xE896, Tone::Accent},
-            {"version.svg", 0xE81C, Tone::Muted},
             {"backup.svg", 0xEA35, Tone::Muted},
             {"locked.svg", 0xE72E, Tone::Ink},
             {"attachment.svg", 0xE723, Tone::Ink},

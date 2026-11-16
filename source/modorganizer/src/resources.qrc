@@ -24,7 +24,6 @@
     <qresource prefix="/MO/gui/contextmenu">
         <file alias="all-mods.svg">resources/contextmenu/all-mods.svg</file>
         <file alias="categories.svg">resources/contextmenu/categories.svg</file>
-        <file alias="updates.svg">resources/contextmenu/updates.svg</file>
         <file alias="update-check.svg">resources/contextmenu/update-check.svg</file>
         <file alias="enable.svg">resources/contextmenu/enable.svg</file>
         <file alias="disable.svg">resources/contextmenu/disable.svg</file>
@@ -80,7 +79,6 @@
         <file alias="about-revamped.svg">resources/mainwindow/status/about-revamped.svg</file>
         <file alias="debug.svg">resources/mainwindow/status/debug.svg</file>
         <file alias="update.svg">resources/mainwindow/status/update.svg</file>
-        <file alias="version.svg">resources/mainwindow/status/version.svg</file>
         <file alias="backup.svg">resources/mainwindow/status/backup.svg</file>
         <file alias="locked.svg">resources/mainwindow/status/locked.svg</file>
         <file alias="attachment.svg">resources/mainwindow/status/attachment.svg</file>

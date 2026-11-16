@@ -11,7 +11,7 @@ NehrimSaveGame::NehrimSaveGame(QString const& fileName, GameNehrim const* game)
   SYSTEMTIME creationTime;
   fetchInformationFields(file, m_SaveNumber, m_PCName, m_PCLevel, m_PCLocation,
                          creationTime);
-  setCreationTime(creationTime);
+  setCreationTimeLocal(creationTime);
 }
 
 void NehrimSaveGame::fetchInformationFields(FileWrapper& file,

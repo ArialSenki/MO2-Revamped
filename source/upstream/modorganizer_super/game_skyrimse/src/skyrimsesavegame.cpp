@@ -16,14 +16,9 @@ SkyrimSESaveGame::SkyrimSESaveGame(QString const& fileName, GameSkyrimSE const* 
   // intervals that have elapsed since 12:00 A.M. January 1, 1601 Coordinated Universal
   // Time (UTC). So we need to convert that to something useful
 
-  // For some reason, the file time is off by about 6 hours.
-  // So we need to subtract those 6 hours from the filetime.
-  _ULARGE_INTEGER time;
-  time.LowPart  = ftime.dwLowDateTime;
-  time.HighPart = ftime.dwHighDateTime;
-  time.QuadPart -= 2.16e11;
-  ftime.dwHighDateTime = time.HighPart;
-  ftime.dwLowDateTime  = time.LowPart;
+  // MO2 Revamped: it is UTC, as FallrimTools' ReSaver reads it; the 6 hours
+  // taken off here made up for the Saves tab showing UTC (it now shows local
+  // time), and only in one time zone
 
   SYSTEMTIME ctime;
   ::FileTimeToSystemTime(&ftime, &ctime);

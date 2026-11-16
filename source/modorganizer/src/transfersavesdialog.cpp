@@ -311,7 +311,8 @@ void TransferSavesDialog::refreshCharacters(const SaveCollection& saveCollection
                           : tr("%1 saves").arg(static_cast<qulonglong>(saves.size()));
     if (!saves.empty()) {
       caption += QStringLiteral(" · ") +
-                 QLocale().toString(saves.front()->getCreationTime(), QLocale::ShortFormat);
+                 QLocale().toString(saves.front()->getCreationTime().toLocalTime(),
+                                    QLocale::ShortFormat);
     }
     item->setData(FluentPanels::CaptionRole, caption);
     item->setIcon(FluentIcons::glyph(0xE77B));
