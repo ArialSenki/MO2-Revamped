@@ -400,31 +400,39 @@ std::vector<QPair<QString, QString>> findEldenRingInstallations(
     }
   }
 
-  const QString appId = game->steamAPPId();
+  // MO2 Revamped: and the other Steam editions of a game: Steam sells Fallout 3
+  // only as the Game Of The Year edition (22370), not the plugin's default
+  QStringList appIds = {game->steamAPPId()};
+  if (game->gameShortName().compare(QStringLiteral("Fallout3"), Qt::CaseInsensitive) == 0) {
+    appIds.append(QStringLiteral("22370"));
+  }
+  appIds.removeDuplicates();
   const QStringList names = {game->gameName(), game->displayGameName()};
 
   const QStringList libraries =
       steamRoot.isEmpty() ? QStringList() : steamLibraries(steamRoot);
   for (const QString& library : libraries) {
-    const QString manifestPath = QDir(library).filePath(
-        QStringLiteral("steamapps/appmanifest_%1.acf").arg(appId));
-    QString installDirectory;
-    QFile manifest(manifestPath);
-    if (manifest.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      const QString contents = QString::fromUtf8(manifest.readAll());
-      const QRegularExpression installDirEntry(
-          QStringLiteral(R"rx("installdir"\s*"((?:\\.|[^"\\])*)")rx"));
-      const auto match = installDirEntry.match(contents);
-      if (match.hasMatch()) {
-        installDirectory = decodeSteamPath(match.captured(1));
+    for (const QString& appId : appIds) {
+      const QString manifestPath = QDir(library).filePath(
+          QStringLiteral("steamapps/appmanifest_%1.acf").arg(appId));
+      QString installDirectory;
+      QFile manifest(manifestPath);
+      if (manifest.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString contents = QString::fromUtf8(manifest.readAll());
+        const QRegularExpression installDirEntry(
+            QStringLiteral(R"rx("installdir"\s*"((?:\\.|[^"\\])*)")rx"));
+        const auto match = installDirEntry.match(contents);
+        if (match.hasMatch()) {
+          installDirectory = decodeSteamPath(match.captured(1));
+        }
       }
-    }
 
-    if (!installDirectory.isEmpty()) {
-      addInstallation(QDir(library).filePath(
-                          QStringLiteral("steamapps/common/%1")
-                              .arg(installDirectory)),
-                      QObject::tr("Steam library"));
+      if (!installDirectory.isEmpty()) {
+        addInstallation(QDir(library).filePath(
+                            QStringLiteral("steamapps/common/%1")
+                                .arg(installDirectory)),
+                        QObject::tr("Steam library"));
+      }
     }
 
     for (const QString& name : names) {

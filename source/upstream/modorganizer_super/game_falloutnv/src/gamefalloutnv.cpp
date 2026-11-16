@@ -95,6 +95,15 @@ QString GameFalloutNV::identifyGamePath() const
         result = startPath.absoluteFilePath(subDirs.first());
     }
   }
+  // MO2 Revamped: GOG, then a Steam library (the Bethesda key is only written
+  // once the game has run)
+  if (result.isEmpty()) {
+    result = findInRegistry(HKEY_LOCAL_MACHINE, L"Software\\GOG.com\\Games\\1454587428",
+                            L"path");
+  }
+  if (result.isEmpty()) {
+    result = parseSteamLocation("22380", "Fallout New Vegas");
+  }
   return result;
 }
 
