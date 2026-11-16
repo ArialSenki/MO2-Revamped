@@ -316,15 +316,16 @@ public:
 
   // MO2 Revamped: how the files of the mods' Root folders that the VFS can't
   // serve reach the program (rootlaunch.h); empty when Root/ isn't mapped
-  RootLaunch::Plan planRootLaunch(const QString& profileName, const QFileInfo& binary);
+  RootLaunch::Plan planRootLaunch(const QString& profileName, const QFileInfo& binary,
+                                  const QString& arguments);
 
-  // the copy fallback for a run; false when nothing could be copied (the
-  // game folder can't be written to: one notice per session)
-  bool deployRootCopies(const std::vector<RootCopy::File>& files);
+  // the copy fallback for a run; its result says what failed (a game folder
+  // that can't be written to also shows one notice per session)
+  RootCopy::Result deployRootCopies(const std::vector<RootCopy::File>& files);
 
   // takes the copies out and restores the game's files once no program runs
   // in the VFS; true when nothing is left in the game folder
-  bool restoreRootCopies();
+  bool restoreRootCopies(bool exiting = false);
 
   // a launch from its copies to its start counts as running; endRootRun()
   // takes the started process (or none) and starts the restore timer
@@ -664,12 +665,13 @@ private:
   // started, and when the last one started
   int m_RootRunsActive = 0;
   std::vector<HANDLE> m_RootRunHandles;
+  HANDLE m_RootLastRun = nullptr;
   QElapsedTimer m_RootRunGrace;
   // files restore left because something else changed them: told once
   bool m_RootConflictNoticeShown   = false;
   bool m_RootConflictNoticePending = false;
   QStringList m_RootConflictFiles;
-  bool rootProgramsRunning();
+  bool rootProgramsRunning(bool ignoreGrace = false);
   void showRootConflictNotice();
 
   bool m_ArchivesInit;

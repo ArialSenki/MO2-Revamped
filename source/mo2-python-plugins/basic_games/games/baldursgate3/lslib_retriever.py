@@ -33,6 +33,11 @@ class LSLibRetriever:
         }
 
     def _has_dotnet_8(self) -> bool:
+        # MO2 Revamped: the runtime Divine's own runtimeconfig.json names, once
+        # it's downloaded (a newer LSLib may want a newer .NET)
+        divine = self._utils.tools_dir / "Divine.exe"
+        if divine.with_name("Divine.runtimeconfig.json").is_file():
+            return bg3_utils.missing_dotnet_major(divine) is None
         # Divine.exe only runs on the .NET 8 runtime
         roots = (
             os.environ.get("DOTNET_ROOT"),

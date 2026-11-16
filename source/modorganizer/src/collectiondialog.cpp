@@ -10,6 +10,7 @@
 #include "revampedtheme.h"
 #include <utility.h>
 
+#include <QScopedValueRollback>
 #include <QScrollArea>
 #include <QResizeEvent>
 #include <QMoveEvent>
@@ -1246,5 +1247,16 @@ void CollectionDialog::closeEvent(QCloseEvent* e)
     });
     return;
   }
+  // it calls reject(), which then only sets the result and hides
+  const QScopedValueRollback inClose(m_inCloseEvent, true);
   QDialog::closeEvent(e);
+}
+
+void CollectionDialog::reject()
+{
+  if (m_inCloseEvent) {
+    QDialog::reject();
+    return;
+  }
+  close();
 }

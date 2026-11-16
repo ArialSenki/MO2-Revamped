@@ -10094,6 +10094,10 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
+      <translation>%1, dans le dossier du jeu, est une copie que l'instance MO2 de %2 y a placée pour son propre lancement, donc %3 n'est pas démarré avec. Lancez cette instance une fois pour qu'elle restaure ses fichiers, ou supprimez le fichier.</translation>
+    </message>
+    <message>
       <source>%1 couldn't be copied from the mod's Root folder into the game folder, so it can't start. The reason is in MO2's log.</source>
       <translation>%1 n'a pas pu être copié du dossier Root du mod vers le dossier du jeu, il ne peut donc pas démarrer. La raison figure dans le journal de MO2.</translation>
     </message>
@@ -15854,16 +15858,16 @@ Start the game again; if a mod stays out, reinstall it.</source>
 Relancez le jeu ; si un mod reste absent, réinstallez-le.</translation>
     </message>
     <message>
-      <source>BG3 Mod Manager needs .NET 8</source>
-      <translation>BG3 Mod Manager a besoin de .NET 8</translation>
+      <source>BG3 Mod Manager needs .NET {0}</source>
+      <translation>BG3 Mod Manager a besoin de .NET {0}</translation>
     </message>
     <message>
-      <source>BG3 Mod Manager needs the .NET 8 Desktop Runtime, which isn't installed on this PC, so it will close with an error as it starts.
+      <source>BG3 Mod Manager needs the .NET {1} Desktop Runtime, which isn't installed on this PC, so it will close with an error as it starts.
 
-Install the .NET Desktop Runtime 8 for Windows x64 from {0}, then run BG3 Mod Manager again.</source>
-      <translation>BG3 Mod Manager a besoin de .NET 8 Desktop Runtime, qui n'est pas installé sur ce PC : il se fermera donc avec une erreur au démarrage.
+Install the .NET Desktop Runtime {1} for Windows x64 from {0}, then run BG3 Mod Manager again.</source>
+      <translation>BG3 Mod Manager a besoin de .NET {1} Desktop Runtime, qui n'est pas installé sur ce PC : il se fermera donc avec une erreur au démarrage.
 
-Installez .NET Desktop Runtime 8 pour Windows x64 depuis {0}, puis relancez BG3 Mod Manager.</translation>
+Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG3 Mod Manager.</translation>
     </message>
     <message>
       <source>Start anyway</source>

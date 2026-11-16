@@ -51,7 +51,7 @@ pak_files_folder = "PAK_FILES"
 
 # MO2 Revamped: BG3 Mod Manager is a .NET 8 desktop program
 _bg3mm_binary = "bg3modmanager.exe"
-_dotnet8_download_url = "https://dotnet.microsoft.com/download/dotnet/8.0"
+_dotnet_download_url = "https://dotnet.microsoft.com/download/dotnet/{0}.0"
 
 
 def get_node_string(
@@ -248,32 +248,64 @@ class BG3Utils:
         failed: list[str] = []
         lock = threading.Lock()
 
+        parser = self._pak_parser
+        from . import pak_parser as pak_parser_module
+
+        def failed_to_read(mod: mobase.IModInterface, e: Exception) -> None:
+            qWarning(f"couldn't read the paks of {mod.name()}: {e}")
+            with lock:
+                failed.append(mod.name())
+                metadata[mod.name()] = ""
+
         # MO2 Revamped: a pak that can't be read is counted as done (and
         # named afterwards) instead of keeping the wait going until it times out
-        def retrieve_mod_metadata_in_new_thread(mod: mobase.IModInterface):
+        def retrieve_mod_metadata_in_new_thread(mod, files, config):
             def run():
                 try:
-                    result = self._pak_parser.get_metadata_for_files_in_mod(
-                        mod, force_reparse_metadata
+                    # meta.ini read again now: the thread may start a while
+                    # later, after MO2 saved it (a Nexus check)
+                    fresh = pak_parser_module.read_meta_ini(
+                        Path(mod.absolutePath()) / "meta.ini"
+                    )
+                    result = parser.metadata_from(
+                        mod, files, fresh, force_reparse_metadata
                     )
                     with lock:
-                        metadata.update(result)
+                        metadata[mod.name()] = result
                 except Exception as e:  # noqa: BLE001
-                    qWarning(f"couldn't read the paks of {mod.name()}: {e}")
-                    with lock:
-                        failed.append(mod.name())
-                        metadata[mod.name()] = ""
+                    failed_to_read(mod, e)
 
             return run
 
-        for mod in active_mods:
+        # MO2 Revamped: the mods whose paks this plugin read before are read
+        # right here (meta.ini only); only those that need Divine go to the
+        # worker threads, which a start with everything known doesn't use
+        num_active_mods = len(active_mods)
+        next_paint = 0.0
+        for index, mod in enumerate(active_mods):
+            if time.monotonic() >= next_paint:
+                progress.setValue(index)
+                QApplication.processEvents()
+                next_paint = time.monotonic() + 0.05
             if progress.wasCanceled():
                 qWarning("processing canceled by user")
                 keep_pak_scans(False)
                 forget_pak_scans()
                 return False
-            threadpool.start(QRunnable.create(retrieve_mod_metadata_in_new_thread(mod)))
-        num_active_mods = len(active_mods)
+            try:
+                files, config = parser.prepare(mod)
+                if parser.needs_divine(files, config, force_reparse_metadata):
+                    threadpool.start(
+                        QRunnable.create(
+                            retrieve_mod_metadata_in_new_thread(mod, files, config)
+                        )
+                    )
+                    continue
+                result = parser.metadata_from(mod, files, config, force_reparse_metadata)
+                with lock:
+                    metadata[mod.name()] = result
+            except Exception as e:  # noqa: BLE001
+                failed_to_read(mod, e)
         # big paks take a while on their first parse: 6 s each, 60 s at least
         # (the progress window can still be cancelled)
         deadline = time.monotonic() + num_active_mods * 6 + 60
@@ -282,8 +314,9 @@ class BG3Utils:
             with lock:
                 return len(metadata)
 
-        # MO2 Revamped: short waits (it was up to 200 ms a turn, the last one
-        # added to every start), the window still painting meanwhile
+        # MO2 Revamped: short waits that end as soon as the threads do
+        # (waitForDone lets them run, it releases the GIL), the window still
+        # painting meanwhile
         while done_count() < num_active_mods:
             progress.setValue(done_count())
             QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 10)
@@ -293,8 +326,8 @@ class BG3Utils:
                 qWarning(f"processing did not finish in time for: {remaining_mods}")
                 progress.close()
                 break
-            time.sleep(0.015)  # lets the worker threads run (the GIL)
-        # a thread still running past the wait doesn't leave a scan behind
+            threadpool.waitForDone(25)
+        # the scans are the mapper's from here on; nothing else adds to them
         keep_pak_scans(False)
         canceled = progress.wasCanceled()
         progress.setValue(num_active_mods)
@@ -345,34 +378,45 @@ class BG3Utils:
     def root_builder_enabled(self) -> bool:
         return root_builder_enabled(self._organizer)
 
-    def check_dotnet8_before_run(
+    def check_dotnet_before_run(
         self,
         exec_path: str = "",
         working_dir: typing.Optional[QDir] = None,
         args: str = "",
     ) -> bool:
-        """MO2 Revamped: BG3 Mod Manager doesn't start without the .NET 8 Desktop
-        Runtime; say so before it runs, with the link to get it."""
+        """MO2 Revamped: BG3 Mod Manager doesn't start without the .NET Desktop
+        Runtime its runtimeconfig.json names; say so before it runs, with the
+        link to get it. A self-contained build has no such file and needs
+        nothing."""
         if Path(exec_path).name.casefold() != _bg3mm_binary:
             return True
-        if dotnet8_desktop_installed():
+        major = missing_dotnet_major(Path(exec_path))
+        if major is None:
             return True
-        qWarning(".NET 8 Desktop Runtime not found, BG3 Mod Manager needs it")
+        qWarning(f".NET {major} Desktop Runtime not found, BG3 Mod Manager needs it")
+        url = _dotnet_download_url.format(major)
         box = QMessageBox(self.main_window)
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(
-            QApplication.translate("BG3Utils", "BG3 Mod Manager needs .NET 8")
+            QApplication.translate("BG3Utils", "BG3 Mod Manager needs .NET {0}").replace(
+                "{0}", str(major)
+            )
         )
         text = QApplication.translate(
             "BG3Utils",
-            "BG3 Mod Manager needs the .NET 8 Desktop Runtime, which isn't "
+            "BG3 Mod Manager needs the .NET {1} Desktop Runtime, which isn't "
             "installed on this PC, so it will close with an error as it starts."
-            "\n\nInstall the .NET Desktop Runtime 8 for Windows x64 from {0}, then "
+            "\n\nInstall the .NET Desktop Runtime {1} for Windows x64 from {0}, then "
             "run BG3 Mod Manager again.",
         )
-        link = f'<a href="{_dotnet8_download_url}">{_dotnet8_download_url}</a>'
+        link = f'<a href="{url}">{url}</a>'
         box.setTextFormat(Qt.TextFormat.RichText)
-        box.setText(html.escape(text).replace("\n", "<br>").replace("{0}", link))
+        box.setText(
+            html.escape(text)
+            .replace("\n", "<br>")
+            .replace("{1}", str(major))
+            .replace("{0}", link)
+        )
         box.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         run_anyway = box.addButton(
             QApplication.translate("BG3Utils", "Start anyway"),
@@ -389,8 +433,13 @@ class BG3Utils:
         return box.clickedButton() is run_anyway
 
     def on_mod_installed(self, mod: mobase.IModInterface) -> None:
-        if self.lslib_retriever.download_lslib_if_missing():
-            self._pak_parser.get_metadata_for_files_in_mod(mod, True)
+        # MO2 Revamped: a pak that can't be read doesn't make the installation
+        # look failed; the next start reads it again
+        try:
+            if self.lslib_retriever.download_lslib_if_missing():
+                self._pak_parser.get_metadata_for_files_in_mod(mod, True)
+        except Exception as e:  # noqa: BLE001
+            qWarning(f"couldn't read the paks of the new mod {mod.name()}: {e}")
 
 
 # MO2 Revamped: the programs that start the game with the mods' load order;
@@ -402,7 +451,7 @@ _game_binaries = {"bg3.exe", "bg3_dx11.exe", "larilauncher.exe"}
 # program starts, kept for the file mapper of the same start (one walk of each
 # mod's folder instead of two); see scan_mod_paks and mod_paks
 _pak_scans: dict[str, tuple[float, list[Path]]] = {}
-_pak_scan_lifetime = 60.0
+_pak_scan_lifetime = 15.0
 _keeping_pak_scans = False
 
 
@@ -449,24 +498,63 @@ def runs_the_game(exec_path: str) -> bool:
     return Path(exec_path).name.casefold() in _game_binaries
 
 
-def dotnet8_desktop_installed() -> bool:
-    """MO2 Revamped: a Microsoft.WindowsDesktop.App 8.x folder in the machine's
-    .NET install (or the one DOTNET_ROOT names)."""
+def _dotnet_roots() -> list[Path]:
     roots = [
         Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "dotnet",
     ]
     if os.environ.get("DOTNET_ROOT"):
         roots.insert(0, Path(os.environ["DOTNET_ROOT"]))
-    for root in roots:
+    return roots
+
+
+def _installed_majors(framework: str) -> set[int]:
+    majors: set[int] = set()
+    for root in _dotnet_roots():
         try:
-            if any(
-                d.is_dir()
-                for d in (root / "shared" / "Microsoft.WindowsDesktop.App").glob("8.*")
-            ):
-                return True
+            for d in (root / "shared" / framework).iterdir():
+                head = d.name.split(".", 1)[0]
+                if d.is_dir() and head.isdigit():
+                    majors.add(int(head))
         except OSError:
             continue
-    return False
+    return majors
+
+
+def missing_dotnet_major(exe: Path) -> typing.Optional[int]:
+    """MO2 Revamped: the major version of a .NET framework that the program's
+    runtimeconfig.json asks for and this PC doesn't have, or None (all there,
+    or a self-contained build). With rollForward Major/LatestMajor a newer
+    major does too."""
+    import json
+
+    config = exe.with_name(exe.stem + ".runtimeconfig.json")
+    if not config.is_file():
+        # a self-contained build carries the runtime next to it; a single-file
+        # build has its runtimeconfig inside the exe: the .NET 8 it always used
+        if any(exe.with_name(dll).is_file() for dll in ("hostfxr.dll", "coreclr.dll")):
+            return None
+        return None if 8 in _installed_majors("Microsoft.WindowsDesktop.App") else 8
+    try:
+        options = json.loads(config.read_text(encoding="utf-8-sig"))["runtimeOptions"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    frameworks = options.get("frameworks") or [options.get("framework") or {}]
+    roll = str(options.get("rollForward", "")).casefold()
+    for fw in frameworks:
+        name = fw.get("name", "") if isinstance(fw, dict) else ""
+        head = str(fw.get("version", "")).split(".", 1)[0] if name else ""
+        if not head.isdigit():
+            continue
+        want = int(head)
+        have = _installed_majors(name)
+        ok = (
+            any(m >= want for m in have)
+            if roll in ("major", "latestmajor")
+            else want in have
+        )
+        if not ok:
+            return want
+    return None
 
 
 def create_dir_if_needed(path: Path) -> Path:

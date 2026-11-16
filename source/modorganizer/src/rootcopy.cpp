@@ -2,13 +2,16 @@
 
 #include <QCryptographicHash>
 #include <QDir>
+#include <QDateTime>
 #include <QDirIterator>
+#include <QTimeZone>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
+#include <QSettings>
 #include <QtEndian>
 #include <QtGlobal>
 
@@ -280,16 +283,12 @@ bool isSteamStub(const PeFile& pe)
                       !pe.entryInSection);
 }
 
-QStringList mentionedNames(const QString& path, const QStringList& names)
+QByteArray loweredBytes(const QString& path)
 {
-  QStringList found;
   QFile file(path);
-  if (names.isEmpty() || !file.open(QIODevice::ReadOnly)) {
-    return found;
-  }
-  // a game's DLLs are a few MB; a 1 GB file is no DLL
-  if (file.size() > 512ll * 1024 * 1024) {
-    return found;
+  // a game's DLLs are a few MB; a 512 MB file is no DLL
+  if (!file.open(QIODevice::ReadOnly) || file.size() > 512ll * 1024 * 1024) {
+    return {};
   }
   QByteArray bytes = file.readAll();
   // ASCII letters to lower case; UTF-16's high bytes are 0 for those, so the
@@ -299,6 +298,12 @@ QStringList mentionedNames(const QString& path, const QStringList& names)
       c = char(c - 'A' + 'a');
     }
   }
+  return bytes;
+}
+
+QStringList mentionedNames(const QByteArray& lowered, const QStringList& names)
+{
+  QStringList found;
   for (const QString& name : names) {
     const QByteArray ascii = name.toLower().toLatin1();
     QByteArray wide;
@@ -306,11 +311,19 @@ QStringList mentionedNames(const QString& path, const QStringList& names)
       wide.append(c);
       wide.append('\0');
     }
-    if (bytes.contains(ascii) || bytes.contains(wide)) {
+    if (lowered.contains(ascii) || lowered.contains(wide)) {
       found.append(name);
     }
   }
   return found;
+}
+
+QStringList mentionedNames(const QString& path, const QStringList& names)
+{
+  if (names.isEmpty()) {
+    return {};
+  }
+  return mentionedNames(loweredBytes(path), names);
 }
 
 // --------------------------------------------------------------------------
@@ -494,6 +507,14 @@ public:
     return save();
   }
 
+  bool setHash(int i, const QString& hash)
+  {
+    QJsonObject e = entry(i);
+    e.insert("hash", hash);
+    m_files.replace(i, e);
+    return save();
+  }
+
   bool remove(int i)
   {
     m_files.removeAt(i);
@@ -532,8 +553,251 @@ static bool restoreBackup(const QString& backup, const QString& target,
   return true;
 }
 
+// the empty folders below root, deepest first
+static void removeEmptyDirs(const QString& root)
+{
+  QStringList found;
+  QDirIterator it(root, QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden,
+                  QDirIterator::Subdirectories);
+  while (it.hasNext()) {
+    found.append(it.next());
+  }
+  std::sort(found.begin(), found.end(), [](const QString& a, const QString& b) {
+    return a.size() > b.size();
+  });
+  for (const QString& dir : found) {
+    QDir().rmdir(dir);
+  }
+  QDir().rmdir(root);
+}
+
+namespace
+{
+
+// the sources' hashes by path, size and time, kept between runs: an
+// unchanged mod file (a 15 MB exe, an ENB folder) isn't read again
+class HashCache
+{
+public:
+  explicit HashCache(QString path) : m_path(std::move(path))
+  {
+    if (m_path.isEmpty()) {
+      return;
+    }
+    QFile file(m_path);
+    if (file.open(QIODevice::ReadOnly)) {
+      m_files = QJsonDocument::fromJson(file.readAll()).object();
+    }
+  }
+
+  ~HashCache()
+  {
+    if (m_changed && !m_path.isEmpty()) {
+      QDir().mkpath(QFileInfo(m_path).absolutePath());
+      QSaveFile file(m_path);
+      if (file.open(QIODevice::WriteOnly)) {
+        file.write(QJsonDocument(m_files).toJson(QJsonDocument::Compact));
+        file.commit();
+      }
+    }
+  }
+
+  // from the cache when the file is the same one: path, size, times and
+  // NTFS file id (a reinstalled file of the same size and time, on exFAT's
+  // 2 s or from a stamped archive, still differs in creation time or id)
+  QString hash(const QString& path, bool* fromCache = nullptr)
+  {
+    if (fromCache) {
+      *fromCache = false;
+    }
+    const QString key  = keyOf(path);
+    const QJsonObject e = m_files.value(key).toObject();
+    const QJsonObject now = identity(path);
+    if (!m_path.isEmpty() && !now.isEmpty() && !e.value("hash").toString().isEmpty()) {
+      QJsonObject known = e;
+      known.remove("hash");
+      if (known == now) {
+        if (fromCache) {
+          *fromCache = true;
+        }
+        return e.value("hash").toString();
+      }
+    }
+    const QString h = fileHash(path);
+    set(path, h);
+    return h;
+  }
+
+  // the hash read from the file itself, replacing what the cache had
+  void set(const QString& path, const QString& h)
+  {
+    if (h.isEmpty() || m_path.isEmpty()) {
+      return;
+    }
+    QJsonObject e = identity(path);
+    if (e.isEmpty()) {
+      return;
+    }
+    e.insert("hash", h);
+    m_files.insert(keyOf(path), e);
+    m_changed = true;
+  }
+
+private:
+  static QString keyOf(const QString& path)
+  {
+    return QDir::cleanPath(QFileInfo(path).absoluteFilePath()).toLower();
+  }
+
+  static QJsonObject identity(const QString& path)
+  {
+    const QFileInfo fi(path);
+    if (!fi.isFile()) {
+      return {};
+    }
+    QJsonObject id{
+        {"size", fi.size()},
+        {"mtime", fi.lastModified(QTimeZone::UTC).toMSecsSinceEpoch()},
+        {"btime", fi.birthTime(QTimeZone::UTC).toMSecsSinceEpoch()}};
+    const std::wstring native = QDir::toNativeSeparators(path).toStdWString();
+    HANDLE h = ::CreateFileW(native.c_str(), 0,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    if (h != INVALID_HANDLE_VALUE) {
+      BY_HANDLE_FILE_INFORMATION info = {};
+      if (::GetFileInformationByHandle(h, &info)) {
+        id.insert("volume", qint64(info.dwVolumeSerialNumber));
+        id.insert("index", QString::number((quint64(info.nFileIndexHigh) << 32) |
+                                           info.nFileIndexLow));
+      }
+      ::CloseHandle(h);
+    }
+    return id;
+  }
+
+public:
+
+private:
+  QString m_path;
+  QJsonObject m_files;
+  bool m_changed = false;
+};
+
+// what other instances' manifests say they copied into gameDir: path in lower
+// case -> (the copy's hash, that instance's state folder)
+QMap<QString, QPair<QString, QString>> foreignCopies(const QStringList& stateDirs,
+                                                     const QString& gameDir)
+{
+  QMap<QString, QPair<QString, QString>> found;
+  for (const QString& dir : stateDirs) {
+    bool ok              = false;
+    const QJsonObject m  = readManifest(dir, &ok);
+    if (!ok || QDir::cleanPath(m.value("gameDir").toString())
+                       .compare(QDir::cleanPath(gameDir), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
+    for (const auto& v : m.value("files").toArray()) {
+      const QJsonObject e = v.toObject();
+      found.insert(e.value("path").toString().toLower(),
+                   {e.value("hash").toString(), dir});
+    }
+  }
+  return found;
+}
+
+// an entry a restore leaves for the user: its file is neither the copy nor
+// the game's (and not a setting the program changed), or its backup is cut
+bool isConflict(const QJsonObject& e, const QString& gameDir, const QString& stateDir)
+{
+  const QString rel        = e.value("path").toString();
+  const QString target     = gameDir + "/" + rel;
+  const QString saved      = backupPath(stateDir, rel);
+  const bool hadBackup     = e.value("backup").toBool();
+  const QString backupHash = e.value("backupHash").toString();
+  const QString state      = e.value("state").toString(QStringLiteral("copied"));
+
+  if (QFileInfo::exists(target)) {
+    const QString current = fileHash(target);
+    if (current == e.value("hash").toString() || (hadBackup && current == backupHash)) {
+      return false;
+    }
+    return isProgramFile(target) || state != "copied" ||
+           (hadBackup && !(QFileInfo::exists(saved) && fileHash(saved) == backupHash));
+  }
+  return hadBackup && QFileInfo::exists(saved) && fileHash(saved) != backupHash;
+}
+
+}  // namespace
+
+bool anyManifest(const QString& base)
+{
+  for (const QString& dir : QDir(base).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (hasManifest(base + "/" + dir)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int settleConflicts(const QString& stateDir)
+{
+  bool ok            = false;
+  QJsonObject object = readManifest(stateDir, &ok);
+  if (!ok) {
+    return 0;
+  }
+  const QString gameDir = object.value("gameDir").toString();
+  const QString stamp =
+      QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss"));
+  const QString keep = stateDir + QStringLiteral("/conflicts/") + stamp;
+
+  QJsonArray kept;
+  int settled = 0;
+  for (const auto& v : object.value("files").toArray()) {
+    const QJsonObject e = v.toObject();
+    if (!isConflict(e, gameDir, stateDir)) {
+      kept.append(e);
+      continue;
+    }
+    const QString rel    = e.value("path").toString();
+    const QString saved  = backupPath(stateDir, rel);
+    const QString target = gameDir + "/" + rel;
+    if (QFileInfo::exists(saved)) {
+      const QString dest = keep + "/" + rel;
+      if (!copyWhole(saved, dest, fileHash(saved)) || !removeFile(saved)) {
+        warn(QStringLiteral("root copy: can't move %1 to %2, the entry stays")
+                 .arg(native(saved), native(dest)));
+        kept.append(e);
+        continue;
+      }
+      warn(QStringLiteral("root copy: %1 was changed by something else and stays as "
+                          "it is; the game's earlier file is kept in %2")
+               .arg(native(target), native(dest)));
+    } else {
+      warn(QStringLiteral("root copy: %1 was changed by something else and stays as "
+                          "it is")
+               .arg(native(target)));
+    }
+    ++settled;
+  }
+
+  if (settled == 0) {
+    return 0;
+  }
+  if (kept.isEmpty()) {
+    QFile::remove(manifestPath(stateDir));
+    removeEmptyDirs(stateDir + QStringLiteral("/files"));
+  } else {
+    object.insert("files", kept);
+    if (!writeManifest(stateDir, object)) {
+      warn(QStringLiteral("root copy: can't write %1").arg(native(manifestPath(stateDir))));
+    }
+  }
+  return settled;
+}
 Result deploy(const std::vector<File>& files, const QString& gameDir,
-              const QString& stateDir, const QString& overwriteRoot)
+              const QString& stateDir, const QString& overwriteRoot,
+              const DeployOptions& options)
 {
   Result result;
   if (files.empty()) {
@@ -547,6 +811,17 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
              .arg(native(gameDir)));
     return result;
   }
+
+  // entries a restore left for the user are settled once nothing runs, so they
+  // don't block their file for good
+  if (!options.othersRunning && hasManifest(stateDir)) {
+    result.settled = settleConflicts(stateDir);
+  }
+
+  // what other instances copied into this game folder
+  const QMap<QString, QPair<QString, QString>> foreign =
+      foreignCopies(options.otherStateDirs, gameDir);
+  HashCache sources(options.hashCache);
 
   QJsonObject object;
   if (hasManifest(stateDir)) {
@@ -594,10 +869,12 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
       continue;
     }
     const QString target = gameDir + "/" + rel;
-    const QString hash   = fileHash(f.source);
+    bool cached    = false;
+    QString hash   = sources.hash(f.source, &cached);
     if (hash.isEmpty()) {
       warn(QStringLiteral("root copy: can't read %1, not copied").arg(native(f.source)));
       ++result.failed;
+      result.failedFiles.append(rel);
       continue;
     }
 
@@ -613,6 +890,11 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
     QString backupHash;
     if (QFileInfo::exists(target)) {
       backupHash = fileHash(target);
+      // a cached hash that says "the same" is checked against the file itself
+      if (backupHash == hash && cached) {
+        hash = fileHash(f.source);
+        sources.set(f.source, hash);
+      }
       if (backupHash == hash) {
         info(QStringLiteral("root copy: %1 is already the same in the game folder, "
                             "left as it is")
@@ -623,6 +905,18 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
         warn(QStringLiteral("root copy: can't read the game's %1, not copied")
                  .arg(native(target)));
         ++result.failed;
+        result.failedFiles.append(rel);
+        continue;
+      }
+      // another instance's copy, not the game's file: that instance restores it
+      const auto other = foreign.find(rel.toLower());
+      if (other != foreign.end() && other->first == backupHash) {
+        warn(QStringLiteral("root copy: %1 in the game folder is another instance's copy "
+                            "(%2); left to it, not copied")
+                 .arg(rel, native(manifestPath(other->second))));
+        ++result.foreign;
+        result.foreignFiles.append(rel);
+        result.foreignStates.append(other->second);
         continue;
       }
     }
@@ -647,6 +941,8 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
     entry.insert("hash", hash);
     entry.insert("backup", !backupHash.isEmpty());
     entry.insert("backupHash", backupHash);
+    entry.insert("size", QFileInfo(f.source).size());
+    entry.insert("backupSize", backupHash.isEmpty() ? qint64(-1) : QFileInfo(target).size());
     entry.insert("reason", f.reason);
     entry.insert("state", "planned");
     added.push_back(manifest.size());
@@ -685,6 +981,7 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
       if (!copyWhole(target, saved, backupHash)) {
         warn(QStringLiteral("root copy: can't back up %1, not copied").arg(native(target)));
         ++result.failed;
+        result.failedFiles.append(rel);
         undone.push_back(i);
         continue;
       }
@@ -697,10 +994,25 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
                .arg(native(target), native(saved)));
     }
 
-    if (!copyWhole(source, target, hash)) {
+    bool copied = copyWhole(source, target, hash);
+    if (!copied) {
+      // a cached hash for a file that changed without its size, times or id:
+      // read again, recorded, and tried once more
+      const QString fresh = fileHash(source);
+      if (!fresh.isEmpty() && fresh != hash) {
+        sources.set(source, fresh);
+        info(QStringLiteral("root copy: %1 changed since its hash was kept, read again")
+                 .arg(native(source)));
+        if (manifest.setHash(i, fresh)) {
+          copied = copyWhole(source, target, fresh);
+        }
+      }
+    }
+    if (!copied) {
       warn(QStringLiteral("root copy: can't copy %1 to %2 (in use?)")
                .arg(native(source), native(target)));
       ++result.failed;
+      result.failedFiles.append(rel);
       // the game's file is still in place (the copy never replaced it); the
       // backup isn't needed
       if (backup && fileHash(target) == backupHash) {
@@ -731,24 +1043,6 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
   }
 
   return result;
-}
-
-// the empty folders below root, deepest first
-static void removeEmptyDirs(const QString& root)
-{
-  QStringList found;
-  QDirIterator it(root, QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden,
-                  QDirIterator::Subdirectories);
-  while (it.hasNext()) {
-    found.append(it.next());
-  }
-  std::sort(found.begin(), found.end(), [](const QString& a, const QString& b) {
-    return a.size() > b.size();
-  });
-  for (const QString& dir : found) {
-    QDir().rmdir(dir);
-  }
-  QDir().rmdir(root);
 }
 
 Result restore(const QString& stateDir)
@@ -786,12 +1080,20 @@ Result restore(const QString& stateDir)
     removeFile(partPath(target));
     removeFile(partPath(saved));
 
-    const bool backupThere = hadBackup && QFileInfo::exists(saved);
-    const bool backupWhole = backupThere && fileHash(saved) == backupHash;
-    bool done              = true;
+    // sizes first: a file of neither size isn't read to be told apart
+    const qint64 size       = e.value("size").toInteger(-1);
+    const qint64 backupSize = e.value("backupSize").toInteger(-1);
+    const bool backupThere  = hadBackup && QFileInfo::exists(saved);
+    const bool backupWhole  = backupThere &&
+                             (backupSize < 0 || QFileInfo(saved).size() == backupSize) &&
+                             fileHash(saved) == backupHash;
+    bool done               = true;
 
     if (QFileInfo::exists(target)) {
-      const QString current = fileHash(target);
+      const qint64 targetSize = QFileInfo(target).size();
+      const bool maybeKnown   = size < 0 || targetSize == size ||
+                              (hadBackup && (backupSize < 0 || targetSize == backupSize));
+      const QString current   = maybeKnown ? fileHash(target) : QString();
       if (current == hash && hadBackup) {
         // ours over the game's: the game's file renamed back over it in one step
         if (backupWhole && restoreBackup(saved, target, backupHash)) {
@@ -831,7 +1133,7 @@ Result restore(const QString& stateDir)
         // a setting the program changed (enblocal.ini): kept in Overwrite,
         // where it's the highest priority Root file the next time
         const QString kept = overwriteRoot + "/" + rel;
-        if (copyWhole(target, kept, current) && removeFile(target)) {
+        if (copyWhole(target, kept, fileHash(target)) && removeFile(target)) {
           ++result.kept;
           info(QStringLiteral("root copy: %1 was changed while the program ran, moved "
                               "to %2")
@@ -847,7 +1149,7 @@ Result restore(const QString& stateDir)
                  backupWhole && !overwriteRoot.isEmpty()) {
         // the same, for a setting that replaced one of the game's
         const QString kept = overwriteRoot + "/" + rel;
-        if (copyWhole(target, kept, current) &&
+        if (copyWhole(target, kept, fileHash(target)) &&
             restoreBackup(saved, target, backupHash)) {
           ++result.kept;
           ++result.restored;
@@ -972,6 +1274,55 @@ bool programsRunning(int activeLaunches, std::vector<void*>& handles,
 
   const std::optional<bool> listed = vfsQuery ? vfsQuery() : std::optional<bool>();
   return !listed.has_value() || *listed;
+}
+
+void closeEnded(std::vector<void*>& handles)
+{
+  for (auto it = handles.begin(); it != handles.end();) {
+    if (::WaitForSingleObject(static_cast<HANDLE>(*it), 0) != WAIT_TIMEOUT) {
+      ::CloseHandle(static_cast<HANDLE>(*it));
+      it = handles.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+bool endedWithin(void* process, qint64 ms)
+{
+  FILETIME created, exited, kernel, user;
+  if (process == nullptr ||
+      ::WaitForSingleObject(static_cast<HANDLE>(process), 0) != WAIT_OBJECT_0 ||
+      !::GetProcessTimes(static_cast<HANDLE>(process), &created, &exited, &kernel, &user)) {
+    return false;
+  }
+  auto ticks = [](const FILETIME& t) {
+    return (qint64(t.dwHighDateTime) << 32) | t.dwLowDateTime;
+  };
+  // 100 ns units
+  return (ticks(exited) - ticks(created)) / 10000 < ms;
+}
+
+QStringList instanceStateDirs(const std::vector<QString>& instancePaths,
+                              const QString& ownBase)
+{
+  QStringList found;
+  const QString own = QDir::cleanPath(ownBase);
+  for (const QString& path : instancePaths) {
+    // the instance's base folder as Settings reads it: [Settings]
+    // base_directory of its ModOrganizer.ini, the instance folder by default
+    const QSettings ini(path + QStringLiteral("/ModOrganizer.ini"), QSettings::IniFormat);
+    const QString instanceBase = QDir::fromNativeSeparators(
+        ini.value(QStringLiteral("Settings/base_directory"), path).toString());
+    const QString base = QDir::cleanPath(instanceBase + QStringLiteral("/rootcopy-backup"));
+    if (base.compare(own, Qt::CaseInsensitive) == 0 || !QFileInfo(base).isDir()) {
+      continue;
+    }
+    for (const QString& dir : QDir(base).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      found.append(base + "/" + dir);
+    }
+  }
+  return found;
 }
 
 }  // namespace RootCopy

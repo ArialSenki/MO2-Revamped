@@ -6,7 +6,6 @@
 #include <QHash>
 #include <queue>
 #include <QRegularExpression>
-#include <bit>
 #include <memory>
 #include <QSet>
 #include <algorithm>
@@ -646,7 +645,6 @@ SortResult sortModsByRules(const CollectionManifest& manifest,
 
 GroupResult groupByCategory(const SortResult& sorted,
                             const std::function<QString(int)>& category,
-                            const std::function<bool(int, int)>& conflicts,
                             const std::function<int(int)>& position,
                             const std::vector<std::pair<int, int>>* conflictPairs)
 {
@@ -683,7 +681,7 @@ GroupResult groupByCategory(const SortResult& sorted,
   // only the rules on a path between two mods that share a file change what
   // the game sees: A before B before C, with A and C sharing one, keeps both
   std::vector<Edge> edges;
-  if (!conflicts && conflictPairs == nullptr) {
+  if (conflictPairs == nullptr) {
     edges = kept;
   } else {
     // bit sets: what each node reaches (itself included), and the files it
@@ -713,35 +711,18 @@ GroupResult groupByCategory(const SortResult& sorted,
         }
       }
     }
-    if (conflictPairs != nullptr) {
-      for (const auto& [a, b] : *conflictPairs) {
-        const auto ia = at.constFind(a);
-        const auto ib = at.constFind(b);
-        if (ia == at.constEnd() || ib == at.constEnd() || ia.value() == ib.value()) {
-          continue;
-        }
-        const int x = ia.value(), y = ib.value();
-        if (test(&desc[static_cast<size_t>(x) * words], y)) {
-          set(&shares[static_cast<size_t>(x) * words], y);
-        }
-        if (test(&desc[static_cast<size_t>(y) * words], x)) {
-          set(&shares[static_cast<size_t>(y) * words], x);
-        }
+    for (const auto& [a, b] : *conflictPairs) {
+      const auto ia = at.constFind(a);
+      const auto ib = at.constFind(b);
+      if (ia == at.constEnd() || ib == at.constEnd() || ia.value() == ib.value()) {
+        continue;
       }
-    } else {
-      // only the pairs the rules order are asked about
-      for (int x = 0; x < n; ++x) {
-        const quint64* d = &desc[static_cast<size_t>(x) * words];
-        for (int w = 0; w < words; ++w) {
-          quint64 bits = d[w];
-          while (bits != 0) {
-            const int y = w * 64 + static_cast<int>(std::countr_zero(bits));
-            bits &= bits - 1;
-            if (y != x && conflicts(sorted.order[x], sorted.order[y])) {
-              set(&shares[static_cast<size_t>(x) * words], y);
-            }
-          }
-        }
+      const int x = ia.value(), y = ib.value();
+      if (test(&desc[static_cast<size_t>(x) * words], y)) {
+        set(&shares[static_cast<size_t>(x) * words], y);
+      }
+      if (test(&desc[static_cast<size_t>(y) * words], x)) {
+        set(&shares[static_cast<size_t>(y) * words], x);
       }
     }
     // what the node and every node before it share with nodes after them

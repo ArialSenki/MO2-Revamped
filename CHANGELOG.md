@@ -125,7 +125,7 @@ the list brings.
   56 ms instead of 8.6 s. The window and the downloads list update without
   freezing.
 
-## 1.1.0-beta.12 — November 14, 2026 (not released on its own; included in 1.1.0-dev.1)
+## 1.1.0-beta.12 (pre-release) — November 16, 2026
 
 ### Nexus collections, complete
 
@@ -159,6 +159,180 @@ the list brings.
   it all, curator text can't load files from your PC or the network, nothing is
   applied to your own mods after a Merge, and the Nexus button opens Nexus in
   one click again.
+
+### Root folders without Root Builder
+
+- A mod's `Root` folder (Root Builder's layout, used by many Wabbajack lists and
+  mods) goes to the game folder through MO2's virtual folder, with no plugin.
+  This covers Bethesda games, Morrowind, Baldur's Gate 3 and other games whose
+  data folder is the game folder, `Data` or `Data Files`. With the Root Builder
+  plugin turned on, it stays in charge and MO2 leaves Root folders to it.
+- Files the virtual folder can't give a game are handled at launch, keeping the
+  game folder as it is wherever that's reliable:
+  - a script extender's loader in a Root folder (`skse64_loader.exe`,
+    `nvse_loader.exe`): MO2 starts the game with the extender's DLL for the
+    game's version loaded first;
+  - DLLs the game exe imports (ENB or ReShade's `d3d11.dll`, DXVK's `d3d9.dll`,
+    NVHR's `d3dx9_38.dll`): loaded from the mod's own file;
+  - where that isn't reliable (an exe wrapped by Steam's DRM, an extender
+    whose loader has to start it, an ENB preset in another mod, a mod that
+    replaces the game exe such as FNV4GB), the files are copied into the game
+    folder for that run. Anything they replace is backed up, and everything is
+    put back when the game closes. If MO2 closes first, it's put back on the
+    next start. The log says how each file was handled.
+- A program found only in a mod's Root folder runs from there, with the game
+  folder as its working folder.
+- Files a program creates in the game folder (logs, caches) stay there, as
+  without Root folders; Sort and shortcuts leave no empty `Overwrite\Root`.
+- A mod with a `Root` folder no longer shows as having no valid game data
+  (Bethesda games).
+- Cyberpunk 2077 keeps loading CET and RED4ext installed at a mod's top level
+  when Root Builder is on.
+- The profile is saved before the launch is planned, so a mod
+  turned on just before Run counts.
+- `nvse_loader.exe -editor` (GECK) and `-altexe` start what they
+  name, not the game.
+- Tools in their own folder (LOOT, xEdit) aren't planned at all.
+- A copy that fails stops the start, and what was already copied
+  is put back. The exception is a game folder that can't be written to: then
+  the game starts without those files, and MO2 says so once per session.
+- Several instances sharing one game folder: a file another
+  instance copied there is never backed up as the game's. The program isn't
+  started, and MO2 names the instance that has to restore it.
+- A file changed by something else while copies were out is kept
+  for you, with its backup moved to a `conflicts` folder and logged.
+- Unchanged mod files aren't read again on every start (hashes
+  kept by path, size and time).
+- When a loader exits right after starting the game, MO2 waits
+  up to 15 seconds for the game before putting the copies back.
+
+### Skyrim Special Edition, Fallout 4, New Vegas and Fallout 3
+
+- **Fallout 3:**
+  - The Fallout Launcher program is found again: Steam's Game Of The Year
+    edition has `Fallout3Launcher.exe`.
+  - The Steam app ID is 22370 for a Game Of The Year install, even when the
+    Regular edition was picked.
+  - FOSE co-saves (`.fose`) move and are deleted along with their save.
+- **Skyrim SE:** saves with a newer header version still show their screenshot
+  and details.
+- **Fallout 3 and New Vegas** are also found from GOG and from any Steam
+  library, before the game has run once. The new-instance wizard finds Steam's
+  Fallout 3 GOTY.
+- **Skyrim SE and Fallout 4:** with "show mods installed outside MO" off, the
+  DLC and Creation Club plugins show in the mod list again.
+- **Mod data:** Skyrim SE and Fallout 4 accept `Seq` and `LODSettings`, and
+  Fallout 4 accepts `Vis` (previs).
+- **Collections:** mods Vortex puts in the game folder (script extenders, ENB)
+  are installed into the mod's `Root` folder, with the collection's patches,
+  file lists and overrides following them.
+
+### Saves
+
+- The Saves tab and the transfer window show each save's time in your local
+  time; they showed UTC.
+- Skyrim SE, Skyrim VR and Enderal SE no longer take 6 hours off the time, which
+  was right in one time zone only. Oblivion and Nehrim, which store local time,
+  show it correctly.
+
+### Plugin list
+
+- Moving plugins with Ctrl+Up/Down saves `plugins.txt` and `loadorder.txt`, as
+  a drag does, so xEdit or LOOT started outside MO2 see the new order.
+- A plugin past 4096 light or 256 medium plugins is marked as one the game won't
+  load.
+- A plugin whose file differs only in case is no longer dropped on a refresh.
+- Switching profiles writes a pending plugin change to the old profile at once,
+  and a save waiting for a refresh is never written into another profile.
+
+### Baldur's Gate 3
+
+- Mods laid out for other MO2 plugins (as Wabbajack lists install them):
+  - top-level `Public`, `Generated`, `Localization`, `ScriptExtender`, `Video`
+    and `Mods/<folder>` go to the game's `Data`;
+  - `SE_CONFIG` goes to Script Extender's folder;
+  - paks in `PAK_FILES` go with the others.
+  These mods count as valid.
+- Loose folders of mods without a `Data` folder were dropped without a notice.
+  This affected loading screens, `Generated` assets and similar mods.
+- Profile saves are mapped on a first start, when the game's saves folder
+  doesn't exist yet.
+- Script Extender and native-mod DLLs (also in `Root\bin`) are loaded into the
+  game only, not into the Larian Launcher. `modsettings.lsx` is also written
+  when the Larian Launcher is started from MO2.
+- A native mod's `.toml` goes to `bin` with its DLL.
+- `meta.ini`:
+  - a pak with spaces in its name is no longer read again on every start;
+  - a list author's load-order entry is found;
+  - names with `&` no longer break `modsettings.lsx`;
+  - values with commas or quotes are kept as written.
+- Paks built from a mod's working folder are rebuilt after their files change,
+  also when files are deleted or renamed. Working folders with "bin", "Data" or
+  "Mods" in their name are packed.
+- Two paks with one name give the mapping and the load order the same file.
+- A pak entry another version of the plugin wrote no longer counts as an
+  override: lists such as Baldur's Gate 3 Enhanced Edition started with only the
+  base game in `modsettings.lsx`. `meta.ini` keeps its keys' case, so a mod is no
+  longer left out over a `gamename`/`gameName` pair.
+- The game's own DLLs are recognised whatever the case of their names.
+- BG3 Mod Manager: a notice with the download link when the .NET Desktop
+  Runtime it needs is missing.
+- Quicker start: each mod's folder is walked once, there's no fixed wait after
+  the load order is written, and the mapping window repaints less often.
+- After a program, only the empty folders MO2 made are removed; your own empty
+  folders in Overwrite and AppData stay.
+- A cancelled start leaves nothing for a later one.
+- A `meta.ini` with odd bytes or keys before its first section is read
+  instead of leaving the mod out.
+- The .NET check uses the version BG3 Mod Manager (and Divine) asks for.
+- Mods whose paks are already known are read at once.
+
+### Nexus collections
+
+- In an exact copy of the author's install, a file the game's installer moved
+  (`DWrite.dll` into `bin`, `Public` into `Data\Public`) is no longer hidden as
+  extra.
+- Closing the collection window while it checks files waits until the check
+  ends.
+- Notices held back while a collection installs are counted and shown once it
+  ends. The ones you must see, such as Settings' restart notice, still show
+  during the install.
+- Esc pauses a running collection, as closing the window does.
+- Patches and the files' checksums are applied and checked off
+  the window's thread, so the window keeps painting.
+- The final ordering checks the collection is still running in
+  its profile, and pauses instead of applying anything otherwise.
+- Fewer disk reads for file overrides in large collections.
+- A collection's patches are only taken from that mod's own
+  folder in the collection's archive, and a folder you allowed to be replaced is
+  replaced only for the mod being installed.
+
+### Performance with large lists
+
+- Conflicts are worked out faster: each other mod is looked up once, not once
+  per shared file.
+- Plugins are matched to their archives with a binary search, and the master
+  order fix updates the list once.
+- A refresh converts the active archives once, not again for every mod.
+- Nexus update checks and tracked mods no longer slow down with thousands of
+  mods, and removing a collection's dropped mods reads each profile once.
+- The log has start timings (virtual folder, profile and plugins, Root copies).
+
+### Settings
+
+- **Interface size** (80 to 125%) in Settings > General, applied at the next
+  start. Programs started from MO2 (LOOT, Qt tools) are no longer scaled with
+  it.
+- **Smooth text in grey** for OLED screens, without ClearType's coloured edges.
+- The collection window opens at a size that fits the screen it's on, and fits
+  another screen when moved there.
+
+### Other fixes
+
+- A failed download that can't be resumed shows as paused, with its reason,
+  instead of "Retrying…" forever.
+- A program started with another profile reads that profile without repairing
+  or migrating it.
 
 ## 1.1.0-beta.11 (pre-release) — November 14, 2026
 

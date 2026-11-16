@@ -45,8 +45,9 @@ struct Input
   QString gameBinary;
   // IPluginGame::gameVersion()
   QString gameVersion;
-  // the program to start, absolute
+  // the program to start, absolute, and its arguments
   QString runBinary;
+  QString runArguments;
 };
 
 struct Plan
@@ -75,6 +76,12 @@ struct Plan
 };
 
 Plan plan(const Input& input);
+
+// whether a program can need anything from Root: one in the game folder, or
+// one in a mod or Overwrite (a Root-only program); a tool in its own folder
+// (LOOT, xEdit) never does, and isn't planned
+bool concerns(const QString& binary, const QString& gameDir, const QString& modsDir,
+              const QString& overwriteDir);
 
 }  // namespace RootLaunch
 

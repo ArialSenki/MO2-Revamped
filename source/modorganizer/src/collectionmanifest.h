@@ -198,7 +198,7 @@ SortResult sortModsByRules(const CollectionManifest& manifest,
 // the sorted mods grouped by category, each group where its first mod is.
 // Inside a group the mods keep the collection's own order (position(), the
 // sorted order when not given), moved only by the rules among them. Only the
-// rules between mods that conflict (conflicts(), all when not given) count:
+// rules between mods that share a file (conflictPairs, all when not given) count:
 // a mod a rule would put out of order across groups goes to a group at the
 // end, overflow, in the sorted order. category() gives a node's group, empty
 // for none (those make a group of their own, named empty)
@@ -212,7 +212,6 @@ struct GroupResult
 
 GroupResult groupByCategory(const SortResult& sorted,
                             const std::function<QString(int)>& category,
-                            const std::function<bool(int, int)>& conflicts = {},
                             const std::function<int(int)>& position = {},
                             const std::vector<std::pair<int, int>>* conflictPairs = nullptr);
 

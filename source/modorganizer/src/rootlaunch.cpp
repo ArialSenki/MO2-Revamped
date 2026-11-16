@@ -4,6 +4,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QMap>
 #include <QRegularExpression>
 #include <QSet>
@@ -15,6 +16,49 @@ namespace RootLaunch
 {
 
 using RootCopy::info;
+
+namespace
+{
+
+// one plan reads a DLL's headers and bytes several times (its imports, what
+// it names, its companions): each file is read once per plan
+struct PlanCache
+{
+  QHash<QString, RootCopy::PeFile> pe;
+  QHash<QString, QByteArray> bytes;
+};
+thread_local PlanCache* g_cache = nullptr;
+
+RootCopy::PeFile cachedPe(const QString& path)
+{
+  if (g_cache == nullptr) {
+    return RootCopy::readPe(path);
+  }
+  const QString key = QDir::cleanPath(path).toLower();
+  auto it           = g_cache->pe.find(key);
+  if (it == g_cache->pe.end()) {
+    it = g_cache->pe.insert(key, RootCopy::readPe(path));
+  }
+  return *it;
+}
+
+QStringList cachedMentions(const QString& path, const QStringList& names)
+{
+  if (names.isEmpty()) {
+    return {};
+  }
+  if (g_cache == nullptr) {
+    return RootCopy::mentionedNames(path, names);
+  }
+  const QString key = QDir::cleanPath(path).toLower();
+  auto it           = g_cache->bytes.find(key);
+  if (it == g_cache->bytes.end()) {
+    it = g_cache->bytes.insert(key, RootCopy::loweredBytes(path));
+  }
+  return RootCopy::mentionedNames(*it, names);
+}
+
+}  // namespace
 
 namespace
 {
@@ -110,7 +154,7 @@ QStringList reach(const Index& index, const QStringList& startFiles, bool startM
   while (!queue.isEmpty()) {
     const Item item = queue.takeFirst();
     QStringList names;
-    for (const QString& imported : RootCopy::readPe(item.path).imports) {
+    for (const QString& imported : cachedPe(item.path).imports) {
       if (dlls.contains(imported)) {
         names.append(imported);
       }
@@ -118,7 +162,7 @@ QStringList reach(const Index& index, const QStringList& startFiles, bool startM
     if (item.mentions) {
       QStringList others = dlls;
       others.removeAll(QFileInfo(item.path).fileName().toLower());
-      names += RootCopy::mentionedNames(item.path, others);
+      names += cachedMentions(item.path, others);
     }
     for (const QString& n : names) {
       if (!seen.contains(n)) {
@@ -184,7 +228,7 @@ QStringList companions(const Index& index, const QString& dllKey)
     out.append(ini);
   }
 
-  const QStringList kind = RootCopy::mentionedNames(dll.source, {"enbseries", "reshade"});
+  const QStringList kind = cachedMentions(dll.source, {"enbseries", "reshade"});
   const bool enb     = kind.contains("enbseries");
   const bool reshade = kind.contains("reshade");
 
@@ -395,6 +439,12 @@ QString matchRuntime(const Index& index, const QString& prefix, const QString& g
 
 Plan plan(const Input& in)
 {
+  PlanCache cache;
+  g_cache = &cache;
+  struct Scope
+  {
+    ~Scope() { g_cache = nullptr; }
+  } scope;
   Plan p;
   if (in.rootFolders.isEmpty()) {
     return p;
@@ -447,7 +497,7 @@ Plan plan(const Input& in)
   const bool exeReplaced = index.contains(gameExeKey) && !index.value(gameExeKey).dir;
   const QString gameExeSource =
       exeReplaced ? index.value(gameExeKey).source : gameExeReal;
-  const RootCopy::PeFile gamePe = RootCopy::readPe(gameExeSource);
+  const RootCopy::PeFile gamePe = cachedPe(gameExeSource);
   const bool steamStub          = RootCopy::isSteamStub(gamePe);
   if (exeReplaced) {
     const Entry e = index.value(gameExeKey);
@@ -481,7 +531,16 @@ Plan plan(const Input& in)
     const Entry loader = index.value(extender->key);
     QString why;
     QString runtime;
-    if (exeReplaced) {
+    static const QRegularExpression otherProgram(
+        QStringLiteral("(^|\\s)[-/](editor|altexe)\\b"),
+        QRegularExpression::CaseInsensitiveOption);
+    const auto otherMatch = otherProgram.match(in.runArguments);
+    if (otherMatch.hasMatch()) {
+      // nvse_loader.exe -editor starts GECK, -altexe another exe: not the game
+      why = QStringLiteral("%1 is started with %2, it starts another program than "
+                           "the game")
+                .arg(loader.name, otherMatch.captured(0).trimmed());
+    } else if (exeReplaced) {
       why = QStringLiteral("the game exe is replaced by a mod");
     } else if (steamStub) {
       why = QStringLiteral("%1 is SteamStub-wrapped, its code isn't unpacked yet when "
@@ -490,7 +549,7 @@ Plan plan(const Input& in)
     } else {
       runtime = matchRuntime(index, extender->prefix, in.gameVersion, &why);
       if (!runtime.isEmpty() &&
-          !RootCopy::mentionedNames(loader.source, {"start" + extender->tag}).isEmpty()) {
+          !cachedMentions(loader.source, {"start" + extender->tag}).isEmpty()) {
         why = QStringLiteral("%1 calls Start%2 after injecting %3, which a forced load "
                              "doesn't do")
                   .arg(loader.name, extender->tag.toUpper(), index.value(runtime).name);
@@ -507,11 +566,9 @@ Plan plan(const Input& in)
       info(QStringLiteral("root launch: %1 is loaded into %2 by usvfs before the game's "
                           "entry point (forced load, from %3), instead of starting %4")
                .arg(dll.name, gameExeName, modName(roots, dll.root), loader.name));
-      if (runIsLoader) {
-        p.runBinary = gameExeReal;
-        startsGame  = true;
-      }
-    } else if (runIsLoader) {
+      p.runBinary = gameExeReal;
+      startsGame  = true;
+    } else {
       info(QStringLiteral("root launch: %1 runs, copied into the game folder with its "
                           "DLLs: %2")
                .arg(loader.name, why));
@@ -571,13 +628,13 @@ Plan plan(const Input& in)
       } else if (QFileInfo::exists(gameDir + "/" + runRel)) {
         source = gameDir + "/" + runRel;
         if (sameDir) {
-          startedPe   = RootCopy::readPe(source);
+          startedPe   = cachedPe(source);
           startedName = name;
         }
       }
     }
     if (sameDir && !source.isEmpty() && !gameCopy &&
-        !RootCopy::mentionedNames(source, {gameExeKey}).isEmpty()) {
+        !cachedMentions(source, {gameExeKey}).isEmpty()) {
       gameCopy       = true;
       gameCopyReason = QStringLiteral("%1 names %2 and may start it").arg(name, gameExeName);
     }
@@ -604,7 +661,7 @@ Plan plan(const Input& in)
         QString problem;
         for (const QString& key : group) {
           const Entry e               = index.value(key);
-          const RootCopy::PeFile pe   = RootCopy::readPe(e.source);
+          const RootCopy::PeFile pe   = cachedPe(e.source);
           if (!pe.valid || pe.is64 != startedPe.is64) {
             problem = QStringLiteral("%1 isn't a DLL for this game").arg(e.name);
           } else if (ImportPatch::importablePath(e.source).isEmpty()) {
@@ -647,7 +704,7 @@ Plan plan(const Input& in)
             }
             preloaded.append(*it);
             const Entry e             = index.value(*it);
-            const RootCopy::PeFile pe = RootCopy::readPe(e.source);
+            const RootCopy::PeFile pe = cachedPe(e.source);
             p.preloads.push_back({native(e.source), pe.exportName, pe.exportOrdinal});
           }
           info(QStringLiteral("root launch: %1 is loaded from %2's Root folder (import "
@@ -702,6 +759,18 @@ Plan plan(const Input& in)
 
   p.copies = copies.files();
   return p;
+}
+
+bool concerns(const QString& binary, const QString& gameDir, const QString& modsDir,
+              const QString& overwriteDir)
+{
+  const QString bin = QDir::cleanPath(QDir::fromNativeSeparators(binary));
+  auto under        = [&](const QString& dir) {
+    return !dir.isEmpty() &&
+           bin.startsWith(QDir::cleanPath(QDir::fromNativeSeparators(dir)) + "/",
+                          Qt::CaseInsensitive);
+  };
+  return under(gameDir) || under(modsDir) || under(overwriteDir);
 }
 
 }  // namespace RootLaunch

@@ -316,7 +316,9 @@ private:
   bool checkGame(const QString& domain);
   bool gameMatches(const QString& domain) const;
   QString folderFingerprint(const QString& modName) const;
-  QStringList approvedNow() const;
+  // the folder this install writes to, when the user said it may be replaced
+  // and it is still that folder; empty otherwise
+  QStringList approvedFor(const QString& modName) const;
   void findOrFetchArchive();
   void downloadArchive(const QString& url);
   void archiveDownloaded();
@@ -355,6 +357,8 @@ private:
   void startInNewInstance();
   bool askAboutExisting();
   void finalize();
+  // still running in the collection's profile; pauses when not
+  bool finalizeCanGoOn();
   void applyModOrder();
   void postInstall(int row);
   void applyFileOverrides();

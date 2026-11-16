@@ -882,7 +882,8 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   // MO2 Revamped: the files of the mods' Root folders the VFS can't serve
   // (rootlaunch.h): a script extender's loader replaced by the game exe and a
   // forced load, proxy DLLs through the import table, or the copy fallback
-  const RootLaunch::Plan rootPlan = m_core.planRootLaunch(m_profileName, m_sp.binary);
+  const RootLaunch::Plan rootPlan =
+      m_core.planRootLaunch(m_profileName, m_sp.binary, m_sp.arguments);
   if (!rootPlan.runBinary.isEmpty()) {
     log::info("root launch: starting {} instead of {}",
               QDir::toNativeSeparators(rootPlan.runBinary),
@@ -953,23 +954,59 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
 
   // MO2 Revamped: the Root files copied for this run (taken out once the last
   // program in the VFS ends), and the import table patch spawn() applies
+  auto cantStart = [&](const QString& file) {
+    log::error("root launch: {} couldn't be copied into the game folder, {} isn't "
+               "started",
+               file, m_sp.binary.fileName());
+    QMessageBox::warning(
+        parent, QObject::tr("Can't start %1").arg(m_sp.binary.fileName()),
+        QObject::tr("%1 couldn't be copied from the mod's Root folder into the game "
+                    "folder, so it can't start. The reason is in MO2's log.")
+            .arg(file));
+  };
+
   if (!rootPlan.copies.empty()) {
-    m_core.deployRootCopies(rootPlan.copies);
+    const auto copied = m_core.deployRootCopies(rootPlan.copies);
     log::info("start: {} Root files copied in {}ms", rootPlan.copies.size(),
               startTimer.restart());
+
+    // another instance's copy in the game folder: the program would run with
+    // that instance's file; not started, and told which and whose
+    if (copied.foreign > 0) {
+      const QString file     = QDir::toNativeSeparators(copied.foreignFiles.first());
+      const QString instance = QDir::toNativeSeparators(
+          QFileInfo(QFileInfo(copied.foreignStates.first()).absolutePath()).absolutePath());
+      log::error("root launch: {} in the game folder is the copy of the instance in {}, "
+                 "{} isn't started",
+                 file, instance, m_sp.binary.fileName());
+      m_core.restoreRootCopies();
+      QMessageBox::warning(
+          parent, QObject::tr("Can't start %1").arg(m_sp.binary.fileName()),
+          QObject::tr("%1 in the game folder is a copy that the MO2 instance in %2 put "
+                      "there for its own run, so %3 isn't started with it. Start that "
+                      "instance once to restore its files, or remove the file.")
+              .arg(file, instance, m_sp.binary.fileName()));
+      return Error;
+    }
+
+    // a needed copy that failed stops the start, and what was copied comes out
+    // again (nothing of this run is running yet). The game folder that can't be
+    // written to at all is the exception: its notice says the game starts
+    // without them
+    if (!copied.notWritable && (copied.failed > 0 || !copied.error.isEmpty())) {
+      m_core.restoreRootCopies();
+      cantStart(copied.failedFiles.isEmpty() ? m_sp.binary.fileName()
+                                             : QFileInfo(copied.failedFiles.first()).fileName());
+      return Error;
+    }
   }
 
   // the program to start is one of those copies (an extender's loader): if it
   // didn't arrive, the start is stopped with the reason rather than "file not
   // found"
   if (!rootPlan.runBinary.isEmpty() && !QFileInfo::exists(m_sp.binary.absoluteFilePath())) {
-    log::error("root launch: {} couldn't be copied into the game folder",
-               QDir::toNativeSeparators(m_sp.binary.absoluteFilePath()));
-    QMessageBox::warning(
-        parent, QObject::tr("Can't start %1").arg(m_sp.binary.fileName()),
-        QObject::tr("%1 couldn't be copied from the mod's Root folder into the game "
-                    "folder, so it can't start. The reason is in MO2's log.")
-            .arg(m_sp.binary.fileName()));
+    m_core.restoreRootCopies();
+    cantStart(m_sp.binary.fileName());
     return Error;
   }
 
