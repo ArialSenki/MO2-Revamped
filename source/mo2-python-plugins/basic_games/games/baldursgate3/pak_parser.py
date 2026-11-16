@@ -153,6 +153,13 @@ def _plain_value(value: str) -> str:
 
 
 
+def _subfolders(path: Path) -> list[Path]:
+    try:
+        return [e for e in path.iterdir() if e.is_dir()]
+    except OSError:
+        return []
+
+
 def _keys(section: configparser.SectionProxy) -> dict[str, str]:
     return {key.lower(): _plain_value(value) for key, value in section.items()}
 
@@ -222,23 +229,24 @@ class BG3PakParser:
     def get_metadata_for_files_in_mod(
         self, mod: mobase.IModInterface, force_reparse_metadata: bool
     ):
+        # MO2 Revamped: the mod's folder walked once and its meta.ini read once
+        # (it was read again for every pak and every top-level folder)
+        modpath = Path(mod.absolutePath())
+        files = bg3_utils.scan_mod_paks(modpath)
+        if self._utils.autobuild_paks:
+            files = files + [
+                f
+                for f in _subfolders(modpath)
+                if not self._folder_pattern.fullmatch(f.name)
+                and f.name.casefold() not in self._mapped_folder_names
+            ]
+        if not files:
+            return {mod.name(): ""}
+        config = read_meta_ini(modpath / "meta.ini")
         return {
             mod.name(): "".join(
-                [
-                    self._get_metadata_for_file(mod, file, force_reparse_metadata)
-                    for file in sorted(
-                        bg3_utils.mod_paks(Path(mod.absolutePath()))
-                        + (
-                            [
-                                f
-                                for f in Path(mod.absolutePath()).glob("*")
-                                if f.is_dir()
-                            ]
-                            if self._utils.autobuild_paks
-                            else []
-                        )
-                    )
-                ]
+                self._get_metadata_for_file(mod, file, force_reparse_metadata, config)
+                for file in sorted(files)
             )
         }
 
@@ -247,9 +255,9 @@ class BG3PakParser:
         mod: mobase.IModInterface,
         file: Path,
         force_reparse_metadata: bool,
+        config: configparser.ConfigParser,
     ) -> str:
         meta_ini = Path(mod.absolutePath()) / "meta.ini"
-        config = read_meta_ini(meta_ini)
         try:
             if file.name.endswith("pak"):
                 meta_file = (
@@ -397,6 +405,30 @@ class BG3PakParser:
         condition: bool,
         to_parse: Callable[[], Path],
         in_load_order: bool = False,
+    ):
+        # MO2 Revamped: the config is the mod's for all its paks
+        # (get_metadata_for_files_in_mod); if this pak can't be read, its old
+        # entry (a list author's cache too) stays for the next pak's write
+        previous = dict(config[file.name]) if config.has_section(file.name) else None
+        try:
+            return self._metadata_to_ini(
+                config, file, mod, meta_ini, condition, to_parse, in_load_order
+            )
+        except Exception:
+            config.remove_section(file.name)
+            if previous is not None:
+                config[file.name] = previous
+            raise
+
+    def _metadata_to_ini(
+        self,
+        config: configparser.ConfigParser,
+        file: Path,
+        mod: mobase.IModInterface,
+        meta_ini: Path,
+        condition: bool,
+        to_parse: Callable[[], Path],
+        in_load_order: bool,
     ):
         config[file.name] = {}
         if condition:

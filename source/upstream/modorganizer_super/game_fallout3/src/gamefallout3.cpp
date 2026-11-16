@@ -172,7 +172,9 @@ QString GameFallout3::savegameExtension() const
 
 QString GameFallout3::savegameSEExtension() const
 {
-  return "";
+  // MO2 Revamped: FOSE writes a .fose co-save next to each save
+  // (Serialization.cpp in FOSE's source), as NVSE does
+  return "fose";
 }
 
 std::shared_ptr<const GamebryoSaveGame>

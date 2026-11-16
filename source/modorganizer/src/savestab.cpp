@@ -423,9 +423,11 @@ void SavesTab::refreshSaveListNow()
     for (auto& save : m_SaveGames) {
       auto relpath = savesDir.relativeFilePath(save->getFilepath());
       auto display = save->getName();
-      auto* item   = new QTreeWidgetItem(
+      // MO2 Revamped: the save's time is UTC; shown in local time
+      auto* item = new QTreeWidgetItem(
           ui.list, {display, relpath,
-                    locale.toString(save->getCreationTime(), QLocale::ShortFormat)});
+                    locale.toString(save->getCreationTime().toLocalTime(),
+                                    QLocale::ShortFormat)});
       item->setIcon(0, FluentIcons::file(save->getFilepath(), false));
       item->setToolTip(0, QDir::toNativeSeparators(relpath));
       ui.list->addTopLevelItem(item);

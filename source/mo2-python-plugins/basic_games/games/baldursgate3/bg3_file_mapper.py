@@ -1,5 +1,6 @@
 import functools
 import os
+import time
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -35,6 +36,7 @@ class BG3FileMapper(mobase.IPluginFileMapper):
     def mappings(self) -> list[mobase.Mapping]:
         qInfo("creating custom bg3 mappings")
         self.current_mappings.clear()
+        self._made_dirs: set[Path] = set()
         active_mods = self._utils.active_mods()
         if not active_mods:
             return []
@@ -49,6 +51,8 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         # MO2 Revamped: without Root Builder, MO2 maps each mod's Root/ to the
         # game folder itself (OrganizerCore::fileMapping)
         root_bin = "bin" if self._utils.root_builder_enabled() else "Root/bin"
+        done = 0
+        next_paint = 0.0
         for mod in active_mods:
             modpath = Path(mod.absolutePath())
             # MO2 Revamped: the same paks the load order has (bg3_utils.mod_paks)
@@ -62,11 +66,19 @@ class BG3FileMapper(mobase.IPluginFileMapper):
                 self.map_files(modpath / "bin", only_convert=True)
                 if root_bin != "bin":
                     self.map_files(modpath / root_bin, only_convert=True)
-            progress.setValue(progress.value() + 1)
-            QApplication.processEvents()
+            # MO2 Revamped: the window painted every 50 ms, not after every mod
+            # (a repaint per mod adds up with hundreds of mods)
+            done += 1
+            if time.monotonic() >= next_paint:
+                progress.setValue(done)
+                QApplication.processEvents()
+                next_paint = time.monotonic() + 0.05
             if progress.wasCanceled():
                 qWarning("mapping canceled by user")
+                bg3_utils.forget_pak_scans()
                 return self.current_mappings
+        # MO2 Revamped: the load order's scans are used up (bg3_utils.mod_paks)
+        bg3_utils.forget_pak_scans()
         (self._utils.overwrite_path / "Script Extender").mkdir(
             parents=True, exist_ok=True
         )
@@ -198,7 +210,13 @@ class BG3FileMapper(mobase.IPluginFileMapper):
         )
 
     def create_mapping(self, file: Path, dest: Path):
-        bg3_utils.create_dir_if_needed(dest)
+        # MO2 Revamped: each folder made once per start, not once per file
+        made = getattr(self, "_made_dirs", None)
+        key = dest if "." not in dest.name[1:] else dest.parent
+        if made is None or key not in made:
+            bg3_utils.create_dir_if_needed(dest)
+            if made is not None:
+                made.add(key)
 
         self.current_mappings.append(
             mobase.Mapping(

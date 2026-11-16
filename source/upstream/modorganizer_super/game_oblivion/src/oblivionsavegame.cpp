@@ -11,7 +11,7 @@ OblivionSaveGame::OblivionSaveGame(QString const& fileName, GameOblivion const* 
   SYSTEMTIME creationTime;
   fetchInformationFields(file, m_SaveNumber, m_PCName, m_PCLevel, m_PCLocation,
                          creationTime);
-  setCreationTime(creationTime);
+  setCreationTimeLocal(creationTime);
 }
 
 void OblivionSaveGame::fetchInformationFields(FileWrapper& file,

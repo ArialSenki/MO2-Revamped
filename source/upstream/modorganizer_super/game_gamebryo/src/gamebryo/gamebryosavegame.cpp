@@ -91,6 +91,16 @@ void GamebryoSaveGame::setCreationTime(_SYSTEMTIME const& ctime)
   m_CreationTime = QDateTime(date, time, Qt::UTC);
 }
 
+void GamebryoSaveGame::setCreationTimeLocal(_SYSTEMTIME const& ctime)
+{
+  QDate date;
+  date.setDate(ctime.wYear, ctime.wMonth, ctime.wDay);
+  QTime time;
+  time.setHMS(ctime.wHour, ctime.wMinute, ctime.wSecond, ctime.wMilliseconds);
+
+  m_CreationTime = QDateTime(date, time, Qt::LocalTime).toUTC();
+}
+
 GamebryoSaveGame::FileWrapper::FileWrapper(QString const& filepath,
                                            QString const& expected)
     : m_File(filepath), m_HasFieldMarkers(false),

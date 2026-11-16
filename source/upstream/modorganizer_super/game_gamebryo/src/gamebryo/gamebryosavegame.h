@@ -203,6 +203,9 @@ protected:
   };
 
   void setCreationTime(_SYSTEMTIME const& time);
+  // MO2 Revamped: a time the game wrote in local time (GetLocalTime: Oblivion,
+  // Nehrim), kept as UTC like the others
+  void setCreationTimeLocal(_SYSTEMTIME const& time);
 
   GameGamebryo const* m_Game;
   bool m_MediumEnabled;
