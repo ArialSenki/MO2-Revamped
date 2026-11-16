@@ -63,6 +63,16 @@ GamebryoModDataChecker::CheckReturn GamebryoModDataChecker::dataLooksValid(
   auto& suffixes = possibleFileExtensions();
   for (auto entry : *fileTree) {
     if (entry->isDir()) {
+      // MO2 Revamped: Root/ is Root Builder's layout (files for the game's own
+      // folder, as Wabbajack lists install them), which MO2 Revamped maps to
+      // the game's folder; for every game of this family, whatever its list.
+      // Not with a Data/ next to it: that archive still needs its data folder
+      // chosen (Quick Install would take it as it is)
+      if (entry->compare(QStringLiteral("Root")) == 0 &&
+          fileTree->find(QStringLiteral("Data"), MOBase::IFileTree::DIRECTORY) ==
+              nullptr) {
+        return CheckReturn::VALID;
+      }
       if (folders.count(entry->name()) > 0) {
         return CheckReturn::VALID;
       }

@@ -15707,6 +15707,14 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
       <source>This plugin is past the game's limit of regular plugins, so the game won't load it. Turn off some plugins, or use light (ESL) versions where a mod has them.</source>
       <translation>Dieses Plugin liegt über der Grenze des Spiels für normale Plugins, daher lädt das Spiel es nicht. Schalte einige Plugins aus oder nutze leichte (ESL-)Versionen, wo eine Mod sie hat.</translation>
     </message>
+    <message>
+      <source>This plugin is past the game's limit of 256 medium plugins, so the game won't load it. Turn off some medium plugins.</source>
+      <translation>Dieses Plugin liegt über der Grenze des Spiels von 256 mittleren Plugins, daher lädt das Spiel es nicht. Deaktiviere einige mittlere Plugins.</translation>
+    </message>
+    <message>
+      <source>This plugin is past the game's limit of 4096 light plugins, so the game won't load it. Turn off some light plugins.</source>
+      <translation>Dieses Plugin liegt über der Grenze des Spiels von 4096 leichten Plugins, daher lädt das Spiel es nicht. Deaktiviere einige leichte Plugins.</translation>
+    </message>
   </context>
   <context>
     <name>DirectoryRefresher</name>
@@ -16552,6 +16560,10 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
     <message>
       <source>The download stopped; trying again (%1 of %2).</source>
       <translation>Der Download wurde unterbrochen; neuer Versuch (%1 von %2).</translation>
+    </message>
+    <message>
+      <source>The mod's archive has unsafe file names.</source>
+      <translation>Das Archiv der Mod enthält unsichere Dateinamen.</translation>
     </message>
   </context>
   <context>

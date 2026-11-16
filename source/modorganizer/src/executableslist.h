@@ -218,11 +218,6 @@ private:
   std::vector<Executable> m_Executables;
 
   /**
-   * @brief add the executables preconfigured for this game
-   **/
-  void addFromPlugin(MOBase::IPluginGame const* game, SetFlags flags);
-
-  /**
    * @brief add a new executable to the list
    * @param executable
    */

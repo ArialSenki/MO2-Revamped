@@ -30,7 +30,9 @@ protected:
         "LightPlacer",   "mainmenuwallpapers",
         "MainMenuVideo", "PBRMaterialObjects",
         "PBRNifPatcher", "PBRTextureSets",
-        "Pandora_Engine"};
+        "Pandora_Engine",
+        // MO2 Revamped: SEQ files (xEdit, Synthesis) and LOD settings
+        "Seq",           "LODSettings"};
     return result;
   }
   virtual const FileNameSet& possibleFileExtensions() const override

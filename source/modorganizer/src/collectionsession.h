@@ -73,6 +73,9 @@ public:
     bool selected = true;
     QString presetResult;  // applied, partial or none, for FOMOD choices
     bool keptExisting = false;
+    // installed for the game's folder (Root/): the collection's paths are
+    // the game folder's
+    bool rootLayout = false;
     // patches and exact file lists: what was done, what wasn't and why
     QStringList notes;
     // the folder as installed, so an update knows it is still this one
@@ -342,6 +345,12 @@ private:
   void pumpInstall();
   bool installEntry(int row);
   bool installBundle(int row);
+  // a mod Vortex puts in the game's folder (script extender, ENB): its files
+  // into Root/, its data folder's into the mod's own folder
+  bool installRootMod(int row, bool* handled);
+  // the game's data folder name ("Data") when the collection's mod is one of
+  // those and this game has a data folder of its own; empty otherwise
+  QString rootLayoutData(const Collections::CollectionMod& mod) const;
   bool prepareProfile();
   void startInNewInstance();
   bool askAboutExisting();

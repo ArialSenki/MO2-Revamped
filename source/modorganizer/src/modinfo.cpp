@@ -179,8 +179,10 @@ std::vector<ModInfo::Ptr> ModInfo::getByModID(QString game, int modID)
 {
   QMutexLocker locker(&s_Mutex);
 
+  // MO2 Revamped: by reference; a copy of every entry's name and indices
+  // per call made an update check of thousands of mods take seconds
   std::vector<unsigned int> match;
-  for (auto iter : s_ModsByModID) {
+  for (const auto& iter : s_ModsByModID) {
     if (iter.first.second == modID) {
       if (iter.first.first.compare(game, Qt::CaseInsensitive) == 0) {
         match.insert(match.end(), iter.second.begin(), iter.second.end());
@@ -499,17 +501,14 @@ void ModInfo::manualUpdateCheck(QObject* receiver, std::multimap<QString, int> I
   std::vector<QSharedPointer<ModInfo>> mods;
   std::set<std::pair<QString, int>> organizedGames;
 
-  for (auto ID : IDs) {
-    for (auto matchedMod : getByModID(ID.first, ID.second)) {
-      bool alreadyMatched = false;
-      for (auto mod : mods) {
-        if (mod == matchedMod) {
-          alreadyMatched = true;
-          break;
-        }
-      }
-      if (!alreadyMatched)
+  // MO2 Revamped: the mods already taken in a set, not a scan of the list
+  // for each one
+  std::set<const ModInfo*> matched;
+  for (const auto& ID : IDs) {
+    for (const auto& matchedMod : getByModID(ID.first, ID.second)) {
+      if (matched.insert(matchedMod.data()).second) {
         mods.push_back(matchedMod);
+      }
     }
   }
   mods.erase(std::remove_if(mods.begin(), mods.end(),

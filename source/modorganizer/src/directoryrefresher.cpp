@@ -372,7 +372,8 @@ struct ModThread
   std::wstring path;
   int prio = -1;
   std::vector<std::wstring> archives;
-  std::set<std::wstring> enabledArchives;
+  // MO2 Revamped: shared by all the mods, built once per refresh
+  const std::set<std::wstring>* enabledArchives = nullptr;
   const std::vector<std::wstring>* loadOrder = nullptr;
   DirectoryStats* stats                      = nullptr;
   env::DirectoryWalker walker;
@@ -404,7 +405,7 @@ struct ModThread
     if (Settings::instance().archiveParsing()) {
       // from MO2 3ef0db4 (#2239): the load order is computed once by
       // addMultipleModsFilesToStructure()
-      ds->addFromAllBSAs(modName, path, prio, archives, enabledArchives, *loadOrder,
+      ds->addFromAllBSAs(modName, path, prio, archives, *enabledArchives, *loadOrder,
                          *stats);
     }
 
@@ -451,6 +452,12 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
     }
   }
 
+  // MO2 Revamped: the enabled archives once, not converted again for each mod
+  std::set<std::wstring> enabledArchives;
+  for (auto&& a : m_EnabledArchives) {
+    enabledArchives.insert(a.toStdWString());
+  }
+
   for (std::size_t i = 0; i < entries.size(); ++i) {
     const auto& e  = entries[i];
     const int prio = e.priority + 1;
@@ -482,10 +489,7 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
           mt.archives.push_back(a.toStdWString());
         }
 
-        mt.enabledArchives.clear();
-        for (auto&& a : m_EnabledArchives) {
-          mt.enabledArchives.insert(a.toStdWString());
-        }
+        mt.enabledArchives = &enabledArchives;
 
         mt.loadOrder = &loadOrder;
         mt.stats     = &stats[i];

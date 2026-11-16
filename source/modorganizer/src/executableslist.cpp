@@ -249,15 +249,6 @@ bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game,
   return added;
 }
 
-void ExecutablesList::addFromPlugin(IPluginGame const* game, SetFlags flags)
-{
-  Q_ASSERT(game != nullptr);
-
-  for (const auto& exe : getPluginExecutables(game)) {
-    setExecutable(exe, flags);
-  }
-}
-
 const Executable& ExecutablesList::get(const QString& title) const
 {
   for (const auto& exe : m_Executables) {

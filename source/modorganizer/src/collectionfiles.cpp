@@ -683,6 +683,140 @@ FileListResult compareFileList(const std::vector<FileHash>& listed,
 }
 
 // ---------------------------------------------------------------------------
+// mods for the game's own folder
+
+bool isGameRootType(const QString& vortexType)
+{
+  return vortexType.compare(QStringLiteral("dinput"), Qt::CaseInsensitive) == 0 ||
+         vortexType.compare(QStringLiteral("enb"), Qt::CaseInsensitive) == 0;
+}
+
+QString rootLayoutPath(const QString& gamePath, const QString& dataFolderName)
+{
+  QString p = gamePath;
+  p.replace('\\', '/');
+  while (p.startsWith('/')) {
+    p.remove(0, 1);
+  }
+  const int slash = p.indexOf('/');
+  if (slash > 0 && !dataFolderName.isEmpty() &&
+      p.left(slash).compare(dataFolderName, Qt::CaseInsensitive) == 0) {
+    return p.mid(slash + 1);
+  }
+  return QStringLiteral("Root/") + p;
+}
+
+QString gameRootBase(const QStringList& files, const QString& vortexType,
+                     const std::vector<FileHash>& listed, const QString& dataFolderName)
+{
+  // the archive's files and folders, by their compared path
+  std::set<QString> have;
+  std::map<QString, QString> folders;  // compared, with a trailing slash -> as it is
+  // the top: empty, not null (null is "can't tell")
+  folders.emplace(QString(), QStringLiteral(""));
+  for (QString f : files) {
+    f.replace('\\', '/');
+    while (f.startsWith('/')) {
+      f.remove(0, 1);
+    }
+    have.insert(f.toLower());
+    for (int slash = f.indexOf('/'); slash > 0; slash = f.indexOf('/', slash + 1)) {
+      folders.emplace(f.left(slash + 1).toLower(), f.left(slash + 1));
+    }
+  }
+
+  if (!listed.empty()) {
+    // the folder where the collection's files are; the shallowest of equals
+    QString best;
+    std::size_t bestCount = 0;
+    std::size_t bestDepth = 0;
+    for (const auto& [key, original] : folders) {
+      std::size_t count = 0;
+      for (const FileHash& h : listed) {
+        if (have.count(key + normalizedPath(h.path))) {
+          ++count;
+        }
+      }
+      const auto depth = std::size_t(key.count('/'));
+      if (count > bestCount || (count == bestCount && count > 0 && depth < bestDepth)) {
+        best      = original;
+        bestCount = count;
+        bestDepth = depth;
+      }
+    }
+    if (bestCount * 2 > listed.size()) {
+      return best;
+    }
+    // not laid out as the collection says: as Vortex finds it
+  }
+
+  // the folder of the shallowest file that matches, as it is in files
+  const auto folderOf = [&files](const std::function<bool(const QString&)>& match) {
+    QString found;
+    int depth = -1;
+    for (QString f : files) {
+      f.replace('\\', '/');
+      while (f.startsWith('/')) {
+        f.remove(0, 1);
+      }
+      const QString name = f.section('/', -1).toLower();
+      if (!match(name)) {
+        continue;
+      }
+      const int d = int(f.count('/'));
+      if (depth < 0 || d < depth) {
+        depth = d;
+        found = f.left(f.size() - name.size());
+      }
+    }
+    return depth < 0 ? QString() : (found.isNull() ? QStringLiteral("") : found);
+  };
+
+  if (vortexType.compare(QStringLiteral("enb"), Qt::CaseInsensitive) == 0) {
+    return folderOf([](const QString& name) {
+      return name == u"enbseries.ini";
+    });
+  }
+  if (vortexType == u"dinput-any") {
+    return folderOf([](const QString& name) {
+      return name.endsWith(u".exe") || name.endsWith(u".dll");
+    });
+  }
+  QString base = folderOf([](const QString& name) {
+    return name.endsWith(u"_loader.exe");
+  });
+  if (base.isNull()) {
+    base = folderOf([](const QString& name) {
+      return name == u"dinput8.dll";
+    });
+  }
+  if (base.isNull()) {
+    // not a plugin of the script extender's (Data/SKSE/Plugins/x.dll): the
+    // game's folder is above its data folder
+    QStringList outsideData;
+    for (const QString& f : files) {
+      QString p = QString(f).replace('\\', '/');
+      while (p.startsWith('/')) {
+        p.remove(0, 1);
+      }
+      const QStringList parts = p.split('/');
+      bool inData             = false;
+      for (int i = 0; i + 1 < parts.size(); ++i) {
+        if (parts[i].compare(dataFolderName, Qt::CaseInsensitive) == 0) {
+          inData = true;
+          break;
+        }
+      }
+      if (!inData) {
+        outsideData.append(p);
+      }
+    }
+    base = gameRootBase(outsideData, QStringLiteral("dinput-any"), {}, dataFolderName);
+  }
+  return base;
+}
+
+// ---------------------------------------------------------------------------
 // INI tweaks
 
 namespace
