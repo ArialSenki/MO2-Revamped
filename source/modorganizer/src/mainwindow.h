@@ -101,6 +101,10 @@ class QTreeWidgetItem;
 class QUrl;
 class CollectionDialog;
 class WabbajackDialog;
+namespace Wabbajack
+{
+class ListBrowser;
+}
 class QWidget;
 
 #ifndef Q_MOC_RUN
@@ -341,6 +345,7 @@ private:
   QPointer<QDialog> m_UpdateNotice;
   QPointer<CollectionDialog> m_CollectionDialog;
   QPointer<WabbajackDialog> m_WabbajackDialog;
+  QPointer<Wabbajack::ListBrowser> m_WabbajackBrowser;
   // a notice waits for its turn, see showUpdateNotice()
   bool m_UpdateNoticeWaiting = false;
   // the Update command as it is without an update, to put back

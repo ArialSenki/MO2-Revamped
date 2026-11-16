@@ -17932,5 +17932,9 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
       <source>Stopped.</source>
       <translation>Angehalten.</translation>
     </message>
+    <message>
+      <source>%1 can't be replaced (another program has it open); the downloaded file is kept as %2.</source>
+      <translation>%1 kann nicht ersetzt werden (ein anderes Programm hat die Datei geöffnet); die heruntergeladene Datei bleibt als %2 erhalten.</translation>
+    </message>
   </context>
 </TS>

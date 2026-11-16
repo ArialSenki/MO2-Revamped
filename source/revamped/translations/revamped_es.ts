@@ -18193,5 +18193,9 @@ Instala .NET Desktop Runtime 8 para Windows x64 desde {0} y vuelve a abrir BG3 M
       <source>Stopped.</source>
       <translation>Detenido.</translation>
     </message>
+    <message>
+      <source>%1 can't be replaced (another program has it open); the downloaded file is kept as %2.</source>
+      <translation>No se puede sustituir %1 (otro programa lo tiene abierto); el archivo descargado se guarda como %2.</translation>
+    </message>
   </context>
 </TS>

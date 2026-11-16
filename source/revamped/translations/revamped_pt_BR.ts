@@ -17908,5 +17908,9 @@ Instale o .NET Desktop Runtime 8 para Windows x64 em {0} e depois abra o BG3 Mod
       <source>Stopped.</source>
       <translation>Parado.</translation>
     </message>
+    <message>
+      <source>%1 can't be replaced (another program has it open); the downloaded file is kept as %2.</source>
+      <translation>Não é possível substituir %1 (outro programa o mantém aberto); o arquivo baixado fica guardado como %2.</translation>
+    </message>
   </context>
 </TS>

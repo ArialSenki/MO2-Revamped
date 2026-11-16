@@ -120,7 +120,7 @@ bool isWebAddress(const QString& text)
 
 // the list's file name from its address on Wabbajack's servers
 // ("…/Tempus Maledictum.wabbajack_c52ec8de-…"), plain and safe
-QString fileNameFor(const QString& download, const QString& title)
+QString fileNameFor(const QString& download, const QString& title, const QString& version)
 {
   QString name = QUrl(download).fileName();
   const int cut = name.indexOf(QStringLiteral(".wabbajack"), 0, Qt::CaseInsensitive);
@@ -132,6 +132,15 @@ QString fileNameFor(const QString& download, const QString& title)
   clean = clean.trimmed();
   if (clean.isEmpty() || clean.startsWith(u'.')) {
     clean = QStringLiteral("list");
+  }
+  // each version its own file: a new one never replaces the file an install
+  // of the old one reads
+  QString v;
+  for (const QChar c : version.trimmed()) {
+    v += (c.isLetterOrNumber() || c == u'.' || c == u'-' || c == u'_') ? c : u'_';
+  }
+  if (!v.isEmpty()) {
+    clean += QStringLiteral(" ") + v;
   }
   return clean + QStringLiteral(".wabbajack");
 }
@@ -155,9 +164,10 @@ struct ListBrowser::Download
 
 ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* managedGame,
                          const QString& downloadsFolder,
-                         std::function<void(const QString&)> open, QWidget* parent)
+                         std::function<void(const QString&)> open,
+                         std::function<bool(const QString&)> inUse, QWidget* parent)
     : QDialog(parent), m_games(std::move(games)), m_managed(managedGame),
-      m_open(std::move(open))
+      m_open(std::move(open)), m_inUse(std::move(inUse))
 {
   m_listsFolder = QDir(downloadsFolder).filePath(QStringLiteral("Wabbajack lists"));
   setupUi();
@@ -338,6 +348,8 @@ void ListBrowser::loadGallery(bool fresh)
   }
 
   const int generation = ++m_generation;
+  m_failed             = 0;
+  m_indexError.clear();
   m_collected          = QJsonArray();
   m_summary.clear();
   m_pending = 2;  // the index and the summary
@@ -363,8 +375,8 @@ void ListBrowser::loadGallery(bool fresh)
       return;
     }
     if (index->error() != QNetworkReply::NoError) {
-      m_status->setText(tr("Wabbajack's gallery can't be read: %1")
-                            .arg(networkErrorText(index)));
+      m_indexError = tr("Wabbajack's gallery can't be read: %1").arg(networkErrorText(index));
+      m_status->setText(m_indexError);
       galleryDone(generation);
       return;
     }
@@ -389,6 +401,7 @@ void ListBrowser::loadGallery(bool fresh)
             m_collected.append(o);
           }
         } else {
+          ++m_failed;
           log::debug("wabbajack gallery: repository {} not read: {}", name,
                      repo->errorString());
         }
@@ -407,12 +420,20 @@ void ListBrowser::galleryDone(int generation)
   m_refresh->setEnabled(true);
   if (m_collected.isEmpty()) {
     if (m_entries.empty()) {
-      m_status->setText(tr("Wabbajack's gallery can't be read right now. Try Refresh "
-                           "in a while."));
+      m_status->setText(!m_indexError.isEmpty()
+                            ? m_indexError
+                            : tr("Wabbajack's gallery can't be read right now. Try Refresh "
+                                 "in a while."));
     }
     return;
   }
-  // kept for the next hour
+  // kept for the next hour, when every repository answered: one missing comes
+  // back at the next opening instead of staying out for an hour
+  if (m_failed > 0) {
+    log::info("wabbajack gallery: {} repositories didn't answer; not kept", m_failed);
+    readGallery(m_collected, m_summary);
+    return;
+  }
   QJsonObject cached;
   cached.insert("time", QDateTime::currentSecsSinceEpoch());
   cached.insert("lists", m_collected);
@@ -682,7 +703,7 @@ void ListBrowser::showDetails()
 void ListBrowser::updateButtons()
 {
   const Entry* e      = selected();
-  const bool fetching = m_download != nullptr;
+  const bool fetching = m_download != nullptr || m_checking;
   m_install->setEnabled(!fetching && e != nullptr && !e->down &&
                         isWabbajackCdnHost(cdnUrl(e->download)));
   m_install->setText(fetching ? tr("Downloading the list…") : tr("Open the list"));
@@ -695,7 +716,7 @@ void ListBrowser::updateButtons()
 void ListBrowser::install()
 {
   const Entry* e = selected();
-  if (e == nullptr || m_download != nullptr || e->down) {
+  if (e == nullptr || m_download != nullptr || m_checking || e->down) {
     return;
   }
   const QUrl base = cdnUrl(e->download);
@@ -708,7 +729,8 @@ void ListBrowser::install()
     m_status->setText(tr("%1 can't be made.").arg(QDir::toNativeSeparators(m_listsFolder)));
     return;
   }
-  const QString target = QDir(m_listsFolder).filePath(fileNameFor(e->download, e->title));
+  QString target =
+      QDir(m_listsFolder).filePath(fileNameFor(e->download, e->title, e->version));
 
   // already here, the same file: no download
   const QFileInfo existing(target);
@@ -717,9 +739,12 @@ void ListBrowser::install()
   if (existing.isFile() && ok && e->size > 0 && existing.size() == e->size) {
     m_status->setText(tr("Checking the list's file that is already here…"));
     auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
+    m_checking    = watcher;
+    updateButtons();
     const Entry copy = *e;
     connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, copy, target, want] {
       watcher->deleteLater();
+      m_checking.clear();
       const auto hash = watcher->result();
       if (hash && *hash == want) {
         m_status->setText(tr("Opening %1…").arg(copy.title));
@@ -729,7 +754,14 @@ void ListBrowser::install()
         close();
         return;
       }
-      startDownload(copy, target);
+      // another file of that name, in use by an install: the new one beside it
+      QString to = target;
+      if (m_inUse && m_inUse(target)) {
+        to = QFileInfo(target).absoluteDir().filePath(
+            QFileInfo(target).completeBaseName() + QStringLiteral(" (") +
+            QString::number(QDateTime::currentSecsSinceEpoch()) + QStringLiteral(").wabbajack"));
+      }
+      startDownload(copy, to);
     });
     watcher->setFuture(QtConcurrent::run([target]() -> std::optional<uint64_t> {
       const LowPriority low(LowPriority::Mode::Background);
@@ -740,6 +772,11 @@ void ListBrowser::install()
       }
     }));
     return;
+  }
+  if (existing.exists() && m_inUse && m_inUse(target)) {
+    target = existing.absoluteDir().filePath(
+        existing.completeBaseName() + QStringLiteral(" (") +
+        QString::number(QDateTime::currentSecsSinceEpoch()) + QStringLiteral(").wabbajack"));
   }
   startDownload(*e, target);
 }
@@ -812,9 +849,15 @@ void ListBrowser::nextPart()
   Download& d = *m_download;
   if (d.index >= d.parts.size()) {
     d.file.close();
-    QFile::remove(d.target);
-    if (!QFile::rename(d.file.fileName(), d.target)) {
-      finishDownload(false, tr("%1 can't be written.").arg(QDir::toNativeSeparators(d.target)));
+    if ((QFileInfo::exists(d.target) && !QFile::remove(d.target)) ||
+        !QFile::rename(d.file.fileName(), d.target)) {
+      // the whole file came, checked: it stays, under its part name
+      finishDownload(false,
+                     tr("%1 can't be replaced (another program has it open); the downloaded "
+                        "file is kept as %2.")
+                         .arg(QDir::toNativeSeparators(d.target),
+                              QDir::toNativeSeparators(d.file.fileName())),
+                     true);
       return;
     }
     finishDownload(true, {});
@@ -849,8 +892,9 @@ void ListBrowser::nextPart()
                                   : tr("A part of the list's file kept arriving damaged."));
         return;
       }
-      QTimer::singleShot(3000 * d.tries, this, [this] {
-        if (m_download && !m_download->cancelled) {
+      Download* mine = &d;
+      QTimer::singleShot(3000 * d.tries, this, [this, mine] {
+        if (m_download.get() == mine && !mine->cancelled) {
           nextPart();
         }
       });
@@ -870,7 +914,7 @@ void ListBrowser::nextPart()
   });
 }
 
-void ListBrowser::finishDownload(bool ok, const QString& error)
+void ListBrowser::finishDownload(bool ok, const QString& error, bool keepPart)
 {
   std::unique_ptr<Download> d = std::move(m_download);
   m_progress->hide();
@@ -878,7 +922,7 @@ void ListBrowser::finishDownload(bool ok, const QString& error)
     d->file.close();
   }
   if (!ok) {
-    if (d) {
+    if (d && !keepPart) {
       QFile::remove(d->target + QStringLiteral(".mo2r-part"));
     }
     if (!error.isEmpty()) {

@@ -646,9 +646,16 @@ void WabbajackDialog::placeWindow()
       available.contains(geometry().center()) &&
       width() >= least.boundedTo(available.size()).width() &&
       height() >= least.boundedTo(available.size()).height()) {
-    // where the user left it; the size older versions saved (most of a 2K
-    // screen) comes down to this screen's
-    resize(size().boundedTo(ScreenFitter::wantedSize(available, least)));
+    // where the user left it, the user's size. The one older versions saved
+    // (most of a 2K screen) comes down to this screen's once
+    const char* shrunk = "Wabbajack/windowSizeChecked";
+    if (!GlobalSettings::value(QString::fromLatin1(shrunk), false).toBool()) {
+      resize(size().boundedTo(ScreenFitter::wantedSize(available, least)));
+      GlobalSettings::setValue(QString::fromLatin1(shrunk), true);
+    } else {
+      resize(size().boundedTo(available.size() - QSize(16, 40)));
+    }
+    fitter->setUserSized(true);
     return;
   }
 
@@ -1525,7 +1532,8 @@ void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
   std::vector<QVariantMap> kept = keptPrograms(programs, m_installFolder, gameFolder, notes);
   for (QVariantMap& p : kept) {
     const QString work = p.value("workingDirectory").toString();
-    if (!work.isEmpty() && !QFileInfo(remapData(work)).isDir()) {
+    if (!work.isEmpty() && !QFileInfo(remapData(work)).isDir() &&
+        !isIn(work, m_installFolder) && !isIn(work, gameFolder)) {
       // the author's own folder ("D:\SteamLibrary\..."): MO2 starts it in the
       // program's folder
       log::info("wabbajack: '{}' starts in its own folder, not the author's {}",

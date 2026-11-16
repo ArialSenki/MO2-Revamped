@@ -5073,12 +5073,27 @@ void MainWindow::browseWabbajackLists()
   if (downloads.isEmpty() && m_OrganizerCore.downloadManager() != nullptr) {
     downloads = m_OrganizerCore.downloadManager()->getOutputDirectory();
   }
+  // one gallery: two would download the same list file into one part file
+  if (m_WabbajackBrowser) {
+    m_WabbajackBrowser->showNormal();
+    m_WabbajackBrowser->raise();
+    m_WabbajackBrowser->activateWindow();
+    return;
+  }
   auto* browser = new Wabbajack::ListBrowser(
       m_PluginContainer.plugins<IPluginGame>(), m_OrganizerCore.managedGame(), downloads,
       [this](const QString& path) {
         openWabbajackList(path);
       },
+      [this](const QString& path) {
+        // the list an open window or a paused install of this instance reads
+        const QFileInfo file(path);
+        return (m_WabbajackDialog && QFileInfo(m_WabbajackDialog->path()) == file) ||
+               (!WabbajackDialog::resumeList().isEmpty() &&
+                QFileInfo(WabbajackDialog::resumeList()) == file);
+      },
       this);
+  m_WabbajackBrowser = browser;
   browser->show();
 }
 

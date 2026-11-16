@@ -29,6 +29,10 @@ public:
   // the window at its size for screen, centred on middle and kept on it
   void place(QScreen* screen, const QPoint& middle);
 
+  // a size the user chose (a restored one): a move to another screen keeps it
+  // where it fits
+  void setUserSized(bool sized) { m_userSized = sized; }
+
 protected:
   bool eventFilter(QObject* watched, QEvent* e) override;
 
@@ -38,6 +42,7 @@ private:
   bool m_userSized    = false;
   bool m_fitting      = false;
   bool m_watching     = false;
+  QSize m_applied;  // the last size this set: a resize to another one is the user's
 
   void fitTo(QScreen* screen);
   void apply(const QRect& available, QSize size, const QPoint& middle);

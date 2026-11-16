@@ -47,9 +47,12 @@ class ListBrowser : public QDialog
 public:
   // open gets the downloaded .wabbajack's path
   // the lists' .wabbajack files go to a folder in downloadsFolder
+  // inUse tells whether a list file is open or kept to resume: it is never
+  // replaced then
   ListBrowser(std::vector<MOBase::IPluginGame*> games,
               const MOBase::IPluginGame* managedGame, const QString& downloadsFolder,
-              std::function<void(const QString&)> open, QWidget* parent);
+              std::function<void(const QString&)> open,
+              std::function<bool(const QString&)> inUse, QWidget* parent);
   ~ListBrowser() override;
 
 protected:
@@ -71,6 +74,9 @@ private:
   std::vector<MOBase::IPluginGame*> m_games;
   const MOBase::IPluginGame* m_managed;
   std::function<void(const QString&)> m_open;
+  std::function<bool(const QString&)> m_inUse;
+  // the check of a list file already here (2: no second click meanwhile)
+  QPointer<QObject> m_checking;
   QString m_listsFolder;
   QNetworkAccessManager m_network;
   std::vector<Entry> m_entries;
@@ -97,6 +103,8 @@ private:
   QJsonArray m_collected;  // every repository's lists, with its name
   QByteArray m_summary;    // the lists' status and small images
   int m_generation = 0;    // a reload makes the older answers stale
+  int m_failed     = 0;    // repositories that didn't answer in this reading
+  QString m_indexError;    // why the index itself couldn't be read
 
   // the list's file being downloaded
   struct Download;
@@ -115,7 +123,7 @@ private:
   void install();
   void startDownload(const Entry& e, const QString& target);
   void nextPart();
-  void finishDownload(bool ok, const QString& error);
+  void finishDownload(bool ok, const QString& error, bool keepPart = false);
   void updateButtons();
 };
 

@@ -1,6 +1,9 @@
 #include "screenfitter.h"
 
 #include <QEvent>
+#include <QGuiApplication>
+#include <QPointer>
+#include <QTimer>
 #include <QRect>
 #include <QResizeEvent>
 #include <QScreen>
@@ -45,8 +48,10 @@ bool ScreenFitter::eventFilter(QObject* watched, QEvent* e)
         connect(handle, &QWindow::screenChanged, this, &ScreenFitter::fitTo);
       }
     } else if (e->type() == QEvent::Resize && e->spontaneous() && !m_fitting &&
-               m_window->isVisible()) {
-      // the user dragged its edge
+               m_window->isVisible() && !m_window->isMaximized() &&
+               !m_window->isMinimized() && !m_window->isFullScreen() &&
+               static_cast<QResizeEvent*>(e)->size() != m_applied) {
+      // the user dragged its edge (a maximize or a restore isn't a size of theirs)
       m_userSized = true;
     }
   }
@@ -56,6 +61,17 @@ bool ScreenFitter::eventFilter(QObject* watched, QEvent* e)
 void ScreenFitter::fitTo(QScreen* screen)
 {
   if (screen == nullptr || m_window->isMaximized() || m_window->isFullScreen()) {
+    return;
+  }
+  // still being dragged across: refitted once the user lets go, so the window
+  // doesn't jump under the cursor
+  if (QGuiApplication::mouseButtons() != Qt::NoButton) {
+    QPointer<QScreen> later(screen);
+    QTimer::singleShot(200, this, [this, later] {
+      if (later && m_window->screen() == later) {
+        fitTo(later);
+      }
+    });
     return;
   }
   const QRect available = screen->availableGeometry();
@@ -69,6 +85,7 @@ void ScreenFitter::apply(const QRect& available, QSize size, const QPoint& middl
   size      = size.boundedTo(available.size() - FrameRoom);
   m_fitting = true;
   m_window->setMinimumSize(m_least.boundedTo(available.size() - FrameRoom));
+  m_applied = size;
   if (size != m_window->size()) {
     m_window->resize(size);
   }
