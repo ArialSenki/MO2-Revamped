@@ -969,8 +969,11 @@ void GeometrySettings::centerOnMonitor(QWidget* w, int monitor)
 
   if (monitor >= 0 && monitor < QGuiApplication::screens().size()) {
     center = QGuiApplication::screens().at(monitor)->geometry().center();
+  } else if (const QScreen* screen = QGuiApplication::primaryScreen()) {
+    // no screen at all happens under Wine/Proton while it starts
+    center = screen->geometry().center();
   } else {
-    center = QGuiApplication::primaryScreen()->geometry().center();
+    return;
   }
 
   w->move(center - w->rect().center());

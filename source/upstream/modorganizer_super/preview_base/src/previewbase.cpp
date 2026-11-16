@@ -152,7 +152,9 @@ QWidget* PreviewBase::genImagePreview(const QString& fileName, const QSize&,
   } else {
     pic.loadFromData(fileData);
   }
-  QSize screenSize = QApplication::primaryScreen()->geometry().size();
+  // MO2 Revamped: Wine/Proton can have no screen
+  const QScreen* screen = QApplication::primaryScreen();
+  QSize screenSize = screen != nullptr ? screen->geometry().size() : QSize(1920, 1080);
   // ensure the output image is no more than 80% of the screen height.
   // If the aspect ratio is higher than that of the screen this would still allow the
   // image to extend beyond the screen but it ensures you can drag the window and close

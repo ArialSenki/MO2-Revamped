@@ -205,10 +205,17 @@ void SavesTab::displaySaveGameInfo(QTreeWidgetItem* newItem)
 
   QWindow* window = m_CurrentSaveView->window()->windowHandle();
   QRect screenRect;
-  if (window == nullptr)
-    screenRect = QGuiApplication::primaryScreen()->geometry();
-  else
-    screenRect = window->screen()->geometry();
+  // no screen happens under Wine/Proton: then nothing keeps the card inside one
+  const QScreen* screen =
+      window != nullptr ? window->screen() : QGuiApplication::primaryScreen();
+  if (screen == nullptr) {
+    screen = QGuiApplication::primaryScreen();
+  }
+  if (screen != nullptr) {
+    screenRect = screen->geometry();
+  } else {
+    screenRect = QRect(QPoint(0, 0), QSize(1920, 1080));
+  }
 
   QPoint pos = QCursor::pos();
   if (pos.x() + m_CurrentSaveView->width() > screenRect.right()) {
