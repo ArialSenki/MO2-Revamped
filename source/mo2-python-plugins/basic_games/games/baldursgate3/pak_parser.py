@@ -22,6 +22,64 @@ import mobase
 from . import bg3_utils
 
 
+# MO2 Revamped: a mod's meta.ini as MO2 writes it. Python's parser lower-cased
+# every key on writing it back ("gameName" became "gamename", and MO2 then
+# added its own again), and stopped on the duplicate it had made itself, which
+# left the mod out of the load order. Keys keep their case now, duplicates
+# don't stop the reading, and a key written twice in two cases keeps MO2's.
+def read_meta_ini(path: Path) -> configparser.ConfigParser:
+    config = configparser.ConfigParser(interpolation=None, strict=False)
+    config.optionxform = str  # type: ignore[assignment, method-assign]
+    config.read(path, encoding="utf-8-sig")
+    for section in config.sections():
+        seen: dict[str, str] = {}
+        for key in list(config[section].keys()):
+            other = seen.get(key.lower())
+            if other is None:
+                seen[key.lower()] = key
+                continue
+            # the all-lowercase one is the parser's old copy
+            drop = key if key == key.lower() else other
+            keep = other if drop == key else key
+            config.remove_option(section, drop)
+            seen[key.lower()] = keep
+    return config
+
+
+def _keys(section: configparser.SectionProxy) -> dict[str, str]:
+    return {key.lower(): value for key, value in section.items()}
+
+
+def _is_override(keys: dict[str, str]) -> bool:
+    # "Override = false" (newer versions of this plugin write it for every pak)
+    # is a mod for the load order, not an override
+    return keys.get("override", "").strip().lower() in ("true", "1", "yes")
+
+
+def _wanted_in_load_order(config: configparser.ConfigParser, file: Path) -> bool:
+    # another tool's cache (a Wabbajack list's author) that puts the pak in the
+    # load order: "Override = true" there only means it also replaces files
+    if not config.has_section(file.name):
+        return False
+    keys = _keys(config[file.name])
+    return "cacheversion" in keys and keys.get("loadorder", "").strip().lower() == "true"
+
+
+def _has_cached_entry(config: configparser.ConfigParser, file: Path) -> bool:
+    # what this plugin wrote for the pak: an override, or the whole entry;
+    # anything else (another version's cache) is read from the pak again
+    if not config.has_section(file.name):
+        return False
+    keys = _keys(config[file.name])
+    if "cacheversion" in keys:
+        # another version's cache ("Override = true" with "LoadOrder = true"
+        # is a mod for the load order there): read the pak again
+        return False
+    return _is_override(keys) or all(
+        key.lower() in keys for key in BG3PakParser._types
+    )
+
+
 class BG3PakParser:
     def __init__(self, utils: bg3_utils.BG3Utils):
         self._utils = utils
@@ -82,8 +140,7 @@ class BG3PakParser:
         force_reparse_metadata: bool,
     ) -> str:
         meta_ini = Path(mod.absolutePath()) / "meta.ini"
-        config = configparser.ConfigParser(interpolation=None)
-        config.read(meta_ini, encoding="utf-8")
+        config = read_meta_ini(meta_ini)
         try:
             if file.name.endswith("pak"):
                 meta_file = (
@@ -93,14 +150,7 @@ class BG3PakParser:
                     / f"{file.name[: int(len(file.name) / 2)]}-{hashlib.md5(str(file).encode(), usedforsecurity=False).hexdigest()[:5]}.lsx"
                 )
                 try:
-                    if (
-                        not force_reparse_metadata
-                        and config.has_section(file.name)
-                        and (
-                            "override" in config[file.name].keys()
-                            or "Folder" in config[file.name].keys()
-                        )
-                    ):
+                    if not force_reparse_metadata and _has_cached_entry(config, file):
                         return get_module_short_desc(config, file)
                     meta_file.parent.mkdir(parents=True, exist_ok=True)
                     meta_file.unlink(missing_ok=True)
@@ -139,7 +189,13 @@ class BG3PakParser:
                         )
                         can_continue = False
                     return self.metadata_to_ini(
-                        config, file, mod, meta_ini, can_continue, lambda: meta_file
+                        config,
+                        file,
+                        mod,
+                        meta_ini,
+                        can_continue,
+                        lambda: meta_file,
+                        _wanted_in_load_order(config, file),
                     )
                 finally:
                     if self._utils.remove_extracted_metadata:
@@ -242,6 +298,7 @@ class BG3PakParser:
         meta_ini: Path,
         condition: bool,
         to_parse: Callable[[], Path],
+        in_load_order: bool = False,
     ):
         config[file.name] = {}
         if condition:
@@ -263,6 +320,8 @@ class BG3PakParser:
                         )
                         > 0
                     )
+                elif in_load_order:
+                    self._mod_cache[file] = True
                 elif file not in self._mod_cache:
                     # a mod which has a meta.lsx and is not an override mod meets at least one of three conditions:
                     # 1. it has files in Public/Engine/Timeline/MaterialGroups, or
@@ -292,16 +351,16 @@ class BG3PakParser:
 def get_module_short_desc(config: configparser.ConfigParser, file: Path) -> str:
     if not config.has_section(file.name):
         return ""
-    section: configparser.SectionProxy = config[file.name]
+    keys = _keys(config[file.name])
     return (
         ""
-        if "override" in section.keys() or "Name" not in section.keys()
+        if _is_override(keys) or "name" not in keys
         else bg3_utils.get_node_string(
-            folder=section["Folder"],
-            md5=section["MD5"],
-            name=section["Name"],
-            publish_handle=section["PublishHandle"],
-            uuid=section["UUID"],
-            version64=section["Version64"],
+            folder=keys.get("folder", ""),
+            md5=keys.get("md5", ""),
+            name=keys["name"],
+            publish_handle=keys.get("publishhandle", "0"),
+            uuid=keys.get("uuid", ""),
+            version64=keys.get("version64", "0"),
         )
     )
