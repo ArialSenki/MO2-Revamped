@@ -15,7 +15,9 @@ protected:
         "interface",     "meshes",    "music", "scripts",     "sound", "strings",
         "textures",      "trees",     "video", "materials",   "f4se",  "distantlod",
         "asi",           "Tools",     "MCM",   "distantland", "mits",  "dllplugins",
-        "CalienteTools", "shadersfx", "aaf"};
+        "CalienteTools", "shadersfx", "aaf",
+        // MO2 Revamped: previs (Vis), SEQ files and LOD settings
+        "Vis",           "Seq",       "LODSettings"};
     return result;
   }
   virtual const FileNameSet& possibleFileExtensions() const override
