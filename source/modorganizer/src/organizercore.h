@@ -665,6 +665,9 @@ private:
   bool m_ArchivesInit;
 
   MOBase::DelayedFileWriter m_PluginListsWriter;
+  // MO2 Revamped: the plugin list is saved at once, not after a running
+  // refresh (before a profile switch)
+  bool m_SavePluginListNow = false;
   UsvfsConnector m_USVFS;
 
   UILocker m_UILocker;

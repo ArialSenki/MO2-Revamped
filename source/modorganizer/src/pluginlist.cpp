@@ -36,6 +36,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <report.h>
 #include <safewritefile.h>
 #include <utility.h>
+#include <unordered_set>
 
 #include <QApplication>
 #include <QCoreApplication>
@@ -327,8 +328,14 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  // MO2 Revamped: by name without case, as m_ESPsByName has them: a plugin
+  // whose file differs only in case from the known name stays
+  std::unordered_set<QString> available;
+  for (const auto& [filename, current] : availablePlugins) {
+    available.insert(filename.toLower());
+  }
   for (const auto& espName : m_ESPsByName) {
-    if (!availablePlugins.contains(espName.first)) {
+    if (!available.contains(espName.first.toLower())) {
       m_ESPs[espName.second].name = "";
     }
   }
@@ -618,6 +625,11 @@ void PluginList::shiftPluginsPriority(const QModelIndexList& indices, int offset
   }
 
   refreshLoadOrder();
+  // MO2 Revamped: saved, as a drag or "Send to" saves; a program started
+  // outside MO2 (xEdit, LOOT) reads plugins.txt and loadorder.txt
+  if (moved) {
+    emit writePluginsList();
+  }
 }
 
 void PluginList::toggleState(const QModelIndexList& indices)
@@ -1229,6 +1241,8 @@ void PluginList::generatePluginIndexes()
                             .arg(ESHpos, 2, 16, QChar('0'))
                             .arg(numESHs % 256, 2, 16, QChar('0'))
                             .toUpper();
+      // MO2 Revamped: the game takes 256 medium plugins
+      m_ESPs[i].overIndexLimit = numESHs >= 256;
       ++numESHs;
 
     } else if (lightPluginsSupported &&
@@ -1238,6 +1252,8 @@ void PluginList::generatePluginIndexes()
                             .arg(ESLpos, 2, 16, QChar('0'))
                             .arg(numESLs % 4096, 3, 16, QChar('0'))
                             .toUpper();
+      // MO2 Revamped: and 4096 light ones
+      m_ESPs[i].overIndexLimit = numESLs >= 4096;
       ++numESLs;
     } else {
       const int regularIndex = l - numESHs - numESLs - numSkipped;
@@ -1500,10 +1516,21 @@ QVariant PluginList::tooltipData(const QModelIndex& modelIndex) const
   }
 
   if (esp.overIndexLimit) {
+    auto limits = m_Organizer.gameFeatures().gameFeature<GamePlugins>();
+    const bool light =
+        limits && limits->lightPluginsAreSupported() &&
+        (esp.hasLightExtension || esp.isLightFlagged);
+    const bool medium =
+        limits && limits->mediumPluginsAreSupported() && esp.isMediumFlagged;
     toolTip += "<br><br><b>" +
-               tr("This plugin is past the game's limit of regular plugins, so the "
-                  "game won't load it. Turn off some plugins, or use light (ESL) "
-                  "versions where a mod has them.") +
+               (medium ? tr("This plugin is past the game's limit of 256 medium plugins, "
+                            "so the game won't load it. Turn off some medium plugins.")
+                : light
+                    ? tr("This plugin is past the game's limit of 4096 light plugins, "
+                         "so the game won't load it. Turn off some light plugins.")
+                    : tr("This plugin is past the game's limit of regular plugins, so "
+                         "the game won't load it. Turn off some plugins, or use light "
+                         "(ESL) versions where a mod has them.")) +
                "</b>";
   }
 

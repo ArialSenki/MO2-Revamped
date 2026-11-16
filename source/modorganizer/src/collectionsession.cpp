@@ -2345,6 +2345,17 @@ bool CollectionSession::installEntry(int row)
     return false;
   }
 
+  // a mod for the game's folder goes in as Vortex lays it out; when its
+  // archive doesn't show where the game's folder is, the usual installers
+  e.rootLayout = false;
+  if (!rootLayoutData(mod).isEmpty()) {
+    bool handled = false;
+    const bool ok = installRootMod(row, &handled);
+    if (handled) {
+      return ok;
+    }
+  }
+
   InstallationManager* im = m_core.installationManager();
   const QString choices   = mod.choicesJson();
 
@@ -2571,6 +2582,175 @@ bool CollectionSession::installBundle(int row)
   return true;
 }
 
+QString CollectionSession::rootLayoutData(const CollectionMod& mod) const
+{
+  // a mod with installer choices is laid out by its FOMOD, as Vortex does
+  if (!isGameRootType(mod.deployType) || !mod.choicesJson().isEmpty()) {
+    return {};
+  }
+  const IPluginGame* game = m_core.managedGame();
+  if (game == nullptr) {
+    return {};
+  }
+  // a data folder right in the game's (Data, Data Files): Root/ is then the
+  // game's folder, and the data folder's files are the mod's own
+  const QString data   = QDir::cleanPath(game->dataDirectory().absolutePath());
+  const QString parent = QFileInfo(data).absolutePath();
+  if (parent.compare(QDir::cleanPath(game->gameDirectory().absolutePath()),
+                     Qt::CaseInsensitive) != 0) {
+    return {};
+  }
+  return QFileInfo(data).fileName();
+}
+
+bool CollectionSession::installRootMod(int row, bool* handled)
+{
+  *handled        = false;
+  Entry& e        = m_entries[row];
+  const auto& mod = modOf(e);
+  const QString dataName = rootLayoutData(mod);
+
+  std::unique_ptr<Archive> archive = CreateArchive();
+  if (!archive->isValid() || !archive->open(e.archive.toStdWString(), {})) {
+    // the usual installers say why
+    return false;
+  }
+  const auto closeArchive = qScopeGuard([&archive] {
+    archive->close();
+  });
+
+  QStringList paths;
+  std::vector<std::pair<FileData*, QString>> all;
+  for (FileData* f : archive->getFileList()) {
+    if (f->isDirectory()) {
+      continue;
+    }
+    QString path = QString::fromStdWString(f->getArchiveFilePath());
+    path.replace('\\', '/');
+    paths.append(path);
+    all.emplace_back(f, path);
+  }
+  const QString base = gameRootBase(paths, mod.deployType, mod.hashes, dataName);
+  if (base.isNull()) {
+    log::debug("collection {}: '{}' is a {} mod, but its archive doesn't show the "
+               "game's folder; the installers take it",
+               m_link.slug, e.modName, mod.deployType);
+    return false;
+  }
+
+  // the files under that folder, each to where MO2 has it; outside it,
+  // nothing (Vortex leaves those out too)
+  std::vector<std::pair<FileData*, QString>> files;
+  for (auto& [f, path] : all) {
+    if (!path.startsWith(base, Qt::CaseInsensitive)) {
+      continue;
+    }
+    const QString target = rootLayoutPath(path.mid(base.size()), dataName);
+    if (!isSafeRelativePath(target)) {
+      log::warn("collection {}: unsafe path in '{}': {}", m_link.slug, e.modName, path);
+      *handled = true;
+      setStatus(row, Status::Failed, tr("The mod's archive has unsafe file names."));
+      return false;
+    }
+    files.emplace_back(f, target);
+  }
+  if (files.empty()) {
+    return false;
+  }
+  *handled = true;
+
+  // an installed mod set aside by Replace comes back if this fails; the
+  // folders the user said may be replaced, before this one changes
+  const QStringList approvedBefore = approvedNow();
+  GuessedValue<QString> name(e.modName, GUESS_USER);
+  IModInterface* created = nullptr;
+  {
+    InstallationManager* im = m_core.installationManager();
+    im->setApprovedReplacements(approvedBefore);
+    const auto reset = qScopeGuard([im] {
+      im->setApprovedReplacements({});
+    });
+    created = m_core.createMod(name, false);
+  }
+  if (created == nullptr) {
+    setStatus(row, Status::Failed, tr("Not installed: the mod couldn't be created."));
+    return false;
+  }
+  const bool isNew = m_core.createdModIsNew();
+  const QString folder = static_cast<const QString&>(name);
+  const bool replaced  = approvedBefore.contains(folder, Qt::CaseInsensitive);
+
+  const QString target = QDir::toNativeSeparators(created->absolutePath());
+  const std::filesystem::path out(target.toStdWString());
+  bool ok = true;
+  QString error;
+  for (auto& [f, relative] : files) {
+    if (!staysInside(out, out / relative.toStdWString())) {
+      ok    = false;
+      error = tr("The mod's archive has unsafe file names.");
+      break;
+    }
+    f->addOutputFilePath(QDir::toNativeSeparators(relative).toStdWString());
+  }
+  if (ok) {
+    try {
+      ok = archive->extract(target.toStdWString(), {}, {},
+                            [&error](const std::wstring& message) {
+                              error = QString::fromStdWString(message);
+                            });
+    } catch (const std::exception& ex) {
+      ok    = false;
+      error = QString::fromUtf8(ex.what());
+    }
+  }
+  // what was written stays in the folder
+  if (ok) {
+    for (const auto& [f, relative] : files) {
+      for (const auto& written : f->getOutputFilePaths()) {
+        if (!staysInside(out, out / written)) {
+          ok    = false;
+          error = tr("The mod's archive has unsafe file names.");
+        }
+      }
+    }
+  }
+  if (!ok) {
+    m_core.finishCreatedMod(false);
+    if (isNew) {
+      QDir(target).removeRecursively();
+    }
+    m_core.refresh();
+    setStatus(row, Status::Failed,
+              error.isEmpty() ? tr("The mod's files couldn't be extracted.")
+                              : tr("The mod's files couldn't be extracted: %1").arg(error));
+    return false;
+  }
+
+  m_core.finishCreatedMod(true);
+  m_core.refresh();
+
+  e.modName = folder;
+  if (ModInfo::getIndex(e.modName) != UINT_MAX) {
+    ModInfo::getByIndex(ModInfo::getIndex(e.modName))->setVersion(VersionInfo(mod.version));
+  }
+  m_core.modList()->setActive(e.modName, true);
+  e.rootLayout = true;
+  log::info("collection {}: '{}' installed for the game's folder ({} files, from '{}')",
+            m_link.slug, e.modName, files.size(), base);
+  // as for any mod: only a new folder, or one the user said may be replaced,
+  // gets the collection's patches and file list
+  if (isNew || replaced) {
+    postInstall(row);
+  } else if (!mod.patches.empty() || !mod.hashes.empty()) {
+    e.notes = {tr("Patches and the exact file list weren't applied: the mod went into "
+                  "an existing mod's folder.")};
+  }
+  m_modFolders.insert(e.modName.toLower());
+  e.fingerprint = folderFingerprint(e.modName);
+  setStatus(row, Status::Installed);
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // phase 2: patches, exact file lists, file overrides, INI tweaks, updates
 
@@ -2616,6 +2796,16 @@ void CollectionSession::postInstall(int row)
   }
   e.notes.clear();
   const QDir dir(ModInfo::getByIndex(index)->absolutePath());
+  // a mod installed for the game's folder: the collection's paths are the
+  // game folder's, the mod's are MO2's (Root/...)
+  const QString rootData = e.rootLayout ? rootLayoutData(mod) : QString();
+  const auto place = [&rootData](const QString& path) {
+    return rootData.isEmpty() ? path : rootLayoutPath(path, rootData);
+  };
+  std::vector<FileHash> listed = mod.hashes;
+  for (FileHash& h : listed) {
+    h.path = place(h.path);
+  }
 
   // binary patches, from patches/<mod>/<file>.diff in the collection's archive
   if (!mod.patches.empty()) {
@@ -2632,7 +2822,7 @@ void CollectionSession::postInstall(int row)
 
     int applied = 0;
     for (const auto& [file, crcText] : mod.patches) {
-      const QString relative = QString(file).replace('\\', '/');
+      const QString relative = place(QString(file).replace('\\', '/'));
       if (!isSafeRelativePath(relative)) {
         e.notes.append(tr("Patch not applied to %1: unsafe file name.").arg(file));
         continue;
@@ -2646,7 +2836,8 @@ void CollectionSession::postInstall(int row)
         continue;
       }
       // and comes from this mod's own folder of the archive only
-      const QString suffix = "/" + normalizedPath(relative) + ".diff";
+      // (named by the path in the collection, the game folder's for a Root/ mod)
+      const QString suffix = "/" + normalizedPath(file) + ".diff";
       QString diffFile;
       for (const auto& [path, extracted] : diffs) {
         const QString n = normalizedPath(path);
@@ -2708,7 +2899,7 @@ void CollectionSession::postInstall(int row)
   }
 
   // a replicate install: only the files the collection lists
-  if (!mod.hashes.empty()) {
+  if (!listed.empty()) {
     QStringList present;
     QDirIterator it(dir.path(), QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
     while (it.hasNext()) {
@@ -2725,7 +2916,7 @@ void CollectionSession::postInstall(int row)
       presentByKey.insert(normalizedPath(p), p);
     }
     QStringList toHash;
-    for (const auto& h : mod.hashes) {
+    for (const auto& h : listed) {
       const auto it = presentByKey.constFind(normalizedPath(h.path));
       if (!h.md5.isEmpty() && it != presentByKey.constEnd()) {
         toHash.append(it.value());
@@ -2757,9 +2948,9 @@ void CollectionSession::postInstall(int row)
     const auto md5Of = [&sums](const QString& relative) {
       return sums->value(relative);
     };
-    const auto result = compareFileList(mod.hashes, present, md5Of);
+    const auto result = compareFileList(listed, present, md5Of);
 
-    if (result.missing.size() * 2 > static_cast<qsizetype>(mod.hashes.size())) {
+    if (result.missing.size() * 2 > static_cast<qsizetype>(listed.size())) {
       // the mod's files aren't laid out as the collection's list says: nothing
       // is hidden on a guess
       e.notes.append(tr("The collection's exact file list wasn't applied: most of its "
@@ -2819,8 +3010,14 @@ void CollectionSession::applyFileOverrides()
     const QDir& winnerDir    = placeOf[winner].second;
     const int winnerPriority = placeOf[winner].first;
     int hidden               = 0;
+    // a mod installed for the game's folder: its paths are the game folder's.
+    // In MO2 a data file is at the top of any mod and the rest in Root/, so
+    // the winner's path is the same file in every other mod
+    const QString rootData = w.rootLayout ? rootLayoutData(modOf(w)) : QString();
     for (const QString& file : modOf(w).fileOverrides) {
-      const QString relative = QString(file).replace('\\', '/');
+      const QString collectionPath = QString(file).replace('\\', '/');
+      const QString relative =
+          rootData.isEmpty() ? collectionPath : rootLayoutPath(collectionPath, rootData);
       if (!isSafeRelativePath(relative) || !QFile::exists(winnerDir.filePath(relative))) {
         continue;
       }

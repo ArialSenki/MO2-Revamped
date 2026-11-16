@@ -257,6 +257,7 @@ std::optional<CollectionManifest> CollectionManifest::parse(const QByteArray& js
 
     mod.instructions     = m.value("instructions").toString();
     mod.category         = m.value("details").toObject().value("category").toString().trimmed();
+    mod.deployType       = m.value("details").toObject().value("type").toString().trimmed();
     mod.choices          = m.value("choices");
     mod.hasPatches       = hasContent(m.value("patches"));
     const QJsonObject patches = m.value("patches").toObject();

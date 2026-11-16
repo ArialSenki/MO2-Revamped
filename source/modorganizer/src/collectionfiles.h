@@ -78,6 +78,32 @@ FileListResult compareFileList(const std::vector<FileHash>& listed,
                                const std::function<QString(const QString&)>& md5Of);
 
 // ---------------------------------------------------------------------------
+// mods for the game's own folder
+
+// Vortex's mod types that deploy to the game's folder, not its data folder:
+// "dinput" (script extenders, DLL loaders: Vortex's script extender
+// installer sets it) and "enb"
+bool isGameRootType(const QString& vortexType);
+
+// where a file of such a mod goes in MO2's layout: Vortex keeps it relative
+// to the game's folder ("skse64_loader.exe", "Data/Scripts/a.pex"); what is
+// in the data folder goes to the mod's own folder ("Scripts/a.pex"), the
+// rest to its Root/ ("Root/skse64_loader.exe"), which MO2 Revamped maps to
+// the game's folder
+QString rootLayoutPath(const QString& gamePath, const QString& dataFolderName);
+
+// the folder in a downloaded archive that is the game's folder for such a mod
+// ("skse64_2_02_06/"), with a trailing slash, "" for the archive's top; a
+// null string when it can't be told. With the collection's file list, the
+// folder where most of its files are; else as Vortex finds it: the folder of
+// enbseries.ini ("enb"), or of the script extender's loader, dinput8.dll or
+// the shallowest .exe/.dll outside a data folder ("dinput"). files: the
+// archive's file paths, forward slashes
+QString gameRootBase(const QStringList& files, const QString& vortexType,
+                     const std::vector<FileHash>& listed,
+                     const QString& dataFolderName = QStringLiteral("Data"));
+
+// ---------------------------------------------------------------------------
 // INI tweaks
 
 // "<name> [<target ini>].ini" (Vortex's naming, "(optional)." in front for
