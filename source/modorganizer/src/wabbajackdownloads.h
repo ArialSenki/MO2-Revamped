@@ -32,6 +32,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QTimer>
+#include <QUrl>
 
 #include <atomic>
 #include <map>
@@ -43,6 +44,16 @@ class QNetworkReply;
 
 namespace Wabbajack
 {
+
+// Wabbajack's servers (also for the lists' own files, see wabbajackbrowser):
+// an address on an old host name moved to its current one, and whether an
+// address is one of Wabbajack's
+QUrl cdnUrl(const QString& url);
+bool isWabbajackCdnHost(const QUrl& url);
+// a gzip stream, whole; nullopt when damaged or too large for a definition
+std::optional<QByteArray> gunzip(const QByteArray& data);
+// why a request failed, in the user's language
+QString networkErrorText(const QNetworkReply* reply);
 
 // the hashes of the files read in a folder, by name, size and time
 class HashCache

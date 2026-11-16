@@ -72,6 +72,8 @@ QString nameProblem(const QString& name)
              : QString();
 }
 
+}  // namespace
+
 // Wabbajack's old CDN host names, as its own downloader maps them
 QUrl cdnUrl(const QString& url)
 {
@@ -172,6 +174,9 @@ QString networkErrorText(const QNetworkReply* reply)
       reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), reply->error(),
       reply->errorString());
 }
+
+namespace
+{
 
 QString speedText(qint64 bytesPerSecond)
 {

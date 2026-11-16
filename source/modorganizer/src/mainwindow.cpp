@@ -58,6 +58,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "collectionbrowser.h"
 #include "collectiondialog.h"
+#include "wabbajackbrowser.h"
 #include "wabbajackdialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
@@ -3131,6 +3132,13 @@ void MainWindow::updateToolMenu()
                           "are already downloaded."));
   connect(openList, &QAction::triggered, this, &MainWindow::askForWabbajackList,
           Qt::QueuedConnection);
+  QAction* browseLists = new QAction(FluentIcons::glyph(0xE721), tr("Browse Wabbajack lists…"),
+                                     wabbajack);
+  browseLists->setToolTip(tr("Wabbajack's gallery of lists: choose one and it downloads and "
+                             "opens, without the .wabbajack file at hand."));
+  connect(browseLists, &QAction::triggered, this, &MainWindow::browseWabbajackLists,
+          Qt::QueuedConnection);
+  wabbajack->addAction(browseLists);
   wabbajack->addAction(openList);
 
   m_ToolMenuDirty = false;
@@ -5053,6 +5061,22 @@ void MainWindow::browseCollections()
       game->gameNexusName(), game->displayGameName(),
       [this](const QString& url) {
         openCollection(url);
+      },
+      this);
+  browser->show();
+}
+
+void MainWindow::browseWabbajackLists()
+{
+  // the lists' files go next to the lists' downloads
+  QString downloads = GlobalSettings::value(QStringLiteral("Wabbajack/downloadsFolder")).toString();
+  if (downloads.isEmpty() && m_OrganizerCore.downloadManager() != nullptr) {
+    downloads = m_OrganizerCore.downloadManager()->getOutputDirectory();
+  }
+  auto* browser = new Wabbajack::ListBrowser(
+      m_PluginContainer.plugins<IPluginGame>(), m_OrganizerCore.managedGame(), downloads,
+      [this](const QString& path) {
+        openWabbajackList(path);
       },
       this);
   browser->show();

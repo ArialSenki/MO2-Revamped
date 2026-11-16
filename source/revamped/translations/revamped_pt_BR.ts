@@ -7505,6 +7505,14 @@ Erro: %1</translation>
       <source>A Wabbajack list is being installed. Stop it and quit? Installing it again into the same folder starts over.</source>
       <translation>Uma lista do Wabbajack está sendo instalada. Pará-la e sair? Instalá-la de novo na mesma pasta recomeça do início.</translation>
     </message>
+    <message>
+      <source>Browse Wabbajack lists…</source>
+      <translation>Explorar listas do Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery of lists: choose one and it downloads and opens, without the .wabbajack file at hand.</source>
+      <translation>A galeria de listas do Wabbajack: escolha uma e ela é baixada e aberta, sem precisar ter o arquivo .wabbajack.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -17601,6 +17609,214 @@ Inicie o jogo de novo; se um mod continuar fora, reinstale-o.</translation>
     <message>
       <source>The list leaves files for you to copy by hand, as its guide says: %1.</source>
       <translation>A lista deixa arquivos para você copiar à mão, como diz o guia dela: %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>Wabbajack::ListBrowser</name>
+    <message>
+      <source>Wabbajack lists</source>
+      <translation>Listas do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Search lists, authors and tags</source>
+      <translation>Pesquisar listas, autores e tags</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Jogo</translation>
+    </message>
+    <message>
+      <source>Unofficial lists</source>
+      <translation>Listas não oficiais</translation>
+    </message>
+    <message>
+      <source>Lists Wabbajack doesn't feature. Wabbajack hides them unless asked, too.</source>
+      <translation>Listas que o Wabbajack não destaca. O Wabbajack também as oculta, a menos que se peça.</translation>
+    </message>
+    <message>
+      <source>Adult lists</source>
+      <translation>Listas adultas</translation>
+    </message>
+    <message>
+      <source>Lists</source>
+      <translation>Listas</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Author</source>
+      <translation>Autor</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Versão</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Download</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Instalada</translation>
+    </message>
+    <message>
+      <source>Updated</source>
+      <translation>Atualizada</translation>
+    </message>
+    <message>
+      <source>Readme</source>
+      <translation>Leia-me</translation>
+    </message>
+    <message>
+      <source>Website</source>
+      <translation>Site</translation>
+    </message>
+    <message>
+      <source>Community</source>
+      <translation>Comunidade</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Atualizar</translation>
+    </message>
+    <message>
+      <source>Open the list</source>
+      <translation>Abrir a lista</translation>
+    </message>
+    <message>
+      <source>Downloads the list's file from Wabbajack's servers and opens it: there its archives download and it installs.</source>
+      <translation>Baixa o arquivo da lista dos servidores do Wabbajack e o abre: ali seus arquivos são baixados e ela é instalada.</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Reading Wabbajack's gallery…</source>
+      <translation>Lendo a galeria do Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery can't be read: %1</source>
+      <translation>Não é possível ler a galeria do Wabbajack: %1</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery can't be read right now. Try Refresh in a while.</source>
+      <translation>Não é possível ler a galeria do Wabbajack agora. Tente Atualizar daqui a pouco.</translation>
+    </message>
+    <message>
+      <source>All games</source>
+      <translation>Todos os jogos</translation>
+    </message>
+    <message>
+      <source>Down for maintenance</source>
+      <translation>Em manutenção</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n lists. Tick "Unofficial lists" to see the others too.</source>
+      <translation>
+        <numerusform>%n lista. Marque "Listas não oficiais" para ver as outras também.</numerusform>
+        <numerusform>%n listas. Marque "Listas não oficiais" para ver as outras também.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n lists.</source>
+      <translation>
+        <numerusform>%n lista.</numerusform>
+        <numerusform>%n listas.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Choose a list.</source>
+      <translation>Escolha uma lista.</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>por %1</translation>
+    </message>
+    <message>
+      <source>version %1</source>
+      <translation>versão %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives</source>
+      <translation>
+        <numerusform>%n arquivo</numerusform>
+        <numerusform>%n arquivos</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>%1 to download</source>
+      <translation>%1 para baixar</translation>
+    </message>
+    <message>
+      <source>%1 installed</source>
+      <translation>%1 instalados</translation>
+    </message>
+    <message>
+      <source>Its author took it down for maintenance: it can't be installed now.</source>
+      <translation>O autor a retirou para manutenção: não pode ser instalada agora.</translation>
+    </message>
+    <message>
+      <source>Wabbajack's checks find archives of it that don't download any more; it may not install whole.</source>
+      <translation>As verificações do Wabbajack encontram arquivos dela que não baixam mais; talvez não seja instalada inteira.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for its game.</source>
+      <translation>O MO2 Revamped não tem plugin para o jogo dela.</translation>
+    </message>
+    <message>
+      <source>Downloading the list…</source>
+      <translation>Baixando a lista…</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Parar</translation>
+    </message>
+    <message>
+      <source>This list's file isn't on Wabbajack's servers: open its .wabbajack with Tools &gt; Wabbajack lists &gt; Open a Wabbajack list.</source>
+      <translation>O arquivo desta lista não está nos servidores do Wabbajack: abra o .wabbajack em Ferramentas &gt; Listas do Wabbajack &gt; Abrir uma lista do Wabbajack.</translation>
+    </message>
+    <message>
+      <source>%1 can't be made.</source>
+      <translation>Não é possível criar %1.</translation>
+    </message>
+    <message>
+      <source>Checking the list's file that is already here…</source>
+      <translation>Verificando o arquivo da lista que já está aqui…</translation>
+    </message>
+    <message>
+      <source>Opening %1…</source>
+      <translation>Abrindo %1…</translation>
+    </message>
+    <message>
+      <source>Downloading %1's file…</source>
+      <translation>Baixando o arquivo de %1…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's server describes the file in a way MO2 Revamped doesn't understand.</source>
+      <translation>O servidor do Wabbajack descreve o arquivo de um jeito que o MO2 Revamped não entende.</translation>
+    </message>
+    <message>
+      <source>%1 can't be written.</source>
+      <translation>Não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>A part of the list's file kept arriving damaged.</source>
+      <translation>Uma parte do arquivo da lista chegava danificada repetidas vezes.</translation>
+    </message>
+    <message>
+      <source>The disk is full, or %1 can't be written.</source>
+      <translation>O disco está cheio, ou não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>The list's file couldn't be downloaded: %1</source>
+      <translation>Não foi possível baixar o arquivo da lista: %1</translation>
+    </message>
+    <message>
+      <source>Stopped.</source>
+      <translation>Parado.</translation>
     </message>
   </context>
 </TS>

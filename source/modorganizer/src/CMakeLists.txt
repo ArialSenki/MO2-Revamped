@@ -133,6 +133,7 @@ mo2_add_filter(NAME src/collections GROUPS
 	collectionfiles
 	collectionmanifest
 	collectionsession
+	wabbajackbrowser
 	wabbajackdialog
 	wabbajackdownloads
 	wabbajackinstaller

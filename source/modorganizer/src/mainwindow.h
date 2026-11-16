@@ -259,6 +259,7 @@ private:
   void openCollection(const QString& link, bool autoStart = false, int updateFrom = -1);
   void askForCollection();
   void askForWabbajackList();
+  void browseWabbajackLists();
   void openWabbajackList(const QString& path);
   void browseCollections();
   // the collection a new instance was made for, once its first start is done
