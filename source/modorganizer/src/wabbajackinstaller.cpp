@@ -1227,6 +1227,36 @@ InstallResult Installer::run()
             tr("The list leaves files for you to copy by hand, as its guide says: %1.")
                 .arg(byHand.join(QStringLiteral(", "))));
       }
+      // Root Builder's layout: a mod's Root/ goes to the game's folder. MO2
+      // Revamped gives it to the game through its virtual folder, but a program
+      // started from there (nvse_loader.exe, a patched game exe) and the DLLs
+      // the game loads as it starts (d3d9.dll, d3d11.dll, dxgi.dll) have to
+      // be real files in the game's folder
+      QStringList rootMods;
+      const QDir mods(installPath(m_plan.installFolder, QStringLiteral("mods")));
+      for (const QString& mod : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        const QDir modDir(mods.filePath(mod));
+        for (const QString& sub : modDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+          if (sub.compare(u"Root", Qt::CaseInsensitive) != 0) {
+            continue;
+          }
+          const QStringList binaries = QDir(modDir.filePath(sub))
+                                           .entryList({QStringLiteral("*.exe"),
+                                                       QStringLiteral("*.dll")},
+                                                      QDir::Files);
+          if (!binaries.isEmpty()) {
+            rootMods.append(mod);
+          }
+        }
+      }
+      if (!rootMods.isEmpty()) {
+        m_result.notes.append(
+            tr("These mods have programs or DLLs for the game's own folder (in their "
+               "Root folder), which the game only finds as real files there: %1. "
+               "Copy the files in each Root folder to the game's folder, or use "
+               "Root Builder.")
+                .arg(rootMods.join(QStringLiteral(", "))));
+      }
     }
   } catch (const std::bad_alloc&) {
     m_result.error = tr("Not enough memory.");

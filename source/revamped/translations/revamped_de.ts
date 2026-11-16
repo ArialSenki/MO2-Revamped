@@ -17238,6 +17238,8 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
     <message>
       <source>The list runs the game from its own copy, %1, but the game isn't there yet: the instance uses your game folder. Once you have copied the game there as the list's guide says, set gamePath in the instance's ModOrganizer.ini to that folder.</source>
       <translation>Die Liste startet das Spiel aus ihrer eigenen Kopie, %1, aber das Spiel liegt dort noch nicht: die Instanz nutzt deinen Spielordner. Sobald du das Spiel laut Anleitung der Liste dorthin kopiert hast, trage diesen Ordner als gamePath in die ModOrganizer.ini der Instanz ein.</translation>
+      <source>Programs that were on the list author's computer, left out: %1. Add your own copy in Edit programs if you need it.</source>
+      <translation>Programme, die auf dem Computer des Listenautors lagen, nicht übernommen: %1. Füge in „Programme bearbeiten“ deine eigene Kopie hinzu, wenn du sie brauchst.</translation>
     </message>
   </context>
   <context>
@@ -17717,6 +17719,10 @@ Installiere die .NET Desktop Runtime 8 für Windows x64 von {0} und starte BG3 M
     <message>
       <source>The list leaves files for you to copy by hand, as its guide says: %1.</source>
       <translation>Die Liste lässt Dateien zum Kopieren von Hand übrig, wie ihre Anleitung sagt: %1.</translation>
+    </message>
+    <message>
+      <source>These mods have programs or DLLs for the game's own folder (in their Root folder), which the game only finds as real files there: %1. Copy the files in each Root folder to the game's folder, or use Root Builder.</source>
+      <translation>Diese Mods enthalten Programme oder DLLs für den Ordner des Spiels selbst (in ihrem Root-Ordner), die das Spiel nur als echte Dateien dort findet: %1. Kopiere die Dateien aus jedem Root-Ordner in den Ordner des Spiels oder verwende Root Builder.</translation>
     </message>
   </context>
   <context>

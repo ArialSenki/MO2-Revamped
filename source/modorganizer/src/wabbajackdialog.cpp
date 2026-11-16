@@ -1369,6 +1369,88 @@ void WabbajackDialog::startInstall()
   updateState();
 }
 
+namespace
+{
+
+// "C:/a/b" is in "c:\a": the same folder or one under it
+bool isIn(const QString& path, const QString& folder)
+{
+  if (path.isEmpty() || folder.isEmpty()) {
+    return false;
+  }
+  const QString p = QDir::cleanPath(QDir::fromNativeSeparators(path));
+  const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder));
+  return p.compare(f, Qt::CaseInsensitive) == 0 ||
+         p.startsWith(f + u'/', Qt::CaseInsensitive);
+}
+
+// the list's programs (its ModOrganizer.ini, its paths already this install's)
+// that the new instance takes:
+// - Explorer++ isn't installed with the list (it comes with the list's own
+//   MO2): the list's "Explore Virtual Folder" goes, so MO2 Revamped adds its
+//   own with the instance's data folder; another program of the list's
+//   Explorer++ gets MO2 Revamped's;
+// - a program that isn't a file (a folder, nothing) goes;
+// - one missing outside the install and the game's folder was on the author's
+//   computer (C:/Modding/xEdit/xEdit.exe) and goes; one missing in the game's
+//   folder stays, for the files the list's guide has you copy there
+std::vector<QVariantMap> keptPrograms(const std::vector<QVariantMap>& programs,
+                                      const QString& installFolder,
+                                      const QString& gameFolder, QStringList* notes)
+{
+  const QString listExplorer = QDir(installFolder).filePath("explorer++");
+  const QString ownExplorer =
+      QDir(QCoreApplication::applicationDirPath()).filePath("explorer++");
+  const bool haveExplorer = QFileInfo(QDir(ownExplorer).filePath("Explorer++.exe")).isFile();
+
+  std::vector<QVariantMap> kept;
+  QStringList elsewhere;
+  for (QVariantMap program : programs) {
+    const QString title = program.value("title").toString();
+    QString binary      = program.value("binary").toString();
+
+    if (isIn(binary, listExplorer)) {
+      if (title.compare(u"Explore Virtual Folder", Qt::CaseInsensitive) == 0 ||
+          !haveExplorer) {
+        log::info("wabbajack: program '{}' left out, {}", title,
+                  haveExplorer ? "MO2 Revamped adds its own"
+                               : "Explorer++ isn't in MO2 Revamped's folder");
+        continue;
+      }
+      const QString rest =
+          QDir(listExplorer).relativeFilePath(QDir::fromNativeSeparators(binary));
+      binary = QDir(ownExplorer).filePath(rest);
+      program.insert("binary", binary);
+      if (isIn(program.value("workingDirectory").toString(), listExplorer)) {
+        program.insert("workingDirectory", QDir::toNativeSeparators(ownExplorer));
+      }
+    }
+
+    const QFileInfo file(binary);
+    if (binary.trimmed().isEmpty() || title.trimmed().isEmpty() || file.isDir() ||
+        (!file.exists() && !isIn(binary, installFolder) && !isIn(binary, gameFolder))) {
+      log::info("wabbajack: program '{}' left out, '{}' isn't a file here", title,
+                binary);
+      if (!title.trimmed().isEmpty() && !file.isDir() && !binary.trimmed().isEmpty()) {
+        elsewhere.append(title);
+      }
+      continue;
+    }
+    kept.push_back(std::move(program));
+  }
+
+  if (!elsewhere.isEmpty()) {
+    notes->append(QCoreApplication::translate(
+                      "WabbajackDialog",
+                      "Programs that were on the list author's computer, left out: %1. "
+                      "Add your own copy in Edit programs if you need it.")
+                      .arg(elsewhere.join(QStringLiteral(", "))));
+  }
+  return kept;
+}
+
+}  // namespace
+
 bool WabbajackDialog::sameInstall(const QString& instanceFolder, const QString& installFolder)
 {
   const QString ini = QDir(instanceFolder).filePath("ModOrganizer.ini");
@@ -1384,25 +1466,21 @@ bool WabbajackDialog::sameInstall(const QString& instanceFolder, const QString& 
 }
 
 void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
-                                        const IPluginGame* game) const
+                                        const IPluginGame* game, QStringList* notes) const
 {
   // the list's programs, as they work on this PC: the magic paths are already
-  // this PC's; what still points at the author's machine (a working folder on
-  // their drive), at the author's own MO2 (its Explorer++, not installed) or at
-  // a folder instead of a program is fixed or left out
-  const QString install = QDir::cleanPath(m_installFolder);
+  // this PC's. keptPrograms() leaves out what can't run here (folders, the
+  // list's own Explorer++, programs on the author's machine); here a working
+  // folder on the author's drive is dropped, and "<game>\Data" follows the game
+  // plugin's data folder where that Data folder isn't a real one
   const QString gameDir = QDir::cleanPath(gameDirectory());
-  const QString appDir  = QDir::cleanPath(QCoreApplication::applicationDirPath());
 
-  // "<game>\Data" in the author's programs is the game plugin's data folder
-  // here: Baldur's Gate 3's is the game folder itself
   QString dataHere;
   if (game != nullptr && !gameDir.isEmpty()) {
     const QString pluginGame = QDir::cleanPath(game->gameDirectory().absolutePath());
     const QString pluginData = QDir::cleanPath(game->dataDirectory().absolutePath());
     if (!pluginGame.isEmpty() && pluginData.startsWith(pluginGame, Qt::CaseInsensitive)) {
-      const QString rel = pluginData.mid(pluginGame.size());
-      dataHere          = QDir::cleanPath(gameDir + rel);
+      dataHere = QDir::cleanPath(gameDir + pluginData.mid(pluginGame.size()));
     }
   }
   const QString dataThere = QDir::cleanPath(gameDir + QStringLiteral("/Data"));
@@ -1426,74 +1504,51 @@ void WabbajackDialog::importExecutables(QSettings& from, QSettings& to,
     return text;
   };
 
-  struct Program
-  {
-    QHash<QString, QVariant> values;
-  };
-  std::vector<Program> programs;
   const int count = from.beginReadArray("customExecutables");
+  std::vector<QVariantMap> programs;
   for (int i = 0; i < count; ++i) {
     from.setArrayIndex(i);
-    Program p;
+    QVariantMap program;
     for (const QString& key : from.childKeys()) {
-      p.values.insert(key, from.value(key));
+      program.insert(key, from.value(key));
     }
-    const QString title = p.values.value("title").toString();
-    QString binary =
-        QDir::cleanPath(QDir::fromNativeSeparators(p.values.value("binary").toString()));
-    // a program of the author's MO2 (Explorer++): this MO2's own copy
-    if (!QFileInfo(binary).isFile() &&
-        binary.startsWith(install + u'/', Qt::CaseInsensitive)) {
-      const QString mine = QDir(appDir).filePath(binary.mid(install.size() + 1));
-      if (QFileInfo(mine).isFile()) {
-        binary = mine;
-      }
-    }
-    // a folder isn't a program (the author's "Larian Launcher" was the game
-    // folder); a program that isn't there yet stays when it belongs to the
-    // install or the game (a tool the guide has you copy, one made later);
-    // one elsewhere was on the author's machine
-    const QFileInfo program(binary);
-    const bool ours = binary.startsWith(install + u'/', Qt::CaseInsensitive) ||
-                      (!gameDir.isEmpty() &&
-                       binary.startsWith(gameDir + u'/', Qt::CaseInsensitive));
-    if (binary.isEmpty() || program.isDir() || (!program.isFile() && !ours)) {
-      log::info("wabbajack: the list's program '{}' left out: {} isn't a program here", title,
-                binary);
-      continue;
-    }
-    if (!program.isFile()) {
-      log::info("wabbajack: the list's program '{}' kept, {} isn't there yet", title, binary);
-    }
-    p.values.insert("binary", binary);
-    const QString work = p.values.value("workingDirectory").toString();
+    programs.push_back(std::move(program));
+  }
+  from.endArray();
+  if (count <= 0) {
+    return;
+  }
+  QString gameFolder = to.value("gamePath").toString();
+  if (gameFolder.isEmpty()) {
+    gameFolder = gameDirectory();
+  }
+  std::vector<QVariantMap> kept = keptPrograms(programs, m_installFolder, gameFolder, notes);
+  for (QVariantMap& p : kept) {
+    const QString work = p.value("workingDirectory").toString();
     if (!work.isEmpty() && !QFileInfo(remapData(work)).isDir()) {
       // the author's own folder ("D:\SteamLibrary\..."): MO2 starts it in the
       // program's folder
-      log::info("wabbajack: '{}' starts in its own folder, not the author's {}", title, work);
-      p.values.insert("workingDirectory", QString());
+      log::info("wabbajack: '{}' starts in its own folder, not the author's {}",
+                p.value("title").toString(), work);
+      p.insert("workingDirectory", QString());
     } else if (!work.isEmpty()) {
-      p.values.insert("workingDirectory", remapData(work));
+      p.insert("workingDirectory", remapData(work));
     }
-    p.values.insert("arguments", remapData(p.values.value("arguments").toString()));
-    programs.push_back(std::move(p));
-  }
-  from.endArray();
-  if (programs.empty()) {
-    return;
+    p.insert("arguments", remapData(p.value("arguments").toString()));
   }
   to.remove("customExecutables");
-  to.beginWriteArray("customExecutables", int(programs.size()));
-  for (int i = 0; i < int(programs.size()); ++i) {
+  to.beginWriteArray("customExecutables", int(kept.size()));
+  for (int i = 0; i < int(kept.size()); ++i) {
     to.setArrayIndex(i);
-    for (auto it = programs[i].values.constBegin(); it != programs[i].values.constEnd(); ++it) {
+    for (auto it = kept[i].cbegin(); it != kept[i].cend(); ++it) {
       to.setValue(it.key(), it.value());
     }
   }
   to.endArray();
 }
 
-bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QString* dataPath)
+bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QString* dataPath,
+                                   QStringList* notes)
 {
   IPluginGame* game =
       findGamePlugin(m_list->game, m_core.pluginContainer().plugins<IPluginGame>());
@@ -1602,12 +1657,12 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
       if (game->looksValid(QDir(gamePath))) {
         to.setValue("gamePath", from.value("gamePath"));
       } else {
-        m_instanceNote =
+        notes->append(
             tr("The list runs the game from its own copy, %1, but the game isn't there "
                "yet: the instance uses your game folder. Once you have copied the game there "
                "as the list's guide says, set gamePath in the instance's ModOrganizer.ini "
                "to that folder.")
-                .arg(QDir::toNativeSeparators(gamePath));
+                .arg(QDir::toNativeSeparators(gamePath)));
         log::warn("wabbajack: {} isn't the game yet; the instance uses {}", gamePath,
                   gameDirectory());
       }
@@ -1616,7 +1671,7 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
     if (!profile.isEmpty() && result.profiles.contains(profile, Qt::CaseInsensitive)) {
       to.setValue("selected_profile", from.value("selected_profile"));
     }
-    importExecutables(from, to, game);
+    importExecutables(from, to, game, notes);
     to.sync();
   }
 
@@ -1719,17 +1774,24 @@ void WabbajackDialog::onInstalled()
   }
 
   QString dataPath;
-  m_instanceNote.clear();
-  if (!makeInstance(r, &dataPath)) {
+  QStringList instanceNotes;
+  if (!makeInstance(r, &dataPath, &instanceNotes)) {
     m_status->setText(tr("Installed, but the instance couldn't be made."));
     return;
   }
-  if (!m_instanceNote.isEmpty()) {
-    // in the summary too, where the rest is
-    lines << m_instanceNote;
-    QFile f(QDir(installStateFolder(m_installFolder)).filePath("summary.txt"));
-    if (f.open(QIODevice::Append)) {
-      f.write(("\r\n" + m_instanceNote).toUtf8());
+  if (!instanceNotes.isEmpty()) {
+    // before the failures, as in the summary written above
+    const int at = r.failed > 0 ? int(lines.size()) - int(r.failures.mid(0, 30).size()) - 1
+                                : int(lines.size());
+    for (int i = 0; i < instanceNotes.size(); ++i) {
+      lines.insert(at + i, instanceNotes[i]);
+    }
+    QSaveFile f(QDir(installStateFolder(m_installFolder)).filePath("summary.txt"));
+    if (f.open(QIODevice::WriteOnly)) {
+      QStringList all = lines;
+      all << QString() << r.failures;
+      f.write(all.join("\r\n").toUtf8());
+      f.commit();
     }
   }
   m_status->setText(tr("Installed into %1.").arg(QDir::toNativeSeparators(m_installFolder)));

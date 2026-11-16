@@ -123,8 +123,6 @@ private:
   QString installProblem() const;
   // the window closes once the install has stopped
   bool m_closeAfterInstall = false;
-  // what the new instance does differently from the list (its Stock Game)
-  QString m_instanceNote;
   // asks for the instance's name and folder, then installs
   void startInstall();
   void onInstalled();
@@ -133,10 +131,11 @@ private:
   static bool sameInstall(const QString& instanceFolder, const QString& installFolder);
   void setQuiet(bool quiet);
   // the new instance, with the list's own settings; false with a message
-  bool makeInstance(const Wabbajack::InstallResult& result, QString* dataPath);
+  bool makeInstance(const Wabbajack::InstallResult& result, QString* dataPath,
+                    QStringList* notes);
   // the list's programs, fixed for this PC (see the .cpp)
-  void importExecutables(QSettings& from, QSettings& to,
-                         const MOBase::IPluginGame* game) const;
+  void importExecutables(QSettings& from, QSettings& to, const MOBase::IPluginGame* game,
+                         QStringList* notes) const;
   QString sourceText(const Wabbajack::Archive& a) const;
 };
 
