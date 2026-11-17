@@ -16,15 +16,20 @@ MOMultiProcess::MOMultiProcess(bool allowMultiple, QObject* parent)
   m_SharedMem.setKey(s_Key);
 
   if (!m_SharedMem.create(1)) {
-    if (m_SharedMem.error() == QSharedMemory::AlreadyExists) {
+    // MO2 Revamped: "permission denied" is another MO2 too, one running as
+    // administrator: a link clicked then goes to it instead of crashing here
+    // (the attach below fails the same way, and that is no error either)
+    const auto error = m_SharedMem.error();
+    if (error == QSharedMemory::AlreadyExists ||
+        error == QSharedMemory::PermissionDenied) {
       if (!allowMultiple) {
-        m_SharedMem.attach();
+        if (!m_SharedMem.attach()) {
+          MOBase::log::debug("the other MO2's lock couldn't be opened: {}",
+                             m_SharedMem.errorString());
+        }
         m_Ephemeral = true;
       }
-    }
-
-    if ((m_SharedMem.error() != QSharedMemory::NoError) &&
-        (m_SharedMem.error() != QSharedMemory::AlreadyExists)) {
+    } else {
       throw MOBase::MyException(tr("SHM error: %1").arg(m_SharedMem.errorString()));
     }
   } else {

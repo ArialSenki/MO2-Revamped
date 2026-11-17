@@ -652,7 +652,19 @@ int run(int argc, char* argv[])
   }
 
   // check if there's another process running
-  MOMultiProcess multiProcess(cl.multiple());
+  // MO2 Revamped: an error here was thrown outside any handler, a crash
+  std::unique_ptr<MOMultiProcess> multiProcessOwner;
+  try {
+    multiProcessOwner = std::make_unique<MOMultiProcess>(cl.multiple());
+  } catch (const std::exception& e) {
+    setStartupDiagnosticPhase("startup.instance_lock.failed");
+    writeStartupDiagnosticEvent("startup.instance_lock.failed");
+    reportError(QObject::tr("Mod Organizer couldn't check whether another copy is "
+                            "already open: %1")
+                    .arg(QString::fromUtf8(e.what())));
+    return 1;
+  }
+  MOMultiProcess& multiProcess = *multiProcessOwner;
   writeStartupDiagnosticEvent("startup.instance_lock.ready");
 
   if (multiProcess.ephemeral()) {
