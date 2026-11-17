@@ -7,6 +7,8 @@
 
 static const char s_Key[]  = "mo-43d1a3ad-eeb0-4818-97c9-eda5216c29b5";
 static const int s_Timeout = 5000;
+// how long a link waits for a starting MO2 to take it
+static const int s_AnswerTimeout = 60000;
 
 using MOBase::reportError;
 
@@ -55,7 +57,7 @@ void MOMultiProcess::sendMessage(const QString& message)
     }
 
     // other process may be just starting up
-    socket.connectToServer(s_Key, QIODevice::WriteOnly);
+    socket.connectToServer(s_Key, QIODevice::ReadWrite);
     connected = socket.waitForConnected(s_Timeout);
   }
 
@@ -80,6 +82,12 @@ void MOMultiProcess::sendMessage(const QString& message)
                       .arg(socket.errorString()));
     }
   }
+
+  // MO2 Revamped: the connection stays open until the running MO2 has read the
+  // message: it answers, or closes the connection (an older one). Closed right
+  // away, a message sent while that MO2 was still starting (a browser's links
+  // while it opens) was lost: "failed to receive data from secondary process"
+  socket.waitForReadyRead(s_AnswerTimeout);
 
   socket.disconnectFromServer();
   socket.waitForDisconnected();
@@ -115,6 +123,9 @@ void MOMultiProcess::receiveMessage()
   }
 
   QString message = QString::fromUtf8(socket->readAll().constData());
+  // the sender waits for this before closing (see sendMessage())
+  socket->write("+");
+  socket->flush();
   emit messageSent(message);
   socket->disconnectFromServer();
 }
