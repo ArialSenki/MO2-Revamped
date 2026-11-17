@@ -70,6 +70,26 @@ QColor recolor(const QColor& color);
 // a user theme is in use
 bool active();
 
+// the six colors of Light or Dark, which a new theme starts from
+QMap<QString, QColor> builtInColors(bool dark);
+
+// the files a live preview writes, beside the themes, never listed: two that
+// take turns, so each change is a new theme to apply
+QString previewFileName(int turn);
+
+// the theme's file without its mo2r-theme header: its own rules
+QString rulesOf(const QString& path);
+
+// the header for a theme, as the editor writes it
+QString header(const Theme& theme);
+
+// a file name for a new theme called name: its letters and digits, made unique
+// in the folder ("Ember.qss", "Ember 2.qss")
+QString newFileName(const QString& stylesheetsDir, const QString& name);
+
+// writes the header and the rules to path; false with the reason in error
+bool write(const QString& path, const Theme& theme, const QString& rules, QString* error);
+
 }  // namespace UserTheme
 
 #endif  // MO2R_USERTHEME_H

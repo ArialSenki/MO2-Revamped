@@ -4,6 +4,17 @@ MO2 Revamped has two themes, Light and Dark. You can add your own: a `.qss`
 style sheet in the `stylesheets` folder of the MO2 Revamped installation. It
 shows in **Settings > Theme** as "*name* (on Dark)" or "*name* (on Light)".
 
+## The quick way: the theme editor
+
+In **Settings > Theme**, **New theme...** opens a small editor: a name, the theme
+it goes on top of, and six colors to pick. MO2 shows the colors as you change
+them, Save writes the theme to the `stylesheets` folder and puts it in use, and
+Cancel puts back the theme you had. **Edit theme...** opens the selected theme
+of your own in the same editor (rules you wrote by hand are kept), and **Open
+themes folder** shows the files, to share a theme or add rules to it.
+
+## How a theme works
+
 A theme of your own always loads **on top of** Light or Dark. It doesn't have to
 style every window, only what you want to change. Two things shape it:
 

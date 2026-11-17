@@ -16,6 +16,8 @@ public:
 private:
   void addStyles();
   void selectStyle();
+  void addThemeButtons();
+  QString stylesheetsDir() const;
 };
 
 #endif  // SETTINGSDIALOGGENERAL_H

@@ -11,6 +11,7 @@
 #include <gameplugins.h>
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
+#include "themeeditordialog.h"
 #include "usertheme.h"
 #include <QBoxLayout>
 #include <QCoreApplication>
@@ -19,6 +20,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLayoutItem>
+#include <QPushButton>
 #include <QStringList>
 #include <questionboxmemory.h>
 #include <utility.h>
@@ -66,6 +68,7 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   // style
   addStyles();
   selectStyle();
+  addThemeButtons();
 
   // colors
   ui->colorTable->load(s);
@@ -168,4 +171,79 @@ void ThemeSettingsTab::selectStyle()
                    [box = ui->styleBox] {
                      box->setProperty("mo2Picked", true);
                    });
+}
+
+QString ThemeSettingsTab::stylesheetsDir() const
+{
+  return QDir(QCoreApplication::applicationDirPath())
+      .filePath(QString::fromStdWString(AppConfig::stylesheetsPath()));
+}
+
+void ThemeSettingsTab::addThemeButtons()
+{
+  auto* layout = qobject_cast<QBoxLayout*>(ui->themeStyleGroup->layout());
+  if (!layout) {
+    return;
+  }
+
+  // themes of your own: made and edited here, or by hand in the folder
+  auto* row = new QHBoxLayout;
+  row->setContentsMargins(0, 4, 0, 0);
+  row->setSpacing(8);
+  auto* newButton    = new QPushButton(QObject::tr("New theme..."), ui->themeStyleGroup);
+  auto* editButton   = new QPushButton(QObject::tr("Edit theme..."), ui->themeStyleGroup);
+  auto* folderButton = new QPushButton(QObject::tr("Open themes folder"), ui->themeStyleGroup);
+  for (auto* button : {newButton, editButton, folderButton}) {
+    button->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+    row->addWidget(button);
+  }
+  row->addStretch(1);
+  layout->addLayout(row);
+
+  const auto selectedTheme = [this]() -> std::optional<UserTheme::Theme> {
+    return UserTheme::load(stylesheetsDir(),
+                           ui->styleBox->itemData(ui->styleBox->currentIndex()).toString());
+  };
+  const auto updateEdit = [editButton, selectedTheme] {
+    editButton->setEnabled(selectedTheme().has_value());
+  };
+  updateEdit();
+  QObject::connect(ui->styleBox, &QComboBox::currentIndexChanged, editButton, updateEdit);
+
+  const auto openEditor = [this](const UserTheme::Theme* existing) {
+    const QString inUse = settings().interface().styleName().value_or(QString());
+    ThemeEditorDialog editor(parentWidget(), stylesheetsDir(), inUse, existing,
+                             [this](const QString& file) {
+                               emit settings().styleChanged(file);
+                             });
+    if (editor.exec() != QDialog::Accepted || editor.savedFileName().isEmpty()) {
+      return;
+    }
+    // saved: the theme is in use now, and the list shows it
+    const QString saved = editor.savedFileName();
+    settings().interface().setStyleName(saved);
+    ui->styleBox->blockSignals(true);
+    ui->styleBox->clear();
+    addStyles();
+    const int index = ui->styleBox->findData(saved);
+    if (index != -1) {
+      ui->styleBox->setCurrentIndex(index);
+    }
+    ui->styleBox->blockSignals(false);
+    ui->styleBox->setProperty("mo2Picked", false);
+    emit ui->styleBox->currentIndexChanged(ui->styleBox->currentIndex());
+  };
+
+  QObject::connect(newButton, &QPushButton::clicked, newButton, [openEditor] {
+    openEditor(nullptr);
+  });
+  QObject::connect(editButton, &QPushButton::clicked, editButton,
+                   [openEditor, selectedTheme] {
+                     if (const auto theme = selectedTheme()) {
+                       openEditor(&*theme);
+                     }
+                   });
+  QObject::connect(folderButton, &QPushButton::clicked, folderButton, [this] {
+    shell::Explore(stylesheetsDir());
+  });
 }

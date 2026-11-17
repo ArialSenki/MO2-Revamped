@@ -9924,6 +9924,38 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
   <context>
     <name>QObject</name>
     <message>
+      <source>New theme...</source>
+      <translation>Nuevo tema...</translation>
+    </message>
+    <message>
+      <source>Edit theme...</source>
+      <translation>Editar tema...</translation>
+    </message>
+    <message>
+      <source>Open themes folder</source>
+      <translation>Abrir carpeta de temas</translation>
+    </message>
+    <message>
+      <source>Accent</source>
+      <translation>Acento</translation>
+    </message>
+    <message>
+      <source>Window background</source>
+      <translation>Fondo de la ventana</translation>
+    </message>
+    <message>
+      <source>Cards and lists</source>
+      <translation>Tarjetas y listas</translation>
+    </message>
+    <message>
+      <source>Borders</source>
+      <translation>Bordes</translation>
+    </message>
+    <message>
+      <source>Secondary text</source>
+      <translation>Texto secundario</translation>
+    </message>
+    <message>
       <source>%1 (on %2)</source>
       <translation>%1 (sobre %2)</translation>
     </message>
@@ -16922,4 +16954,69 @@ Instala .NET Desktop Runtime {1} para Windows x64 desde {0} y vuelve a abrir BG3
       <translation>Nexus no respondió: %1</translation>
     </message>
   </context>
+<context>
+    <name>ThemeEditorDialog</name>
+    <message>
+      <source>Edit theme</source>
+      <translation>Editar tema</translation>
+    </message>
+    <message>
+      <source>New theme</source>
+      <translation>Nuevo tema</translation>
+    </message>
+    <message>
+      <source>Pick the colors: MO2 shows them as you change them, and Cancel puts back the theme you had.</source>
+      <translation>Elige los colores: MO2 los muestra mientras los cambias, y Cancelar vuelve a poner el tema que tenías.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nombre</translation>
+    </message>
+    <message>
+      <source>Based on</source>
+      <translation>Basado en</translation>
+    </message>
+    <message>
+      <source>Dark</source>
+      <translation>Oscuro</translation>
+    </message>
+    <message>
+      <source>Light</source>
+      <translation>Claro</translation>
+    </message>
+    <message>
+      <source>My theme</source>
+      <translation>Mi tema</translation>
+    </message>
+    <message>
+      <source>Pick a color</source>
+      <translation>Elegir un color</translation>
+    </message>
+    <message>
+      <source>This theme also has rules of its own. They are kept as they are.</source>
+      <translation>Este tema también tiene reglas propias. Se conservan tal cual.</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <translation>Guardar</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Theme not saved</source>
+      <translation>Tema no guardado</translation>
+    </message>
+    <message>
+      <source>MO2 couldn&apos;t write the theme to %1:
+%2
+
+If MO2 Revamped is installed in a protected folder such as Program Files, run it as administrator once to save themes there, or install it in another folder.</source>
+      <translation>MO2 no pudo escribir el tema en %1:
+%2
+
+Si MO2 Revamped está instalado en una carpeta protegida como Archivos de programa, ábrelo una vez como administrador para guardar temas ahí, o instálalo en otra carpeta.</translation>
+    </message>
+</context>
 </TS>

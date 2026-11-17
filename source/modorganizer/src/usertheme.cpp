@@ -151,6 +151,15 @@ QColor recolorWith(const Theme& theme, const QColor& color)
   return out;
 }
 
+const QRegularExpression& headerPattern()
+{
+  static const QRegularExpression pattern(
+      QStringLiteral("/\\*\\s*mo2r-theme\\b(.*?)\\*/"),
+      QRegularExpression::DotMatchesEverythingOption |
+          QRegularExpression::CaseInsensitiveOption);
+  return pattern;
+}
+
 QString hex(const QColor& c)
 {
   return c.name(QColor::HexRgb).toUpper();
@@ -266,11 +275,7 @@ std::optional<Theme> load(const QString& stylesheetsDir, const QString& fileName
 
   // the header: the first comment that says mo2r-theme
   const QString head = QString::fromUtf8(file.read(16 * 1024));
-  static const QRegularExpression headerPattern(
-      QStringLiteral("/\\*\\s*mo2r-theme\\b(.*?)\\*/"),
-      QRegularExpression::DotMatchesEverythingOption |
-          QRegularExpression::CaseInsensitiveOption);
-  const auto header = headerPattern.match(head);
+  const auto header  = headerPattern().match(head);
 
   std::optional<bool> dark;
   if (header.hasMatch()) {
@@ -331,7 +336,8 @@ QList<Theme> list(const QString& stylesheetsDir)
   for (const QString& fileName : files) {
     // the built-in themes' source names, which a development build has beside
     // their installed copies
-    if (fileName.startsWith(QStringLiteral("MO2 Fluent v4 - "), Qt::CaseInsensitive)) {
+    if (fileName.startsWith(QStringLiteral("MO2 Fluent v4 - "), Qt::CaseInsensitive) ||
+        fileName.startsWith('.')) {
       continue;
     }
     if (auto theme = load(stylesheetsDir, fileName)) {
@@ -370,6 +376,96 @@ QColor recolor(const QColor& color)
 bool active()
 {
   return current().has_value();
+}
+
+QMap<QString, QColor> builtInColors(bool dark)
+{
+  const BaseColors& base = baseColors(dark);
+  return {{QStringLiteral("accent"), base.accent},   {QStringLiteral("window"), base.window},
+          {QStringLiteral("surface"), base.surface}, {QStringLiteral("border"), base.border},
+          {QStringLiteral("text"), base.text},       {QStringLiteral("muted"), base.muted}};
+}
+
+QString previewFileName(int turn)
+{
+  return QStringLiteral(".mo2r-preview-%1.qss").arg(turn % 2 + 1);
+}
+
+QString rulesOf(const QString& path)
+{
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return {};
+  }
+  QString text      = QString::fromUtf8(file.readAll());
+  const auto header = headerPattern().match(text);
+  if (header.hasMatch()) {
+    text.remove(header.capturedStart(), header.capturedLength());
+  }
+  while (text.startsWith('\n')) {
+    text.remove(0, 1);
+  }
+  return text;
+}
+
+QString header(const Theme& theme)
+{
+  QString out = QStringLiteral("/* mo2r-theme\n");
+  out += QStringLiteral("   name: %1\n").arg(QString(theme.name).remove(QStringLiteral("*/")));
+  out += QStringLiteral("   base: %1\n")
+             .arg(theme.dark ? QStringLiteral("dark") : QStringLiteral("light"));
+  for (const QString& key : colorKeys()) {
+    if (theme.colors.contains(key)) {
+      out += QStringLiteral("   %1: %2\n").arg(key, hex(theme.colors.value(key)));
+    }
+  }
+  out += QStringLiteral("*/\n");
+  return out;
+}
+
+QString newFileName(const QString& stylesheetsDir, const QString& name)
+{
+  QString stem;
+  for (const QChar c : name.trimmed()) {
+    stem += (c.isLetterOrNumber() || c == ' ' || c == '-' || c == '_') ? c : QChar('_');
+  }
+  stem = stem.simplified().left(50);
+  if (stem.isEmpty()) {
+    stem = QStringLiteral("My theme");
+  }
+
+  const QDir dir(stylesheetsDir);
+  QString candidate = stem + QStringLiteral(".qss");
+  for (int i = 2;
+       dir.exists(candidate) || isBuiltIn(candidate) ||
+       candidate.startsWith(QStringLiteral("MO2 Fluent v4 - "), Qt::CaseInsensitive);
+       ++i) {
+    candidate = QStringLiteral("%1 %2.qss").arg(stem).arg(i);
+  }
+  return candidate;
+}
+
+bool write(const QString& path, const Theme& theme, const QString& rules, QString* error)
+{
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+    if (error) {
+      *error = file.errorString();
+    }
+    return false;
+  }
+  QString text = header(theme);
+  if (!rules.trimmed().isEmpty()) {
+    text += QStringLiteral("\n") + rules;
+  }
+  const QByteArray bytes = text.toUtf8();
+  if (file.write(bytes) != bytes.size()) {
+    if (error) {
+      *error = file.errorString();
+    }
+    return false;
+  }
+  return true;
 }
 
 }  // namespace UserTheme
