@@ -2181,7 +2181,11 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 
 void OrganizerCore::loginSuccessful(bool necessary)
 {
-  if (necessary) {
+  // MO2 Revamped: only when something was waiting for it (a download, an
+  // update check the user asked for). Signing in with the saved key at every
+  // start needs no notice: the status bar shows the connection, and the
+  // notice came up over the first start's theme question
+  if (necessary && (!m_PendingDownloads.isEmpty() || !m_PostLoginTasks.empty())) {
     MessageDialog::showMessage(tr("Signed in to Nexus Mods"), qApp->activeWindow());
   }
   for (QString url : m_PendingDownloads) {

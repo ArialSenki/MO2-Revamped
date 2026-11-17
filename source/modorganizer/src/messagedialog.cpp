@@ -39,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <log.h>
 
 #include <algorithm>
+#include <utility>
 
 using namespace MOBase;
 
@@ -58,6 +59,33 @@ constexpr int MaxShown   = 4;    // over one window; a fifth closes the oldest
 constexpr int Radius     = 8;
 
 constexpr char16_t InfoGlyph = 0xE946;
+
+// notices waiting for the dialog in front to close
+struct WaitingNotice
+{
+  QString text;
+  QPointer<QWidget> reference;
+  bool bringToFront;
+};
+
+QList<WaitingNotice>& waitingNotices()
+{
+  static QList<WaitingNotice> waiting;
+  return waiting;
+}
+
+QTimer& waitingTimer()
+{
+  static QTimer* timer = [] {
+    auto* t = new QTimer(qApp);
+    t->setInterval(400);
+    QObject::connect(t, &QTimer::timeout, [] {
+      MessageDialog::showWaitingNotices();
+    });
+    return t;
+  }();
+  return *timer;
+}
 
 // notices that are still on screen, so a new one stacks above them
 QList<QPointer<MessageDialog>>& liveNotices()
@@ -117,7 +145,8 @@ MessageDialog::MessageDialog(const QString& text, QWidget* reference)
                   Qt::NoDropShadowWindowHint |
                   // without a window to stay above, it stays above everything
                   (reference == nullptr ? Qt::WindowStaysOnTopHint : Qt::Widget)),
-      m_text(text.trimmed()), m_reference(reference), m_timer(new QTimer(this))
+      m_text(text.trimmed()), m_base(text.trimmed()), m_reference(reference),
+      m_timer(new QTimer(this))
 {
   setObjectName(QStringLiteral("MessageDialog"));
   setAttribute(Qt::WA_TranslucentBackground);
@@ -313,6 +342,18 @@ void MessageDialog::dismiss()
   });
 }
 
+void MessageDialog::showWaitingNotices()
+{
+  if (QApplication::activeModalWidget() != nullptr) {
+    return;  // still open: the timer asks again
+  }
+  waitingTimer().stop();
+  const auto waiting = std::exchange(waitingNotices(), {});
+  for (const auto& w : waiting) {
+    showMessage(w.text, w.reference, w.bringToFront);
+  }
+}
+
 void MessageDialog::restack(QWidget* parent)
 {
   for (const auto& other : liveNotices()) {
@@ -350,6 +391,38 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
     qApp->setProperty("mo2r.collectionQuietHidden",
                       qApp->property("mo2r.collectionQuietHidden").toInt() + 1);
     return;
+  }
+
+  // MO2 Revamped: never over a question the user has to answer (the theme
+  // choice at the first start, a confirmation): a notice that isn't the open
+  // dialog's own waits until it closes
+  if (!fromFrontDialog && front != nullptr && front->isVisible() &&
+      qobject_cast<const QProgressDialog*>(front) == nullptr) {
+    waitingNotices().append({text, QPointer<QWidget>(reference), bringToFront});
+    log::debug("notice waits for the dialog in front: {}", text);
+    if (!waitingTimer().isActive()) {
+      waitingTimer().start();
+    }
+    return;
+  }
+
+  // MO2 Revamped: the same notice again while it is still shown (one
+  // "Installation successful" per mod): the one shown counts it and stays a
+  // little longer, instead of a stack of the same card
+  {
+    const QString trimmed = text.trimmed();
+    for (const auto& other : liveNotices()) {
+      if (other != nullptr && other->isVisible() && !other->m_closing &&
+          other->m_base == trimmed) {
+        ++other->m_count;
+        other->m_text = QStringLiteral("%1 (×%2)").arg(trimmed).arg(other->m_count);
+        other->setAccessibleName(other->m_text);
+        restack(other->parentWidget());
+        other->update();
+        other->m_timer->start(readingTime(other->m_text));
+        return;
+      }
+    }
   }
 
   // MO2 Revamped: over the dialog in front (the instance wizard, Settings),

@@ -67,6 +67,9 @@ public:
   static void showMessage(const QString& text, QWidget* reference,
                           bool bringToFront = true);
 
+  // shows the notices that waited for a dialog to close, once none is open
+  static void showWaitingNotices();
+
   QSize sizeHint() const override;
 
 protected:
@@ -78,6 +81,9 @@ protected:
 
 private:
   QString m_text;
+  // the text as asked for, and how many times it was asked for while shown
+  QString m_base;
+  int m_count = 1;
   QPointer<QWidget> m_reference;
   QTimer* m_timer;
   QColor m_card, m_line, m_ink;
