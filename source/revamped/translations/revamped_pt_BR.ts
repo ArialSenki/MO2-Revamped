@@ -10808,6 +10808,10 @@ Exemplos:
       <translation>Falhou</translation>
     </message>
     <message>
+      <source>Interface language</source>
+      <translation>Idioma da interface</translation>
+    </message>
+    <message>
       <source>Interface size</source>
       <translation>Tamanho da interface</translation>
     </message>

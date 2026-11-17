@@ -11296,6 +11296,10 @@ Esempio:
       <translation>Non riuscito</translation>
     </message>
     <message>
+      <source>Interface language</source>
+      <translation>Lingua dell'interfaccia</translation>
+    </message>
+    <message>
       <source>Interface size</source>
       <translation>Dimensione dell'interfaccia</translation>
     </message>

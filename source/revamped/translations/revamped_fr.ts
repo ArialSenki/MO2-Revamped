@@ -11145,6 +11145,10 @@ Exemple :
       <translation>Échec</translation>
     </message>
     <message>
+      <source>Interface language</source>
+      <translation>Langue de l'interface</translation>
+    </message>
+    <message>
       <source>Interface size</source>
       <translation>Taille de l'interface</translation>
     </message>

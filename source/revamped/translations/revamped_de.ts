@@ -10824,6 +10824,10 @@ Firefox.exe</translation>
       <translation>Fehlgeschlagen</translation>
     </message>
     <message>
+      <source>Interface language</source>
+      <translation>Sprache der Oberfläche</translation>
+    </message>
+    <message>
       <source>Interface size</source>
       <translation>Größe der Oberfläche</translation>
     </message>

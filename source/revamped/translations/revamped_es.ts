@@ -10986,6 +10986,10 @@ Ejemplo:
       <translation>Error</translation>
     </message>
     <message>
+      <source>Interface language</source>
+      <translation>Idioma de la interfaz</translation>
+    </message>
+    <message>
       <source>Interface size</source>
       <translation>Tamaño de la interfaz</translation>
     </message>
