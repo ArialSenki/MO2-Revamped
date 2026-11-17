@@ -2089,6 +2089,48 @@ void OrganizerCore::modPrioritiesChanged(const QModelIndexList& indices)
   clearCaches(vindices);
 }
 
+// MO2 Revamped: the origins take the profile's priorities, and the files'
+// origins are sorted again. Every file of the list was sorted at each toggle
+// (~100 ms with 3666 mods), but turning mods on or off moves no priority: the
+// files of a mod turned on were added to the sorted lists by addOrigin, and a
+// mod turned off was only taken out of them. So all files are sorted only when
+// a priority moved, and otherwise just those of the mods that changed.
+bool OrganizerCore::syncOriginPriorities(const std::vector<unsigned int>& changedMods)
+{
+  bool moved = false;
+  for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
+    ModInfo::Ptr modInfo    = ModInfo::getByIndex(i);
+    const std::wstring name = ToWString(modInfo->internalName());
+    if (ownsOriginName(modInfo) && m_DirectoryStructure->originExists(name)) {
+      // priorities in the directory structure are one higher because data is
+      // 0
+      FilesOrigin& origin = m_DirectoryStructure->getOriginByName(name);
+      const int priority  = m_CurrentProfile->getModPriority(i) + 1;
+      if (origin.getPriority() != priority) {
+        origin.setPriority(priority);
+        moved = true;
+      }
+    }
+  }
+
+  if (moved) {
+    m_DirectoryStructure->getFileRegister()->sortOrigins();
+    return true;
+  }
+
+  for (unsigned int i : changedMods) {
+    ModInfo::Ptr modInfo    = ModInfo::getByIndex(i);
+    const std::wstring name = ToWString(modInfo->internalName());
+    if (ownsOriginName(modInfo) && m_DirectoryStructure->originExists(name)) {
+      for (const FileEntryPtr& file :
+           m_DirectoryStructure->getOriginByName(name).getFiles()) {
+        file->sortOrigins();
+      }
+    }
+  }
+  return false;
+}
+
 void OrganizerCore::modStatusChanged(unsigned int index)
 {
   // the structure in use now is replaced when the refresh ends
@@ -2113,18 +2155,7 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       }
     }
 
-    for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
-      ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
-      int priority         = m_CurrentProfile->getModPriority(i);
-      if (ownsOriginName(modInfo) &&
-          m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
-        // priorities in the directory structure are one higher because data is
-        // 0
-        m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))
-            .setPriority(priority + 1);
-      }
-    }
-    m_DirectoryStructure->getFileRegister()->sortOrigins();
+    syncOriginPriorities({index});
 
     refreshLists();
     clearCaches({index});
@@ -2172,18 +2203,7 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
       }
     }
 
-    for (unsigned int i = 0; i < m_CurrentProfile->numMods(); ++i) {
-      ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
-      int priority         = m_CurrentProfile->getModPriority(i);
-      if (ownsOriginName(modInfo) &&
-          m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
-        // priorities in the directory structure are one higher because data is
-        // 0
-        m_DirectoryStructure->getOriginByName(ToWString(modInfo->internalName()))
-            .setPriority(priority + 1);
-      }
-    }
-    m_DirectoryStructure->getFileRegister()->sortOrigins();
+    syncOriginPriorities(vindices);
 
     refreshLists();
     clearCaches(vindices);
