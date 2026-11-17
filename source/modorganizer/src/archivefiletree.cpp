@@ -28,6 +28,58 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace MOBase;
 
+namespace
+{
+// MO2 Revamped: the parts of a path, without "." parts and empty ones (a
+// leading slash); nothing when it climbs out of the folder it is written to:
+// a ".." part, or a drive ("C:") first
+std::optional<QStringList> pathSegments(const QString& path)
+{
+  QString p = path;
+  p.replace(QLatin1Char('\\'), QLatin1Char('/'));
+  QStringList segments;
+  for (const QString& segment : p.split('/', Qt::SkipEmptyParts)) {
+    if (segment == QLatin1String(".")) {
+      continue;
+    }
+    if (segment == QLatin1String("..") ||
+        (segments.isEmpty() && segment.size() >= 2 && segment[1] == ':')) {
+      return std::nullopt;
+    }
+    segments.append(segment);
+  }
+  return segments;
+}
+
+// MO2 Revamped: a file's place in the mod's folder as it is written, from the
+// name in the archive or the one an installer gave it. A path that would land
+// elsewhere on the PC is not written. Characters Windows doesn't allow in names
+// become "_" (a colon would write a stream of the file), and the spaces and
+// dots Windows drops at the end of a name go: written through a \\?\ path they
+// made folders the game and Explorer can't open
+void addOutputPath(FileData* data, const QString& path)
+{
+  const auto segments = pathSegments(path);
+  if (!segments || segments->isEmpty()) {
+    log::warn("'{}' would be written outside the mod's folder; left out", path);
+    return;
+  }
+  QStringList cleaned;
+  for (QString segment : *segments) {
+    for (QChar& c : segment) {
+      if (c.unicode() < 32 || QStringLiteral("<>:\"|?*").contains(c)) {
+        c = '_';
+      }
+    }
+    while (segment.endsWith(' ') || segment.endsWith('.')) {
+      segment.chop(1);
+    }
+    cleaned.append(segment.isEmpty() ? QStringLiteral("_") : segment);
+  }
+  data->addOutputFilePath(cleaned.join(QLatin1Char('\\')).toStdWString());
+}
+}  // namespace
+
 /**
  * We use custom file entries to store the index.
  */
@@ -109,15 +161,14 @@ public:  // Overrides:
             dynamic_cast<const ArchiveFileTreeImpl&>(*entry);
         QString tmp = path + archiveEntry.name();
         if (archiveEntry.m_Index != -1) {
-          data[archiveEntry.m_Index]->addOutputFilePath(tmp.toStdWString());
+          addOutputPath(data[archiveEntry.m_Index], tmp);
         }
         mapToArchive(*archiveEntry.astree(), tmp, data);
       } else {
         const ArchiveFileEntry& archiveFileEntry =
             dynamic_cast<const ArchiveFileEntry&>(*entry);
         if (archiveFileEntry.m_Index != -1) {
-          data[archiveFileEntry.m_Index]->addOutputFilePath(
-              (path + archiveFileEntry.name()).toStdWString());
+          addOutputPath(data[archiveFileEntry.m_Index], path + archiveFileEntry.name());
         }
       }
     }
@@ -226,47 +277,6 @@ private:
   mutable std::vector<File> m_Files;
 };
 
-namespace
-{
-// MO2 Revamped: the parts of a path in an archive as they can go on disk. An
-// entry whose path climbs out of the mod's folder ("..", a drive) is
-// left out: written as it is, it would land elsewhere on the PC. Characters
-// Windows doesn't allow in names, and the spaces and dots it drops at their
-// end, are made into names it keeps
-std::optional<QStringList> safeSegments(const QString& archivePath)
-{
-  // a leading slash goes, as the empty parts do
-  QString path = archivePath;
-  path.replace(QLatin1Char('\\'), QLatin1Char('/'));
-  QStringList segments;
-  for (QString segment : path.split('/', Qt::SkipEmptyParts)) {
-    if (segment == QLatin1String(".")) {
-      continue;
-    }
-    if (segment == QLatin1String("..")) {
-      return std::nullopt;
-    }
-    // "C:" first is a drive; anywhere else a colon would write a stream of
-    // the file, and becomes "_" below
-    if (segments.isEmpty() && segment.size() >= 2 && segment[1] == ':') {
-      return std::nullopt;
-    }
-    for (QChar& c : segment) {
-      if (c.unicode() < 32 || QStringLiteral("<>:\"|?*").contains(c)) {
-        c = '_';
-      }
-    }
-    while (segment.endsWith(' ') || segment.endsWith('.')) {
-      segment.chop(1);
-    }
-    if (segment.isEmpty()) {
-      segment = QStringLiteral("_");
-    }
-    segments.append(segment);
-  }
-  return segments;
-}
-}  // namespace
 
 std::shared_ptr<ArchiveFileTree> ArchiveFileTree::makeTree(Archive const& archive)
 {
@@ -282,8 +292,10 @@ std::shared_ptr<ArchiveFileTree> ArchiveFileTree::makeTree(Archive const& archiv
       continue;
     }
 
+    // the names stay as they are, for the installers that look them up; an
+    // entry that would climb out of the mod's folder is left out
     const QString archivePath = QString::fromStdWString(data[i]->getArchiveFilePath());
-    auto segments             = safeSegments(archivePath);
+    auto segments             = pathSegments(archivePath);
     if (!segments) {
       log::warn("'{}' in the archive would go outside the mod's folder; left out",
                 archivePath);
@@ -313,7 +325,7 @@ void mapToArchive(std::vector<FileData*> const& data, It begin, It end)
     auto* aentry = dynamic_cast<const ArchiveFileEntry*>(entry.get());
 
     if (aentry->m_Index != -1) {
-      data[aentry->m_Index]->addOutputFilePath(aentry->path().toStdWString());
+      addOutputPath(data[aentry->m_Index], aentry->path());
     }
 
     if (entry->isDir()) {
