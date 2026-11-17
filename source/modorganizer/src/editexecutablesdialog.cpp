@@ -31,6 +31,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_editexecutablesdialog.h"
 
 #include <QTimer>
+#include <memory>
 #include <QAbstractButton>
 #include <QAction>
 #include <QBoxLayout>
@@ -490,8 +491,23 @@ bool EditExecutablesDialog::commitChanges()
         continue;
       }
 
-      Profile other(QDir(profilesDir.absoluteFilePath(name)),
-                    m_organizerCore.managedGame(), m_organizerCore.gameFeatures());
+      // MO2 Revamped: only real profiles (a plugin keeps its own folder here),
+      // and only their settings: the full constructor repaired, migrated and
+      // rewrote each one, and gave a plugin's folder a modlist.txt
+      const QDir otherDir(profilesDir.absoluteFilePath(name));
+      if (!otherDir.exists(QStringLiteral("modlist.txt"))) {
+        continue;
+      }
+      std::unique_ptr<Profile> other;
+      try {
+        other = std::make_unique<Profile>(otherDir, m_organizerCore.managedGame(),
+                                          m_organizerCore.gameFeatures(),
+                                          Profile::ReadOnly{});
+      } catch (const std::exception& e) {
+        log::warn("can't open profile '{}' to move its program settings: {}", name,
+                  e.what());
+        continue;
+      }
 
       // read everything first: two titles can trade places
       std::vector<Moved> moved;
@@ -500,12 +516,12 @@ bool EditExecutablesDialog::commitChanges()
           continue;
         }
 
-        Moved m{to, other.setting("custom_overwrites", from),
-                other.setting("forced_libraries", from + "/enabled"),
-                other.settingsByArray("forced_libraries/" + from)};
+        Moved m{to, other->setting("custom_overwrites", from),
+                other->setting("forced_libraries", from + "/enabled"),
+                other->settingsByArray("forced_libraries/" + from)};
 
-        other.removeSetting("custom_overwrites", from);
-        other.removeForcedLibraries(from);
+        other->removeSetting("custom_overwrites", from);
+        other->removeForcedLibraries(from);
         moved.push_back(std::move(m));
       }
 
@@ -515,13 +531,13 @@ bool EditExecutablesDialog::commitChanges()
         }
 
         if (m.overwrite.isValid()) {
-          other.storeSetting("custom_overwrites", m.to, m.overwrite);
+          other->storeSetting("custom_overwrites", m.to, m.overwrite);
         }
         if (m.librariesEnabled.isValid()) {
-          other.setForcedLibrariesEnabled(m.to, m.librariesEnabled.toBool());
+          other->setForcedLibrariesEnabled(m.to, m.librariesEnabled.toBool());
         }
         if (!m.libraries.isEmpty()) {
-          other.storeSettingsByArray("forced_libraries/" + m.to, m.libraries);
+          other->storeSettingsByArray("forced_libraries/" + m.to, m.libraries);
         }
       }
     }
