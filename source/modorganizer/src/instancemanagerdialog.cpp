@@ -30,6 +30,8 @@
 #include <QLocale>
 #include <QMenu>
 #include <QPointer>
+#include <QElapsedTimer>
+#include <QThread>
 #include <QThreadPool>
 #include <QTimer>
 #include <QDir>
@@ -391,6 +393,22 @@ void showInstanceExample(QWidget* parent)
                         ? layout->totalHeightForWidth(width)
                         : dlg.sizeHint().height());
   dlg.exec();
+}
+
+void InstanceManagerDialog::stopSizeScan()
+{
+  if (m_sizeScan) {
+    *m_sizeScan = true;
+  }
+  if (!m_sizeScanDone) {
+    return;
+  }
+  // the scan checks the flag after every file: this is a few milliseconds
+  QElapsedTimer waited;
+  waited.start();
+  while (!*m_sizeScanDone && waited.elapsed() < 2000) {
+    QThread::msleep(10);
+  }
 }
 
 InstanceManagerDialog::~InstanceManagerDialog()
@@ -1320,6 +1338,8 @@ void InstanceManagerDialog::rename()
   // the desktop shortcut names the instance and opens it by name
   const bool hadShortcut = shortcutExists(*i);
 
+  // MO2 Revamped: the size scan of the selection held folders open inside it
+  stopSizeScan();
   const auto r = shell::Rename(QFileInfo(src), QFileInfo(dest), false);
 
   if (!r) {
@@ -1583,6 +1603,7 @@ void InstanceManagerDialog::deleteInstance()
   // deleting
   const QString identifier = i->instanceIdentifier();
   const bool hadShortcut   = shortcutExists(*i);
+  stopSizeScan();
   const QStringList remaining = doDelete(selected, (r == Recycle));
   if (!remaining.isEmpty()) {
     QStringList shown;
@@ -1849,32 +1870,42 @@ void InstanceManagerDialog::startSizeScan(const Instance& ii)
   if (m_sizeScan) {
     *m_sizeScan = true;
   }
-  m_sizeScan = std::make_shared<std::atomic_bool>(false);
+  m_sizeScan     = std::make_shared<std::atomic_bool>(false);
+  m_sizeScanDone = std::make_shared<std::atomic_bool>(false);
   static_cast<ElidedLabel*>(m_sizeRow.value)->setFullText(tr("Calculating…"));
 
   Settings settings(ii.iniPath());
   if (settings.iniStatus() != QSettings::NoError) {
     static_cast<ElidedLabel*>(m_sizeRow.value)->setFullText(tr("Unknown"));
+    *m_sizeScanDone = true;
     return;
   }
 
   const QStringList folders = {settings.paths().mods(), settings.paths().downloads(),
                                settings.paths().overwrite()};
   auto stop                 = m_sizeScan;
+  auto done                 = m_sizeScanDone;
   QPointer<InstanceManagerDialog> self(this);
 
-  QThreadPool::globalInstance()->start([folders, stop, self] {
+  QThreadPool::globalInstance()->start([folders, stop, done, self] {
     std::vector<qint64> sizes;
     for (const QString& folder : folders) {
+      if (*stop) {
+        break;
+      }
       qint64 total = 0;
-      QDirIterator it(folder, QDir::Files | QDir::Hidden | QDir::System,
-                      QDirIterator::Subdirectories);
-      while (it.hasNext() && !*stop) {
-        it.next();
-        total += it.fileInfo().size();
+      {
+        QDirIterator it(folder, QDir::Files | QDir::Hidden | QDir::System,
+                        QDirIterator::Subdirectories);
+        while (it.hasNext() && !*stop) {
+          it.next();
+          total += it.fileInfo().size();
+        }
       }
       sizes.push_back(total);
     }
+    // the folders are let go of here (the iterators are gone)
+    *done = true;
     if (*stop) {
       return;
     }
