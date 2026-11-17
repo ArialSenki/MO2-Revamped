@@ -91,6 +91,9 @@ private:
   std::unique_ptr<NexusInterface> m_nexus;
   std::unique_ptr<PluginContainer> m_plugins;
   std::unique_ptr<OrganizerCore> m_core;
+  // nxm links sent while no instance was loaded yet; taken once the main window
+  // is open
+  QStringList m_waitingLinks;
 
   void externalMessage(const QString& message);
   std::unique_ptr<Instance> getCurrentInstance(bool forceSelect);
