@@ -66,7 +66,8 @@ int SelectionDialog::numChoices() const
 
 QVariant SelectionDialog::getChoiceData()
 {
-  return m_Choice->property("data");
+  // nothing was chosen when it closed with Esc, X or Cancel
+  return m_Choice != nullptr ? m_Choice->property("data") : QVariant();
 }
 
 void SelectionDialog::on_buttonBox_clicked(QAbstractButton* button)

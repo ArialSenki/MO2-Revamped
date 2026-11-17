@@ -110,6 +110,12 @@ QList<MOBase::ExecutableForcedLoadSetting> ForcedLoadDialog::values()
   QList<MOBase::ExecutableForcedLoadSetting> results;
   for (int row = 0; row < ui->tableWidget->rowCount(); row++) {
     auto widget = (ForcedLoadDialogWidget*)ui->tableWidget->cellWidget(row, 0);
+    // MO2 Revamped: a rule left without its library or program (added, then
+    // OK) gave the loader an empty path
+    if (widget == nullptr || widget->getProcess().trimmed().isEmpty() ||
+        widget->getLibraryPath().trimmed().isEmpty()) {
+      continue;
+    }
     results.append(
         ExecutableForcedLoadSetting(widget->getProcess(), widget->getLibraryPath())
             .withEnabled(widget->getEnabled())

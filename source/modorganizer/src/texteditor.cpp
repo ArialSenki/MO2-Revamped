@@ -2,6 +2,7 @@
 #include "fluenticons.h"
 #include "utility.h"
 #include <QDir>
+#include <QSaveFile>
 #include <QSplitter>
 #include <log.h>
 #include <report.h>
@@ -127,7 +128,10 @@ bool TextEditor::save()
     return false;
   }
 
-  QFile file(m_filename);
+  QSaveFile file(m_filename);
+  // a folder that takes no new files (the file itself is writable) is still
+  // written in place, as before
+  file.setDirectWriteFallback(true);
   QStringConverter::Flags flags = QStringConverter::Flag::Default;
   if (m_needsBOM) {
     flags |= QStringConverter::Flag::WriteBom;
@@ -137,8 +141,10 @@ bool TextEditor::save()
   QString data           = toPlainText().replace("\n", "\r\n");
   const QByteArray bytes = encoder.encode(data);
 
+  // MO2 Revamped: written beside it and swapped in at the end; a failed write
+  // (disk full, a scanner holding it) left the file emptied
   const bool saved = file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() &&
-                     file.flush();
+                     file.commit();
 
   if (!saved) {
     MOBase::reportError(tr("Could not save \"%1\": %2").arg(m_filename, file.errorString()));
