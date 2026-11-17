@@ -52,6 +52,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSettings>
+#include <QStorageInfo>
 #include <QTextDocument>
 #include <QtConcurrent/QtConcurrentRun>
 
@@ -303,20 +304,36 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
   if ((!future.result() || !errorMessage.isEmpty()) && m_PasswordCancelled) {
     return false;
   }
+  // MO2 Revamped: a disk that filled up while extracting showed as a number
+  // or a file that couldn't be written; the user can act on this
+  const auto diskFull = [&extractPath]() {
+    const QStorageInfo storage(extractPath);
+    return storage.isValid() && storage.bytesAvailable() >= 0 &&
+           storage.bytesAvailable() < 64LL * 1024 * 1024;
+  };
   if (!errorMessage.isEmpty()) {
     // RAR4 and 7z report a wrong password as a damaged file
     if (m_PasswordAsked && (errorMessage == QLatin1String("CRC error") ||
                             errorMessage == QLatin1String("Data error"))) {
       throw MyException(tr("Wrong password, or the archive is damaged."));
     }
+    if (diskFull()) {
+      throw MyException(tr("Extraction failed: the disk is full. Free some space on "
+                           "%1 and install the mod again.")
+                            .arg(QDir::toNativeSeparators(QStorageInfo(extractPath).rootPath())));
+    }
     throw MyException(tr("Extraction failed: %1").arg(errorMessage));
   }
   if (!future.result()) {
     if (m_ArchiveHandler->getLastError() == Archive::Error::ERROR_EXTRACT_CANCELLED) {
       return false;
+    } else if (diskFull()) {
+      throw MyException(tr("Extraction failed: the disk is full. Free some space on "
+                           "%1 and install the mod again.")
+                            .arg(QDir::toNativeSeparators(QStorageInfo(extractPath).rootPath())));
     } else {
       throw MyException(tr("Extraction failed: %1")
-                            .arg(static_cast<int>(m_ArchiveHandler->getLastError())));
+                            .arg(getErrorString(m_ArchiveHandler->getLastError())));
     }
   }
 
@@ -1549,6 +1566,12 @@ QString InstallationManager::getErrorString(Archive::Error errorCode)
   } break;
   case Archive::Error::ERROR_ARCHIVE_INVALID: {
     return tr("archive invalid");
+  } break;
+  case Archive::Error::ERROR_EXTRACT_CANCELLED: {
+    return tr("cancelled");
+  } break;
+  case Archive::Error::ERROR_OUT_OF_MEMORY: {
+    return tr("not enough memory");
   } break;
   default: {
     // this probably means the archiver.dll is newer than this

@@ -12857,6 +12857,18 @@ Verwende dies, wenn du Mod Organizer verschoben oder die zuvor registrierte Mod-
     <context>
     <name>InstallationManager</name>
     <message>
+      <source>Extraction failed: the disk is full. Free some space on %1 and install the mod again.</source>
+      <translation>Entpacken fehlgeschlagen: Der Datenträger ist voll. Gib Speicherplatz auf %1 frei und installiere die Mod erneut.</translation>
+    </message>
+    <message>
+      <source>cancelled</source>
+      <translation>abgebrochen</translation>
+    </message>
+    <message>
+      <source>not enough memory</source>
+      <translation>nicht genug Arbeitsspeicher</translation>
+    </message>
+    <message>
       <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
       <translation>WinRAR hat das Archiv mit Fehlern entpackt: Einige seiner Dateien fehlen möglicherweise im Mod.</translation>
     </message>
