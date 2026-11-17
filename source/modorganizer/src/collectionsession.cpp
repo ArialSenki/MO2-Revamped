@@ -2559,6 +2559,35 @@ bool staysInside(const std::filesystem::path& base, const std::filesystem::path&
 
 }  // namespace
 
+namespace
+{
+// MO2 Revamped: counts the session's nested waits (CollectionSession::waiting)
+struct WaitGuard
+{
+  explicit WaitGuard(int& n) : m_n(n) { ++m_n; }
+  ~WaitGuard() { --m_n; }
+  WaitGuard(const WaitGuard&)            = delete;
+  WaitGuard& operator=(const WaitGuard&) = delete;
+  int& m_n;
+};
+
+// MO2 Revamped: runs job on a worker thread; events (not the user's) run
+// meanwhile, and the window waits to close (CollectionDialog::closeEvent) so
+// the session isn't deleted here
+void runOnWorker(int& waiting, std::function<void()> job)
+{
+  QEventLoop wait;
+  std::unique_ptr<QThread> worker(QThread::create(std::move(job)));
+  QObject::connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
+  worker->start();
+  {
+    const WaitGuard guard(waiting);
+    wait.exec(QEventLoop::ExcludeUserInputEvents);
+  }
+  worker->wait();
+}
+}  // namespace
+
 bool CollectionSession::installBundle(int row)
 {
   Entry& e        = m_entries[row];
@@ -2638,15 +2667,18 @@ bool CollectionSession::installBundle(int row)
   }
 
   if (ok) {
-    try {
-      ok = archive->extract(target.toStdWString(), {}, {},
-                            [&error](const std::wstring& message) {
-                              error = QString::fromStdWString(message);
-                            });
-    } catch (const std::exception& ex) {
-      ok    = false;
-      error = QString::fromUtf8(ex.what());
-    }
+    // on a worker: the window keeps painting through a large archive
+    runOnWorker(m_waiting, [&] {
+      try {
+        ok = archive->extract(target.toStdWString(), {}, {},
+                              [&error](const std::wstring& message) {
+                                error = QString::fromStdWString(message);
+                              });
+      } catch (const std::exception& ex) {
+        ok    = false;
+        error = QString::fromUtf8(ex.what());
+      }
+    });
   }
 
   // what was written stays in the folder
@@ -2797,15 +2829,18 @@ bool CollectionSession::installRootMod(int row, bool* handled)
     f->addOutputFilePath(QDir::toNativeSeparators(relative).toStdWString());
   }
   if (ok) {
-    try {
-      ok = archive->extract(target.toStdWString(), {}, {},
-                            [&error](const std::wstring& message) {
-                              error = QString::fromStdWString(message);
-                            });
-    } catch (const std::exception& ex) {
-      ok    = false;
-      error = QString::fromUtf8(ex.what());
-    }
+    // on a worker: the window keeps painting through a large archive
+    runOnWorker(m_waiting, [&] {
+      try {
+        ok = archive->extract(target.toStdWString(), {}, {},
+                              [&error](const std::wstring& message) {
+                                error = QString::fromStdWString(message);
+                              });
+      } catch (const std::exception& ex) {
+        ok    = false;
+        error = QString::fromUtf8(ex.what());
+      }
+    });
   }
   // what was written stays in the folder
   if (ok) {
@@ -2890,34 +2925,6 @@ bool CollectionSession::extractArchiveFiles(
   return ok;
 }
 
-namespace
-{
-// MO2 Revamped: counts the session's nested waits (CollectionSession::waiting)
-struct WaitGuard
-{
-  explicit WaitGuard(int& n) : m_n(n) { ++m_n; }
-  ~WaitGuard() { --m_n; }
-  WaitGuard(const WaitGuard&)            = delete;
-  WaitGuard& operator=(const WaitGuard&) = delete;
-  int& m_n;
-};
-
-// MO2 Revamped: runs job on a worker thread; events (not the user's) run
-// meanwhile, and the window waits to close (CollectionDialog::closeEvent) so
-// the session isn't deleted here
-void runOnWorker(int& waiting, std::function<void()> job)
-{
-  QEventLoop wait;
-  std::unique_ptr<QThread> worker(QThread::create(std::move(job)));
-  QObject::connect(worker.get(), &QThread::finished, &wait, &QEventLoop::quit);
-  worker->start();
-  {
-    const WaitGuard guard(waiting);
-    wait.exec(QEventLoop::ExcludeUserInputEvents);
-  }
-  worker->wait();
-}
-}  // namespace
 
 void CollectionSession::postInstall(int row)
 {
