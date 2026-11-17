@@ -18252,4 +18252,55 @@ Instala .NET Desktop Runtime {1} para Windows x64 desde {0} y vuelve a abrir BG3
       <translation>El archivo de la lista llegó dañado (su hash no coincide).</translation>
     </message>
   </context>
+  <context>
+    <name>WabbajackInstance</name>
+    <message>
+      <source>The list leaves files for you to install by hand, as its guide says (usually into the game's folder): %1. The game may not start, or the list may not work, until they are in place.</source>
+      <translation>La lista deja archivos para que los instales a mano, como dice su guía (normalmente en la carpeta del juego): %1. Puede que el juego no arranque, o que la lista no funcione, hasta que estén en su sitio.</translation>
+    </message>
+    <message>
+      <source>The list was made for version %1 of the game, the version you have.</source>
+      <translation>La lista se hizo para la versión %1 del juego, la que tienes.</translation>
+    </message>
+    <message>
+      <source>The list was made for version &lt;b&gt;%1&lt;/b&gt; of the game, and you have &lt;b&gt;%2&lt;/b&gt;. Its script extender and some mods may refuse to start until the game is that version; the list's guide says how to get it.</source>
+      <translation>La lista se hizo para la versión &lt;b&gt;%1&lt;/b&gt; del juego, y tienes la &lt;b&gt;%2&lt;/b&gt;. Su script extender y algunos mods pueden negarse a arrancar hasta que el juego sea esa versión; la guía de la lista explica cómo conseguirla.</translation>
+    </message>
+    <message>
+      <source>The guide: &lt;a href=&quot;%1&quot;&gt;%2&lt;/a&gt;.</source>
+      <translation>La guía: &lt;a href=&quot;%1&quot;&gt;%2&lt;/a&gt;.</translation>
+    </message>
+    <message>
+      <source>The list</source>
+      <translation>La lista</translation>
+    </message>
+    <message>
+      <source>Before you start %1</source>
+      <translation>Antes de empezar %1</translation>
+    </message>
+    <message>
+      <source>What the list's guide still asks of you:</source>
+      <translation>Lo que la guía de la lista aún te pide:</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>Aceptar</translation>
+    </message>
+    <message>
+      <source>The game isn't the version %1 was made for</source>
+      <translation>El juego no es la versión para la que se hizo %1</translation>
+    </message>
+    <message>
+      <source>%1 was made for version %2 of the game, and the game is now %3 (a game update changes it). Its script extender and some of its mods may refuse to start, or the game may close at once. The list's guide says how to get version %2.</source>
+      <translation>%1 se hizo para la versión %2 del juego, y ahora el juego es la %3 (una actualización del juego la cambia). Su script extender y algunos de sus mods pueden negarse a arrancar, o el juego puede cerrarse enseguida. La guía de la lista explica cómo conseguir la versión %2.</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar de todos modos</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
 </TS>

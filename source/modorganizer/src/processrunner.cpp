@@ -9,6 +9,7 @@
 #include "profile.h"
 #include "scriptextendersetup.h"
 #include "borderlesswindow.h"
+#include "wabbajackinstance.h"
 #include <iplugingame.h>
 #include <scriptextender.h>
 #include <log.h>
@@ -901,6 +902,12 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
 
   // these questions come before the plugins prepare the launch: a plugin that
   // hides saves for it gives up when the game doesn't appear in a few seconds
+
+  // MO2 Revamped: an instance made from a Wabbajack list, with the game
+  // updated since (its script extender refuses the new version)
+  if (!Wabbajack::confirmGameVersion(parent, m_core, m_sp.binary)) {
+    return Error;
+  }
 
   // MO2 Revamped: the script extender's loader with a DLL for another game
   // version (the game updated) doesn't start the game; asked before Steam starts

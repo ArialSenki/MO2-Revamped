@@ -138,6 +138,7 @@ mo2_add_filter(NAME src/collections GROUPS
 	wabbajackdialog
 	wabbajackdownloads
 	wabbajackinstaller
+	wabbajackinstance
 	wabbajacklist
 )
 

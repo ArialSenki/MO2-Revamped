@@ -10,6 +10,7 @@
 #include "organizercore.h"
 #include "plugincontainer.h"
 #include "settings.h"
+#include "wabbajackinstance.h"
 
 #include <filesystemutilities.h>
 #include <iplugingame.h>
@@ -1854,6 +1855,22 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
       to.setValue("selected_profile", result.profiles.front().toUtf8());
     }
     to.sync();
+  }
+  // what the list's guide still asks of you (the folders it leaves to copy by
+  // hand, the game version it was made for): shown when the instance first
+  // opens, and the version again before the game starts if it changes
+  {
+    Wabbajack::InstanceInfo info;
+    info.list   = m_list->name;
+    info.readme = m_list->readme;
+    for (const WjArchive& a : m_list->archives) {
+      if (a.source == Source::GameFile && !a.gameVersion.isEmpty()) {
+        info.gameVersion = a.gameVersion;
+        break;
+      }
+    }
+    info.manualFolders = Wabbajack::byHandFolders(m_installFolder);
+    Wabbajack::writeInstanceInfo(ci.iniPath, info);
   }
   // the list's own categories ("6," is its "User Interface"): MO2 reads them
   // from the instance's folder, not from the install's

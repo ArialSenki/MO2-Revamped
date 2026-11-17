@@ -119,6 +119,55 @@ bool writeIni(const QString& file, const QString& key, const QString& value)
                                     file.toStdWString().c_str()) != FALSE;
 }
 
+// a display mode of the primary screen, as the game asks for it full screen
+bool screenHasMode(int width, int height)
+{
+  DEVMODEW mode{};
+  mode.dmSize = sizeof(mode);
+  for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &mode); ++i) {
+    if (int(mode.dmPelsWidth) == width && int(mode.dmPelsHeight) == height) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The game's size in the INI, when the screen can't show it, becomes the
+// screen's. A list's prefs INI made on the author's 1440p screen, or one the
+// game's launcher filled in on the first start (it can pick a mode larger
+// than the screen), stops New Vegas with "Failed to initialize renderer".
+// A size the screen can show, smaller or a real full-screen mode, stays.
+void fitToScreen(const QString& iniPath)
+{
+  const QFileInfo ini(iniPath);
+  if (!ini.exists() || ini.size() == 0) {
+    return;
+  }
+  bool okW = false, okH = false;
+  const int width  = readIni(iniPath, QStringLiteral("iSize W")).trimmed().toInt(&okW);
+  const int height = readIni(iniPath, QStringLiteral("iSize H")).trimmed().toInt(&okH);
+  if (!okW || !okH || width <= 0 || height <= 0) {
+    return;
+  }
+  const QRect screen    = primaryScreen();
+  const bool fullScreen = readIni(iniPath, QStringLiteral("bFull Screen")).trimmed() == u"1";
+  const bool fits       = fullScreen ? screenHasMode(width, height)
+                                     : width <= screen.width() && height <= screen.height();
+  if (fits || screen.width() <= 0 || screen.height() <= 0) {
+    return;
+  }
+  if (!ini.permissions().testFlag(QFileDevice::WriteUser)) {
+    log::warn("{} asks for {}x{}, which the screen ({}x{}) can't show, and it is read-only",
+              iniPath, width, height, screen.width(), screen.height());
+    return;
+  }
+  if (writeIni(iniPath, QStringLiteral("iSize W"), QString::number(screen.width())) &&
+      writeIni(iniPath, QStringLiteral("iSize H"), QString::number(screen.height()))) {
+    log::info("{} asked for {}x{}, which the screen can't show; it is now {}x{}", iniPath,
+              width, height, screen.width(), screen.height());
+  }
+}
+
 // the records of the values MO2 changed, for every instance in one place:
 // instances whose profiles use the INI in Documents share that file
 QString savedStorePath()
@@ -362,11 +411,18 @@ bool BorderlessWindow::prepareLaunch(OrganizerCore& core, const QFileInfo& binar
   const IPluginGame* game = core.managedGame();
   const auto gameInfo     = info(game);
   const Profile* profile  = core.currentProfile();
-  if (!gameInfo || profile == nullptr || !startsTheGame(core, game, *gameInfo, binary)) {
+  if (!gameInfo || profile == nullptr) {
     return false;
   }
 
   const QString iniPath = profile->absoluteIniFilePath(iniName(game, gameInfo->ini));
+  // with the option on or off, and for the launcher too: a size the screen
+  // can't show stops the game before its window opens
+  fitToScreen(iniPath);
+  if (!startsTheGame(core, game, *gameInfo, binary)) {
+    return false;
+  }
+
   QSettings settings(savedStorePath(), QSettings::IniFormat);
   settings.beginGroup(SavedGroup);
   moveInstanceRecords(core, settings);

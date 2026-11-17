@@ -88,6 +88,11 @@ QString installStateFolder(const QString& installFolder);
 // an install that finished there: its folder isn't one to install into again
 bool isFinishedInstall(const QString& installFolder);
 
+// the folders at the top of an install the author leaves to be copied by hand
+// (into the game's folder, usually), as the list's guide says: Wabbajack
+// doesn't copy them either ("__Files Requiring Manual Install")
+QStringList byHandFolders(const QString& installFolder);
+
 }  // namespace Wabbajack
 
 #endif  // WABBAJACKINSTALLER_H

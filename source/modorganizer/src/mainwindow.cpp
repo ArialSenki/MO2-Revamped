@@ -59,6 +59,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "collectionbrowser.h"
 #include "collectiondialog.h"
 #include "wabbajackbrowser.h"
+#include "wabbajackinstance.h"
 #include "wabbajackdialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
@@ -2794,6 +2795,11 @@ void MainWindow::showEvent(QShowEvent* event)
     });
     QTimer::singleShot(0, this, [this] {
       offerScriptExtenderLaunch();
+    });
+    // an instance made from a Wabbajack list: what its guide still asks of
+    // you, once, before the first Run
+    QTimer::singleShot(0, this, [this] {
+      Wabbajack::showListNotice(this, m_OrganizerCore);
     });
 
     m_OrganizerCore.settings().widgets().restoreIndex(ui->groupCombo);

@@ -1372,15 +1372,7 @@ InstallResult Installer::run()
       }
       // folders the author leaves to be copied by hand (into the game's folder,
       // usually), as the list's guide says: Wabbajack doesn't copy them either
-      QStringList byHand;
-      for (const QString& dir :
-           QDir(m_plan.installFolder).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        if (dir.startsWith(u"__") ||
-            dir.compare(u"Game Folder Files", Qt::CaseInsensitive) == 0 ||
-            dir.compare(u"Manual Game Files", Qt::CaseInsensitive) == 0) {
-          byHand.append(dir);
-        }
-      }
+      const QStringList byHand = byHandFolders(m_plan.installFolder);
       if (!byHand.isEmpty()) {
         m_result.notes.append(
             tr("The list leaves files for you to copy by hand, as its guide says: %1.")
@@ -1475,6 +1467,19 @@ QString installStateFolder(const QString& installFolder)
 bool isFinishedInstall(const QString& installFolder)
 {
   return QFileInfo::exists(QDir(installStateFolder(installFolder)).filePath("finished"));
+}
+
+QStringList byHandFolders(const QString& installFolder)
+{
+  QStringList result;
+  for (const QString& dir :
+       QDir(installFolder).entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+    if (dir.startsWith(u"__") || dir.compare(u"Game Folder Files", Qt::CaseInsensitive) == 0 ||
+        dir.compare(u"Manual Game Files", Qt::CaseInsensitive) == 0) {
+      result.append(dir);
+    }
+  }
+  return result;
 }
 
 QString installPath(const QString& installFolder, const QString& relative)
