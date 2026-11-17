@@ -2297,11 +2297,28 @@ void PathsPage::checkPaths()
 
   if (ui->advancedPathOptions->isChecked()) {
     // checking advanced paths
-    m_okay = checkAdvancedPath(ui->base->text()) &&
-             checkAdvancedPath(resolve(ui->downloads->text())) &&
-             checkAdvancedPath(resolve(ui->mods->text())) &&
-             checkAdvancedPath(resolve(ui->profiles->text())) &&
-             checkAdvancedPath(resolve(ui->overwrite->text()));
+    // MO2 Revamped: the five share one "already exists" warning and each
+    // check set it for its own folder only: an existing base folder lost its
+    // warning to an overwrite folder that isn't there yet. The first folder
+    // that exists keeps it
+    const QStringList paths = {ui->base->text(), resolve(ui->downloads->text()),
+                               resolve(ui->mods->text()), resolve(ui->profiles->text()),
+                               resolve(ui->overwrite->text())};
+    QString existing;
+    m_okay = true;
+    for (const QString& path : paths) {
+      if (!checkAdvancedPath(path)) {
+        m_okay = false;
+        break;
+      }
+      if (existing.isEmpty() && !ui->advancedDirExists->isHidden()) {
+        existing = QDir::toNativeSeparators(path.trimmed());
+      }
+    }
+    if (m_okay && !existing.isEmpty()) {
+      m_advancedExists.setVisible(true);
+      m_advancedExists.setText(existing);
+    }
   } else {
     // checking simple path
     m_okay = checkSimplePath(ui->location->text());
