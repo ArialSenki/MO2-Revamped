@@ -7490,6 +7490,10 @@ Fehler: %1</translation>
       <translation>Unfertige Sammlung</translation>
     </message>
     <message>
+      <source>The collection &quot;%1&quot; wasn&apos;t finished the last time. Continue installing it?</source>
+      <translation>Die Sammlung „%1“ wurde beim letzten Mal nicht fertig. Mit der Installation weitermachen?</translation>
+    </message>
+    <message>
       <source>The collection &quot;%1&quot; wasn&apos;t finished the last time (%2 of %3 mods done). Continue installing it?</source>
       <translation>Die Sammlung „%1“ wurde beim letzten Mal nicht fertig (%2 von %3 Mods erledigt). Mit der Installation weitermachen?</translation>
     </message>
@@ -16677,8 +16681,8 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       </translation>
     </message>
     <message>
-      <source>Game version: the collection was made with %1, this game is %2. Mods that hook into the game (script extender plugins, Address Library, engine fixes) are built for one version and can crash on another. Look for a collection made for your version, or update the game first.</source>
-      <translation>Spielversion: Die Sammlung wurde mit %1 erstellt, dieses Spiel ist %2. Mods, die sich ins Spiel einklinken (Script-Extender-Plugins, Address Library, Engine-Fixes), sind für eine Version gebaut und können auf einer anderen abstürzen. Suche eine Sammlung für deine Version oder aktualisiere zuerst das Spiel.</translation>
+      <source>Game version: the collection was made with %1, this game is %2. Mods that hook into the game (script extender plugins, Address Library, engine fixes) are built for one version and can crash on another. Look for a collection made for your version, or put the game on the collection&apos;s version first.</source>
+      <translation>Spielversion: Die Sammlung wurde mit %1 erstellt, dieses Spiel ist %2. Mods, die sich ins Spiel einklinken (Script-Extender-Plugins, Address Library, Engine-Fixes), sind für eine Version gebaut und können auf einer anderen abstürzen. Suche eine Sammlung für deine Version oder bring das Spiel zuerst auf die Version der Sammlung.</translation>
     </message>
     <message>
       <source>Game edition: this game is the %1 edition. Collections are almost always made on Steam, and script extenders and DLL plugins often have a separate %1 build, or none. Check those mods&apos; pages for a %1 version.</source>

@@ -7482,6 +7482,10 @@ Erro: %1</translation>
       <translation>Coleção não terminada</translation>
     </message>
     <message>
+      <source>The collection &quot;%1&quot; wasn&apos;t finished the last time. Continue installing it?</source>
+      <translation>A coleção &quot;%1&quot; não foi terminada da última vez. Continuar a instalação?</translation>
+    </message>
+    <message>
       <source>The collection &quot;%1&quot; wasn&apos;t finished the last time (%2 of %3 mods done). Continue installing it?</source>
       <translation>A coleção &quot;%1&quot; não foi terminada da última vez (%2 de %3 mods feitos). Continuar a instalação?</translation>
     </message>
@@ -16653,8 +16657,8 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
       </translation>
     </message>
     <message>
-      <source>Game version: the collection was made with %1, this game is %2. Mods that hook into the game (script extender plugins, Address Library, engine fixes) are built for one version and can crash on another. Look for a collection made for your version, or update the game first.</source>
-      <translation>Versão do jogo: a coleção foi feita com a %1 e este jogo é a %2. Mods que se ligam ao jogo (plugins do script extender, Address Library, correções do motor) são feitos para uma versão e podem travar em outra. Procure uma coleção feita para a sua versão ou atualize o jogo antes.</translation>
+      <source>Game version: the collection was made with %1, this game is %2. Mods that hook into the game (script extender plugins, Address Library, engine fixes) are built for one version and can crash on another. Look for a collection made for your version, or put the game on the collection&apos;s version first.</source>
+      <translation>Versão do jogo: a coleção foi feita com a %1 e este jogo é a %2. Mods que se ligam ao jogo (plugins do script extender, Address Library, correções do motor) são feitos para uma versão e podem travar em outra. Procure uma coleção feita para a sua versão ou coloque o jogo na versão da coleção antes.</translation>
     </message>
     <message>
       <source>Game edition: this game is the %1 edition. Collections are almost always made on Steam, and script extenders and DLL plugins often have a separate %1 build, or none. Check those mods&apos; pages for a %1 version.</source>

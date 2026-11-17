@@ -5042,12 +5042,17 @@ void MainWindow::openPendingCollection(int idleChecks)
   if (!unfinished) {
     return;
   }
-  FluentContentDialog dialog(
-      this, QStringLiteral("CollectionResumeDialog"), tr("Unfinished collection"),
-      tr("The collection \"%1\" wasn't finished the last time (%2 of %3 mods done). "
-         "Continue installing it?")
-          .arg(unfinished->name, QString::number(unfinished->done),
-               QString::number(unfinished->total)));
+  const QString text =
+      unfinished->total > 0
+          ? tr("The collection \"%1\" wasn't finished the last time (%2 of %3 mods "
+               "done). Continue installing it?")
+                .arg(unfinished->name, QString::number(unfinished->done),
+                     QString::number(unfinished->total))
+          : tr("The collection \"%1\" wasn't finished the last time. Continue "
+               "installing it?")
+                .arg(unfinished->name);
+  FluentContentDialog dialog(this, QStringLiteral("CollectionResumeDialog"),
+                             tr("Unfinished collection"), text);
   auto* resume = dialog.addButton(tr("Continue"), true);
   auto* later  = dialog.addButton(tr("Not now"));
   auto* never  = dialog.addButton(tr("Don't ask again"));

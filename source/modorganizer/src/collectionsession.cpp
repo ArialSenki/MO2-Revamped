@@ -2450,7 +2450,8 @@ QStringList CollectionSession::preflightIssues() const
           tr("Game version: the collection was made with %1, this game is %2. Mods "
              "that hook into the game (script extender plugins, Address Library, "
              "engine fixes) are built for one version and can crash on another. Look "
-             "for a collection made for your version, or update the game first.")
+             "for a collection made for your version, or put the game on the collection's "
+             "version first.")
               .arg(versions.join(QStringLiteral(", ")), installed));
     }
   }
