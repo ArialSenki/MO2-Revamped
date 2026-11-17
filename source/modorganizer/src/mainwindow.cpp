@@ -4853,7 +4853,7 @@ void MainWindow::on_actionSettings_triggered()
     settings.paths().setDownloads(oldDownloadsSetting);
     MessageDialog::showMessage(tr("Can't change download directory while "
                                   "downloads are in progress!"),
-                               this);
+                               this, true);
   }
 
   InstallationManager* instManager = m_OrganizerCore.installationManager();
@@ -5925,7 +5925,7 @@ void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, in
   } else {
     MessageDialog::showMessage(
         tr("Error %1: Request to Nexus failed: %2").arg(errorCode).arg(errorString),
-        this);
+        this, true);
   }
 }
 

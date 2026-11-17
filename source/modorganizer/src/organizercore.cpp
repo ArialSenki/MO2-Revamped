@@ -1800,7 +1800,7 @@ void OrganizerCore::loggedInAction(QWidget* parent, std::function<void()> f)
       });
       NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
     } else {
-      MessageDialog::showMessage(tr("You need to be logged in with Nexus"), parent);
+      MessageDialog::showMessage(tr("You need to be logged in with Nexus"), parent, true);
     }
   }
 }
@@ -2228,14 +2228,14 @@ void OrganizerCore::loginFailed(const QString& message)
     MessageDialog::showMessage(
         tr("login failed: %1. Download will not be associated with an account")
             .arg(message),
-        qApp->activeWindow());
+        qApp->activeWindow(), true);
     for (QString url : m_PendingDownloads) {
       downloadRequestedNXM(url);
     }
     m_PendingDownloads.clear();
   } else {
     MessageDialog::showMessage(tr("login failed: %1").arg(message),
-                               qApp->activeWindow());
+                               qApp->activeWindow(), true);
     m_PostLoginTasks.clear();
   }
   NexusInterface::instance().loginCompleted();
@@ -2384,7 +2384,7 @@ void OrganizerCore::savePluginList()
                    "couldn't be set: %1. Close the program (the game, xEdit) and "
                    "refresh.")
                     .arg(locked.join(", ")),
-                qApp->activeWindow());
+                qApp->activeWindow(), true);
           }
         }
   };
@@ -2644,7 +2644,7 @@ RootCopy::Result OrganizerCore::deployRootCopies(const std::vector<RootCopy::Fil
              "them. Move the game out of Program Files, or give your account write "
              "access to its folder.")
               .arg(QDir::toNativeSeparators(gameDir)),
-          qApp->activeWindow());
+          qApp->activeWindow(), true);
     }
   }
 
@@ -2764,7 +2764,7 @@ void OrganizerCore::showRootConflictNotice()
          "in MO2's log; check them, or let Steam verify the game's files.")
           .arg(m_RootConflictFiles.join(", "),
                QDir::toNativeSeparators(rootCopyBase())),
-      m_UserInterface->mainWindow());
+      m_UserInterface->mainWindow(), true);
 }
 
 bool OrganizerCore::restoreRootCopies(bool exiting)

@@ -524,7 +524,7 @@ bool ModList::renameMod(int index, const QString& newName)
 {
   QString nameFixed = newName;
   if (!fixDirectoryName(nameFixed) || nameFixed.isEmpty()) {
-    MessageDialog::showMessage(tr("Invalid name"), nullptr);
+    MessageDialog::showMessage(tr("Invalid name"), nullptr, true);
     return false;
   }
 
@@ -533,20 +533,20 @@ bool ModList::renameMod(int index, const QString& newName)
     MessageDialog::showMessage(
         tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
             .arg(nameFixed),
-        nullptr);
+        nullptr, true);
     return false;
   }
 
   // MO2 Revamped: "data", a secondary data folder's name or "Overwrite" would mix
   // its files with the game's or Overwrite's
   if (ModInfo::isReservedModName(nameFixed)) {
-    MessageDialog::showMessage(ModInfo::reservedModNameMessage(nameFixed), nullptr);
+    MessageDialog::showMessage(ModInfo::reservedModNameMessage(nameFixed), nullptr, true);
     return false;
   }
 
   if (ModList::allMods().contains(nameFixed, Qt::CaseInsensitive) &&
       nameFixed.toLower() != ModInfo::getByIndex(index)->name().toLower()) {
-    MessageDialog::showMessage(tr("Name is already in use by another mod"), nullptr);
+    MessageDialog::showMessage(tr("Name is already in use by another mod"), nullptr, true);
     return false;
   }
 
@@ -558,13 +558,13 @@ bool ModList::renameMod(int index, const QString& newName)
     if (ModInfo::isBackupName(nameFixed)) {
       MessageDialog::showMessage(
           tr("Names ending in \"_backup\" are for backups. Choose another name."),
-          nullptr);
+          nullptr, true);
       return false;
     }
     if (ModInfo::isSeparatorName(nameFixed)) {
       MessageDialog::showMessage(
           tr("Names ending in \"_separator\" are for separators. Choose another name."),
-          nullptr);
+          nullptr, true);
       return false;
     }
   }
@@ -593,7 +593,7 @@ bool ModList::renameMod(int index, const QString& newName)
           tr("\"%1\" couldn't be renamed. Close programs using its files and try "
              "again.")
               .arg(getDisplayName(modInfo)),
-          nullptr);
+          nullptr, true);
       return false;
     }
   }
