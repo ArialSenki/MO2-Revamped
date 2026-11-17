@@ -722,14 +722,46 @@ void ModInfoDialog::updateTabs(bool becauseOriginChanged)
 void ModInfoDialog::feedFiles(std::vector<TabInfo*>& interestedTabs)
 {
   const auto rootPath = m_mod->absolutePath();
-  if (rootPath.isEmpty()) {
+
+  // MO2 Revamped: only these tabs take files; with none of them shown (a DLC's
+  // entry, whose folder is the game's whole data folder; a hide or rename that
+  // only the conflicts and file tree tabs follow) there's nothing to scan
+  std::vector<TabInfo*> feeders;
+  for (auto* tabInfo : interestedTabs) {
+    ModInfoDialogTab* tab = tabInfo->tab.get();
+    if (dynamic_cast<ESPsTab*>(tab) != nullptr || dynamic_cast<ImagesTab*>(tab) != nullptr ||
+        dynamic_cast<GenericFilesTab*>(tab) != nullptr) {
+      feeders.push_back(tabInfo);
+    }
+  }
+  if (rootPath.isEmpty() || feeders.empty()) {
     return;
   }
 
   const fs::path fsPath(rootPath.toStdWString());
 
-  for (const auto& entry : fs::recursive_directory_iterator(fsPath)) {
-    if (!entry.is_regular_file()) {
+  // MO2 Revamped: a folder deleted in Explorer, on a drive that's gone, or a
+  // subfolder Windows denies threw out of the dialog and closed MO2; the tabs
+  // now show what could be read
+  std::error_code ec;
+  fs::recursive_directory_iterator it(
+      fsPath, fs::directory_options::skip_permission_denied, ec);
+  if (ec) {
+    log::warn("can't list the files of '{}': {}", rootPath,
+              QString::fromStdString(ec.message()));
+    return;
+  }
+
+  for (const fs::recursive_directory_iterator end; it != end; it.increment(ec)) {
+    if (ec) {
+      log::warn("can't list all the files of '{}': {}", rootPath,
+                QString::fromStdString(ec.message()));
+      break;
+    }
+
+    const auto& entry = *it;
+    std::error_code typeError;
+    if (!entry.is_regular_file(typeError)) {
       // skip directories
       continue;
     }
@@ -737,7 +769,7 @@ void ModInfoDialog::feedFiles(std::vector<TabInfo*>& interestedTabs)
     const auto filePath = QString::fromStdWString(entry.path().native());
 
     // for each tab
-    for (auto* tabInfo : interestedTabs) {
+    for (auto* tabInfo : feeders) {
       if (tabInfo->tab->feedFile(rootPath, filePath)) {
         break;
       }
