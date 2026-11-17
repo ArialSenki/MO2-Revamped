@@ -54,11 +54,13 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSettings>
 #include <QStorageInfo>
 #include <QTextDocument>
+#include <QTimer>
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <Shellapi.h>
 
 #include <boost/assign.hpp>
+#include <atomic>
 #include <functional>
 #include <optional>
 #include <boost/scoped_ptr.hpp>
@@ -236,8 +238,6 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     // QProgressDialog::setValue and using .exec() creates huge recursion that leads to
     // stack-overflow. See https://bugreports.qt.io/browse/QTBUG-10561
     QEventLoop loop;
-    connect(this, &InstallationManager::progressUpdate, &loop, &QEventLoop::wakeUp,
-            Qt::QueuedConnection);
 
     // Cancelling progress only cancel the extraction, we do not force exiting the
     // event-loop:
@@ -245,29 +245,30 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
       m_ArchiveHandler->cancel();
     });
 
+    // MO2 Revamped: the extraction only notes where it is, and the dialog shows
+    // it a few times a second. Waking the interface for each written block and
+    // each file (thousands in a texture pack) slowed the extraction down
     std::mutex mutex;
-    int currentProgress = 0;
+    std::atomic<int> currentProgress = 0;
     QString currentFileName;
+    QTimer tick;
+    tick.setInterval(100);
+    connect(&tick, &QTimer::timeout, &loop, &QEventLoop::wakeUp);
+    tick.start();
 
     // The callbacks:
-    auto progressCallback = [this, &currentProgress, &mutex](
-                                auto progressType, uint64_t current, uint64_t total) {
-      if (progressType == Archive::ProgressType::EXTRACTION) {
-        {
-          std::scoped_lock guard(mutex);
-          currentProgress = static_cast<int>(100 * current / total);
-        }
-        emit progressUpdate();
+    auto progressCallback = [&currentProgress](auto progressType, uint64_t current,
+                                               uint64_t total) {
+      // an archive that doesn't give its files' sizes has no total
+      if (progressType == Archive::ProgressType::EXTRACTION && total > 0) {
+        currentProgress = static_cast<int>(std::min<uint64_t>(100, 100 * current / total));
       }
     };
     Archive::FileChangeCallback fileChangeCallback =
-        [this, &currentFileName, &mutex](auto changeType, std::wstring const& file) {
+        [&currentFileName, &mutex](auto changeType, std::wstring const& file) {
           if (changeType == Archive::FileChangeType::EXTRACTION_START) {
-            {
-              std::scoped_lock guard(mutex);
-              currentFileName = QString::fromStdWString(file);
-            }
-            emit progressUpdate();
+            std::scoped_lock guard(mutex);
+            currentFileName = QString::fromStdWString(file);
           }
         };
 
@@ -286,14 +287,20 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
 
     while (!futureWatcher.isFinished()) {
       loop.processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
-      std::scoped_lock guard(mutex);
-      if (currentProgress != installationProgress->value()) {
-        installationProgress->setValue(currentProgress);
+      const int progress = currentProgress;
+      if (progress != installationProgress->value()) {
+        installationProgress->setValue(progress);
       }
-      if (currentFileName != installationProgress->labelText()) {
-        installationProgress->setLabelText(currentFileName);
+      QString fileName;
+      {
+        std::scoped_lock guard(mutex);
+        fileName = currentFileName;
+      }
+      if (fileName != installationProgress->labelText()) {
+        installationProgress->setLabelText(fileName);
       }
     }
+    tick.stop();
 
     installationProgress->hide();
 
