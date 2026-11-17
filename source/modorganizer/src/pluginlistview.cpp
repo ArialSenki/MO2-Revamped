@@ -378,11 +378,10 @@ void PluginListView::onDoubleClicked(const QModelIndex& index)
   }
 
   try {
-    if (selectionModel()->hasSelection() &&
-        selectionModel()->selectedRows().count() == 1) {
-
-      // the name, whichever column was clicked
-      QModelIndex idx  = selectionModel()->currentIndex().siblingAtColumn(PluginList::COL_NAME);
+    {
+      // the plugin double-clicked, whichever column; MO2 Revamped: not the
+      // selection, which Ctrl's first click had just toggled
+      QModelIndex idx  = index.siblingAtColumn(PluginList::COL_NAME);
       QString fileName = idx.data().toString();
 
       if (ModInfo::getIndex(m_core->pluginList()->origin(fileName)) == UINT_MAX) {
