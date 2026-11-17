@@ -3377,6 +3377,12 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
 
   while (profileIter.hasNext()) {
     profileIter.next();
+    // MO2 Revamped: only folders that are profiles (plugins keep their own
+    // folders here); the one in use stays even with its list missing
+    if (!QFileInfo::exists(profileIter.filePath() + QStringLiteral("/modlist.txt")) &&
+        currentProfileName.compare(profileIter.fileName(), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
     try {
       profileBox->addItem(profileIter.fileName());
     } catch (const std::runtime_error& error) {
