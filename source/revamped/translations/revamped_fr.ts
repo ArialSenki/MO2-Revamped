@@ -10058,6 +10058,10 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 (on %2)</source>
+      <translation>%1 (sur %2)</translation>
+    </message>
+    <message>
       <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
       <translation>%1, dans le dossier du jeu, est une copie que l'instance MO2 de %2 y a placée pour son propre lancement, donc %3 n'est pas démarré avec. Lancez cette instance une fois pour qu'elle restaure ses fichiers, ou supprimez le fichier.</translation>
     </message>

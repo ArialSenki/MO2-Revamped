@@ -3,6 +3,7 @@
 #include "fluenticons.h"
 #include "fluentmotion.h"
 #include "revampedtheme.h"
+#include "usertheme.h"
 
 #include <QAbstractButton>
 #include <QApplication>
@@ -30,7 +31,8 @@ const char* const StateObjectName = "fluentNavigationState";
 QColor accentColor()
 {
   using namespace MOBase;
-  return RevampedTheme::isDark() ? QColor("#4CC2FF") : QColor("#005FB8");
+  return UserTheme::recolor(RevampedTheme::isDark() ? QColor("#4CC2FF")
+                                                     : QColor("#005FB8"));
 }
 
 // kept on the tab widget so sync() finds the list and the glyphs again

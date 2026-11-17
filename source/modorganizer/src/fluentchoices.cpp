@@ -2,6 +2,7 @@
 #include "revampedtheme.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
+#include "usertheme.h"
 
 #include <QButtonGroup>
 #include <QEvent>
@@ -114,9 +115,9 @@ void FluentCardButton::paintCard(QPainter& p, bool selected) const
   } else {
     // on the Light window a fill of the text color reads darker than it; the
     // cards are the near-white of the theme's other cards
-    p.setBrush(!isEnabled() || isDown() ? QColor(0xF5F5F5)
-               : underMouse()           ? QColor(0xF2F2F2)
-                                        : QColor(0xFBFBFB));
+    p.setBrush(UserTheme::recolor(!isEnabled() || isDown() ? QColor(0xF5F5F5)
+                                  : underMouse()           ? QColor(0xF2F2F2)
+                                                           : QColor(0xFBFBFB)));
   }
   p.drawRoundedRect(card, Radius, Radius);
 

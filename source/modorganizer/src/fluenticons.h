@@ -31,6 +31,9 @@ enum class Tone
 // the color of a tone in the active theme
 QColor color(Tone tone);
 
+// the tone in Light or Dark, before a user theme's colors (see UserTheme)
+QColor builtInColor(Tone tone);
+
 // the Segoe Fluent Icons font, Segoe MDL2 Assets on Windows 10
 QFont font(int pixelSize);
 

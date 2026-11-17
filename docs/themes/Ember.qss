@@ -1,0 +1,26 @@
+/* mo2r-theme
+   name: Ember
+   base: dark
+   accent: #E0A84F
+   window: #1C1814
+   surface: #26211B
+   border: #4A3F30
+   text: #F1E6D2
+   muted: #B8A88C
+*/
+
+/* An example MO2 Revamped theme: copy it into MO2 Revamped's stylesheets folder
+   and pick "Ember (on Dark)" in Settings > Theme. The colors above recolor the
+   whole interface; the rules below change what colors alone can't. MO2 reloads
+   the theme when you save this file. See docs/THEMES.md. */
+
+/* a warmer selection in the mod and plugin lists */
+QTreeView::item:selected,
+QListView::item:selected {
+  background-color: rgba(224, 168, 79, 60);
+}
+
+/* a line under the main toolbar */
+QMainWindow#MainWindow QToolBar {
+  border-bottom: 1px solid #4A3F30;
+}

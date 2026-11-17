@@ -9788,6 +9788,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 (on %2)</source>
+      <translation>%1 (sobre %2)</translation>
+    </message>
+    <message>
       <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
       <translation>%1, na pasta do jogo, é uma cópia que a instância do MO2 em %2 colocou lá para a própria execução, então %3 não é iniciado com ela. Inicie essa instância uma vez para restaurar os arquivos dela, ou remova o arquivo.</translation>
     </message>

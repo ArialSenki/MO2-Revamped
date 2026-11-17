@@ -1,5 +1,6 @@
 #include "fluenticons.h"
 #include "revampedtheme.h"
+#include "usertheme.h"
 
 #include <QAbstractButton>
 #include <algorithm>
@@ -452,6 +453,13 @@ namespace FluentIcons
 {
 
 QColor color(Tone tone)
+{
+  // a user theme recolors the glyphs too (its greys and accent; the status tones
+  // keep their hue)
+  return UserTheme::recolor(builtInColor(tone));
+}
+
+QColor builtInColor(Tone tone)
 {
   const bool dark = RevampedTheme::isDark();
 

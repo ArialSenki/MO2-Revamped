@@ -53,6 +53,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "startupdiagnostics.h"
 #include "thread_utils.h"
 #include "tutorialmanager.h"
+#include "usertheme.h"
 #include <QThread>
 #include <QWindow>
 #include <QAbstractItemView>
@@ -386,7 +387,7 @@ private:
     // Update the view palette directly. Re-polishing a view when focus moves
     // can invalidate Qt's item-view internals while switching between lists.
     // The per-view palette keeps selection local and preserves each row brush.
-    const QColor highlight = active ? MOBase::RevampedTheme::accent(QColor(75, 146, 198, 82))
+    const QColor highlight = active ? UserTheme::recolor(QColor(75, 146, 198, 82))
                                     : QColor(0, 0, 0, 0);
     QPalette palette = view->palette();
     for (QPalette::ColorGroup group :
@@ -592,7 +593,19 @@ MOApplication::MOApplication(int& argc, char** argv) : QApplication(argc, argv)
 
   connect(&m_styleWatcher, &QFileSystemWatcher::fileChanged, [&](auto&& file) {
     log::debug("style file '{}' changed, reloading", file);
-    updateStyle(file);
+    // a user theme is two files (it and the built-in theme under it): either
+    // one reloads the whole theme. An editor that saves by replacing the file
+    // drops it from the watch, so it's watched again
+    if (QFile::exists(file) && !m_styleWatcher.files().contains(file)) {
+      m_styleWatcher.addPath(file);
+    }
+    const QString applied =
+        m_appliedStyleFile.isEmpty()
+            ? QString()
+            : applicationDirPath() + "/" +
+                  MOBase::ToQString(AppConfig::stylesheetsPath()) + "/" +
+                  m_appliedStyleFile;
+    updateStyle(!applied.isEmpty() && QFile::exists(applied) ? applied : file);
   });
 
   m_defaultStyle = "windowsvista";
@@ -716,6 +729,16 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   const QString stylesheetsPath =
       QDir(applicationDirPath())
           .filePath(ToQString(AppConfig::stylesheetsPath()));
+  // a theme of the user's own in the stylesheets folder, on top of Light or Dark
+  // (the retired classic themes still map to Light above)
+  if (const auto userTheme =
+          configuredStyle.startsWith("classic-refined", Qt::CaseInsensitive)
+              ? std::nullopt
+              : UserTheme::load(stylesheetsPath, configuredStyle);
+      userTheme && QFile::exists(QDir(stylesheetsPath).filePath(
+                       UserTheme::baseFileName(userTheme->dark)))) {
+    selectedStyle = configuredStyle;
+  }
   const auto stylePath = [&stylesheetsPath](const QString& fileName) {
     return QDir(stylesheetsPath).filePath(fileName);
   };
@@ -1151,8 +1174,19 @@ void MOApplication::resetForRestart()
 namespace
 {
 
+std::optional<UserTheme::Theme> userThemeNamed(const QString& styleName);
+
 QColor styleWindowBackgroundColor(const QString& styleName)
 {
+  // a user theme: the built-in theme's background in the theme's colors
+  if (const auto theme = userThemeNamed(styleName)) {
+    if (UserTheme::active()) {
+      return UserTheme::recolor(
+          styleWindowBackgroundColor(UserTheme::baseFileName(theme->dark)));
+    }
+    return {};
+  }
+
   QFile stylesheet(styleName);
   if (!stylesheet.exists()) {
     const QString styleFile = QFileInfo(styleName).fileName();
@@ -1190,8 +1224,20 @@ QColor styleWindowBackgroundColor(const QString& styleName)
   return {};
 }
 
+std::optional<UserTheme::Theme> userThemeNamed(const QString& styleName)
+{
+  const QString file = QFileInfo(styleName).fileName();
+  return UserTheme::load(QApplication::applicationDirPath() + "/" +
+                             MOBase::ToQString(AppConfig::stylesheetsPath()),
+                         file);
+}
+
 bool stylePrefersDarkTitleBar(const QString& styleName)
 {
+  if (const auto theme = userThemeNamed(styleName)) {
+    return theme->dark;
+  }
+
   const QString styleId = QFileInfo(styleName).completeBaseName().toCaseFolded();
   if (styleId.contains("dark") || styleId.contains("dracula") ||
       styleId.contains("night") || styleId.contains("midnight") ||
@@ -1399,6 +1445,15 @@ bool MOApplication::setStyleFile(const QString& styleName)
                              styleName;
     if (QFile::exists(styleSheetName)) {
       m_styleWatcher.addPath(styleSheetName);
+      // a user theme also reloads when the built-in theme under it changes
+      if (const auto theme = UserTheme::load(QFileInfo(styleSheetName).absolutePath(),
+                                             styleName)) {
+        const QString base = QFileInfo(styleSheetName).absoluteDir().filePath(
+            UserTheme::baseFileName(theme->dark));
+        if (QFile::exists(base)) {
+          m_styleWatcher.addPath(base);
+        }
+      }
       updateStyle(styleSheetName);
     } else {
       updateStyle(styleName);
@@ -1823,7 +1878,16 @@ QString extractBaseStyleFromStyleSheet(QFile& stylesheet, const QString& default
 
 void MOApplication::updateStyle(const QString& fileName)
 {
-  setProperty("revampedDark", stylePrefersDarkTitleBar(fileName));
+  // a user theme: its own file on top of Light or Dark, in its colors
+  std::optional<UserTheme::Theme> userTheme;
+  if (!QStyleFactory::keys().contains(fileName) && QFile::exists(fileName)) {
+    userTheme = UserTheme::load(QFileInfo(fileName).absolutePath(),
+                                QFileInfo(fileName).fileName());
+  }
+  UserTheme::publishColors(userTheme ? &*userTheme : nullptr);
+
+  setProperty("revampedDark",
+              userTheme ? userTheme->dark : stylePrefersDarkTitleBar(fileName));
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
   // MO2 Revamped: since Qt 6.8 Qt sets the windows' light or dark frame and
   // backdrop itself, from its color scheme, and sets it again whenever a window
@@ -1847,7 +1911,9 @@ void MOApplication::updateStyle(const QString& fileName)
     setStyleSheet("");
     applyBaseStyle(fileName);
   } else {
-    QFile stylesheet(fileName);
+    QFile stylesheet(userTheme ? QFileInfo(fileName).absoluteDir().filePath(
+                                     UserTheme::baseFileName(userTheme->dark))
+                               : fileName);
     if (stylesheet.exists()) {
       applyBaseStyle(
           extractBaseStyleFromStyleSheet(stylesheet, m_defaultStyle));
@@ -1893,8 +1959,34 @@ void MOApplication::updateStyle(const QString& fileName)
           themePalette.setColor(QPalette::Disabled, role, QColor("#8A8A8A"));
         }
       }
+      if (userTheme) {
+        // the palette in the theme's colors too: what reads it (the scroll bars,
+        // the navigation pane, text) follows the theme
+        for (const auto group :
+             {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+          for (int role = 0; role < QPalette::NColorRoles; ++role) {
+            const auto r = static_cast<QPalette::ColorRole>(role);
+            themePalette.setColor(group, r,
+                                  UserTheme::recolor(themePalette.color(group, r)));
+          }
+        }
+      }
       setPalette(themePalette);
-      setStyleSheet(QString("file:///%1").arg(fileName));
+      if (userTheme) {
+        QFile own(fileName);
+        if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text) &&
+            own.open(QIODevice::ReadOnly | QIODevice::Text)) {
+          setStyleSheet(UserTheme::composeStyleSheet(
+              *userTheme, QString::fromUtf8(stylesheet.readAll()),
+              QString::fromUtf8(own.readAll())));
+          log::info("theme '{}' on top of {}", userTheme->name,
+                    UserTheme::baseFileName(userTheme->dark));
+        } else {
+          log::warn("can't read the theme '{}'", fileName);
+        }
+      } else {
+        setStyleSheet(QString("file:///%1").arg(fileName));
+      }
     } else {
       log::warn("invalid stylesheet: {}", fileName);
     }

@@ -8,6 +8,7 @@
 #include "organizercore.h"
 #include "settings.h"
 #include "ui_modinfodialog.h"
+#include "usertheme.h"
 #include <log.h>
 #include <utility.h>
 #include <versioninfo.h>
@@ -349,14 +350,18 @@ bool NexusTab::tryRefreshData(int modID)
 static QString fluentDescriptionStyle(QString html)
 {
   const bool dark = MOBase::RevampedTheme::isDark();
-  const QString card    = dark ? "#2B2B2B" : "#FBFBFB";
-  const QString text    = dark ? "#FFFFFF" : "#1A1A1A";
-  const QString muted   = dark ? "#C5C5C5" : "#5D5D5D";
-  const QString link    = dark ? "#60CDFF" : "#005FB8";
-  const QString quote   = dark ? "#2F2F2F" : "#F3F3F3";
-  const QString inset   = dark ? "#262626" : "#F2F2F2";
-  const QString line    = dark ? "#3D3D3D" : "#E5E5E5";
-  const QString control = dark ? "#323232" : "#F6F6F6";
+  // in a user theme's colors too
+  const auto c = [](const char* color) {
+    return UserTheme::recolor(QColor(color)).name();
+  };
+  const QString card    = c(dark ? "#2B2B2B" : "#FBFBFB");
+  const QString text    = c(dark ? "#FFFFFF" : "#1A1A1A");
+  const QString muted   = c(dark ? "#C5C5C5" : "#5D5D5D");
+  const QString link    = c(dark ? "#60CDFF" : "#005FB8");
+  const QString quote   = c(dark ? "#2F2F2F" : "#F3F3F3");
+  const QString inset   = c(dark ? "#262626" : "#F2F2F2");
+  const QString line    = c(dark ? "#3D3D3D" : "#E5E5E5");
+  const QString control = c(dark ? "#323232" : "#F6F6F6");
 
   html.replace("font-family: sans-serif;",
                "font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;");
@@ -496,7 +501,7 @@ void NexusTab::loadDescription()
   descriptionAsHTML = fluentDescriptionStyle(descriptionAsHTML);
   // no white frame while the page loads
   m_browser->page()->setBackgroundColor(
-      QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB));
+      UserTheme::recolor(QColor(MOBase::RevampedTheme::isDark() ? 0x2B2B2B : 0xFBFBFB)));
 
   m_browser->page()->setHtml(descriptionAsHTML);
 

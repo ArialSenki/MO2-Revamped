@@ -5,6 +5,7 @@
 #include "modlistview.h"
 #include "nexusinterface.h"
 #include "revampedtheme.h"
+#include "usertheme.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -153,9 +154,12 @@ std::pair<QColor, QColor> colorsFor(Tone tone)
   const bool dark = RevampedTheme::isDark();
 
   switch (tone) {
-  case Tone::Accent:
-    return dark ? std::pair{QColor("#1F3443"), QColor("#60CDFF")}
-                : std::pair{QColor("#DCE8F5"), QColor("#005FB8")};
+  case Tone::Accent: {
+    // a user theme's accent too
+    const auto [fill, text] = dark ? std::pair{QColor("#1F3443"), QColor("#60CDFF")}
+                                   : std::pair{QColor("#DCE8F5"), QColor("#005FB8")};
+    return {UserTheme::recolor(fill), UserTheme::recolor(text)};
+  }
   case Tone::Success:
     return dark ? std::pair{QColor("#2A3B22"), QColor("#9FD89F")}
                 : std::pair{QColor("#DFF6DD"), QColor("#0E700E")};

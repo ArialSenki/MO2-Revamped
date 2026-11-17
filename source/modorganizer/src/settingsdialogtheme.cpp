@@ -11,6 +11,7 @@
 #include <gameplugins.h>
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
+#include "usertheme.h"
 #include <QBoxLayout>
 #include <QCoreApplication>
 #include <QDir>
@@ -135,6 +136,22 @@ void ThemeSettingsTab::addStyles()
                                     ? QObject::tr("Light")
                                     : QObject::tr("Dark");
     ui->styleBox->addItem(displayName, fileName);
+  }
+
+  // themes of the user's own: any other .qss in the folder, on top of Light or
+  // Dark (see docs/THEMES.md)
+  const auto userThemes = UserTheme::list(styleDirectory.absolutePath());
+  if (!userThemes.isEmpty()) {
+    ui->styleBox->insertSeparator(ui->styleBox->count());
+  }
+  for (const auto& theme : userThemes) {
+    if (!styleDirectory.exists(UserTheme::baseFileName(theme.dark))) {
+      continue;
+    }
+    ui->styleBox->addItem(
+        QObject::tr("%1 (on %2)")
+            .arg(theme.name, theme.dark ? QObject::tr("Dark") : QObject::tr("Light")),
+        theme.fileName);
   }
 }
 

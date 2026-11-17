@@ -9800,6 +9800,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   <context>
     <name>QObject</name>
     <message>
+      <source>%1 (on %2)</source>
+      <translation>%1 (auf %2)</translation>
+    </message>
+    <message>
       <source>%1 in the game folder is a copy that the MO2 instance in %2 put there for its own run, so %3 isn't started with it. Start that instance once to restore its files, or remove the file.</source>
       <translation>%1 im Spielordner ist eine Kopie, die die MO2-Instanz in %2 für ihren eigenen Start dort abgelegt hat, daher wird %3 nicht damit gestartet. Starte diese Instanz einmal, damit sie ihre Dateien wiederherstellt, oder entferne die Datei.</translation>
     </message>
