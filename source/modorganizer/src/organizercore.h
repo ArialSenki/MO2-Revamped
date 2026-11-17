@@ -546,6 +546,11 @@ private:
   void updateModActiveState(int index, bool active);
   void updateModsActiveState(const QList<unsigned int>& modIndices, bool active);
 
+  // gives the origins the profile's priorities and sorts the files' origins:
+  // all of them if a priority moved (returns true), else only the files of
+  // changedMods
+  bool syncOriginPriorities(const std::vector<unsigned int>& changedMods);
+
   // clear the conflict caches of all the given mods, and the mods in conflict
   // with the given mods
   //

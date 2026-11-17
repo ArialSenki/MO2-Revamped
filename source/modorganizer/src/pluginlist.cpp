@@ -55,6 +55,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <ctime>
+#include <execution>
 #include <optional>
 #include <stdexcept>
 
@@ -289,9 +290,55 @@ void PluginList::refresh(const QString& profileName,
   }
   std::sort(archivesByName.begin(), archivesByName.end());
 
+  // MO2 Revamped: the plugins to add, in the order they were always added
+  struct NewPlugin
+  {
+    const QString* filename;
+    const FileEntryPtr* entry;
+    QString fullPath;
+    std::shared_ptr<const PluginHeader> header;
+  };
+  std::vector<NewPlugin> newPlugins;
   for (const auto& [filename, current] : availablePlugins) {
-    if (m_ESPsByName.contains(filename)) {
-      continue;
+    if (!m_ESPsByName.contains(filename)) {
+      newPlugins.push_back({&filename, &current, ToQString(current->getFullPath()), {}});
+    }
+  }
+
+  // headers already read for this version of the file come from the cache; the
+  // others are read in parallel. Reading them one by one on this thread froze
+  // the window for 21 s on a cold disk with ~3850 plugins, and a forced
+  // rebuild (every mod toggle) read them all again
+  std::vector<size_t> unread;
+  for (size_t i = 0; i < newPlugins.size(); ++i) {
+    const FILETIME time = (*newPlugins[i].entry)->getFileTime();
+    auto cached         = m_HeaderCache.find(newPlugins[i].fullPath);
+    if (cached != m_HeaderCache.end() &&
+        CompareFileTime(&cached->second.time, &time) == 0 &&
+        cached->second.mediumSupported == mediumPluginsAreSupported) {
+      newPlugins[i].header = cached->second.header;
+    } else {
+      unread.push_back(i);
+    }
+  }
+  if (!unread.empty()) {
+    std::for_each(std::execution::par, unread.begin(), unread.end(), [&](size_t i) {
+      newPlugins[i].header = std::make_shared<const PluginHeader>(
+          readPluginHeader(newPlugins[i].fullPath, mediumPluginsAreSupported));
+    });
+    for (size_t i : unread) {
+      m_HeaderCache[newPlugins[i].fullPath] = {(*newPlugins[i].entry)->getFileTime(),
+                                               mediumPluginsAreSupported,
+                                               newPlugins[i].header};
+    }
+  }
+
+  for (const NewPlugin& plugin : newPlugins) {
+    const QString& filename     = *plugin.filename;
+    const FileEntryPtr& current = *plugin.entry;
+    if (!plugin.header->parsed) {
+      log::error("failed to parse plugin file {}: {}", plugin.fullPath,
+                 plugin.header->error);
     }
 
     bool forceLoaded = Settings::instance().game().forceEnableCoreFiles() &&
@@ -327,9 +374,9 @@ void PluginList::refresh(const QString& profileName,
       }
 
       m_ESPs.emplace_back(filename, forceLoaded, forceEnabled, forceDisabled,
-                          originName, ToQString(current->getFullPath()), hasIni,
-                          loadedArchives, lightPluginsAreSupported,
-                          mediumPluginsAreSupported);
+                          originName, plugin.fullPath, hasIni, loadedArchives,
+                          lightPluginsAreSupported, mediumPluginsAreSupported,
+                          *plugin.header);
       m_ESPs.rbegin()->priority = -1;
     } catch (const std::exception& e) {
       errors.append(tr("failed to update esp info for file %1 (source id: %2), error: %3")
@@ -2047,30 +2094,25 @@ PluginList::ESPInfo::ESPInfo(const QString& name, bool forceLoaded, bool forceEn
                              bool forceDisabled, const QString& originName,
                              const QString& fullPath, bool hasIni,
                              std::set<QString> archives, bool lightSupported,
-                             bool mediumSupported)
+                             bool mediumSupported, const PluginHeader& header)
     : name(name), fullPath(fullPath), enabled(forceLoaded), forceLoaded(forceLoaded),
       forceEnabled(forceEnabled), forceDisabled(forceDisabled), priority(0),
       loadOrder(-1), originName(originName), hasIni(hasIni),
       archives(archives.begin(), archives.end()), modSelected(false)
 {
-  try {
-    ESP::File file(ToWString(fullPath));
+  if (header.parsed) {
     auto extension     = name.right(3).toLower();
     hasMasterExtension = (extension == "esm");
     hasLightExtension  = (extension == "esl");
-    isMasterFlagged    = file.isMaster();
-    isLightFlagged     = lightSupported && file.isLight(mediumSupported);
-    isMediumFlagged    = mediumSupported && file.isMedium();
-    hasNoRecords       = file.isDummy();
-
-    author      = QString::fromLatin1(file.author().c_str());
-    description = QString::fromLatin1(file.description().c_str());
-
-    for (auto&& m : file.masters()) {
-      masters.insert(QString::fromStdString(m));
-    }
-  } catch (const std::exception& e) {
-    log::error("failed to parse plugin file {}: {}", fullPath, e.what());
+    isMasterFlagged    = header.isMaster;
+    isLightFlagged     = lightSupported && header.isLight;
+    isMediumFlagged    = mediumSupported && header.isMedium;
+    hasNoRecords       = header.isDummy;
+    author             = header.author;
+    description        = header.description;
+    masters            = header.masters;
+  } else {
+    // the parse error is logged by the caller
     hasMasterExtension = false;
     hasLightExtension  = false;
     isMasterFlagged    = false;
@@ -2078,5 +2120,28 @@ PluginList::ESPInfo::ESPInfo(const QString& name, bool forceLoaded, bool forceEn
     isLightFlagged     = false;
     hasNoRecords       = false;
   }
+}
+
+// MO2 Revamped: runs on worker threads; touches nothing but the file
+PluginList::PluginHeader PluginList::readPluginHeader(const QString& fullPath,
+                                                      bool mediumSupported)
+{
+  PluginHeader header;
+  try {
+    ESP::File file(ToWString(fullPath));
+    header.isMaster    = file.isMaster();
+    header.isLight     = file.isLight(mediumSupported);
+    header.isMedium    = file.isMedium();
+    header.isDummy     = file.isDummy();
+    header.author      = QString::fromLatin1(file.author().c_str());
+    header.description = QString::fromLatin1(file.description().c_str());
+    for (auto&& m : file.masters()) {
+      header.masters.insert(QString::fromStdString(m));
+    }
+    header.parsed = true;
+  } catch (const std::exception& e) {
+    header.error = e.what();
+  }
+  return header;
 }
 

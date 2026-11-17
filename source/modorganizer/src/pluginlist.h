@@ -45,6 +45,8 @@ class IPluginGame;
 #endif
 
 #include <map>
+#include <memory>
+#include <unordered_map>
 #include <vector>
 
 class OrganizerCore;
@@ -297,12 +299,36 @@ signals:
   void writePluginsList();
 
 private:
+  // MO2 Revamped: what a plugin file's header says, read once per version of
+  // the file (its path and last write time) instead of at every rebuild
+  struct PluginHeader
+  {
+    bool parsed = false;  // false: the file could not be read, see error
+    std::string error;
+    bool isMaster = false;
+    bool isLight  = false;
+    bool isMedium = false;
+    bool isDummy  = false;
+    QString author;
+    QString description;
+    std::set<QString, MOBase::FileNameComparator> masters;
+  };
+
+  struct CachedHeader
+  {
+    FILETIME time;
+    bool mediumSupported;
+    std::shared_ptr<const PluginHeader> header;
+  };
+
+  static PluginHeader readPluginHeader(const QString& fullPath, bool mediumSupported);
+
   struct ESPInfo
   {
     ESPInfo(const QString& name, bool forceLoaded, bool forceEnabled,
             bool forceDisabled, const QString& originName, const QString& fullPath,
             bool hasIni, std::set<QString> archives, bool lightSupported,
-            bool mediumSupported);
+            bool mediumSupported, const PluginHeader& header);
 
     QString name;
     QString fullPath;
@@ -383,6 +409,8 @@ private:
   std::vector<ESPInfo> m_ESPs;
   // Reuse per-mod plugin file scans between selection changes.
   std::map<unsigned int, QStringList> m_ModPluginNameCache;
+  // headers by full path; an entry is used only while the file time matches
+  std::unordered_map<QString, CachedHeader> m_HeaderCache;
 
   std::map<QString, int, MOBase::FileNameComparator> m_ESPsByName;
   std::vector<int> m_ESPsByPriority;
