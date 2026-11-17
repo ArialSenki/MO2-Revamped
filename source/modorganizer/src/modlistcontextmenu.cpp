@@ -933,10 +933,18 @@ void ModListContextMenu::addBackupActions(ModInfo::Ptr mod)
   addSeparator();
   addFolderActions(mod);
 
+  // only the backups of a mixed selection: the label names backups
+  QModelIndexList backups;
+  for (const auto& index : m_selected) {
+    const auto selected = ModInfo::getByIndex(index.data(ModList::IndexRole).toInt());
+    if (selected && selected->isBackup()) {
+      backups.append(index);
+    }
+  }
   m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                          tr("Remove backup..."), this);
   connect(m_remove, &QAction::triggered, this, [=]() {
-    m_actions.removeMods(m_selected);
+    m_actions.removeMods(backups);
   });
 }
 

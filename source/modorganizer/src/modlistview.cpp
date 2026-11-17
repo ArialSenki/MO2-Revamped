@@ -2203,8 +2203,11 @@ bool ModListView::event(QEvent* event)
     QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
     auto index = selectionModel()->currentIndex();
+    // MO2 Revamped: the numpad's Enter carries the keypad flag, and Delete and
+    // Space only act alone (Alt+Space is the window menu)
+    const auto modifiers = keyEvent->modifiers() & ~Qt::KeypadModifier;
 
-    if (keyEvent->modifiers() == Qt::ControlModifier) {
+    if (modifiers == Qt::ControlModifier) {
       // ctrl+enter open explorer
       if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
         // a group heading has no folder
@@ -2219,7 +2222,7 @@ bool ModListView::event(QEvent* event)
                (keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down)) {
         return moveSelection(keyEvent->key());
       }
-    } else if (keyEvent->modifiers() == Qt::ShiftModifier) {
+    } else if (modifiers == Qt::ShiftModifier) {
       // shift+enter expand
       if ((keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) &&
           selectionModel()->selectedRows().count() == 1) {
@@ -2233,7 +2236,7 @@ bool ModListView::event(QEvent* event)
           setCurrentIndex(index.parent());
         }
       }
-    } else {
+    } else if (modifiers == Qt::NoModifier) {
       if (keyEvent->key() == Qt::Key_Delete) {
         return removeSelection();
       } else if (keyEvent->key() == Qt::Key_Space) {
