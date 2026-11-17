@@ -9800,6 +9800,14 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   <context>
     <name>QObject</name>
     <message>
+      <source>Notices: sound only, without the card</source>
+      <translation>Hinweise: nur Ton, ohne Karte</translation>
+    </message>
+    <message>
+      <source>Plays Windows&apos; notification sound instead of showing the small notices at the bottom of the window (&quot;Installation successful&quot; and so on). They&apos;re still in MO2&apos;s log. Questions and errors still show.</source>
+      <translation>Spielt den Windows-Benachrichtigungston ab, statt die kleinen Hinweise unten im Fenster zu zeigen (&quot;Installation erfolgreich&quot; usw.). Sie stehen weiter im MO2-Protokoll. Fragen und Fehler werden weiterhin angezeigt.</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Neues Design...</translation>
     </message>

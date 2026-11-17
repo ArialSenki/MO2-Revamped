@@ -62,10 +62,12 @@ public:
    * @param reference the reference widget on top of which the message should be
    *displayed; the main window when nullptr, the screen when there is none
    * @param true if the message should bring MO to front to ensure this message is
-   *visible
+   *visible. MO2 Revamped: off by default; on, the notice is one the user must see,
+   *shown even while a collection installs or notices are set to sound only
+   *(Settings' "applies when it starts again")
    **/
   static void showMessage(const QString& text, QWidget* reference,
-                          bool bringToFront = true);
+                          bool bringToFront = false);
 
   // shows the notices that waited for a dialog to close, once none is open
   static void showWaitingNotices();

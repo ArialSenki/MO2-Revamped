@@ -10058,6 +10058,14 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   <context>
     <name>QObject</name>
     <message>
+      <source>Notices: sound only, without the card</source>
+      <translation>Notifications : son uniquement, sans la carte</translation>
+    </message>
+    <message>
+      <source>Plays Windows&apos; notification sound instead of showing the small notices at the bottom of the window (&quot;Installation successful&quot; and so on). They&apos;re still in MO2&apos;s log. Questions and errors still show.</source>
+      <translation>Joue le son de notification de Windows au lieu d&apos;afficher les petites notifications en bas de la fenêtre (&quot;Installation réussie&quot;, etc.). Elles restent dans le journal de MO2. Les questions et les erreurs s&apos;affichent toujours.</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Nouveau thème...</translation>
     </message>

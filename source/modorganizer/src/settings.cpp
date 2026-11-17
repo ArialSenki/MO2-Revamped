@@ -2575,6 +2575,16 @@ void GlobalSettings::setGreyscaleText(bool on)
   setValue(QStringLiteral("greyscale_text"), on);
 }
 
+bool GlobalSettings::noticeSoundOnly()
+{
+  return value(QStringLiteral("notice_sound_only"), false).toBool();
+}
+
+void GlobalSettings::setNoticeSoundOnly(bool on)
+{
+  setValue(QStringLiteral("notice_sound_only"), on);
+}
+
 bool GlobalSettings::developerMode()
 {
   return value(QStringLiteral("developer_mode"), false).toBool();

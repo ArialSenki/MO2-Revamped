@@ -18,12 +18,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "messagedialog.h"
+#include "settings.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
 
 #include <QAccessible>
 #include <QApplication>
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QEnterEvent>
 #include <QGuiApplication>
 #include <QMainWindow>
@@ -35,6 +37,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTextLayout>
 #include <QTimer>
 #include <QtMath>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 #include <log.h>
 
@@ -390,6 +395,23 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
     log::info("notice not shown while a collection installs: {}", text);
     qApp->setProperty("mo2r.collectionQuietHidden",
                       qApp->property("mo2r.collectionQuietHidden").toInt() + 1);
+    return;
+  }
+
+  // MO2 Revamped: the notices as a sound only, if the user prefers it (one
+  // sound for a burst of them); the dialog in front's own, such as Settings'
+  // "applies when it starts again", still show
+  if (GlobalSettings::noticeSoundOnly() && !fromFrontDialog && !bringToFront) {
+    log::info("notice (sound only): {}", text);
+    static QElapsedTimer lastSound;
+    if (!lastSound.isValid() || lastSound.elapsed() > 1500) {
+      lastSound.start();
+#ifdef Q_OS_WIN
+      ::MessageBeep(MB_ICONASTERISK);
+#else
+      QApplication::beep();
+#endif
+    }
     return;
   }
 

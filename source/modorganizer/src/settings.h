@@ -989,6 +989,10 @@ public:
   static bool greyscaleText();
   static void setGreyscaleText(bool on);
 
+  // notices as the system's notification sound only, without their card
+  static bool noticeSoundOnly();
+  static void setNoticeSoundOnly(bool on);
+
   static bool hideCategoryReminder();
   static void setHideCategoryReminder(bool b);
 

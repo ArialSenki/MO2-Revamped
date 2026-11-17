@@ -132,6 +132,17 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
         "Draws text without Windows' coloured edges, which show as a coloured halo on "
         "OLED screens. It applies when Mod Organizer starts again."));
     grid->addWidget(m_greyText, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
+
+    // the small notices at the bottom of the window, or only their sound
+    m_soundOnly = new QCheckBox(QObject::tr("Notices: sound only, without the card"),
+                                ui->groupBox_61);
+    m_soundOnly->setObjectName(QStringLiteral("noticeSoundOnlyBox"));
+    m_soundOnly->setChecked(GlobalSettings::noticeSoundOnly());
+    m_soundOnly->setToolTip(QObject::tr(
+        "Plays Windows' notification sound instead of showing the small notices at "
+        "the bottom of the window (\"Installation successful\" and so on). They're "
+        "still in MO2's log. Questions and errors still show."));
+    grid->addWidget(m_soundOnly, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
   }
 
   // download list
@@ -281,6 +292,9 @@ void GeneralSettingsTab::update()
       GlobalSettings::setInterfaceScale(scale);
       restartNeeded = true;
     }
+  }
+  if (m_soundOnly != nullptr) {
+    GlobalSettings::setNoticeSoundOnly(m_soundOnly->isChecked());
   }
   if (m_greyText != nullptr && m_greyText->isChecked() != GlobalSettings::greyscaleText()) {
     GlobalSettings::setGreyscaleText(m_greyText->isChecked());
