@@ -3404,6 +3404,12 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
 
   while (profileIter.hasNext()) {
     profileIter.next();
+    // MO2 Revamped: only folders that are profiles (plugins keep their own
+    // folders here); the one in use stays even with its list missing
+    if (!QFileInfo::exists(profileIter.filePath() + QStringLiteral("/modlist.txt")) &&
+        currentProfileName.compare(profileIter.fileName(), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
     try {
       profileBox->addItem(profileIter.fileName());
     } catch (const std::runtime_error& error) {
@@ -4420,8 +4426,10 @@ void MainWindow::importCategories(bool)
 {
   NexusInterface& nexus = NexusInterface::instance();
   nexus.setPluginContainer(&m_OrganizerCore.pluginContainer());
-  nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(), this,
-                        QVariant(), QString());
+  // MO2 Revamped: the id, so a later request (the categories dialog's) doesn't
+  // replace the categories again
+  m_categoryImportRequest = nexus.requestGameInfo(
+      Settings::instance().game().plugin()->gameShortName(), this, QVariant(), QString());
 }
 
 void MainWindow::showMessage(const QString& message)
@@ -4894,7 +4902,7 @@ void MainWindow::on_actionSettings_triggered()
     settings.paths().setDownloads(oldDownloadsSetting);
     MessageDialog::showMessage(tr("Can't change download directory while "
                                   "downloads are in progress!"),
-                               this);
+                               this, true);
   }
 
   InstallationManager* instManager = m_OrganizerCore.installationManager();
@@ -4985,12 +4993,13 @@ void MainWindow::refreshNexusCategories(CategoriesDialog* dialog)
   NexusInterface& nexus = NexusInterface::instance();
   nexus.setPluginContainer(&m_PluginContainer);
   if (!Settings::instance().game().plugin()->primarySources().isEmpty()) {
-    nexus.requestGameInfo(
+    dialog->setNexusRequest(nexus.requestGameInfo(
         Settings::instance().game().plugin()->primarySources().first(), dialog,
-        QVariant(), QString());
+        QVariant(), QString()));
   } else {
-    nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(), dialog,
-                          QVariant(), QString());
+    dialog->setNexusRequest(
+        nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(),
+                              dialog, QVariant(), QString()));
   }
 }
 
@@ -6020,8 +6029,15 @@ void MainWindow::nxmDownloadURLs(QString, int, int, QVariant, QVariant resultDat
 }
 
 void MainWindow::nxmGameInfoAvailable(QString gameName, QVariant, QVariant resultData,
-                                      int)
+                                      int requestID)
 {
+  // MO2 Revamped: only the import's own reply; the connection also brings the
+  // categories dialog's "Load from Nexus", which must not reset the categories
+  // behind the dialog's Cancel
+  if (requestID != m_categoryImportRequest || m_categoryImportRequest < 0) {
+    return;
+  }
+  m_categoryImportRequest = -1;
   QVariantMap result          = resultData.toMap();
   QVariantList categories     = result["categories"].toList();
   CategoryFactory& catFactory = CategoryFactory::instance();
@@ -6071,7 +6087,7 @@ void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, in
   } else {
     MessageDialog::showMessage(
         tr("Error %1: Request to Nexus failed: %2").arg(errorCode).arg(errorString),
-        this);
+        this, true);
   }
 }
 

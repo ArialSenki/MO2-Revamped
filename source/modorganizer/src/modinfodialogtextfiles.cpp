@@ -1,4 +1,7 @@
 #include "modinfodialogtextfiles.h"
+#include <QPersistentModelIndex>
+#include <QSignalBlocker>
+#include <QTimer>
 #include "modinfodialog.h"
 #include "settings.h"
 #include "ui_modinfodialog.h"
@@ -210,7 +213,18 @@ void GenericFilesTab::onSelection(const QModelIndex& current,
                                   const QModelIndex& previous)
 {
   if (!canClose()) {
-    m_list->selectionModel()->select(previous, QItemSelectionModel::Current);
+    // MO2 Revamped: Cancel on "save changes?" left the new file highlighted
+    // while the editor still showed the old one (and a click on it did nothing);
+    // the old one becomes current again once this change is over
+    const QPersistentModelIndex back(previous);
+    QTimer::singleShot(0, m_list, [this, back] {
+      if (back.isValid()) {
+        QSignalBlocker blocker(m_list->selectionModel());
+        m_list->selectionModel()->setCurrentIndex(
+            back, QItemSelectionModel::ClearAndSelect);
+        m_list->viewport()->update();
+      }
+    });
     return;
   }
 

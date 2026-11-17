@@ -748,9 +748,25 @@ void CategoriesDialog::nexusImport_clicked()
   }
 }
 
-void CategoriesDialog::nxmGameInfoAvailable(QString gameName, QVariant,
-                                            QVariant resultData, int)
+void CategoriesDialog::setNexusRequest(int requestID)
 {
+  m_nexusRequest = requestID;
+  if (requestID < 0) {
+    // not sent (the rate limit or no game plugin): the status says so
+    // instead of loading forever
+    ui->nexusStatus->setText(
+        tr("Could not refresh the Nexus list. Check your connection and Nexus access."));
+  }
+}
+
+void CategoriesDialog::nxmGameInfoAvailable(QString gameName, QVariant,
+                                            QVariant resultData, int requestID)
+{
+  // MO2 Revamped: the connection carries every later game info request
+  if (requestID != m_nexusRequest || m_nexusRequest < 0) {
+    return;
+  }
+  m_nexusRequest = -1;
   QVariantMap result          = resultData.toMap();
   QVariantList categories     = result["categories"].toList();
   QListWidget* list           = ui->nexusCategoryList;
@@ -1005,9 +1021,15 @@ void CategoriesDialog::nxmGameInfoAvailable(QString gameName, QVariant,
                QString::number(exactNameMappings)));
 }
 
-void CategoriesDialog::nxmRequestFailed(QString, int, int, QVariant, int, int errorCode,
-                                        const QString& errorMessage)
+void CategoriesDialog::nxmRequestFailed(QString, int, int, QVariant, int requestID,
+                                        int errorCode, const QString& errorMessage)
 {
+  // MO2 Revamped: every failed Nexus request arrives here once connected; only
+  // the dialog's own is its error
+  if (requestID != m_nexusRequest || m_nexusRequest < 0) {
+    return;
+  }
+  m_nexusRequest = -1;
   ui->nexusStatus->setText(
       tr("Could not refresh the Nexus list. Check your connection and Nexus access."));
   MessageDialog::showMessage(

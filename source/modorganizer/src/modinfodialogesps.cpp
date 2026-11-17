@@ -351,7 +351,12 @@ void ESPsTab::onActivate()
       return;
     }
 
-    if (newName.isEmpty()) {
+    // MO2 Revamped: a name, not a path: "..\x.esp" moved the plugin out of
+    // the mod, "sub/x.esp" into a folder that isn't there
+    newName = newName.trimmed();
+    if (newName.isEmpty() || newName.contains(QLatin1Char('/')) ||
+        newName.contains(QLatin1Char('\\')) || newName == QStringLiteral(".") ||
+        newName == QStringLiteral("..")) {
       newName = file.fileName();
     }
   }
@@ -362,6 +367,9 @@ void ESPsTab::onActivate()
     m_inactiveModel->removeRow(index.row());
     m_activeModel->addOne(std::move(copy));
     selectRow(ui->inactiveESPList, index.row());
+    // MO2 Revamped: the plugin list and the conflicts follow; a mod reached
+    // with Next or "Go to" stayed stale until a manual refresh
+    emitOriginModified();
   } else {
     reportError(QObject::tr("Failed to move file"));
   }
@@ -410,6 +418,7 @@ void ESPsTab::onDeactivate()
     m_activeModel->removeRow(index.row());
     m_inactiveModel->addOne(std::move(copy));
     selectRow(ui->activeESPList, index.row());
+    emitOriginModified();
   } else {
     reportError(QObject::tr("Failed to move file"));
   }

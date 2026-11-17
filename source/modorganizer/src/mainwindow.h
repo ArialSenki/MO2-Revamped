@@ -363,6 +363,8 @@ private:
   std::unique_ptr<SavesTab> m_SavesTab;
 
   int m_OldProfileIndex;
+  // the Nexus game info request of importCategories(), -1 when none waits
+  int m_categoryImportRequest = -1;
 
   QStringList m_DefaultArchives;
 

@@ -12301,6 +12301,34 @@ Iniciar mesmo assim?</translation>
   <context>
     <name>FileTreeTab</name>
     <message>
+      <source>The name can't be empty.</source>
+      <translation>O nome não pode ficar vazio.</translation>
+    </message>
+    <message>
+      <source>A name can't contain any of these characters: \ / : * ? &quot; &lt; &gt; |</source>
+      <translation>Um nome não pode conter nenhum destes caracteres: \ / : * ? &quot; &lt; &gt; |</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow a name ending in a dot or a space.</source>
+      <translation>O Windows não aceita um nome que termine em ponto ou espaço.</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow &quot;%1&quot; as a name.</source>
+      <translation>O Windows não aceita &quot;%1&quot; como nome.</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; already exists in this folder.</source>
+      <translation>&quot;%1&quot; já existe nesta pasta.</translation>
+    </message>
+    <message>
+      <source>Close programs using it and try again.</source>
+      <translation>Feche os programas que o estão usando e tente novamente.</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; couldn't be renamed to &quot;%2&quot;. %3</source>
+      <translation>Não foi possível renomear &quot;%1&quot; para &quot;%2&quot;. %3</translation>
+    </message>
+    <message>
       <source>Failed to delete the selected files: %1</source>
       <translation>Não foi possível excluir os arquivos selecionados: %1</translation>
     </message>

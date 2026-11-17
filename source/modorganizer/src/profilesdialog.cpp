@@ -210,6 +210,13 @@ ProfilesDialog::ProfilesDialog(const QString& profileName, OrganizerCore& organi
   QListWidgetItem* active = nullptr;
   while (profileIter.hasNext()) {
     profileIter.next();
+    // MO2 Revamped: only folders that are profiles, as the instance manager
+    // counts them; plugins keep their own folders here, which showed as
+    // empty profiles (the one in use is kept even with its list missing)
+    if (!QFileInfo::exists(profileIter.filePath() + QStringLiteral("/modlist.txt")) &&
+        profileName.compare(profileIter.fileName(), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
     QListWidgetItem* item = addItem(profileIter.filePath());
     // Windows folder names ignore case, as the other checks here do
     if (profileName.compare(profileIter.fileName(), Qt::CaseInsensitive) == 0) {
@@ -868,8 +875,9 @@ void ProfilesDialog::removeProfile()
   Profile::Ptr profileToDelete = selectedItem->data(Qt::UserRole).value<Profile::Ptr>();
   const QString profileName =
       profileToDelete ? profileToDelete->name() : selectedItem->text();
-  if (profileToDelete &&
-      profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
+  // MO2 Revamped: also when the profile in use couldn't be read (its row has
+  // no Profile), which skipped this and deleted the folder in use
+  if (profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
     showProfileNotice(this, tr("Delete profile"), QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before removing it."));

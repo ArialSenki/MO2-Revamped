@@ -47,6 +47,81 @@ class FileTreeModel : public QFileSystemModel
 public:
   using QFileSystemModel::QFileSystemModel;
 
+  // MO2 Revamped: the mod's own meta.ini keeps its name (it holds the Nexus ID,
+  // version and notes); Delete and Hide already kept it, F2 renamed it
+  bool isMetaFile(const QModelIndex& index) const
+  {
+    return index.isValid() && !rootPath().isEmpty() &&
+           filePath(index).compare(rootPath() + QStringLiteral("/meta.ini"),
+                                   Qt::CaseInsensitive) == 0;
+  }
+
+  Qt::ItemFlags flags(const QModelIndex& index) const override
+  {
+    Qt::ItemFlags f = QFileSystemModel::flags(index);
+    if (isMetaFile(index)) {
+      f &= ~Qt::ItemIsEditable;
+    }
+    return f;
+  }
+
+  // MO2 Revamped: Qt 6 refuses a bad name in silence and the old one comes
+  // back; this says why
+  bool setData(const QModelIndex& index, const QVariant& value,
+               int role = Qt::EditRole) override
+  {
+    if (role != Qt::EditRole || index.column() != 0 || isReadOnly()) {
+      return QFileSystemModel::setData(index, value, role);
+    }
+
+    const QString oldName = index.data(Qt::DisplayRole).toString();
+    const QString name    = value.toString();
+    if (name == oldName) {
+      return true;
+    }
+
+    static const QString invalidChars = QStringLiteral("\\/:*?\"<>|");
+    const auto hasInvalidChar = std::any_of(name.begin(), name.end(), [](QChar c) {
+      return c.unicode() < 32 || invalidChars.contains(c);
+    });
+
+    QString reason;
+    if (name.trimmed().isEmpty() || name == QStringLiteral(".") ||
+        name == QStringLiteral("..")) {
+      reason = QCoreApplication::translate("FileTreeTab", "The name can't be empty.");
+    } else if (hasInvalidChar) {
+      reason = QCoreApplication::translate(
+          "FileTreeTab", "A name can't contain any of these characters: \\ / : * ? \" < > |");
+    } else if (name.endsWith(QLatin1Char('.')) || name.endsWith(QLatin1Char(' '))) {
+      reason = QCoreApplication::translate("FileTreeTab",
+                                           "Windows doesn't allow a name ending in a dot "
+                                           "or a space.");
+    } else if (ModInfo::isReservedDeviceName(name)) {
+      reason = QCoreApplication::translate(
+                   "FileTreeTab", "Windows doesn't allow \"%1\" as a name.")
+                   .arg(name);
+    } else if (name.compare(oldName, Qt::CaseInsensitive) != 0 &&
+               QFileInfo::exists(fileInfo(index).absolutePath() + QLatin1Char('/') +
+                                 name)) {
+      reason = QCoreApplication::translate(
+                   "FileTreeTab", "\"%1\" already exists in this folder.")
+                   .arg(name);
+    }
+
+    if (reason.isEmpty() && QFileSystemModel::setData(index, value, role)) {
+      return true;
+    }
+
+    if (reason.isEmpty()) {
+      reason = QCoreApplication::translate(
+          "FileTreeTab", "Close programs using it and try again.");
+    }
+    reportError(QCoreApplication::translate("FileTreeTab",
+                                            "\"%1\" couldn't be renamed to \"%2\". %3")
+                    .arg(oldName, name, reason));
+    return false;
+  }
+
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role = Qt::DisplayRole) const override
   {
@@ -524,7 +599,7 @@ void FileTreeTab::onContextMenu(const QPoint& pos)
   } else if (selection.size() == 1) {
     // single selection
     enableNewFolder = true;
-    enableRename    = true;
+    enableRename    = !isModMetaFile(selection[0]);
     enableDelete    = !isModMetaFile(selection[0]);
 
     // only enable open action if a file is selected

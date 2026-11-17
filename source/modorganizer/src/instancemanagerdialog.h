@@ -155,6 +155,12 @@ private:
 
   // set to stop the folder size scan of the previous selection
   std::shared_ptr<std::atomic_bool> m_sizeScan;
+  // set by the scan when it has let go of the folders
+  std::shared_ptr<std::atomic_bool> m_sizeScanDone;
+
+  // stops the size scan and waits a moment for it to close its folder handles:
+  // an open one inside the instance made renaming or deleting it fail
+  void stopSizeScan();
   QPushButton* m_switch;
 
   // builds the window: the list card, the details card and the buttons

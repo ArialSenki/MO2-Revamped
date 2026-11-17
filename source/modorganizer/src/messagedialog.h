@@ -64,7 +64,7 @@ public:
    * @param true if the message should bring MO to front to ensure this message is
    *visible. MO2 Revamped: off by default; on, the notice is one the user must see,
    *shown even while a collection installs or notices are set to sound only
-   *(Settings' "applies when it starts again")
+   *(Settings' "applies when it starts again", errors and warnings)
    **/
   static void showMessage(const QString& text, QWidget* reference,
                           bool bringToFront = false);

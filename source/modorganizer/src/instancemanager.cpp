@@ -301,50 +301,26 @@ void Instance::setGame(const QString& name, const QString& dir,
     if (s.iniStatus() == QSettings::NoError) {
       auto executables = s.executables();
       bool changed = false;
-      QList<MOBase::ExecutableInfo> pluginExecutables;
+      // MO2 Revamped: the programs follow the game by their path inside its
+      // folder only. Asking the game plugin for its own (game->executables())
+      // here, before the game is active, crashed MO2: Skyrim SE's reads its
+      // script extender feature, not registered yet, so every instance whose
+      // game had moved closed on "Finish" in the "Where is ... now?" page
       if (game) {
         game->setGamePath(dir);
-        pluginExecutables = game->executables();
       }
 
       for (auto& executable : executables) {
-        auto title = executable.find(QStringLiteral("title"));
-        const QString savedTitle = title == executable.end()
-                                       ? QString()
-                                       : title->second.toString();
-        const auto pluginExecutable = std::find_if(
-            pluginExecutables.cbegin(), pluginExecutables.cend(),
-            [&savedTitle](const MOBase::ExecutableInfo& info) {
-              return !savedTitle.isEmpty() &&
-                     info.title().compare(savedTitle, Qt::CaseInsensitive) == 0;
-            });
-
-        auto binary = executable.find(QStringLiteral("binary"));
-        if (binary != executable.end()) {
-          const QString oldPath = binary->second.toString();
-          QString newPath = remapPathWithinDirectory(
-              oldPath, previousGameDirectory, dir);
-          if (pluginExecutable != pluginExecutables.cend() &&
-              newPath != oldPath) {
-            newPath = pluginExecutable->binary().filePath();
+        for (const auto& key : {QStringLiteral("binary"), QStringLiteral("workingDirectory")}) {
+          auto value = executable.find(key);
+          if (value == executable.end()) {
+            continue;
           }
+          const QString oldPath = value->second.toString();
+          const QString newPath =
+              remapPathWithinDirectory(oldPath, previousGameDirectory, dir);
           if (newPath != oldPath) {
-            binary->second = newPath;
-            changed = true;
-          }
-        }
-
-        auto workingDirectory = executable.find(QStringLiteral("workingDirectory"));
-        if (workingDirectory != executable.end()) {
-          const QString oldPath = workingDirectory->second.toString();
-          QString newPath = remapPathWithinDirectory(
-              oldPath, previousGameDirectory, dir);
-          if (pluginExecutable != pluginExecutables.cend() &&
-              newPath != oldPath) {
-            newPath = pluginExecutable->workingDirectory().path();
-          }
-          if (newPath != oldPath) {
-            workingDirectory->second = newPath;
+            value->second = newPath;
             changed = true;
           }
         }

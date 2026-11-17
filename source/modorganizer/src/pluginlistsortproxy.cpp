@@ -144,7 +144,7 @@ bool PluginListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction act
     QWidget* active = qApp->activeWindow();
     QWidget* wid    = active ? active->findChild<QTreeView*>("espList") : nullptr;
     MessageDialog::showMessage(
-        tr("Drag&Drop is only supported when sorting by priority or mod index"), wid);
+        tr("Drag&Drop is only supported when sorting by priority or mod index"), wid, true);
     return false;
   }
 

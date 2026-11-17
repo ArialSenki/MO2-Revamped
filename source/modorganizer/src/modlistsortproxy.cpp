@@ -637,7 +637,7 @@ bool ModListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction action
     QWidget* active = qApp->activeWindow();
     QWidget* wid    = active ? active->findChild<QTreeView*>("modList") : nullptr;
     MessageDialog::showMessage(
-        tr("Drag&Drop is only supported when sorting by priority"), wid);
+        tr("Drag&Drop is only supported when sorting by priority"), wid, true);
     return false;
   }
 

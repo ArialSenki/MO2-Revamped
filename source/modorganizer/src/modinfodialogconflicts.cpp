@@ -812,8 +812,12 @@ bool GeneralConflictsTab::update()
 
         bool currModFileArchive = currModAlt->isFromArchive();
 
+        // MO2 Revamped: the item is this mod's copy, so its own archive flag
+        // decides whether Hide/Open/Explore apply (the winner's said a file in a
+        // BSA was loose, and the reverse)
         m_overwrittenModel->add(createOverwrittenItem(file->getIndex(), fileOrigin,
-                                                      archive, std::move(fileName),
+                                                      currModFileArchive,
+                                                      std::move(fileName),
                                                       std::move(relativeName)));
 
         ++m_counts.numOverwritten;

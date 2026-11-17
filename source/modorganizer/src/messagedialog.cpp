@@ -349,7 +349,11 @@ void MessageDialog::dismiss()
 
 void MessageDialog::showWaitingNotices()
 {
-  if (QApplication::activeModalWidget() != nullptr) {
+  // the same test showMessage makes: a progress window in front doesn't hold
+  // them back (an installation's starts right after its question closes)
+  const QWidget* front = QApplication::activeModalWidget();
+  if (front != nullptr && front->isVisible() &&
+      qobject_cast<const QProgressDialog*>(front) == nullptr) {
     return;  // still open: the timer asks again
   }
   waitingTimer().stop();
@@ -388,7 +392,8 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
       reference->window() == front->window() &&
       qobject_cast<const QProgressDialog*>(front) == nullptr &&
       qstrcmp(front->window()->metaObject()->className(), "CollectionDialog") != 0;
-  // bringToFront is the caller saying the user must see it (only Settings)
+  // bringToFront is the caller saying the user must see it (Settings' restart
+  // notice, errors and warnings such as a refused rename)
   if (qApp->property("mo2r.collectionQuiet").toBool() && !fromFrontDialog &&
       !bringToFront) {
     // still in the log, where a user looking for it finds it
