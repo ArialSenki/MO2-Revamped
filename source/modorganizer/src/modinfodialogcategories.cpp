@@ -2,6 +2,7 @@
 #include "categories.h"
 #include "modinfo.h"
 #include "ui_modinfodialog.h"
+#include <QSignalBlocker>
 
 CategoriesTab::CategoriesTab(ModInfoDialogTabContext cx)
     : ModInfoDialogTab(std::move(cx))
@@ -77,17 +78,29 @@ void CategoriesTab::add(const CategoryFactory& factory,
 
 void CategoriesTab::updatePrimary()
 {
-  ui->primaryCategories->clear();
-
   int primaryCategory = mod().primaryCategory();
 
-  addChecked(ui->categories->invisibleRootItem());
+  // MO2 Revamped: filling the box chose its first item as the primary, then put
+  // the real one back: every look at the tab changed and restored meta.ini
+  bool found = false;
+  {
+    QSignalBlocker blocker(ui->primaryCategories);
+    ui->primaryCategories->clear();
+    addChecked(ui->categories->invisibleRootItem());
 
-  for (int i = 0; i < ui->primaryCategories->count(); ++i) {
-    if (ui->primaryCategories->itemData(i).toInt() == primaryCategory) {
-      ui->primaryCategories->setCurrentIndex(i);
-      break;
+    for (int i = 0; i < ui->primaryCategories->count(); ++i) {
+      if (ui->primaryCategories->itemData(i).toInt() == primaryCategory) {
+        ui->primaryCategories->setCurrentIndex(i);
+        found = true;
+        break;
+      }
     }
+  }
+
+  // the primary isn't among the checked ones (none yet, or it was unchecked):
+  // the first one shown becomes it, as before
+  if (!found && ui->primaryCategories->count() > 0) {
+    onPrimaryChanged(ui->primaryCategories->currentIndex());
   }
 
   setHasData(ui->primaryCategories->count() > 0);
