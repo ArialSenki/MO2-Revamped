@@ -1535,8 +1535,29 @@ void ModListView::onCustomContextMenuRequested(const QPoint& pos)
       // no selection
       ModListGlobalContextMenu(*m_core, this).exec(viewport()->mapToGlobal(pos));
     } else {
-      ModListContextMenu(contextIdx, *m_core, m_categories, this)
-          .exec(viewport()->mapToGlobal(pos));
+      ModListContextMenu menu(contextIdx, *m_core, m_categories, this);
+      // MO2 Revamped: the menu keeps mod numbers; a refresh while it's open (a
+      // background install, a game exiting) renumbers the mods and an action
+      // could hit the neighbour, so the menu closes instead
+      // (queued: a submenu applying its categories on close must not run in the
+      // middle of the model's change)
+      auto* mods = m_core->modList();
+      const auto closeMenu = [&menu] {
+        menu.close();
+      };
+      const QList<QMetaObject::Connection> stale = {
+          connect(mods, &QAbstractItemModel::modelAboutToBeReset, &menu, closeMenu,
+                  Qt::QueuedConnection),
+          connect(mods, &QAbstractItemModel::rowsAboutToBeRemoved, &menu, closeMenu,
+                  Qt::QueuedConnection),
+          connect(mods, &QAbstractItemModel::rowsAboutToBeInserted, &menu, closeMenu,
+                  Qt::QueuedConnection),
+          connect(mods, &QAbstractItemModel::layoutAboutToBeChanged, &menu, closeMenu,
+                  Qt::QueuedConnection)};
+      menu.exec(viewport()->mapToGlobal(pos));
+      for (const auto& c : stale) {
+        disconnect(c);
+      }
     }
   } catch (const std::exception& e) {
     reportError(tr("Exception: %1").arg(e.what()));
