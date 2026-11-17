@@ -357,17 +357,22 @@ bool ModInfo::updateOneFromDisc(const QString& modsDirectory, const QString& nam
   }
 
   QMutexLocker lock(&s_Mutex);
-  ModInfo::Ptr fresh(new ModInfoRegular(dir, core));
 
   // the same folder read before: the new object takes its place; a new one
   // goes where a full read would put it
   const auto it = s_ModsByName.find(name);
+  ModInfo::Ptr fresh;
   if (it != s_ModsByName.end() && it->second < s_Collection.size() &&
       s_Collection[it->second]->isRegular()) {
+    // the old object goes first, as in a full read: what it still had to save
+    // is written before the folder is read again, not over it afterwards
+    s_Collection[it->second].reset();
+    fresh.reset(new ModInfoRegular(dir, core));
     s_Collection[it->second] = fresh;
   } else if (it != s_ModsByName.end()) {
     return false;
   } else {
+    fresh.reset(new ModInfoRegular(dir, core));
     s_Collection.push_back(fresh);
     std::sort(s_Collection.begin(), s_Collection.end(), ModInfo::ByName);
   }
