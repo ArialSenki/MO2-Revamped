@@ -62,6 +62,10 @@ public:
    **/
   void commitChanges();
 
+  // the id of the Nexus request the dialog waits for; replies to any other
+  // request (an update check, the main window's own import) aren't its own
+  void setNexusRequest(int requestID);
+
 public slots:
   void nxmGameInfoAvailable(QString gameName, QVariant, QVariant resultData, int);
   void nxmRequestFailed(QString, int, int, QVariant, int, int errorCode,
@@ -105,6 +109,7 @@ private:
 
   int m_HighestID;
   std::set<int> m_IDs;
+  int m_nexusRequest = -1;
 
   bool m_cardsBuilt          = false;
   bool m_fluentRefreshQueued = false;

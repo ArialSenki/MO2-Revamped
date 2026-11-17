@@ -4379,8 +4379,10 @@ void MainWindow::importCategories(bool)
 {
   NexusInterface& nexus = NexusInterface::instance();
   nexus.setPluginContainer(&m_OrganizerCore.pluginContainer());
-  nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(), this,
-                        QVariant(), QString());
+  // MO2 Revamped: the id, so a later request (the categories dialog's) doesn't
+  // replace the categories again
+  m_categoryImportRequest = nexus.requestGameInfo(
+      Settings::instance().game().plugin()->gameShortName(), this, QVariant(), QString());
 }
 
 void MainWindow::showMessage(const QString& message)
@@ -4944,12 +4946,13 @@ void MainWindow::refreshNexusCategories(CategoriesDialog* dialog)
   NexusInterface& nexus = NexusInterface::instance();
   nexus.setPluginContainer(&m_PluginContainer);
   if (!Settings::instance().game().plugin()->primarySources().isEmpty()) {
-    nexus.requestGameInfo(
+    dialog->setNexusRequest(nexus.requestGameInfo(
         Settings::instance().game().plugin()->primarySources().first(), dialog,
-        QVariant(), QString());
+        QVariant(), QString()));
   } else {
-    nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(), dialog,
-                          QVariant(), QString());
+    dialog->setNexusRequest(
+        nexus.requestGameInfo(Settings::instance().game().plugin()->gameShortName(),
+                              dialog, QVariant(), QString()));
   }
 }
 
@@ -5874,8 +5877,15 @@ void MainWindow::nxmDownloadURLs(QString, int, int, QVariant, QVariant resultDat
 }
 
 void MainWindow::nxmGameInfoAvailable(QString gameName, QVariant, QVariant resultData,
-                                      int)
+                                      int requestID)
 {
+  // MO2 Revamped: only the import's own reply; the connection also brings the
+  // categories dialog's "Load from Nexus", which must not reset the categories
+  // behind the dialog's Cancel
+  if (requestID != m_categoryImportRequest || m_categoryImportRequest < 0) {
+    return;
+  }
+  m_categoryImportRequest = -1;
   QVariantMap result          = resultData.toMap();
   QVariantList categories     = result["categories"].toList();
   CategoryFactory& catFactory = CategoryFactory::instance();
