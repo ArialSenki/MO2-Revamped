@@ -239,8 +239,14 @@ private:
     bool optional = false;
     int categoryId = 0;
     QString category;
+    // Nexus' file category (MAIN, ARCHIVED, REMOVED...) and the mod's status
+    // (published, hidden, removed...), for the checks before the start
+    QString fileCategory;
+    QString modStatus;
   };
   std::map<int, NexusFile> m_files;  // by file id
+  // the game versions the revision was made with, as Nexus has them
+  QStringList m_gameVersions;
 
   QJsonObject m_saved;  // the state file, until the entries take it
   Collections::CollectionManifest m_manifest;
@@ -252,6 +258,9 @@ private:
   Target m_target      = Target::NewInstance;
   QString m_instanceName;
   bool m_autoStart     = false;
+  // the checks before the start were shown (or the restart into the new
+  // instance follows a go given before it)
+  bool m_preflightDone = false;
   bool m_placeFixed    = false;
   int m_latestRevision = -1;
   int m_updateFrom     = -1;
@@ -358,6 +367,12 @@ private:
   bool askAboutExisting();
   // enough free space for what's left to download and install, or the user's go
   bool confirmSpace();
+  // what is likely to go wrong with this collection here (game version and
+  // edition, script extender, DLC, mods gone from Nexus, a profile with mods),
+  // each with what to do; empty when nothing is
+  QStringList preflightIssues() const;
+  // the issues above, if any, and the user's go
+  bool preflight();
   void finalize();
   // still running in the collection's profile; pauses when not
   bool finalizeCanGoOn();

@@ -15,6 +15,7 @@
 #include "nexusinterface.h"
 #include "nxmaccessmanager.h"
 #include "organizercore.h"
+#include "game_features.h"
 #include "plugincontainer.h"
 #include "pluginlist.h"
 #include "profile.h"
@@ -27,6 +28,7 @@
 #include <imodinterface.h>
 #include <iplugingame.h>
 #include <log.h>
+#include <scriptextender.h>
 #include <utility.h>
 
 #include <QApplication>
@@ -199,6 +201,7 @@ const char* FilesQuery = R"(query ($slug: String!, $revision: Int) {
   collectionRevision(slug: $slug, revision: $revision, viewAdultContent: true) {
     revisionNumber
     downloadLink
+    gameVersions { reference }
     collection {
       name user { name } game { domainName }
       latestPublishedRevision { revisionNumber }
@@ -206,7 +209,7 @@ const char* FilesQuery = R"(query ($slug: String!, $revision: Int) {
     modFiles {
       optional
       fileId
-      file { modId name version sizeInBytes uri mod { name modCategory { categoryId name } } }
+      file { modId name version sizeInBytes uri category mod { name status modCategory { categoryId name } } }
     }
   }
 })";
@@ -825,7 +828,16 @@ void CollectionSession::onApiResult(QVariant, QVariant result, int id)
       f.categoryId = category.value("categoryId").toInt();
       f.category   = category.value("name").toString();
       f.optional = mf.value("optional").toBool();
+      f.fileCategory = file.value("category").toString();
+      f.modStatus    = file.value("mod").toMap().value("status").toString();
       m_files[mf.value("fileId").toInt()] = f;
+    }
+    m_gameVersions.clear();
+    for (const QVariant& v : r.value("gameVersions").toList()) {
+      const QString version = v.toMap().value("reference").toString().trimmed();
+      if (!version.isEmpty() && !m_gameVersions.contains(version)) {
+        m_gameVersions.append(version);
+      }
     }
     findOrFetchArchive();
   } else if (id == m_linkRequest) {
@@ -1220,7 +1232,8 @@ void CollectionSession::buildEntries()
 
   // opened by the restart into the instance made for it
   if (m_autoStart) {
-    m_autoStart = false;
+    m_autoStart     = false;
+    m_preflightDone = true;
     if (m_stage == Stage::Ready || m_stage == Stage::Paused) {
       QTimer::singleShot(0, this, &CollectionSession::start);
     }
@@ -2285,6 +2298,281 @@ bool CollectionSession::confirmSpace()
   return dialog.exec() == QDialog::Accepted;
 }
 
+namespace
+{
+
+// "1.6.1170.0" and "1.6.1170" are the same game: the first three numbers
+QString versionKey(const QString& version)
+{
+  static const QRegularExpression nonDigits(QStringLiteral("[^0-9]+"));
+  QStringList parts = version.split(nonDigits, Qt::SkipEmptyParts);
+  while (parts.size() > 3) {
+    parts.removeLast();
+  }
+  for (QString& p : parts) {
+    p = QString::number(p.toLongLong());
+  }
+  return parts.join('.');
+}
+
+// the store a game folder comes from when it isn't Steam, empty for Steam or
+// when it can't be told
+QString storeEdition(const QDir& dir)
+{
+  if (dir.exists(QStringLiteral("Galaxy64.dll")) || dir.exists(QStringLiteral("Galaxy.dll")) ||
+      !dir.entryList({QStringLiteral("goggame-*.info")}, QDir::Files).isEmpty()) {
+    return QStringLiteral("GOG");
+  }
+  if (dir.exists(QStringLiteral("EOSSDK-Win64-Shipping.dll")) ||
+      dir.exists(QStringLiteral("EOSSDK-Win32-Shipping.dll")) ||
+      dir.exists(QStringLiteral(".egstore"))) {
+    return QStringLiteral("Epic Games Store");
+  }
+  if (dir.exists(QStringLiteral("appxmanifest.xml")) ||
+      dir.exists(QStringLiteral("MicrosoftGame.config"))) {
+    return QStringLiteral("Microsoft Store / Game Pass");
+  }
+  return {};
+}
+
+// up to max names, then "and n more"
+QString shortList(const QStringList& names, int max = 8)
+{
+  if (names.size() <= max) {
+    return names.join(QStringLiteral(", "));
+  }
+  return QCoreApplication::translate("CollectionSession", "%1 and %n more", "",
+                                     static_cast<int>(names.size() - max))
+      .arg(names.mid(0, max).join(QStringLiteral(", ")));
+}
+
+}  // namespace
+
+QStringList CollectionSession::preflightIssues() const
+{
+  QStringList issues;
+  const IPluginGame* game = m_core.managedGame();
+  if (game == nullptr) {
+    return issues;
+  }
+
+  // the game's version: mods that hook into the game are built for one
+  QStringList versions = m_gameVersions;
+  for (const QString& v : m_manifest.gameVersions) {
+    if (!v.trimmed().isEmpty() && !versions.contains(v.trimmed())) {
+      versions.append(v.trimmed());
+    }
+  }
+  QString installed;
+  try {
+    installed = game->gameVersion();
+  } catch (const std::exception& e) {
+    log::debug("collection {}: the game's version couldn't be read: {}", m_link.slug,
+               e.what());
+  }
+  if (!versions.isEmpty() && !versionKey(installed).isEmpty()) {
+    bool same = false;
+    for (const QString& v : versions) {
+      same = same || versionKey(v) == versionKey(installed);
+    }
+    if (!same) {
+      issues.append(
+          tr("Game version: the collection was made with %1, this game is %2. Mods "
+             "that hook into the game (script extender plugins, Address Library, "
+             "engine fixes) are built for one version and can crash on another. Look "
+             "for a collection made for your version, or update the game first.")
+              .arg(versions.join(QStringLiteral(", ")), installed));
+    }
+  }
+
+  // the script extender, and the store the game comes from
+  const auto extender = m_core.gameFeatures().gameFeature<ScriptExtender>();
+  if (extender != nullptr) {
+    const QString edition = storeEdition(game->gameDirectory());
+    if (!edition.isEmpty()) {
+      issues.append(
+          tr("Game edition: this game is the %1 edition. Collections are almost "
+             "always made on Steam, and script extenders and DLL plugins often have a "
+             "separate %1 build, or none. Check those mods' pages for a %1 version.")
+              .arg(edition));
+    }
+
+    QString token = extender->loaderName().toLower();
+    if (const auto at = token.indexOf(QStringLiteral("_loader")); at > 0) {
+      token = token.left(at);
+    }
+    while (!token.isEmpty() && token.back().isDigit()) {
+      token.chop(1);
+    }
+    const auto mentions = [&token](const QString& text) {
+      return (token.size() >= 3 && text.contains(token, Qt::CaseInsensitive)) ||
+             text.contains(QStringLiteral("script extender"), Qt::CaseInsensitive);
+    };
+
+    bool mentioned = mentions(m_manifest.installInstructions) ||
+                     mentions(m_manifest.description);
+    bool shipped   = false;
+    for (const auto& mod : m_manifest.mods) {
+      const bool named = mentions(mod.name) || mentions(mod.logicalFilename);
+      mentioned = mentioned || named || mentions(mod.instructions);
+      // one MO2 installs itself, into the mod's Root/ folder
+      shipped = shipped || (named && isGameRootType(mod.deployType) &&
+                            (mod.type == SourceType::Nexus ||
+                             mod.type == SourceType::Bundle));
+    }
+
+    if (mentioned && !shipped && !extender->isInstalled()) {
+      bool inRoot = false;
+      const QDir mods(m_core.settings().paths().mods());
+      for (const QString& folder : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (QFileInfo::exists(
+                mods.filePath(folder + QStringLiteral("/Root/") + extender->loaderName()))) {
+          inRoot = true;
+          break;
+        }
+      }
+      if (!inRoot) {
+        issues.append(
+            tr("Script extender: the collection needs %1, which isn't in the game "
+               "folder (%2). Download it from its website and copy %3 and its DLL "
+               "files next to the game's exe, or install it as a mod with its files "
+               "in a Root folder. Without it, the mods that need it do nothing or "
+               "crash the game.")
+                .arg(token.toUpper(),
+                     QDir::toNativeSeparators(game->gameDirectory().absolutePath()),
+                     extender->loaderName()));
+      }
+    }
+  }
+
+  // DLC and Creation Club content the plugin list needs
+  if (m_manifest.hasPlugins) {
+    QSet<QString> official;
+    for (const QStringList& list :
+         {game->primaryPlugins(), game->DLCPlugins(), game->CCPlugins()}) {
+      for (const QString& p : list) {
+        official.insert(p.toLower());
+      }
+    }
+    const QDir data = game->dataDirectory();
+    QStringList missing;
+    for (const auto& p : m_manifest.plugins) {
+      if (p.enabled && official.contains(p.name.toLower()) && !data.exists(p.name) &&
+          !missing.contains(p.name, Qt::CaseInsensitive)) {
+        missing.append(p.name);
+      }
+    }
+    if (!missing.isEmpty()) {
+      issues.append(
+          tr("Missing game content: the collection uses %1, which this game doesn't "
+             "have. Get the DLC or Creation Club content (for Skyrim, the Anniversary "
+             "Edition upgrade) from the store and run the game once. Plugins that need "
+             "it make the game crash at start until they are disabled.")
+              .arg(shortList(missing)));
+    }
+  }
+
+  // mods hidden or removed on Nexus, files deleted
+  QStringList gone;
+  int byClick = 0;
+  for (const auto& e : m_entries) {
+    const auto& mod = modOf(e);
+    if (!e.selected || isFinished(e) || e.byHand || mod.type != SourceType::Nexus) {
+      continue;
+    }
+    if (e.archive.isEmpty() || !QFileInfo::exists(e.archive)) {
+      ++byClick;
+    }
+    const auto it = m_files.find(mod.fileId);
+    if (it == m_files.end()) {
+      continue;
+    }
+    const QString& status = it->second.modStatus;
+    if ((!status.isEmpty() &&
+         status.compare(QStringLiteral("published"), Qt::CaseInsensitive) != 0) ||
+        it->second.fileCategory.compare(QStringLiteral("REMOVED"),
+                                        Qt::CaseInsensitive) == 0) {
+      gone.append(it->second.modName.isEmpty() ? mod.name : it->second.modName);
+    }
+  }
+  if (!gone.isEmpty()) {
+    issues.append(
+        tr("Unavailable on Nexus: %1. These were hidden or removed by their authors, "
+           "or the file was deleted, so their downloads will likely fail. The "
+           "collection goes on without them and lists them at the end: look for a "
+           "replacement, or ask the curator for an updated revision.")
+            .arg(shortList(gone)));
+  }
+
+  // a free account clicks every file
+  constexpr int ManyClicks = 50;
+  if (!isPremium() && NexusInterface::instance().getAPIUserAccount().isValid() &&
+      byClick >= ManyClicks) {
+    issues.append(
+        tr("Free Nexus account: each of the %n file(s) to download needs a click on "
+           "\"Slow download\" on its Nexus page. MO2 opens the pages one by one and "
+           "you can stop and continue at any time; Premium downloads them by itself.",
+           "", byClick));
+  }
+
+  // a profile that already has mods: its order and plugins get mixed
+  if (m_target == Target::CurrentProfile && !m_profileMade) {
+    if (Profile* current = m_core.currentProfile()) {
+      QSet<QString> ours;
+      for (const auto& e : m_entries) {
+        ours.insert(e.modName.toLower());
+      }
+      int active = 0;
+      for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+        const auto info = ModInfo::getByIndex(i);
+        if (info && info->isRegular() && !info->isSeparator() &&
+            !ours.contains(info->name().toLower()) && current->modEnabled(i)) {
+          ++active;
+        }
+      }
+      if (active > 0) {
+        issues.append(
+            tr("This profile already has %n active mod(s) of its own. The "
+               "collection's mod order and plugin list will be mixed with them, and "
+               "they may conflict. A new profile (or instance) keeps them apart.",
+               "", active));
+      }
+    }
+  }
+
+  return issues;
+}
+
+bool CollectionSession::preflight()
+{
+  const QStringList issues = preflightIssues();
+  if (issues.isEmpty()) {
+    return true;
+  }
+  for (const QString& i : issues) {
+    log::warn("collection {}: before the start: {}", m_link.slug, i);
+  }
+
+  FluentContentDialog dialog(
+      qApp->activeWindow(), QStringLiteral("CollectionPreflightDialog"),
+      tr("Before installing"),
+      tr("A few things may get in the way of this collection here. You can start "
+         "anyway and fix them later."));
+  for (const QString& i : issues) {
+    auto* label = new QLabel(QStringLiteral("• ") + i, &dialog);
+    label->setWordWrap(true);
+    label->setTextFormat(Qt::PlainText);
+    label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    dialog.body()->addWidget(label);
+  }
+  auto* go     = dialog.addButton(tr("Start anyway"), true);
+  auto* cancel = dialog.addButton(tr("Cancel"));
+  QObject::connect(go, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+  dialog.askFirst(cancel);
+  return dialog.exec() == QDialog::Accepted;
+}
+
 void CollectionSession::start()
 {
   if (m_stage != Stage::Ready && m_stage != Stage::Paused && m_stage != Stage::Done) {
@@ -2299,6 +2587,14 @@ void CollectionSession::start()
 
   if (!confirmSpace()) {
     return;
+  }
+
+  // the first start only: once it runs, the user has seen these
+  if (!m_started && !m_preflightDone) {
+    if (!preflight()) {
+      return;
+    }
+    m_preflightDone = true;
   }
 
   // an instance of its own: made here, the collection goes on there
