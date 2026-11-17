@@ -94,6 +94,33 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
 
   // MO2 Revamped: the size of the whole interface, beside the language
   if (auto* grid = qobject_cast<QGridLayout*>(ui->groupBox_61->layout())) {
+    // the language as a row like the others, its box on the right; alone under
+    // the heading it sat further left than every title below it
+    // the card's heading took row 0 and moved the language down a row
+    int languageAt = 0, column = 0, rowSpan = 1, columnSpan = 1;
+    grid->getItemPosition(grid->indexOf(ui->languageBox), &languageAt, &column, &rowSpan,
+                          &columnSpan);
+    if (QLayoutItem* spacer = grid->itemAtPosition(languageAt, 2);
+        spacer != nullptr && spacer->spacerItem() != nullptr) {
+      grid->removeItem(spacer);
+      delete spacer;
+    }
+    grid->removeWidget(ui->languageBox);
+    auto* languageRow    = new QFrame(ui->groupBox_61);
+    languageRow->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* languageLayout = new QHBoxLayout(languageRow);
+    languageLayout->setContentsMargins(4, 6, 4, 6);
+    languageLayout->setSpacing(12);
+    auto* languageLabel = new QLabel(QObject::tr("Interface language"), languageRow);
+    languageLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
+    languageLabel->setToolTip(ui->languageBox->toolTip());
+    languageLabel->setBuddy(ui->languageBox);
+    languageLayout->addWidget(languageLabel);
+    languageLayout->addStretch(1);
+    ui->languageBox->setParent(languageRow);
+    languageLayout->addWidget(ui->languageBox);
+    grid->addWidget(languageRow, languageAt, 0, 1, qMax(1, grid->columnCount()));
+
     auto* label = new QLabel(QObject::tr("Interface size"), ui->groupBox_61);
     m_scaleBox  = new QComboBox(ui->groupBox_61);
     m_scaleBox->setObjectName(QStringLiteral("interfaceScaleBox"));
@@ -116,8 +143,10 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     // styled as the other settings rows ("Versions to be notified of")
     row->setObjectName(QStringLiteral("fluentSettingRow"));
     auto* rowLayout = new QHBoxLayout(row);
-    rowLayout->setContentsMargins(0, 0, 0, 0);
+    // the margins of the other rows, so the title and the box line up with them
+    rowLayout->setContentsMargins(4, 6, 4, 6);
     rowLayout->setSpacing(12);
+    label->setObjectName(QStringLiteral("fluentSettingTitle"));
     rowLayout->addWidget(label);
     rowLayout->addStretch(1);
     rowLayout->addWidget(m_scaleBox);

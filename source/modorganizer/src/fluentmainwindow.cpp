@@ -311,8 +311,13 @@ void MainWindow::setupFluentCommandBar()
   if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
     button->setPopupMode(QToolButton::InstantPopup);
     button->setObjectName(QStringLiteral("actionFluentMore"));
-    // its shortcut, Ctrl+H, opens the menu
-    connect(ui->actionHelp, &QAction::triggered, button, &QToolButton::showMenu);
+    // its shortcut, Ctrl+H, opens the menu; not while a program runs, when
+    // the bar is locked (the action lives on the window, which isn't)
+    connect(ui->actionHelp, &QAction::triggered, button, [button] {
+      if (!UILocker::instance().locked() && button->isEnabled()) {
+        button->showMenu();
+      }
+    });
   }
 
   // Manage Instances opens the instances to switch to; the manager itself

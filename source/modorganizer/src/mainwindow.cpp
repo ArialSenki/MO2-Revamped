@@ -4848,7 +4848,7 @@ void MainWindow::on_actionSettings_triggered()
   auto e = dialog.exitNeeded();
 
   // the current profile and Overwrite stay open at the old paths until then
-  if (oldManagedGameDirectory != settings.game().directory() ||
+  if (oldManagedGameDirectory != settings.game().directory().value_or("") ||
       oldProfilesDirectory != settings.paths().profiles() ||
       oldOverwriteDirectory != settings.paths().overwrite()) {
     e |= Exit::Restart;
@@ -5260,6 +5260,10 @@ bool MainWindow::selectProfileByName(const QString& name)
 
 void MainWindow::on_actionNexus_triggered()
 {
+  // Ctrl+N lives on the window, which the lock while a program runs leaves on
+  if (UILocker::instance().locked()) {
+    return;
+  }
   const IPluginGame* game = m_OrganizerCore.managedGame();
   QString gameName        = game->gameShortName();
   if (game->gameNexusName().isEmpty() && game->primarySources().count())

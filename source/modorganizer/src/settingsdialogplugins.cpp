@@ -2,6 +2,7 @@
 #include "circularuihelpers.h"
 #include "noeditdelegate.h"
 #include "ui_settingsdialog.h"
+#include <algorithm>
 #include <iplugin.h>
 
 #include "disableproxyplugindialog.h"
@@ -375,9 +376,6 @@ PluginsSettingsTab::PluginsSettingsTab(Settings& s, PluginContainer* pluginConta
                    [&](auto* current, auto* previous) {
                      on_pluginsList_currentItemChanged(current, previous);
                    });
-  // turning a plugin on or off is not one of the changes Cancel undoes
-  ui->enabledCheckbox->setToolTip(
-      QObject::tr("Takes effect right away, even if you then cancel Settings."));
   QObject::connect(ui->enabledCheckbox, &QCheckBox::clicked, [&](bool checked) {
     on_checkboxEnabled_clicked(checked);
   });
@@ -538,25 +536,41 @@ bool PluginsSettingsTab::isEnabledHere(IPlugin* plugin) const
 void PluginsSettingsTab::update()
 {
   // MO2 Revamped: the plugins turned on or off, now that OK was clicked
-  bool restart = false;
+  // only the last click on each plugin counts: off and on again is no change,
+  // and replaying both would turn off the plugins that need it on the way
+  std::vector<std::pair<IPlugin*, bool>> changes;
   for (const auto& [plugin, enabled] : m_pendingEnabled) {
-    // a proxy turned on or off needs a restart, also one already turned off
-    // with another plugin it needs (checked before skipping it)
+    auto it = std::find_if(changes.begin(), changes.end(), [p = plugin](auto&& c) {
+      return c.first == p;
+    });
+    if (it != changes.end()) {
+      it->second = enabled;
+    } else {
+      changes.emplace_back(plugin, enabled);
+    }
+  }
+  m_pendingEnabled.clear();
+
+  // a proxy whose state really changes needs a restart, also one turned off
+  // together with another plugin it needs (checked before applying any)
+  bool restart = false;
+  for (const auto& [plugin, enabled] : changes) {
     if (m_pluginContainer->implementInterface<IPluginProxy>(plugin) &&
         m_pluginContainer->isEnabled(plugin) != enabled) {
       restart = true;
     }
-    if (m_pluginContainer->isEnabled(plugin) == enabled) {
-      if (m_pluginContainer->implementInterface<IPluginProxy>(plugin) && !enabled) {
-        restart = true;
-      }
-      continue;
-    }
-
-    // turning one off turns off the plugins that need it too
-    m_pluginContainer->setEnabled(plugin, enabled, !enabled);
   }
-  m_pendingEnabled.clear();
+
+  // turned off first, so a plugin turned on isn't caught by a later cascade
+  for (const bool pass : {false, true}) {
+    for (const auto& [plugin, enabled] : changes) {
+      if (enabled != pass || m_pluginContainer->isEnabled(plugin) == enabled) {
+        continue;
+      }
+      // turning one off turns off the plugins that need it too
+      m_pluginContainer->setEnabled(plugin, enabled, !enabled);
+    }
+  }
 
   if (restart) {
     dialog().setExitNeeded(Exit::Restart);

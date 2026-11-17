@@ -509,9 +509,6 @@
              <property name="visible">
               <bool>false</bool>
              </property>
-             <property name="layoutDirection">
-              <enum>Qt::RightToLeft</enum>
-             </property>
              <property name="text">
               <string>Clear filters</string>
              </property>

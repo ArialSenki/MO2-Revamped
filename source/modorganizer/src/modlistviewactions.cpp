@@ -558,12 +558,19 @@ void ModListViewActions::assignCategories() const
       }
     }
     int newCategory = CategoryFactory::instance().resolveNexusID(nexusCategory);
-    if (newCategory != 0) {
-      for (auto category : modInfo->categories()) {
-        modInfo->removeCategory(category);
-      }
+    // MO2 Revamped: 0 is "not mapped"; setting it gave the mod the "None"
+    // category, which then counted as having one
+    if (newCategory == 0) {
+      continue;
+    }
+    for (auto category : modInfo->categories()) {
+      modInfo->removeCategory(category);
     }
     modInfo->setCategory(CategoryFactory::instance().getCategoryID(newCategory), true);
+  }
+  // the Category column, its sort and the category filters see the new ones
+  if (m_core.modList()->rowCount() > 0) {
+    m_core.modList()->notifyChange(0, m_core.modList()->rowCount() - 1);
   }
 }
 
@@ -1132,6 +1139,11 @@ void ModListViewActions::removeMods(const QModelIndexList& indices) const
         modNames.append(
             ModInfo::getByIndex(idx.data(ModList::IndexRole).toInt())->name());
         ++i;
+      }
+      // MO2 Revamped: nothing that can be removed (Overwrite, DLC): no empty
+      // question
+      if (modNames.isEmpty()) {
+        return;
       }
       if (QMessageBox::question(
               m_parent, tr("Confirm"),

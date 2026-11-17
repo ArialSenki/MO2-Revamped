@@ -197,6 +197,8 @@ public:
   int getPriority(int index) const { return m_ESPs.at(index).priority; }
   QString getIndexPriority(int index) const;
   bool isESPLocked(int index) const;
+  // a plugin the game always loads, which keeps its place
+  bool isForceLoaded(int index) const;
   void lockESPIndex(int index, bool lock);
 
   static QString getColumnName(int column);

@@ -10646,10 +10646,6 @@ Firefox.exe</translation>
       <translation>Dieses Spiel hat keine INI-Dateien.</translation>
     </message>
     <message>
-      <source>Takes effect right away, even if you then cancel Settings.</source>
-      <translation>Wirkt sofort, auch wenn du die Einstellungen danach abbrichst.</translation>
-    </message>
-    <message>
       <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
       <translation>Aus MO2 gestartete Programme verwenden es ab ihrem nächsten Start, MO2 selbst ab seinem nächsten Start.</translation>
     </message>
@@ -10864,6 +10860,10 @@ Firefox.exe</translation>
     <message>
       <source>Failed</source>
       <translation>Fehlgeschlagen</translation>
+    </message>
+    <message>
+      <source>Interface language</source>
+      <translation>Sprache der Oberfläche</translation>
     </message>
     <message>
       <source>Interface size</source>

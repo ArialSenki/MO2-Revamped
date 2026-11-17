@@ -236,8 +236,17 @@ void PluginListView::setSelected(const QModelIndex& current,
                                  const QModelIndexList& selected)
 {
   setCurrentIndex(indexModelToView(current));
+  // MO2 Revamped: one selection change for all of them; one per row made the
+  // mod list highlight run once per plugin (quadratic on a big selection)
+  QItemSelection selection;
   for (auto idx : selected) {
-    selectionModel()->select(indexModelToView(idx),
+    const QModelIndex view = indexModelToView(idx);
+    if (view.isValid()) {
+      selection.select(view, view);
+    }
+  }
+  if (!selection.isEmpty()) {
+    selectionModel()->select(selection,
                              QItemSelectionModel::Select | QItemSelectionModel::Rows);
   }
 }
@@ -257,10 +266,10 @@ void PluginListView::setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* 
   setItemDelegateForColumn(PluginList::COL_FLAGS, new GenericIconDelegate(this));
 
   // counter
-  connect(core.pluginList(), &PluginList::writePluginsList, [=] {
+  connect(core.pluginList(), &PluginList::writePluginsList, this, [=] {
     updatePluginCount();
   });
-  connect(core.pluginList(), &PluginList::esplist_changed, [=] {
+  connect(core.pluginList(), &PluginList::esplist_changed, this, [=] {
     updatePluginCount();
   });
 
@@ -369,11 +378,10 @@ void PluginListView::onDoubleClicked(const QModelIndex& index)
   }
 
   try {
-    if (selectionModel()->hasSelection() &&
-        selectionModel()->selectedRows().count() == 1) {
-
-      // the name, whichever column was clicked
-      QModelIndex idx  = selectionModel()->currentIndex().siblingAtColumn(PluginList::COL_NAME);
+    {
+      // the plugin double-clicked, whichever column; MO2 Revamped: not the
+      // selection, which Ctrl's first click had just toggled
+      QModelIndex idx  = index.siblingAtColumn(PluginList::COL_NAME);
       QString fileName = idx.data().toString();
 
       if (ModInfo::getIndex(m_core->pluginList()->origin(fileName)) == UINT_MAX) {
@@ -434,7 +442,7 @@ bool PluginListView::event(QEvent* event)
   if (event->type() == QEvent::KeyPress) {
     QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
-    if (keyEvent->modifiers() == Qt::ControlModifier &&
+    if ((keyEvent->modifiers() & ~Qt::KeypadModifier) == Qt::ControlModifier &&
         (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)) {
       if (selectionModel()->hasSelection() &&
           selectionModel()->selectedRows().count() == 1) {
@@ -455,7 +463,9 @@ bool PluginListView::event(QEvent* event)
                 sortColumn() == PluginList::COL_MODINDEX) &&
                (keyEvent->key() == Qt::Key_Up || keyEvent->key() == Qt::Key_Down)) {
       return moveSelection(keyEvent->key());
-    } else if (keyEvent->key() == Qt::Key_Space) {
+    } else if (keyEvent->key() == Qt::Key_Space &&
+               (keyEvent->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier) {
+      // Alt+Space is the window menu
       return toggleSelectionState();
     }
     return QTreeView::event(event);

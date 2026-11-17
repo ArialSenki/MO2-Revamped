@@ -156,11 +156,34 @@ void ModListByPriorityProxy::onModelDataChanged(const QModelIndex& topLeft,
     return;
   }
 
-  if (topLeft == bottomRight) {
-    emit dataChanged(proxyTopLeft, proxyTopLeft);
-  } else {
-    QModelIndex proxyBottomRight = mapFromSource(bottomRight);
-    emit dataChanged(proxyTopLeft, proxyBottomRight);
+  if (!bottomRight.isValid() || topLeft.row() == bottomRight.row()) {
+    emit dataChanged(proxyTopLeft,
+                     proxyTopLeft.siblingAtColumn(
+                         bottomRight.isValid() ? bottomRight.column() : columnCount(QModelIndex()) - 1),
+                     roles);
+    return;
+  }
+
+  // MO2 Revamped: the rows of a range sit under different separators here, and
+  // a dataChanged() whose corners have different parents only reaches the
+  // first parent's rows (the filter missed mods turned on under another
+  // separator); one per parent instead
+  const int left  = topLeft.column();
+  const int right = bottomRight.column();
+  if (!m_Root.children.empty()) {
+    emit dataChanged(createIndex(0, left, m_Root.children.front()),
+                     createIndex(static_cast<int>(m_Root.children.size()) - 1, right,
+                                 m_Root.children.back()),
+                     roles);
+  }
+  for (TreeItem* item : m_Root.children) {
+    if (!item->children.empty()) {
+      emit dataChanged(
+          createIndex(0, left, item->children.front()),
+          createIndex(static_cast<int>(item->children.size()) - 1, right,
+                      item->children.back()),
+          roles);
+    }
   }
 }
 

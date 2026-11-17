@@ -162,6 +162,8 @@ private:
   SeparatorsMode m_FilterSeparators;
 
   std::vector<Criteria> m_PreChangeCriteria;
+  // edits in flight: the filter comes back after the last one
+  int m_ChangeDepth = 0;
 
   bool criteriaMatchMod(ModInfo::Ptr info, bool enabled, const Criteria& c) const;
   bool categoryMatchesMod(ModInfo::Ptr info, bool enabled, int category) const;

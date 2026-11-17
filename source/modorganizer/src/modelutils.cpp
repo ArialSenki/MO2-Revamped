@@ -1,6 +1,7 @@
 #include "modelutils.h"
 
 #include <QAbstractProxyModel>
+#include <QSet>
 
 namespace MOShared
 {
@@ -87,10 +88,14 @@ QModelIndexList indexViewToModel(const QModelIndexList& index,
 {
   // rows with no row in the model (a group heading) are left out: kept as an
   // invalid index, their IndexRole reads as 0 and an action hits the first mod
+  // MO2 Revamped: grouped by category, a mod shows once per category; it is
+  // kept once, or Ctrl+Up moved it a step per category and lists named it twice
   QModelIndexList result;
+  QSet<QModelIndex> seen;
   for (auto& idx : index) {
     const QModelIndex mapped = indexViewToModel(idx, model);
-    if (mapped.isValid()) {
+    if (mapped.isValid() && !seen.contains(mapped)) {
+      seen.insert(mapped);
       result.append(mapped);
     }
   }

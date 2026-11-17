@@ -33,6 +33,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settingsdialogtheme.h"
 #include "settingsdialogworkarounds.h"
 #include "plugincontainer.h"
+#include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
 
 #include "game_features.h"
@@ -312,6 +313,13 @@ int SettingsDialog::exec()
 
   m_settings.widgets().saveIndex(ui->tabWidget);
 
+  // a restart asked for inside Settings (Reset window geometries) belongs to
+  // the changes Cancel drops, also after OK refused to save them
+  if (ret != QDialog::Accepted) {
+    m_exit             = Exit::None;
+    m_restartConfirmed = false;
+  }
+
   if (ret == QDialog::Accepted) {
     for (auto&& tab : m_tabs) {
       if (tab) {
@@ -367,7 +375,11 @@ void SettingsDialog::accept()
     }
 
     QString newModPath = ui->modDirEdit->text().trimmed();
-    newModPath = PathSettings::resolve(newModPath, newBase);
+    // an empty field is the default folder in the base, as the Paths page
+    // saves it
+    newModPath = newModPath.isEmpty()
+                     ? newBase + "/" + QString::fromStdWString(AppConfig::modsPath())
+                     : PathSettings::resolve(newModPath, newBase);
 
     // MO2 Revamped: Windows paths ignore case, and a trailing slash is the
     // same folder

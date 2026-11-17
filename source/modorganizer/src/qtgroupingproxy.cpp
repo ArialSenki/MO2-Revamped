@@ -890,15 +890,27 @@ void QtGroupingProxy::modelDataChanged(const QModelIndex& topLeft,
 {
   // TODO: need to look in the groupedColumn and see if it changed and changed grouping
   // accordingly
-  QModelIndex proxyTopLeft = mapFromSource(topLeft);
-  if (!proxyTopLeft.isValid())
+  if (!topLeft.isValid()) {
     return;
+  }
 
-  if (topLeft == bottomRight) {
-    emit dataChanged(proxyTopLeft, proxyTopLeft);
-  } else {
-    QModelIndex proxyBottomRight = mapFromSource(bottomRight);
-    emit dataChanged(proxyTopLeft, proxyBottomRight);
+  // MO2 Revamped: a mod can sit in several groups, and a range can span groups;
+  // a dataChanged() whose corners have different parents only reaches the first
+  // parent's rows, so a filter missed the others. Each group's rows and the top
+  // level are notified on their own (grouping is rare and these are cheap).
+  const int left  = topLeft.column();
+  const int right = bottomRight.isValid() ? bottomRight.column()
+                                          : columnCount(QModelIndex()) - 1;
+  const int top   = rowCount(QModelIndex());
+  if (top > 0) {
+    emit dataChanged(index(0, left, QModelIndex()), index(top - 1, right, QModelIndex()));
+  }
+  for (int group = 0; group < m_groupMaps.count(); ++group) {
+    const QModelIndex parent = index(group, 0, QModelIndex());
+    const int rows           = rowCount(parent);
+    if (rows > 0) {
+      emit dataChanged(index(0, left, parent), index(rows - 1, right, parent));
+    }
   }
 }
 

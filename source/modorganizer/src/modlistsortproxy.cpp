@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modlistsortproxy.h"
+#include "fluentperf.h"
 #include "fluenticons.h"
 #include "fluentstatusdelegate.h"
 #include "messagedialog.h"
@@ -255,6 +256,8 @@ void ModListSortProxy::updateFilter(const QString& filter)
     }
   }
 
+  // MO2_REVAMPED_PERF: the cost of one keystroke in the filter box
+  FluentPerf::Timer perf("ModListSortProxy::updateFilter");
   updateFilterActive();
   invalidateFilter();
   emit filterInvalidated();
@@ -637,7 +640,7 @@ bool ModListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction action
     QWidget* active = qApp->activeWindow();
     QWidget* wid    = active ? active->findChild<QTreeView*>("modList") : nullptr;
     MessageDialog::showMessage(
-        tr("Drag&Drop is only supported when sorting by priority"), wid, true);
+        tr("Drag&Drop is only supported when sorting by priority"), wid);
     return false;
   }
 
@@ -679,8 +682,12 @@ void ModListSortProxy::aboutToChangeData()
   // (at least with some Qt versions)
   // this may be related to the fact that the item being edited may disappear from the
   // view as a result of the edit
-  m_PreChangeCriteria = m_Criteria;
-  setCriteria({});
+  // a second edit before the first restored the filter saved the empty one,
+  // and the filter was lost while its panel still showed it ticked
+  if (m_ChangeDepth++ == 0) {
+    m_PreChangeCriteria = m_Criteria;
+    setCriteria({});
+  }
 }
 
 void ModListSortProxy::postDataChanged()
@@ -689,7 +696,9 @@ void ModListSortProxy::postDataChanged()
   // invisible or at least the view continues to think it's being edited. As a result no
   // new editor can be opened
   QTimer::singleShot(10, this, [this]() {
-    setCriteria(m_PreChangeCriteria);
-    m_PreChangeCriteria.clear();
+    if (m_ChangeDepth > 0 && --m_ChangeDepth == 0) {
+      setCriteria(m_PreChangeCriteria);
+      m_PreChangeCriteria.clear();
+    }
   });
 }

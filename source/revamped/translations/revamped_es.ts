@@ -10808,10 +10808,6 @@ Ejemplo:
       <translation>Este juego no tiene archivos INI.</translation>
     </message>
     <message>
-      <source>Takes effect right away, even if you then cancel Settings.</source>
-      <translation>Se aplica al momento, aunque después canceles Ajustes.</translation>
-    </message>
-    <message>
       <source>Programs started from MO2 use it from their next launch; MO2 itself, from its next start.</source>
       <translation>Los programas que se inician desde MO2 lo usan desde su siguiente inicio; MO2, desde la próxima vez que arranque.</translation>
     </message>
@@ -11026,6 +11022,10 @@ Ejemplo:
     <message>
       <source>Failed</source>
       <translation>Error</translation>
+    </message>
+    <message>
+      <source>Interface language</source>
+      <translation>Idioma de la interfaz</translation>
     </message>
     <message>
       <source>Interface size</source>

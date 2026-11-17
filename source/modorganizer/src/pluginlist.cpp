@@ -626,7 +626,8 @@ void PluginList::shiftPluginsPriority(const QModelIndexList& indices, int offset
   // when moving them
   std::vector<int> allIndex;
   for (auto& idx : indices) {
-    if (isValidRow(idx)) {
+    // the game's own plugins keep their place, as with a drag or "Send to"
+    if (isValidRow(idx) && !m_ESPs[idx.row()].forceLoaded) {
       allIndex.push_back(idx.row());
     }
   }
@@ -659,20 +660,19 @@ void PluginList::shiftPluginsPriority(const QModelIndexList& indices, int offset
 
 void PluginList::toggleState(const QModelIndexList& indices)
 {
-  QModelIndex minRow, maxRow;
+  // MO2 Revamped: each plugin flips, in two batches; setEnabled() skips the
+  // plugins the game forces on or off, which the checkbox can't change either,
+  // and refreshes and saves once instead of once per plugin
+  QModelIndexList turnOn, turnOff;
   for (auto& idx : indices) {
-    if (!minRow.isValid() || (idx.row() < minRow.row())) {
-      minRow = idx;
+    if (!isValidRow(idx)) {
+      continue;
     }
-    if (!maxRow.isValid() || (idx.row() > maxRow.row())) {
-      maxRow = idx;
-    }
-    int oldState = idx.data(Qt::CheckStateRole).toInt();
-    setData(idx, oldState == Qt::Unchecked ? Qt::Checked : Qt::Unchecked,
-            Qt::CheckStateRole);
+    (m_ESPs[idx.row()].enabled ? turnOff : turnOn).append(idx);
   }
 
-  emit dataChanged(minRow, maxRow);
+  setEnabled(turnOff, false);
+  setEnabled(turnOn, true);
 }
 
 bool PluginList::isEnabled(const QString& name)
@@ -922,6 +922,11 @@ bool PluginList::isESPLocked(int index) const
   return m_LockedOrder.find(m_ESPs.at(index).name) != m_LockedOrder.end();
 }
 
+bool PluginList::isForceLoaded(int index) const
+{
+  return m_ESPs.at(index).forceLoaded;
+}
+
 void PluginList::lockESPIndex(int index, bool lock)
 {
   if (lock) {
@@ -935,6 +940,8 @@ void PluginList::lockESPIndex(int index, bool lock)
       m_LockedOrder.erase(iter);
     }
   }
+  // the lock icon in the Flags column
+  emit dataChanged(this->index(index, 0), this->index(index, columnCount() - 1));
   emit writePluginsList();
 }
 

@@ -76,7 +76,9 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
     for (auto& idx : indicesOf(m_selected)) {
       if (m_core.pluginList()->isESPLocked(idx.row())) {
         hasLocked = true;
-      } else if (m_core.pluginList()->isEnabled(idx.row())) {
+      } else if (m_core.pluginList()->isEnabled(idx.row()) &&
+                 !m_core.pluginList()->isForceLoaded(idx.row())) {
+        // the game's own plugins can't be locked (lockESPIndex skips them)
         hasUnlocked = true;
       }
     }
