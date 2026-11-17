@@ -148,13 +148,15 @@ GameFeatures::GameFeatures(OrganizerCore* core, PluginContainer* plugins)
   // can be nullptr since the plugin container can be initialized with a Core (e.g.,
   // on first MO2 start)
   if (core) {
-    connect(core, &OrganizerCore::managedGameChanged, [this] {
+    connect(core, &OrganizerCore::managedGameChanged, this, [this] {
       updateCurrentFeatures();
     });
   }
 
   auto updateFeatures = [this] {
-    QTimer::singleShot(UPDATE_QUEUE_TIMER, [this] {
+    // MO2 Revamped: with this as context, a timer pending when the plugins
+    // are reset (a restart into another instance) doesn't fire on freed memory
+    QTimer::singleShot(UPDATE_QUEUE_TIMER, this, [this] {
       updateCurrentFeatures();
     });
   };

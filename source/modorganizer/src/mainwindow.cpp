@@ -3380,7 +3380,7 @@ void MainWindow::on_profileBox_currentIndexChanged(int index)
   auto invalidation = m_OrganizerCore.gameFeatures().gameFeature<BSAInvalidation>();
   if (invalidation != nullptr) {
     if (invalidation->prepareProfile(m_OrganizerCore.currentProfile())) {
-      QTimer::singleShot(5, [this] {
+      QTimer::singleShot(5, this, [this] {
         m_OrganizerCore.refresh();
       });
     }
@@ -4330,7 +4330,7 @@ void MainWindow::on_actionAdd_Profile_triggered()
   auto invalidation = m_OrganizerCore.gameFeatures().gameFeature<BSAInvalidation>();
   if (invalidation != nullptr) {
     if (invalidation->prepareProfile(m_OrganizerCore.currentProfile())) {
-      QTimer::singleShot(5, [this] {
+      QTimer::singleShot(5, this, [this] {
         m_OrganizerCore.refresh();
       });
     }

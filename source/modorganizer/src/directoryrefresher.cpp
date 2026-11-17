@@ -42,6 +42,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 
+#include <climits>
+
 using namespace MOBase;
 using namespace MOShared;
 
@@ -185,7 +187,14 @@ void DirectoryRefresher::setMods(
     if (isReservedModEntry(name, std::get<1>(*mod))) {
       continue;
     }
-    ModInfo::Ptr info = ModInfo::getByIndex(ModInfo::getIndex(name));
+    // MO2 Revamped: a mod renamed or removed since the list was made; its
+    // UINT_MAX index gave Overwrite, whose files were then taken for it
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index == UINT_MAX) {
+      log::warn("refresh: the mod '{}' is no longer there, skipped", name);
+      continue;
+    }
+    ModInfo::Ptr info = ModInfo::getByIndex(index);
     m_Mods.push_back(EntryInfo(name, std::get<1>(*mod), info->stealFiles(),
                                info->archives(), std::get<2>(*mod)));
   }

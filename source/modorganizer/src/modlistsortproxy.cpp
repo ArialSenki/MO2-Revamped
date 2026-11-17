@@ -688,7 +688,7 @@ void ModListSortProxy::postDataChanged()
   // if the filter is re-activated right away the editor can't be deleted but becomes
   // invisible or at least the view continues to think it's being edited. As a result no
   // new editor can be opened
-  QTimer::singleShot(10, [this]() {
+  QTimer::singleShot(10, this, [this]() {
     setCriteria(m_PreChangeCriteria);
     m_PreChangeCriteria.clear();
   });

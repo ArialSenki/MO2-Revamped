@@ -708,7 +708,7 @@ void ModListView::scrollToAndSelect(const QModelIndexList& indexes,
   }
   selectionModel()->select(selection,
                            QItemSelectionModel::Select | QItemSelectionModel::Rows);
-  QTimer::singleShot(50, [=] {
+  QTimer::singleShot(50, this, [this] {
     setFocus();
   });
 }

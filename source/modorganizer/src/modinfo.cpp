@@ -170,8 +170,14 @@ ModInfo::Ptr ModInfo::getByIndex(unsigned int index)
   if (index >= s_Collection.size() && index != ULONG_MAX) {
     throw MyException(tr("invalid mod index: %1").arg(index));
   }
-  if (index == ULONG_MAX)
-    return s_Collection[ModInfo::getIndex("Overwrite")];
+  if (index == ULONG_MAX) {
+    // MO2 Revamped: before Overwrite is in the list this read past its end
+    const unsigned int overwrite = ModInfo::getIndex("Overwrite");
+    if (overwrite >= s_Collection.size()) {
+      throw MyException(tr("invalid mod index: %1").arg(index));
+    }
+    return s_Collection[overwrite];
+  }
   return s_Collection[index];
 }
 
