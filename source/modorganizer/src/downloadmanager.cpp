@@ -1288,6 +1288,15 @@ void DownloadManager::resumeDownloadInt(int index)
     QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toUtf8()));
     request.setHeader(QNetworkRequest::UserAgentHeader,
                       m_NexusInterface->getAccessManager()->userAgent());
+    // MO2 Revamped: as a new download asks (see startDownloadURLs()): never from
+    // the cache, and HTTP/2's larger windows
+    request.setAttribute(QNetworkRequest::CacheSaveControlAttribute, false);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
+                         QNetworkRequest::AlwaysNetwork);
+    QHttp2Configuration h2Conf;
+    h2Conf.setSessionReceiveWindowSize(16777215);
+    h2Conf.setStreamReceiveWindowSize(16777215);
+    request.setHttp2Configuration(h2Conf);
     // MO2 Revamped: an automatic retry after an error goes on from what is there
     // too; an error page never reaches the file (see acceptReplyData()), and a
     // server that ignores the range (200) or refuses it (416) starts it over
@@ -2008,25 +2017,28 @@ void DownloadManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
         info->m_DownloadTimeAcc(elapsed - info->m_DownloadTimeLast);
         info->m_DownloadTimeLast = elapsed;
 
-        // calculate the download speed
-        const double speed = rolling_mean(info->m_DownloadAcc) /
-                             (rolling_mean(info->m_DownloadTimeAcc) / 1000.0);
-        ;
-
-        const qint64 remaining = (bytesTotal - bytesReceived) / speed * 1000;
-
-        info->m_Progress.second = tr("%1% - %2 - ~%3")
-                                      .arg(info->m_Progress.first)
-                                      .arg(MOBase::localizedByteSpeed(speed))
-                                      .arg(MOBase::localizedTimeRemaining(remaining));
-
-        TaskProgressManager::instance().updateProgress(info->m_TaskProgressId,
-                                                       bytesReceived, bytesTotal);
-        // the network reports progress many times a second; the row repaints
-        // when the percentage changes, and otherwise about four times a second
+        // the network reports progress many times a second (each chunk of a
+        // fast download); the row repaints when the percentage changes, and
+        // otherwise about four times a second
         if (info->m_Progress.first != oldProgress ||
             elapsed - info->m_ProgressShownAt >= 250) {
           info->m_ProgressShownAt = elapsed;
+
+          // MO2 Revamped: the text and the taskbar's progress (a call into
+          // Explorer) only for what is shown; they ran for every chunk
+          const double speed = rolling_mean(info->m_DownloadAcc) /
+                               (rolling_mean(info->m_DownloadTimeAcc) / 1000.0);
+          const qint64 remaining =
+              speed > 0 ? static_cast<qint64>((bytesTotal - bytesReceived) / speed * 1000)
+                        : 0;
+
+          info->m_Progress.second = tr("%1% - %2 - ~%3")
+                                        .arg(info->m_Progress.first)
+                                        .arg(MOBase::localizedByteSpeed(speed))
+                                        .arg(MOBase::localizedTimeRemaining(remaining));
+
+          TaskProgressManager::instance().updateProgress(info->m_TaskProgressId,
+                                                         bytesReceived, bytesTotal);
           emit update(index);
         }
       }
