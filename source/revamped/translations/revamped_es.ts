@@ -13511,6 +13511,10 @@ Revisa las opciones del juego antes de jugar.</translation>
       <translation>Cancelar</translation>
     </message>
     <message>
+      <source>the server stopped sending data</source>
+      <translation>el servidor dejó de enviar datos</translation>
+    </message>
+    <message>
       <source>the server refused to continue the download</source>
       <translation>el servidor se negó a continuar la descarga</translation>
     </message>

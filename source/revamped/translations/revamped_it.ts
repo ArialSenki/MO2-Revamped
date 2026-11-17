@@ -1187,6 +1187,10 @@ Vuoi davvero continuare?</translation>
       <translation>Annulla</translation>
     </message>
     <message>
+      <source>the server stopped sending data</source>
+      <translation>il server ha smesso di inviare dati</translation>
+    </message>
+    <message>
       <source>the server refused to continue the download</source>
       <translation>il server ha rifiutato di continuare il download</translation>
     </message>

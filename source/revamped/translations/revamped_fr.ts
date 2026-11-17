@@ -13335,6 +13335,10 @@ Vérifiez les options du jeu avant de jouer.</translation>
       <translation>Annuler</translation>
     </message>
     <message>
+      <source>the server stopped sending data</source>
+      <translation>le serveur a cessé d'envoyer des données</translation>
+    </message>
+    <message>
       <source>the server refused to continue the download</source>
       <translation>le serveur a refusé de reprendre le téléchargement</translation>
     </message>

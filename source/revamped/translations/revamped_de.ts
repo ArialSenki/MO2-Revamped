@@ -13152,6 +13152,10 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
       <translation>Abbrechen</translation>
     </message>
     <message>
+      <source>the server stopped sending data</source>
+      <translation>der Server hat aufgehört, Daten zu senden</translation>
+    </message>
+    <message>
       <source>the server refused to continue the download</source>
       <translation>der Server hat die Fortsetzung des Downloads abgelehnt</translation>
     </message>

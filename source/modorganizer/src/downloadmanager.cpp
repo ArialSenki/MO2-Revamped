@@ -44,6 +44,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QHttp2Configuration>
+#include <QPointer>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -298,7 +299,9 @@ DownloadManager::DownloadManager(NexusInterface* nexusInterface, QObject* parent
   connect(m_NexusInterface, &NexusInterface::nxmRequestDropped, this,
           &DownloadManager::nxmRequestFailed);
   m_TimeoutTimer.setSingleShot(false);
-  // connect(&m_TimeoutTimer, SIGNAL(timeout()), this, SLOT(checkDownloadTimeout()));
+  connect(&m_TimeoutTimer, &QTimer::timeout, this, [this] {
+    checkStalledDownloads();
+  });
   m_TimeoutTimer.start(5 * 1000);
 }
 
@@ -683,6 +686,8 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   newDownload->m_StartTime.start();
   // the clock starts again on a resume or a retry: so does the progress shown
   newDownload->m_ProgressShownAt = -1000;
+  newDownload->m_LastDataAt      = 0;
+  newDownload->m_Stalled         = false;
   createMetaFile(newDownload);
 
   if (!newDownload->m_Output.open(mode)) {
@@ -1180,7 +1185,31 @@ void DownloadManager::cancelDownload(int index)
 
   if (m_ActiveDownloads.at(index)->m_State == STATE_DOWNLOADING) {
     setState(m_ActiveDownloads.at(index), STATE_CANCELING);
+    stopReplySoon(m_ActiveDownloads.at(index));
   }
+}
+
+void DownloadManager::stopReplySoon(DownloadInfo* info)
+{
+  // MO2 Revamped: pausing and canceling waited for the next progress of the
+  // reply; with a stalled server (or one that sends no size) that never came and
+  // the download stayed "pausing" or "canceling". The reply is stopped once the
+  // caller is done (finishing removes a canceled row), unless progress did it.
+  const unsigned int downloadID = info->m_DownloadID;
+  QPointer<QNetworkReply> reply(info->m_Reply);
+  QMetaObject::invokeMethod(
+      this,
+      [this, downloadID, reply] {
+        DownloadInfo* current = downloadInfoByID(downloadID);
+        if (reply.isNull() || current == nullptr || current->m_Reply != reply ||
+            !reply->isRunning()) {
+          return;
+        }
+        if (current->m_State == STATE_PAUSING || current->m_State == STATE_CANCELING) {
+          reply->abort();
+        }
+      },
+      Qt::QueuedConnection);
 }
 
 void DownloadManager::pauseDownload(int index)
@@ -1195,6 +1224,7 @@ void DownloadManager::pauseDownload(int index)
   if (info->m_State == STATE_DOWNLOADING) {
     if ((info->m_Reply != nullptr) && (info->m_Reply->isRunning())) {
       setState(info, STATE_PAUSING);
+      stopReplySoon(info);
     } else {
       setState(info, STATE_PAUSED);
     }
@@ -2006,9 +2036,34 @@ void DownloadManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
   }
 }
 
+void DownloadManager::checkStalledDownloads()
+{
+  // a server that keeps the connection open but sends nothing (a stuck CDN
+  // node, a dropped Wi-Fi the system didn't notice) gets this long
+  static const qint64 stallLimit = 60 * 1000;
+  for (DownloadInfo* info : m_ActiveDownloads) {
+    if (info->m_State != STATE_DOWNLOADING || info->m_Reply == nullptr ||
+        !info->m_Reply->isRunning() || info->m_Stalled) {
+      continue;
+    }
+    const qint64 quiet = info->m_StartTime.elapsed() - info->m_LastDataAt;
+    if (quiet >= stallLimit) {
+      log::warn("download \"{}\": no data for {} seconds, stopping it to retry",
+                info->m_FileName, quiet / 1000);
+      info->m_Stalled = true;
+      // finished() comes from here or later; downloadFinished() takes it for a
+      // failure (and retries) because of m_Stalled
+      QMetaObject::invokeMethod(info->m_Reply, "abort", Qt::QueuedConnection);
+    }
+  }
+}
+
 void DownloadManager::downloadReadyRead()
 {
   try {
+    if (DownloadInfo* info = findDownload(this->sender())) {
+      info->m_LastDataAt = info->m_StartTime.elapsed();
+    }
     writeData(findDownload(this->sender()));
   } catch (const std::bad_alloc&) {
     reportError(tr("Memory allocation error (in processing downloaded data)."));
@@ -2670,7 +2725,9 @@ void DownloadManager::downloadFinished(int index)
 
     bool error = false;
     QString failure;
-    if (!canceling && (info->m_State != STATE_PAUSING)) {
+    // a paused one (its reply aborted by the pause) is no failure either, even
+    // with nothing written yet
+    if (!canceling && info->m_State != STATE_PAUSING && info->m_State != STATE_PAUSED) {
       const QString contentType =
           reply->header(QNetworkRequest::ContentTypeHeader).toString();
       bool textData = contentType.startsWith("text", Qt::CaseInsensitive);
@@ -2679,7 +2736,7 @@ void DownloadManager::downloadFinished(int index)
         log::warn("download \"{}\": content type is {}", info->m_FileName, contentType);
         emit showMessage(tr("Nexus sent a web page instead of the file."));
       }
-      if ((info->m_Output.size() == 0) || (status == 416) ||
+      if ((info->m_Output.size() == 0) || (status == 416) || info->m_Stalled ||
           ((reply->error() != QNetworkReply::NoError) &&
            (reply->error() != QNetworkReply::OperationCanceledError))) {
         if (reply->error() == QNetworkReply::UnknownContentError) {
@@ -2702,7 +2759,10 @@ void DownloadManager::downloadFinished(int index)
                       .arg(reply->error());
         log::warn("download \"{}\" failed: {}", info->m_FileName, failure);
         // MO2 Revamped: kept for the row's tool tip, in words where Qt has none
-        if (status == 416) {
+        if (info->m_Stalled) {
+          failure           = tr("the server stopped sending data");
+          info->m_LastError = failure;
+        } else if (status == 416) {
           info->m_LastError = tr("the server refused to continue the download");
         } else if (reply->error() != QNetworkReply::NoError &&
                    reply->error() != QNetworkReply::OperationCanceledError) {

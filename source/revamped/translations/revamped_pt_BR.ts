@@ -13128,6 +13128,10 @@ Confira as opções do jogo antes de jogar.</translation>
       <translation>Cancelar</translation>
     </message>
     <message>
+      <source>the server stopped sending data</source>
+      <translation>o servidor parou de enviar dados</translation>
+    </message>
+    <message>
       <source>the server refused to continue the download</source>
       <translation>o servidor se recusou a continuar o download</translation>
     </message>
