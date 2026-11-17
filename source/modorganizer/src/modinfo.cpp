@@ -454,6 +454,8 @@ std::set<QSharedPointer<ModInfo>> ModInfo::filteredMods(QString gameName,
                                                         bool addOldMods,
                                                         bool markUpdated)
 {
+  // MO2 Revamped: runs on a worker thread; a refresh clears the collection
+  QMutexLocker locker(&s_Mutex);
   std::set<QSharedPointer<ModInfo>> finalMods;
   for (QVariant result : updateData) {
     QVariantMap update = result.toMap();

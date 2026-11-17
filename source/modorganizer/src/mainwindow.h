@@ -392,6 +392,8 @@ private:
   std::atomic<std::size_t> m_NumberOfProblems;
   std::atomic<bool> m_ProblemsCheckRequired;
   std::mutex m_CheckForProblemsMutex;
+  // MO2 Revamped: the checks still running, waited for in cleanup()
+  QList<QFuture<void>> m_ProblemChecks;
 
   QVersionNumber m_LastVersion;
 

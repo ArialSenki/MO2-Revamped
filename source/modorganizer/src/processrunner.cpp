@@ -453,10 +453,12 @@ ProcessRunner::Results waitForProcesses(const std::vector<HANDLE>& initialProces
   auto* t = QThread::create(waitForProcessesThread, std::ref(results), monitor, ls,
                             std::ref(interrupt), ignored);
 
+  // MO2 Revamped: queued to this thread's loop. Called on the worker, a quit()
+  // that came before exec() started was lost (exec() resets it): a program
+  // that ended at once left the UI waiting for good
   QEventLoop events;
-  QObject::connect(t, &QThread::finished, [&] {
-    events.quit();
-  });
+  QObject::connect(t, &QThread::finished, &events, &QEventLoop::quit,
+                   Qt::QueuedConnection);
 
   t->start();
   events.exec();

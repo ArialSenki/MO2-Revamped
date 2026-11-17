@@ -2458,9 +2458,15 @@ void MainWindow::updateProblemsButton()
 
 QFuture<void> MainWindow::checkForProblemsAsync()
 {
-  return QtConcurrent::run([this]() {
+  // MO2 Revamped: kept, so the window isn't deleted under a running check
+  m_ProblemChecks.removeIf([](const QFuture<void>& f) {
+    return f.isFinished();
+  });
+  auto future = QtConcurrent::run([this]() {
     checkForProblemsImpl();
   });
+  m_ProblemChecks.append(future);
+  return future;
 }
 
 void MainWindow::checkForProblemsImpl()
@@ -2947,7 +2953,21 @@ void MainWindow::cleanup()
   }
 
   m_SaveMetaTimer.stop();
-  m_MetaSave.waitForFinished();
+  try {
+    m_MetaSave.waitForFinished();
+  } catch (const std::exception& e) {
+    log::error("saving the mods' meta.ini failed: {}", e.what());
+  }
+
+  m_UpdateProblemsTimer.stop();
+  for (auto& f : m_ProblemChecks) {
+    try {
+      f.waitForFinished();
+    } catch (const std::exception& e) {
+      log::error("the problems check failed: {}", e.what());
+    }
+  }
+  m_ProblemChecks.clear();
 }
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
@@ -3663,10 +3683,24 @@ void MainWindow::checkBSAList()
 void MainWindow::saveModMetas()
 {
   if (m_MetaSave.isFinished()) {
-    m_MetaSave = QtConcurrent::run([this]() {
-      for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
-        ModInfo::Ptr modInfo = ModInfo::getByIndex(i);
-        modInfo->saveMeta();
+    // MO2 Revamped: the list is taken here, on the UI thread. Walking it by
+    // index on the worker read the collection while a refresh or a removal
+    // changed it: an index past the end threw, and the exception came back out
+    // of waitForFinished() when MO2 closed
+    std::vector<ModInfo::Ptr> mods;
+    mods.reserve(ModInfo::getNumMods());
+    for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+      mods.push_back(ModInfo::getByIndex(i));
+    }
+    m_MetaSave = QtConcurrent::run([mods = std::move(mods)]() {
+      for (const ModInfo::Ptr& modInfo : mods) {
+        try {
+          if (modInfo) {
+            modInfo->saveMeta();
+          }
+        } catch (const std::exception& e) {
+          log::error("couldn't save meta.ini of '{}': {}", modInfo->name(), e.what());
+        }
       }
     });
   }
@@ -5615,8 +5649,10 @@ void MainWindow::nxmUpdateInfoAvailable(QString gameName, QVariant userData,
   }
   QVariantList resultList = resultData.toList();
 
-  auto* watcher = new QFutureWatcher<NxmUpdateInfoData>();
-  QObject::connect(watcher, &QFutureWatcher<NxmUpdateInfoData>::finished,
+  // MO2 Revamped: owned by the window, so a close before the worker ends
+  // doesn't call into a deleted one
+  auto* watcher = new QFutureWatcher<NxmUpdateInfoData>(this);
+  QObject::connect(watcher, &QFutureWatcher<NxmUpdateInfoData>::finished, this,
                    [this, watcher]() {
                      finishUpdateInfo(watcher->result());
                      watcher->deleteLater();

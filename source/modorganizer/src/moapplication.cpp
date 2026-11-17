@@ -1659,6 +1659,25 @@ private:
 };
 }  // namespace
 
+namespace
+{
+// MO2 Revamped: notify() runs for the worker threads' events too, and a message
+// box made on one of them can crash or hang: it goes to the UI thread
+void reportOnUiThread(const QString& message)
+{
+  if (QThread::currentThread() == qApp->thread()) {
+    reportError(message);
+    return;
+  }
+  QMetaObject::invokeMethod(
+      qApp,
+      [message] {
+        reportError(message);
+      },
+      Qt::QueuedConnection);
+}
+}  // namespace
+
 bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
   if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
@@ -1788,12 +1807,12 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
   } catch (const std::exception& e) {
     log::error("uncaught exception in handler (object {}, eventtype {}): {}",
                receiver->objectName(), event->type(), e.what());
-    reportError(tr("an error occurred: %1").arg(e.what()));
+    reportOnUiThread(tr("an error occurred: %1").arg(QString::fromUtf8(e.what())));
     return false;
   } catch (...) {
     log::error("uncaught non-std exception in handler (object {}, eventtype {})",
                receiver->objectName(), event->type());
-    reportError(tr("an error occurred"));
+    reportOnUiThread(tr("an error occurred"));
     return false;
   }
 }
