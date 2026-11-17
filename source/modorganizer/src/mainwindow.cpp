@@ -5107,6 +5107,10 @@ bool MainWindow::selectProfileByName(const QString& name)
 
 void MainWindow::on_actionNexus_triggered()
 {
+  // Ctrl+N lives on the window, which the lock while a program runs leaves on
+  if (UILocker::instance().locked()) {
+    return;
+  }
   const IPluginGame* game = m_OrganizerCore.managedGame();
   QString gameName        = game->gameShortName();
   if (game->gameNexusName().isEmpty() && game->primarySources().count())
