@@ -2675,7 +2675,7 @@ bool CollectionSession::installBundle(int row)
   }
 
   m_core.finishCreatedMod(true);
-  m_core.refresh();
+  m_core.refreshInstalledMod(static_cast<const QString&>(name));
 
   e.modName = static_cast<const QString&>(name);
   if (ModInfo::getIndex(e.modName) != UINT_MAX) {
@@ -2831,7 +2831,7 @@ bool CollectionSession::installRootMod(int row, bool* handled)
   }
 
   m_core.finishCreatedMod(true);
-  m_core.refresh();
+  m_core.refreshInstalledMod(folder);
 
   e.modName = folder;
   if (ModInfo::getIndex(e.modName) != UINT_MAX) {

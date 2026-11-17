@@ -342,6 +342,40 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
   updateIndices();
 }
 
+bool ModInfo::updateOneFromDisc(const QString& modsDirectory, const QString& name,
+                                OrganizerCore& core)
+{
+  TimeThis tt("ModInfo::updateOneFromDisc()");
+
+  if (name.isEmpty() || name == QLatin1String(MOShared::ReplacedModsFolder) ||
+      isBackupName(name) || isSeparatorName(name)) {
+    return false;
+  }
+  const QDir dir(QDir::fromNativeSeparators(modsDirectory) + "/" + name);
+  if (!dir.exists()) {
+    return false;
+  }
+
+  QMutexLocker lock(&s_Mutex);
+  ModInfo::Ptr fresh(new ModInfoRegular(dir, core));
+
+  // the same folder read before: the new object takes its place; a new one
+  // goes where a full read would put it
+  const auto it = s_ModsByName.find(name);
+  if (it != s_ModsByName.end() && it->second < s_Collection.size() &&
+      s_Collection[it->second]->isRegular()) {
+    s_Collection[it->second] = fresh;
+  } else if (it != s_ModsByName.end()) {
+    return false;
+  } else {
+    s_Collection.push_back(fresh);
+    std::sort(s_Collection.begin(), s_Collection.end(), ModInfo::ByName);
+  }
+  fresh->prefetch();
+  updateIndices();
+  return true;
+}
+
 void ModInfo::updateIndices()
 {
   s_ModsByName.clear();

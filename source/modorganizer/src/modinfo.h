@@ -119,6 +119,15 @@ public:  // Static functions:
   static void updateFromDisc(const QString& modDirectory, OrganizerCore& core,
                              bool displayForeign, std::size_t refreshThreadCount);
 
+  /**
+   * @brief MO2 Revamped: reads one mod folder again, or for the first time, and
+   *   leaves the others as they are (an install during a collection).
+   * @return false when the folder isn't a regular mod folder there; the caller
+   *   then reads them all
+   */
+  static bool updateOneFromDisc(const QString& modDirectory, const QString& name,
+                                OrganizerCore& core);
+
   static void clear()
   {
     s_Collection.clear();

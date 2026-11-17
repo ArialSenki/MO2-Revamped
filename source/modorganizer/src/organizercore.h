@@ -433,6 +433,10 @@ public:
   ModList* modList();
   void refresh(bool saveChanges = true);
 
+  // MO2 Revamped: after an install while directory refreshes are deferred (a
+  // collection): only that mod's folder is read again; otherwise refresh()
+  void refreshInstalledMod(const QString& modName);
+
   // MO2 Revamped: Nexus collection links (nxm://<game>/collections/...) go to
   // the handler the main window sets; links that come before it wait for it
   void setCollectionHandler(std::function<void(const QString&)> handler);
