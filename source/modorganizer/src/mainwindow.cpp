@@ -4799,7 +4799,7 @@ void MainWindow::on_actionSettings_triggered()
   auto e = dialog.exitNeeded();
 
   // the current profile and Overwrite stay open at the old paths until then
-  if (oldManagedGameDirectory != settings.game().directory() ||
+  if (oldManagedGameDirectory != settings.game().directory().value_or("") ||
       oldProfilesDirectory != settings.paths().profiles() ||
       oldOverwriteDirectory != settings.paths().overwrite()) {
     e |= Exit::Restart;
