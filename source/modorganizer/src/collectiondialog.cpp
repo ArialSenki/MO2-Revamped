@@ -1,14 +1,24 @@
 #include "collectiondialog.h"
 
+#include "collectionbrowser.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentpanels.h"
+#include "nexusinterface.h"
 #include "organizercore.h"
 #include "profile.h"
+#include "screenfitter.h"
 #include "settings.h"
 
 #include "revampedtheme.h"
+#include <iplugingame.h>
 #include <utility.h>
+
+#include <QJsonObject>
+#include <QMap>
+#include <algorithm>
+#include <QProgressBar>
+#include <QRegularExpression>
 
 #include <QScopedValueRollback>
 #include <QScrollArea>
@@ -55,6 +65,25 @@ constexpr char16_t NextGlyph      = 0xE8A7;  // OpenInNewWindow
 constexpr char16_t InstanceGlyph  = 0xE8B7;  // Folder
 constexpr char16_t CurrentGlyph   = 0xE73E;  // CheckMark
 constexpr char16_t DownloadGlyph  = 0xE896;  // Download
+
+// the header's picture, as the Wabbajack list window's
+const QSize ImageSize(256, 144);
+
+// what the window shows of the collection's page; the session asks Nexus for
+// what the install needs
+const char* InfoQuery = R"(query ($slug: String!) {
+  collection(slug: $slug, viewAdultContent: true) {
+    summary
+    description
+    adultContent
+    endorsements
+    totalDownloads
+    category { name }
+    game { domainName }
+    tileImage { thumbnailUrl(size: med) }
+    latestPublishedRevision { gameVersions { reference } }
+  }
+})";
 
 enum Column
 {
@@ -113,6 +142,7 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
   setProperty("mo2rOwnWindow", true);
   setProperty("mo2rOwnPosition", true);
   setupUi();
+  m_fitter = new ScreenFitter(this, QSize(900, 640));
   placeWindow();
 
   // MO2 may still be starting (a collection link on its command line): the main
@@ -151,8 +181,13 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
     activateWindow();
   });
 
+  auto& nexus = NexusInterface::instance();
+  connect(&nexus, &NexusInterface::nxmApiV2Available, this, &CollectionDialog::onInfo);
+  connect(&nexus, &NexusInterface::nxmRequestFailed, this, &CollectionDialog::onInfoFailed);
+
   onChanged();
   QTimer::singleShot(0, m_session, &CollectionSession::load);
+  QTimer::singleShot(0, this, &CollectionDialog::requestInfo);
 }
 
 CollectionDialog::~CollectionDialog() = default;
@@ -175,28 +210,17 @@ void CollectionDialog::placeWindow()
       QGuiApplication::screenAt(geometry().center()) == screen &&
       available.contains(geometry().center()) && width() >= least.width() &&
       height() >= least.height()) {
-    resize(size().boundedTo(available.size()));
+    resize(size().boundedTo(available.size() - QSize(16, 40)));
+    m_fitter->setUserSized(true);
     return;
   }
 
-  // else large from the start, centred over the main window; over the work area
-  // when the main window fills it or isn't shown yet (its size is then not its
-  // final one)
-  // sized by the screen, not by the main window, which may be small or not
-  // shown yet; centred over the main window when it is shown
+  // else sized by the screen, not by the main window, which may be small or
+  // not shown yet; centred over the main window when it is shown
   const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
-  const QRect base      = available;
-  const QSize wanted    = wantedSize(available);
-  resize(wanted);
-  const QPoint middle = overWindow ? anchor->frameGeometry().center() : base.center();
-  QPoint pos(middle.x() - wanted.width() / 2, middle.y() - wanted.height() / 2);
-  pos.setX(qBound(available.left(), pos.x(),
-                  qMax(available.left(), available.right() - wanted.width() - 16)));
-  pos.setY(qBound(available.top(), pos.y(),
-                  qMax(available.top(), available.bottom() - wanted.height() - 40)));
-  move(pos);
+  m_fitter->place(screen, overWindow ? anchor->frameGeometry().center() : available.center());
 }
 
 bool CollectionDialog::eventFilter(QObject* watched, QEvent* event)
@@ -238,55 +262,11 @@ void CollectionDialog::moveEvent(QMoveEvent* e)
 void CollectionDialog::resizeEvent(QResizeEvent* e)
 {
   QDialog::resizeEvent(e);
-  if (!m_placing && !m_fitting && isVisible() && e->spontaneous()) {
-    m_userPlaced  = true;
-    m_userResized = true;
+  // the size by the screen is ScreenFitter's; this only stops the window
+  // following the main window once the user has sized it
+  if (!m_placing && isVisible() && e->spontaneous() && !isMaximized()) {
+    m_userPlaced = true;
   }
-}
-
-// MO2 Revamped: a size for the work area of one screen: large enough for the
-// table and the options, but not the whole of a 2K or 4K screen
-QSize CollectionDialog::wantedSize(const QRect& available) const
-{
-  const QSize least = QSize(900, 640).boundedTo(available.size());
-  QSize wanted(qMin(available.width() * 7 / 10, 1500),
-               qMin(available.height() * 8 / 10, 1000));
-  return wanted.expandedTo(least).boundedTo(available.size() - QSize(16, 40));
-}
-
-void CollectionDialog::showEvent(QShowEvent* e)
-{
-  QDialog::showEvent(e);
-  if (QWindow* window = windowHandle(); window != nullptr && !m_screenWatched) {
-    m_screenWatched = true;
-    connect(window, &QWindow::screenChanged, this, &CollectionDialog::fitToScreen);
-  }
-}
-
-// moved to another screen (a 2K one to a 1080p one): the window takes that
-// screen's size, or, once the user sized it, at least fits on it
-void CollectionDialog::fitToScreen(QScreen* screen)
-{
-  if (screen == nullptr || isMaximized() || isFullScreen()) {
-    return;
-  }
-  const QRect available = screen->availableGeometry();
-  const QSize least     = QSize(900, 640).boundedTo(available.size());
-  QSize size            = m_userResized ? this->size() : wantedSize(available);
-  size                  = size.boundedTo(available.size() - QSize(16, 40));
-  m_fitting             = true;
-  setMinimumSize(least);
-  if (size != this->size()) {
-    const QPoint middle = frameGeometry().center();
-    resize(size);
-    QPoint pos(middle.x() - size.width() / 2, middle.y() - size.height() / 2);
-    pos.setX(qBound(available.left(), pos.x(),
-                    qMax(available.left(), available.right() - size.width() - 16)));
-    pos.setY(qBound(available.top(), pos.y(),
-                    qMax(available.top(), available.bottom() - size.height() - 40)));
-    move(pos);
-  }
-  m_fitting = false;
 }
 
 bool CollectionDialog::claims(const QString& nxmUrl) const
@@ -402,8 +382,12 @@ void CollectionDialog::setupUi()
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(8);
 
+  // as the Wabbajack list window: what it is, what it needs, the author's
+  // notes, then the steps of the install and the mods
   layout->addWidget(createHeader());
+  layout->addWidget(createNeeds());
   layout->addWidget(createInstructions());
+  layout->addWidget(createSteps());
   layout->addWidget(createMods(), 1);
   layout->addWidget(createOptions());
   layout->addWidget(createSummary());
@@ -486,27 +470,137 @@ QFrame* CollectionDialog::createHeader()
   auto* card = new QFrame(this);
   card->setObjectName(QStringLiteral("collectionHeaderCard"));
   card->setProperty("fluentCard", true);
+  // as tall as its text
+  card->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
   auto* layout = new QHBoxLayout(card);
   layout->setContentsMargins(18, 14, 18, 14);
-  layout->setSpacing(10);
+  layout->setSpacing(14);
+
+  // the collection's picture, once Nexus has sent it
+  m_image = new QLabel(card);
+  m_image->setObjectName(QStringLiteral("collectionImage"));
+  m_image->setFixedSize(ImageSize);
+  m_image->setAlignment(Qt::AlignCenter);
+  m_image->hide();
+  layout->addWidget(m_image, 0, Qt::AlignTop);
 
   auto* names = new QVBoxLayout;
-  names->setSpacing(2);
+  names->setSpacing(4);
   m_name = new QLabel(card);
   m_name->setObjectName(QStringLiteral("instanceDetailName"));
+  m_name->setTextFormat(Qt::PlainText);
   m_name->setTextInteractionFlags(Qt::TextSelectableByMouse);
   m_caption = new QLabel(card);
   m_caption->setObjectName(QStringLiteral("instanceDetailCaption"));
+  m_caption->setTextFormat(Qt::PlainText);
   m_caption->setWordWrap(true);
+  m_about = new QLabel(card);
+  m_about->setObjectName(QStringLiteral("collectionSummary"));
+  m_about->setWordWrap(true);
+  m_about->setTextFormat(Qt::PlainText);
+  m_about->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_about->hide();
+
+  // the collection's page: a button straight in the card's layout (a widget
+  // around it is painted as a panel of its own)
+  auto* links = new QHBoxLayout;
+  links->setContentsMargins(0, 4, 0, 0);
+  links->setSpacing(8);
+  m_page = new QPushButton(FluentIcons::glyph(NextGlyph), tr("Collection page"), card);
+  m_page->setObjectName(QStringLiteral("collectionPage"));
+  m_page->setAutoDefault(false);
+  m_page->hide();
+  links->addWidget(m_page);
+  links->addStretch(1);
+  connect(m_page, &QPushButton::clicked, this, [this] {
+    const QUrl url(m_page->property("mo2rUrl").toString());
+    if (url.isValid() && url.scheme() == u"https") {
+      shell::Open(url);
+    }
+  });
+
   names->addWidget(m_name);
   names->addWidget(m_caption);
+  names->addWidget(m_about);
+  names->addLayout(links);
+  names->addStretch(1);
   layout->addLayout(names, 1);
 
   m_loading = new QLabel(card);
   m_loading->setObjectName(QStringLiteral("fluentStatCaption"));
   m_loading->setWordWrap(true);
-  layout->addWidget(m_loading, 0, Qt::AlignVCenter | Qt::AlignRight);
+  layout->addWidget(m_loading, 0, Qt::AlignTop | Qt::AlignRight);
   return card;
+}
+
+QFrame* CollectionDialog::createNeeds()
+{
+  m_needsCard = new QFrame(this);
+  m_needsCard->setObjectName(QStringLiteral("collectionNeedsCard"));
+  m_needsCard->setProperty("fluentCard", true);
+  auto* layout = new QVBoxLayout(m_needsCard);
+  layout->setContentsMargins(14, 10, 14, 10);
+  layout->setSpacing(6);
+
+  auto* title = new QLabel(tr("What it needs"), m_needsCard);
+  title->setObjectName(QStringLiteral("fluentCardTitle"));
+  layout->addWidget(title);
+
+  m_needs = new QLabel(m_needsCard);
+  m_needs->setWordWrap(true);
+  m_needs->setTextFormat(Qt::RichText);
+  m_needs->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  layout->addWidget(m_needs);
+
+  m_needsNotes = new QLabel(m_needsCard);
+  m_needsNotes->setObjectName(QStringLiteral("instanceDetailCaption"));
+  m_needsNotes->setWordWrap(true);
+  m_needsNotes->setTextFormat(Qt::PlainText);
+  m_needsNotes->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  m_needsNotes->hide();
+  layout->addWidget(m_needsNotes);
+
+  m_needsCard->hide();
+  return m_needsCard;
+}
+
+// the install in three steps, each with its own progress: the files come, the
+// mods are installed, then the order, plugins and the rest of the collection
+QFrame* CollectionDialog::createSteps()
+{
+  m_stepsCard = new QFrame(this);
+  m_stepsCard->setObjectName(QStringLiteral("collectionStepsCard"));
+  m_stepsCard->setProperty("fluentCard", true);
+  m_stepsCard->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+  auto* layout = new QHBoxLayout(m_stepsCard);
+  layout->setContentsMargins(14, 10, 14, 12);
+  layout->setSpacing(18);
+
+  const QString titles[] = {tr("1. Download the files"), tr("2. Install the mods"),
+                            tr("3. Order and finish")};
+  for (int i = 0; i < 3; ++i) {
+    auto* column = new QVBoxLayout;
+    column->setSpacing(4);
+    auto* title = new QLabel(titles[i], m_stepsCard);
+    title->setObjectName(QStringLiteral("fluentCardTitle"));
+    m_stepBar[i] = new QProgressBar(m_stepsCard);
+    m_stepBar[i]->setObjectName(QStringLiteral("collectionStepBar"));
+    m_stepBar[i]->setTextVisible(false);
+    m_stepBar[i]->setRange(0, 1);
+    m_stepBar[i]->setValue(0);
+    m_stepBar[i]->setAccessibleName(titles[i]);
+    m_stepText[i] = new QLabel(m_stepsCard);
+    m_stepText[i]->setObjectName(QStringLiteral("fluentStatCaption"));
+    // one line, its height fixed: a longer text never moves the bars
+    m_stepText[i]->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    column->addWidget(title);
+    column->addWidget(m_stepBar[i]);
+    column->addWidget(m_stepText[i]);
+    layout->addLayout(column, 1);
+  }
+
+  m_stepsCard->hide();
+  return m_stepsCard;
 }
 
 QFrame* CollectionDialog::createInstructions()
@@ -518,7 +612,7 @@ QFrame* CollectionDialog::createInstructions()
   layout->setContentsMargins(14, 10, 8, 8);
   layout->setSpacing(4);
 
-  auto* title = new QLabel(tr("Instructions"), m_instructionsCard);
+  auto* title = new QLabel(tr("Author's notes"), m_instructionsCard);
   title->setObjectName(QStringLiteral("fluentCardTitle"));
   layout->addWidget(title);
 
@@ -534,7 +628,7 @@ QFrame* CollectionDialog::createInstructions()
       shell::Open(url);
     }
   });
-  m_instructions->setMaximumHeight(100);
+  m_instructions->setMaximumHeight(160);
   layout->addWidget(m_instructions);
 
   m_instructionsCard->hide();
@@ -770,13 +864,23 @@ void CollectionDialog::onChanged()
   m_name->setText(m_session->displayName());
   QStringList caption;
   if (!m_session->author().isEmpty()) {
-    caption.append(m_session->author());
+    caption.append(tr("by %1").arg(m_session->author()));
   }
   if (m_session->revision() > 0) {
     caption.append(tr("revision %1").arg(m_session->revision()));
   }
   if (!m_session->gameName().isEmpty()) {
     caption.append(m_session->gameName());
+  }
+  if (m_info.known) {
+    if (!m_info.category.isEmpty()) {
+      caption.append(m_info.category);
+    }
+    caption.append(tr("%n endorsement(s)", "", m_info.endorsements));
+    caption.append(tr("%n download(s)", "", m_info.downloads));
+    if (m_info.adult) {
+      caption.append(tr("adult content (NSFW)"));
+    }
   }
   m_caption->setText(caption.join(QStringLiteral(" · ")));
   setWindowTitle(tr("Nexus collection: %1").arg(m_session->displayName()));
@@ -796,13 +900,11 @@ void CollectionDialog::onChanged()
     buildRows();
   }
 
-  if (haveRows) {
-    const QString instructions = m_session->manifest().installInstructions.trimmed();
-    if (!instructions.isEmpty() && m_instructions->toPlainText().isEmpty()) {
-      m_instructions->setMarkdown(instructions);
-    }
-    m_instructionsCard->setVisible(!instructions.isEmpty() && stage != Stage::Done);
+  updateNotes();
+  updateNeeds();
+  updateSteps();
 
+  if (haveRows) {
     QString count = tr("%n mod(s)", "", static_cast<int>(m_session->entries().size()));
     count += QStringLiteral(" · ") +
              tr("%1 in total").arg(localizedByteSize(m_session->totalSize()));
@@ -849,6 +951,274 @@ void CollectionDialog::onChanged()
   updateButtons();
 }
 
+// ---------------------------------------------------------------------------
+// the collection's page on Nexus: picture, summary, notes
+
+void CollectionDialog::requestInfo()
+{
+  const QString slug = m_session->link().slug;
+  if (slug.isEmpty() || m_infoRequest >= 0 || m_info.known) {
+    return;
+  }
+  QJsonObject vars;
+  vars.insert("slug", slug);
+  m_infoRequest = NexusInterface::instance().requestGraphQL(
+      QString::fromUtf8(InfoQuery), vars, QVariant(), QStringLiteral("collections"));
+}
+
+void CollectionDialog::onInfo(QVariant, QVariant result, int id)
+{
+  if (id < 0 || id != m_infoRequest) {
+    return;
+  }
+  m_infoRequest = -1;
+  const QVariantMap c = result.toMap().value("data").toMap().value("collection").toMap();
+  if (c.isEmpty()) {
+    return;  // the session says why, when the collection isn't there
+  }
+  m_info.known        = true;
+  m_info.domain       = c.value("game").toMap().value("domainName").toString();
+  m_info.summary      = c.value("summary").toString().trimmed();
+  m_info.description  = c.value("description").toString().trimmed();
+  m_info.category     = c.value("category").toMap().value("name").toString();
+  m_info.image        = c.value("tileImage").toMap().value("thumbnailUrl").toString();
+  m_info.endorsements = c.value("endorsements").toInt();
+  m_info.downloads    = c.value("totalDownloads").toInt();
+  m_info.adult        = c.value("adultContent").toBool();
+  for (const QVariant& g :
+       c.value("latestPublishedRevision").toMap().value("gameVersions").toList()) {
+    const QString v = g.toMap().value("reference").toString().trimmed();
+    if (!v.isEmpty()) {
+      m_info.gameVersions.append(v);
+    }
+  }
+
+  m_about->setText(m_info.summary);
+  m_about->setVisible(!m_info.summary.isEmpty());
+  if (Collections::isValidSlug(m_session->link().slug) && !m_info.domain.isEmpty()) {
+    const QString url = QStringLiteral("https://www.nexusmods.com/games/%1/collections/%2")
+                            .arg(m_info.domain, m_session->link().slug);
+    m_page->setProperty("mo2rUrl", url);
+    m_page->setToolTip(url);
+    m_page->show();
+  }
+
+  if (!m_info.image.isEmpty()) {
+    CollectionImages::fetch(m_network, m_info.image, this, [this](const QImage& image) {
+      if (image.isNull()) {
+        return;
+      }
+      const qreal dpr = devicePixelRatioF();
+      QPixmap pixmap  = QPixmap::fromImage(
+          image.scaled(ImageSize * dpr, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+      pixmap.setDevicePixelRatio(dpr);
+      m_image->setPixmap(pixmap);
+      m_image->show();
+    });
+  }
+  onChanged();
+}
+
+void CollectionDialog::onInfoFailed(QString, int, int, QVariant, int id, int, const QString&)
+{
+  if (id >= 0 && id == m_infoRequest) {
+    // the header stays as the session fills it
+    m_infoRequest = -1;
+  }
+}
+
+void CollectionDialog::updateNotes()
+{
+  // the author's notes: the install instructions first (what to do), then the
+  // collection's description from its page. Images in it aren't loaded
+  QStringList parts;
+  const QString instructions = m_session->manifest().installInstructions.trimmed();
+  if (!instructions.isEmpty()) {
+    parts.append(instructions);
+  }
+  if (!m_info.description.isEmpty()) {
+    static const QRegularExpression image(QStringLiteral(R"(!\[[^\]]*\]\([^)]*\))"));
+    QString description = m_info.description;
+    description.remove(image);
+    description = description.trimmed();
+    if (!description.isEmpty()) {
+      if (!parts.isEmpty()) {
+        parts.append(QStringLiteral("---"));
+      }
+      parts.append(description);
+    }
+  }
+  const QString text = parts.join(QStringLiteral("\n\n"));
+  // set once per change: the reader's place in it stays
+  if (text != m_notesShown) {
+    m_notesShown = text;
+    m_instructions->setMarkdown(text);
+  }
+  m_instructionsCard->setVisible(!text.isEmpty() && m_session->stage() != Stage::Done &&
+                                 m_session->stage() != Stage::Error);
+}
+
+void CollectionDialog::updateNeeds()
+{
+  const auto& entries = m_session->entries();
+  const Stage stage   = m_session->stage();
+  // before the start: once it runs, the steps and the mod list have the room
+  if (entries.empty() || stage == Stage::Error || stage == Stage::Done ||
+      m_session->started()) {
+    m_needsCard->setVisible(false);
+    return;
+  }
+
+  int nexus = 0, bundled = 0, external = 0, byHand = 0, optional = 0;
+  qint64 nexusSize = 0, download = 0;
+  QMap<QString, int> categories;
+  for (const auto& e : entries) {
+    const auto& mod = m_session->modOf(e);
+    if (mod.optional) {
+      ++optional;
+    }
+    if (e.byHand) {
+      ++byHand;
+    } else if (mod.type == SourceType::Nexus) {
+      ++nexus;
+      nexusSize += e.size;
+    } else if (mod.type == SourceType::Bundle) {
+      ++bundled;
+    } else {
+      ++external;
+    }
+    if (e.selected && mod.type != SourceType::Bundle) {
+      download += e.size;
+    }
+    const QString category = !mod.category.trimmed().isEmpty() ? mod.category.trimmed()
+                                                                : e.category.trimmed();
+    if (!category.isEmpty()) {
+      ++categories[category];
+    }
+  }
+
+  QStringList lines;
+  lines << tr("<b>%1</b> to download, %n mod(s) to install", "",
+              static_cast<int>(entries.size()))
+               .arg(localizedByteSize(download));
+  auto line = [&](int count, const QString& what) {
+    if (count > 0) {
+      lines << QStringLiteral("• %1").arg(what);
+    }
+  };
+  line(nexus, tr("%n mod(s) from Nexus Mods (%1)", "", nexus).arg(localizedByteSize(nexusSize)));
+  line(bundled, tr("%n mod(s) bundled in the collection", "", bundled));
+  line(external, tr("%n mod(s) from other sites, to get by hand", "", external));
+  line(byHand, tr("%n file(s) of another game's page, to install by hand", "", byHand));
+  line(optional, tr("%n optional mod(s): tick the ones you want in the list below", "",
+                    optional));
+
+  // the categories, the largest first
+  if (!categories.isEmpty()) {
+    std::vector<std::pair<QString, int>> sorted;
+    for (auto it = categories.cbegin(); it != categories.cend(); ++it) {
+      sorted.emplace_back(it.key(), it.value());
+    }
+    std::stable_sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+      return a.second > b.second;
+    });
+    QStringList names;
+    constexpr std::size_t Shown = 8;
+    for (std::size_t i = 0; i < sorted.size() && i < Shown; ++i) {
+      names << QStringLiteral("%1 (%2)").arg(sorted[i].first.toHtmlEscaped()).arg(sorted[i].second);
+    }
+    if (sorted.size() > Shown) {
+      names << tr("%n more", "", static_cast<int>(sorted.size() - Shown));
+    }
+    lines << tr("Categories: %1").arg(names.join(QStringLiteral(", ")));
+  }
+  m_needs->setText(lines.join(QStringLiteral("<br>")));
+
+  // the game version it was made for, against the one here
+  QString note;
+  const MOBase::IPluginGame* game = m_core.managedGame();
+  if (!m_info.gameVersions.isEmpty() && game != nullptr) {
+    const QString have = game->gameVersion();
+    note = have.isEmpty()
+               ? tr("Made for game version %1.").arg(m_info.gameVersions.join(", "))
+               : tr("Made for game version %1; you have %2.")
+                     .arg(m_info.gameVersions.join(", "), have);
+  }
+  m_needsNotes->setText(note);
+  m_needsNotes->setVisible(!note.isEmpty());
+  m_needsCard->setVisible(true);
+}
+
+void CollectionDialog::updateSteps()
+{
+  const auto& entries = m_session->entries();
+  const Stage stage   = m_session->stage();
+  if (entries.empty() || stage == Stage::Loading || stage == Stage::Error) {
+    m_stepsCard->setVisible(false);
+    return;
+  }
+
+  int downloads = 0, downloaded = 0, mods = 0, installed = 0, failed = 0;
+  for (const auto& e : entries) {
+    if (!e.selected || e.status == Status::Skipped) {
+      continue;
+    }
+    const auto& mod = m_session->modOf(e);
+    ++mods;
+    if (e.status == Status::Installed) {
+      ++installed;
+    } else if (e.status == Status::Failed) {
+      ++failed;
+    }
+    if (mod.type != SourceType::Bundle) {
+      ++downloads;
+      if (e.status == Status::Downloaded || e.status == Status::Installed) {
+        ++downloaded;
+      }
+    }
+  }
+
+  auto show = [this](int step, int done, int total, const QString& text) {
+    QProgressBar* bar = m_stepBar[step];
+    if (bar->maximum() != qMax(1, total)) {
+      bar->setRange(0, qMax(1, total));
+    }
+    if (bar->value() != done) {
+      bar->setValue(done);
+    }
+    if (m_stepText[step]->text() != text) {
+      m_stepText[step]->setText(text);
+    }
+  };
+
+  const bool running = stage == Stage::Running;
+  QString text       = downloads == 0 ? tr("Nothing to download")
+                                      : tr("%1 of %2 files").arg(downloaded).arg(downloads);
+  if (running && downloaded < downloads) {
+    text += QStringLiteral(" · ") + tr("in progress");
+  }
+  show(0, downloaded, downloads, text);
+
+  text = tr("%1 of %2 mods").arg(installed).arg(mods);
+  if (failed > 0) {
+    text += QStringLiteral(" · ") + tr("%n failed", "", failed);
+  }
+  show(1, installed, mods, text);
+
+  // the last step has no count: busy while it runs, full when done
+  if (stage == Stage::Done) {
+    show(2, 1, 1, tr("Done"));
+  } else if (m_session->finalizing()) {
+    if (m_stepBar[2]->maximum() != 0) {
+      m_stepBar[2]->setRange(0, 0);
+    }
+    m_stepText[2]->setText(tr("Mod order, plugins and settings…"));
+  } else {
+    show(2, 0, 1, m_session->started() ? tr("After the mods") : tr("Not started"));
+  }
+  m_stepsCard->setVisible(true);
+}
+
 void CollectionDialog::buildRows()
 {
   m_built = true;
@@ -872,6 +1242,7 @@ void CollectionDialog::onEntryChanged(int row)
   if (row == currentRow()) {
     updateExternal();
   }
+  updateSteps();
 }
 
 void CollectionDialog::updateRow(QTreeWidgetItem* item, int row)
