@@ -16175,6 +16175,148 @@ Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3
       <source>Tries every file that failed again.</source>
       <translation>Versucht jede fehlgeschlagene Datei erneut.</translation>
     </message>
+    <message>
+      <source>Collection page</source>
+      <translation>Seite der Kollektion</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>von %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n endorsement(s)</source>
+      <translation>
+        <numerusform>%n Empfehlung</numerusform>
+        <numerusform>%n Empfehlungen</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n download(s)</source>
+      <translation>
+        <numerusform>%n Download</numerusform>
+        <numerusform>%n Downloads</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>What it needs</source>
+      <translation>Was sie braucht</translation>
+    </message>
+    <message>
+      <source>1. Download the files</source>
+      <translation>1. Dateien herunterladen</translation>
+    </message>
+    <message>
+      <source>2. Install the mods</source>
+      <translation>2. Mods installieren</translation>
+    </message>
+    <message>
+      <source>3. Order and finish</source>
+      <translation>3. Ordnen und abschließen</translation>
+    </message>
+    <message>
+      <source>Author's notes</source>
+      <translation>Notizen des Autors</translation>
+    </message>
+    <message>
+      <source>adult content (NSFW)</source>
+      <translation>Inhalte für Erwachsene (NSFW)</translation>
+    </message>
+    <message numerus="yes">
+      <source>&lt;b&gt;%1&lt;/b&gt; to download, %n mod(s) to install</source>
+      <translation>
+        <numerusform>&lt;b&gt;%1&lt;/b&gt; herunterzuladen, %n Mod zu installieren</numerusform>
+        <numerusform>&lt;b&gt;%1&lt;/b&gt; herunterzuladen, %n Mods zu installieren</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) from Nexus Mods (%1)</source>
+      <translation>
+        <numerusform>%n Mod von Nexus Mods (%1)</numerusform>
+        <numerusform>%n Mods von Nexus Mods (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) bundled in the collection</source>
+      <translation>
+        <numerusform>%n Mod in der Kollektion enthalten</numerusform>
+        <numerusform>%n Mods in der Kollektion enthalten</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s) from other sites, to get by hand</source>
+      <translation>
+        <numerusform>%n Mod von anderen Seiten, von Hand zu holen</numerusform>
+        <numerusform>%n Mods von anderen Seiten, von Hand zu holen</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n file(s) of another game's page, to install by hand</source>
+      <translation>
+        <numerusform>%n Datei von der Seite eines anderen Spiels, von Hand zu installieren</numerusform>
+        <numerusform>%n Dateien von der Seite eines anderen Spiels, von Hand zu installieren</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n optional mod(s): tick the ones you want in the list below</source>
+      <translation>
+        <numerusform>%n optionale Mod: hake die gewünschten in der Liste unten an</numerusform>
+        <numerusform>%n optionale Mods: hake die gewünschten in der Liste unten an</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n more</source>
+      <translation>
+        <numerusform>%n weitere</numerusform>
+        <numerusform>%n weitere</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Categories: %1</source>
+      <translation>Kategorien: %1</translation>
+    </message>
+    <message>
+      <source>Made for game version %1.</source>
+      <translation>Für Spielversion %1 gemacht.</translation>
+    </message>
+    <message>
+      <source>Nothing to download</source>
+      <translation>Nichts herunterzuladen</translation>
+    </message>
+    <message>
+      <source>%1 of %2 files</source>
+      <translation>%1 von %2 Dateien</translation>
+    </message>
+    <message>
+      <source>in progress</source>
+      <translation>läuft</translation>
+    </message>
+    <message>
+      <source>%1 of %2 mods</source>
+      <translation>%1 von %2 Mods</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n failed</source>
+      <translation>
+        <numerusform>%n fehlgeschlagen</numerusform>
+        <numerusform>%n fehlgeschlagen</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Done</source>
+      <translation>Fertig</translation>
+    </message>
+    <message>
+      <source>Mod order, plugins and settings…</source>
+      <translation>Mod-Reihenfolge, Plugins und Einstellungen…</translation>
+    </message>
+    <message>
+      <source>After the mods</source>
+      <translation>Nach den Mods</translation>
+    </message>
+    <message>
+      <source>Not started</source>
+      <translation>Nicht gestartet</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>
@@ -16836,6 +16978,79 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
     <message>
       <source>Nexus didn't answer: %1</source>
       <translation>Nexus hat nicht geantwortet: %1</translation>
+    </message>
+    <message>
+      <source>Sort</source>
+      <translation>Sortieren</translation>
+    </message>
+    <message>
+      <source>Collections</source>
+      <translation>Kollektionen</translation>
+    </message>
+    <message>
+      <source>Endorsements</source>
+      <translation>Empfehlungen</translation>
+    </message>
+    <message>
+      <source>Collection page</source>
+      <translation>Seite der Kollektion</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>von %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n endorsement(s)</source>
+      <translation>
+        <numerusform>%n Empfehlung</numerusform>
+        <numerusform>%n Empfehlungen</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n download(s)</source>
+      <translation>
+        <numerusform>%n Download</numerusform>
+        <numerusform>%n Downloads</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Opens the collection's page on Nexus Mods in the browser.</source>
+      <translation>Öffnet die Seite der Kollektion auf Nexus Mods im Browser.</translation>
+    </message>
+    <message>
+      <source>Open the collection</source>
+      <translation>Kollektion öffnen</translation>
+    </message>
+    <message>
+      <source>Shows the collection's mods and what it needs; nothing downloads until you press Start there.</source>
+      <translation>Zeigt die Mods der Kollektion und was sie braucht; nichts wird heruntergeladen, bis du dort auf Starten drückst.</translation>
+    </message>
+    <message>
+      <source>Choose a collection.</source>
+      <translation>Wähle eine Kollektion.</translation>
+    </message>
+    <message>
+      <source>revision %1</source>
+      <translation>Revision %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mod(s)</source>
+      <translation>
+        <numerusform>%n Mod</numerusform>
+        <numerusform>%n Mods</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>%1 to download</source>
+      <translation>%1 herunterzuladen</translation>
+    </message>
+    <message>
+      <source>game version %1</source>
+      <translation>Spielversion %1</translation>
+    </message>
+    <message>
+      <source>Adult content (NSFW).</source>
+      <translation>Inhalte für Erwachsene (NSFW).</translation>
     </message>
   </context>
 <context>

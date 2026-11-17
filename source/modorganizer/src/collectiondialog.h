@@ -10,8 +10,11 @@
 
 #include <QElapsedTimer>
 #include <QDialog>
+#include <QNetworkAccessManager>
 #include <QTimer>
 #include <QPointer>
+#include <QVariant>
+#include <array>
 #include <functional>
 #include <optional>
 
@@ -22,13 +25,13 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
+class QProgressBar;
 class QPushButton;
 class QTextBrowser;
 class QTreeWidget;
 class QTreeWidgetItem;
 class QFrame;
-
-class QScreen;
+class ScreenFitter;
 
 class CollectionDialog : public QDialog
 {
@@ -65,9 +68,24 @@ protected:
   bool eventFilter(QObject* watched, QEvent* event) override;
   void moveEvent(QMoveEvent* e) override;
   void resizeEvent(QResizeEvent* e) override;
-  void showEvent(QShowEvent* e) override;
 
 private:
+  // what the collection's page on Nexus says about it, asked by the window for
+  // its header and notes (the session asks for what the install needs)
+  struct Info
+  {
+    QString domain;
+    QString summary;
+    QString description;
+    QString category;
+    QString image;
+    QStringList gameVersions;
+    int endorsements = 0;
+    int downloads    = 0;
+    bool adult       = false;
+    bool known       = false;
+  };
+
   OrganizerCore& m_core;
   CollectionSession* m_session;
   std::function<void()> m_runLoot;
@@ -83,8 +101,21 @@ private:
   QLabel* m_name;
   QLabel* m_caption;
   QLabel* m_loading;
+  QLabel* m_image;
+  QLabel* m_about;
+  QPushButton* m_page;
+  QFrame* m_needsCard;
+  QLabel* m_needs;
+  QLabel* m_needsNotes;
+  QFrame* m_stepsCard;
+  std::array<QLabel*, 3> m_stepText{};
+  std::array<QProgressBar*, 3> m_stepBar{};
   QFrame* m_instructionsCard;
   QTextBrowser* m_instructions;
+  QString m_notesShown;
+  Info m_info;
+  int m_infoRequest = -1;
+  QNetworkAccessManager m_network;
   QFrame* m_modsCard;
   QLabel* m_count;
   QTreeWidget* m_tree;
@@ -116,13 +147,12 @@ private:
   void placeWindow();
   QElapsedTimer m_placedAt;
   bool m_userPlaced = false;
-  bool m_userResized   = false;
-  bool m_fitting       = false;
-  bool m_screenWatched = false;
-  QSize wantedSize(const QRect& available) const;
-  void fitToScreen(QScreen* screen);
+  // its size by the screen it is on (shared with the Wabbajack list window)
+  ScreenFitter* m_fitter = nullptr;
   bool m_placing    = false;
   QFrame* createHeader();
+  QFrame* createNeeds();
+  QFrame* createSteps();
   QFrame* createInstructions();
   QFrame* createMods();
   QFrame* createOptions();
@@ -134,6 +164,12 @@ private:
   void updateRow(QTreeWidgetItem* item, int row);
   void updateExternal();
   void updateButtons();
+  void updateNeeds();
+  void updateSteps();
+  void updateNotes();
+  void requestInfo();
+  void onInfo(QVariant userData, QVariant result, int id);
+  void onInfoFailed(QString, int, int, QVariant, int id, int, const QString&);
   void showMenu(const QPoint& pos);
   void chooseFile(int row);
   int currentRow() const;
