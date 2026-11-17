@@ -7513,6 +7513,14 @@ Erro: %1</translation>
       <source>Wabbajack's gallery of lists: choose one and it downloads and opens, without the .wabbajack file at hand.</source>
       <translation>A galeria de listas do Wabbajack: escolha uma e ela é baixada e aberta, sem precisar ter o arquivo .wabbajack.</translation>
     </message>
+    <message>
+      <source>Manual steps of this list…</source>
+      <translation>Passos manuais desta lista…</translation>
+    </message>
+    <message>
+      <source>Copies the files the list leaves for the game's folder, backing up what they replace, and runs its patchers when you ask.</source>
+      <translation>Copia os arquivos que a lista deixa para a pasta do jogo, com backup do que eles substituem, e executa os patchers dela quando você pedir.</translation>
+    </message>
   </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -18016,6 +18024,118 @@ Instale o .NET Desktop Runtime {1} para Windows x64 em {0} e depois abra o BG3 M
     <message>
       <source>Cancel</source>
       <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Manual steps…</source>
+      <translation>Passos manuais…</translation>
+    </message>
+    <message>
+      <source>Windows doesn't let MO2 write in the game folder (%1). Start MO2 as administrator, or copy the files yourself.</source>
+      <translation>O Windows não deixa o MO2 escrever na pasta do jogo (%1). Inicie o MO2 como administrador, ou copie os arquivos você mesmo.</translation>
+    </message>
+    <message>
+      <source>%1 is in use and can't be replaced: close the game and try again.</source>
+      <translation>%1 está em uso e não pode ser substituído: feche o jogo e tente de novo.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be backed up, so nothing was copied.</source>
+      <translation>Não foi possível fazer backup de %1, então nada foi copiado.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the game folder; the files already copied were put back.</source>
+      <translation>Não foi possível copiar %1 para a pasta do jogo; os arquivos já copiados voltaram ao que eram.</translation>
+    </message>
+    <message>
+      <source>Run %1?</source>
+      <translation>Executar %1?</translation>
+    </message>
+    <message>
+      <source>%1 comes with the list, and its guide has you run it. It starts in %2, outside MO2's virtual folder, and changes the game's own files as the guide says (it may ask for administrator rights). MO2 Revamped doesn't check what it does: follow the list's guide, and keep a backup of the game folder if the guide doesn't make one.</source>
+      <translation>%1 vem com a lista, e o guia dela pede que você o execute. Ele inicia em %2, fora da pasta virtual do MO2, e altera os arquivos do próprio jogo como o guia diz (pode pedir permissões de administrador). O MO2 Revamped não verifica o que ele faz: siga o guia da lista, e mantenha um backup da pasta do jogo se o guia não fizer um.</translation>
+    </message>
+    <message>
+      <source>Run</source>
+      <translation>Executar</translation>
+    </message>
+    <message numerus="yes">
+      <source>and %n more</source>
+      <translation>
+        <numerusform>e mais %n</numerusform>
+        <numerusform>e mais %n</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Manual steps of %1</source>
+      <translation>Passos manuais de %1</translation>
+    </message>
+    <message>
+      <source>The list leaves these folders in %1 for you, as Wabbajack does. Follow its guide for each one; MO2 Revamped can copy the files that go into the game's folder (%2) and start the programs the guide has you run.</source>
+      <translation>A lista deixa estas pastas em %1 para você, como o Wabbajack faz. Siga o guia dela para cada uma; o MO2 Revamped pode copiar os arquivos que vão para a pasta do jogo (%2) e iniciar os programas que o guia pede que você execute.</translation>
+    </message>
+    <message>
+      <source>Nothing is left to do by hand.</source>
+      <translation>Não resta nada a fazer à mão.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Files for the game's folder (%n files): %1.</source>
+      <translation>
+        <numerusform>Arquivos para a pasta do jogo (%n arquivos): %1.</numerusform>
+        <numerusform>Arquivos para a pasta do jogo (%n arquivos): %1.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The guide has you run %1 in the game's folder once they are there.</source>
+      <translation>O guia pede que você execute %1 na pasta do jogo quando eles estiverem lá.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Tools or choices the guide talks about (%n files). MO2 Revamped doesn't copy them: only the guide says which one you need.</source>
+      <translation>
+        <numerusform>Ferramentas ou opções de que o guia fala (%n arquivos). O MO2 Revamped não as copia: só o guia diz qual você precisa.</numerusform>
+        <numerusform>Ferramentas ou opções de que o guia fala (%n arquivos). O MO2 Revamped não as copia: só o guia diz qual você precisa.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Copy into the game folder</source>
+      <translation>Copiar para a pasta do jogo</translation>
+    </message>
+    <message>
+      <source>Already in the game folder.</source>
+      <translation>Já estão na pasta do jogo.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files copied into the game folder.</source>
+      <translation>
+        <numerusform>%n arquivos copiados para a pasta do jogo.</numerusform>
+        <numerusform>%n arquivos copiados para a pasta do jogo.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The files they replaced are in %1.</source>
+      <translation>Os arquivos que eles substituíram estão em %1.</translation>
+    </message>
+    <message>
+      <source>Run %1…</source>
+      <translation>Executar %1…</translation>
+    </message>
+    <message>
+      <source>Copy the files into the game folder first: %1 runs from there.</source>
+      <translation>Copie primeiro os arquivos para a pasta do jogo: %1 roda de lá.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be started.</source>
+      <translation>Não foi possível iniciar %1.</translation>
+    </message>
+    <message>
+      <source>Open %1</source>
+      <translation>Abrir %1</translation>
+    </message>
+    <message>
+      <source>Open the folder</source>
+      <translation>Abrir a pasta</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
     </message>
   </context>
 </TS>

@@ -37,6 +37,14 @@ void showListNotice(QWidget* parent, OrganizerCore& core);
 // session); false when the user cancels
 bool confirmGameVersion(QWidget* parent, OrganizerCore& core, const QFileInfo& binary);
 
+// an instance whose install left folders for the guide's manual steps
+bool hasManualSteps(OrganizerCore& core);
+
+// the folders of the guide's manual steps, what each needs, with the files
+// for the game's folder to copy (what they replace backed up) and the list's
+// patchers to run (each only when the user asks, with a question first)
+void showManualSteps(QWidget* parent, OrganizerCore& core);
+
 }  // namespace Wabbajack
 
 #endif  // WABBAJACKINSTANCE_H

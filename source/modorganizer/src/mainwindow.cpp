@@ -3146,6 +3146,21 @@ void MainWindow::updateToolMenu()
           Qt::QueuedConnection);
   wabbajack->addAction(browseLists);
   wabbajack->addAction(openList);
+  // an instance installed from a list: the folders its guide has you install
+  // by hand ("__Files Requiring Manual Install")
+  if (Wabbajack::hasManualSteps(m_OrganizerCore)) {
+    QAction* steps = new QAction(FluentIcons::glyph(0xE9D5), tr("Manual steps of this list…"),
+                                 wabbajack);
+    steps->setToolTip(tr("Copies the files the list leaves for the game's folder, backing up "
+                         "what they replace, and runs its patchers when you ask."));
+    connect(
+        steps, &QAction::triggered, this,
+        [this] {
+          Wabbajack::showManualSteps(this, m_OrganizerCore);
+        },
+        Qt::QueuedConnection);
+    wabbajack->addAction(steps);
+  }
 
   m_ToolMenuDirty = false;
 }
