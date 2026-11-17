@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "profileinputdialog.h"
 #include "filesystemutilities.h"
+#include "modinfo.h"
 #include "ui_profileinputdialog.h"
 
 #include <QDialogButtonBox>
@@ -112,11 +113,33 @@ ProfileInputDialog::~ProfileInputDialog()
   delete ui;
 }
 
+namespace
+{
+// MO2 Revamped: one pass can leave a name a second pass changes ("Test.?"
+// became "Test.", whose folder Profile then made "Test"): fixed until it holds
+QString stableDirectoryName(const QString& name, bool* ok = nullptr)
+{
+  QString result = name;
+  bool valid     = true;
+  for (int i = 0; i < 4; ++i) {
+    QString next = result;
+    valid        = MOBase::fixDirectoryName(next);
+    if (!valid || next == result) {
+      result = next;
+      break;
+    }
+    result = next;
+  }
+  if (ok != nullptr) {
+    *ok = valid;
+  }
+  return result;
+}
+}  // namespace
+
 QString ProfileInputDialog::getName() const
 {
-  QString result = ui->nameEdit->text();
-  MOBase::fixDirectoryName(result);
-  return result;
+  return stableDirectoryName(ui->nameEdit->text());
 }
 
 bool ProfileInputDialog::getPreferDefaultSettings() const
@@ -190,9 +213,12 @@ void ProfileInputDialog::useContentDialogLayout()
 void ProfileInputDialog::updateAcceptState()
 {
   const QString name = ui->nameEdit->text();
-  QString normalizedName = name;
-  const bool valid = MOBase::fixDirectoryName(normalizedName) &&
-                     !normalizedName.isEmpty();
+  bool fixed                   = false;
+  const QString normalizedName = stableDirectoryName(name, &fixed);
+  // MO2 Revamped: "con", "nul", "aux"... in any case: Windows makes no such
+  // folder, and creating or renaming failed later with a misleading error
+  const bool valid = fixed && !normalizedName.isEmpty() &&
+                     !ModInfo::isReservedDeviceName(normalizedName);
   QPushButton* acceptButton =
       m_accept != nullptr ? m_accept : ui->buttonBox->button(QDialogButtonBox::Ok);
   if (acceptButton != nullptr) {

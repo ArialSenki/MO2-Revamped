@@ -868,8 +868,9 @@ void ProfilesDialog::removeProfile()
   Profile::Ptr profileToDelete = selectedItem->data(Qt::UserRole).value<Profile::Ptr>();
   const QString profileName =
       profileToDelete ? profileToDelete->name() : selectedItem->text();
-  if (profileToDelete &&
-      profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
+  // MO2 Revamped: also when the profile in use couldn't be read (its row has
+  // no Profile), which skipped this and deleted the folder in use
+  if (profileName.compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
     showProfileNotice(this, tr("Delete profile"), QMessageBox::Warning,
                       tr("This profile is currently active"),
                       tr("Switch to another profile before removing it."));
