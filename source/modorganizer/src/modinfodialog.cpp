@@ -50,6 +50,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScreen>
 #include <QTabBar>
 #include <QTextEdit>
 #include <QToolButton>
@@ -231,7 +232,16 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   });
   FluentNavigation::setHeader(ui->tabWidget, ui->modInfoHeader);
   buildFluentPages();
-  setMinimumSize(1200, 620);
+  // MO2 Revamped: never more than the screen it opens on (1366x768 at 125% is
+  // about 1093x614): the minimum pushed Close and Next off it
+  {
+    QSize minimum(1200, 620);
+    if (const QScreen* s = screen()) {
+      const QSize avail = s->availableGeometry().size() - QSize(32, 48);
+      minimum           = minimum.boundedTo(avail);
+    }
+    setMinimumSize(minimum);
+  }
   resize(1300, 720);
 
   perf.lap("navigation");
