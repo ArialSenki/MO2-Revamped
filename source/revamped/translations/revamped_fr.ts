@@ -16377,10 +16377,6 @@ Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG
       <translation>Faite pour la version %1 du jeu.</translation>
     </message>
     <message>
-      <source>Made for game version %1; you have %2.</source>
-      <translation>Faite pour la version %1 du jeu ; vous avez la %2.</translation>
-    </message>
-    <message>
       <source>Nothing to download</source>
       <translation>Rien à télécharger</translation>
     </message>

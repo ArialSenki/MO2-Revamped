@@ -11,7 +11,6 @@
 #include "settings.h"
 
 #include "revampedtheme.h"
-#include <iplugingame.h>
 #include <utility.h>
 
 #include <QJsonObject>
@@ -1012,6 +1011,8 @@ void CollectionDialog::onInfo(QVariant, QVariant result, int id)
       QPixmap pixmap  = QPixmap::fromImage(
           image.scaled(ImageSize * dpr, Qt::KeepAspectRatio, Qt::SmoothTransformation));
       pixmap.setDevicePixelRatio(dpr);
+      // as wide as the picture: a tall one leaves no gap before the name
+      m_image->setFixedSize(pixmap.deviceIndependentSize().toSize().expandedTo(QSize(1, 1)));
       m_image->setPixmap(pixmap);
       m_image->show();
     });
@@ -1048,7 +1049,12 @@ void CollectionDialog::updateNotes()
       parts.append(description);
     }
   }
-  const QString text = parts.join(QStringLiteral("\n\n"));
+  // headings as bold lines: a page's title in the size of a heading 1 fills
+  // the card
+  static const QRegularExpression heading(QStringLiteral(R"(^[ \t]{0,3}#{1,6}[ \t]+(.+?)[ \t#]*$)"),
+                                          QRegularExpression::MultilineOption);
+  QString text = parts.join(QStringLiteral("\n\n"));
+  text.replace(heading, QStringLiteral("**\\1**"));
   // set once per change: the reader's place in it stays
   if (text != m_notesShown) {
     m_notesShown = text;
@@ -1134,15 +1140,11 @@ void CollectionDialog::updateNeeds()
   }
   m_needs->setText(lines.join(QStringLiteral("<br>")));
 
-  // the game version it was made for, against the one here
+  // the game version it was made for, as Nexus names it (not compared with
+  // the exe's file version: Cyberpunk's 3.0.88 is Nexus' 2.5)
   QString note;
-  const MOBase::IPluginGame* game = m_core.managedGame();
-  if (!m_info.gameVersions.isEmpty() && game != nullptr) {
-    const QString have = game->gameVersion();
-    note = have.isEmpty()
-               ? tr("Made for game version %1.").arg(m_info.gameVersions.join(", "))
-               : tr("Made for game version %1; you have %2.")
-                     .arg(m_info.gameVersions.join(", "), have);
+  if (!m_info.gameVersions.isEmpty()) {
+    note = tr("Made for game version %1.").arg(m_info.gameVersions.join(", "));
   }
   m_needsNotes->setText(note);
   m_needsNotes->setVisible(!note.isEmpty());

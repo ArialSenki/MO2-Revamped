@@ -16213,10 +16213,6 @@ Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3
       <translation>Für Spielversion %1 gemacht.</translation>
     </message>
     <message>
-      <source>Made for game version %1; you have %2.</source>
-      <translation>Für Spielversion %1 gemacht; du hast %2.</translation>
-    </message>
-    <message>
       <source>Nothing to download</source>
       <translation>Nichts herunterzuladen</translation>
     </message>

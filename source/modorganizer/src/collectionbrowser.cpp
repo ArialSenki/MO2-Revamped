@@ -349,6 +349,9 @@ void CollectionBrowser::onResult(QVariant, QVariant result, int id)
     if (const auto it = m_images.constFind(image); it != m_images.constEnd()) {
       item->setIcon(ColName, QIcon(it.value()));
     } else {
+      // every row as tall as a picture from the start (the rows share one
+      // height): no row grows when its picture comes
+      item->setIcon(ColName, placeholder());
       loadImage(image);
     }
   }
@@ -372,6 +375,16 @@ void CollectionBrowser::onFailed(QString, int, int, QVariant, int id, int,
   m_request = -1;
   m_more->setEnabled(m_loaded < m_total);
   m_status->setText(tr("Nexus didn't answer: %1").arg(error));
+}
+
+QIcon CollectionBrowser::placeholder()
+{
+  if (m_placeholder.isNull()) {
+    QPixmap empty(ThumbSize);
+    empty.fill(Qt::transparent);
+    m_placeholder = QIcon(empty);
+  }
+  return m_placeholder;
 }
 
 void CollectionBrowser::loadImage(const QString& url)

@@ -8,6 +8,7 @@
 
 #include <QDialog>
 #include <QHash>
+#include <QIcon>
 #include <QNetworkAccessManager>
 #include <QPixmap>
 #include <QSet>
@@ -74,6 +75,7 @@ private:
   QNetworkAccessManager m_network;
   QHash<QString, QPixmap> m_images;
   QSet<QString> m_imagesAsked;
+  QIcon m_placeholder;
 
   void search(bool more);
   void onResult(QVariant userData, QVariant result, int id);
@@ -81,6 +83,7 @@ private:
   void openSelected();
   void showDetails();
   void loadImage(const QString& url);
+  QIcon placeholder();
   const Entry* selected() const;
   QString pageOf(const Entry& e) const;
 };

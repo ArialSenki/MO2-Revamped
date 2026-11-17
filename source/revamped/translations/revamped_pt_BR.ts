@@ -16189,10 +16189,6 @@ Instale o .NET Desktop Runtime {1} para Windows x64 em {0} e depois abra o BG3 M
       <translation>Feita para a versão %1 do jogo.</translation>
     </message>
     <message>
-      <source>Made for game version %1; you have %2.</source>
-      <translation>Feita para a versão %1 do jogo; você tem a %2.</translation>
-    </message>
-    <message>
       <source>Nothing to download</source>
       <translation>Nada para baixar</translation>
     </message>
