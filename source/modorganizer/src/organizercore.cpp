@@ -1771,9 +1771,10 @@ void OrganizerCore::updateModsInDirectoryStructure(
     m_UserInterface->archivesWriter().writeImmediately(false);
   }
 
-  std::vector<QString> archives = enabledArchives();
-  m_DirectoryRefresher->setMods(m_CurrentProfile->getActiveMods(),
-                                std::set<QString>(archives.begin(), archives.end()));
+  // MO2 Revamped: the archives handed over, not through setMods(), which waited
+  // for a running refresh to end (the window froze when a mod was enabled then)
+  const std::vector<QString> archives = enabledArchives();
+  const std::set<QString> archiveSet(archives.begin(), archives.end());
 
   // finally also add files from bsas to the directory structure
   for (auto idx : modInfo.keys()) {
@@ -1784,7 +1785,7 @@ void OrganizerCore::updateModsInDirectoryStructure(
     m_DirectoryRefresher->addModBSAToStructure(
         m_DirectoryStructure, modInfo[idx]->internalName(),
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
-        modInfo[idx]->archives());
+        modInfo[idx]->archives(), archiveSet);
   }
 }
 
