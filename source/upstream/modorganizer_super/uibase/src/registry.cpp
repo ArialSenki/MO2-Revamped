@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "log.h"
 #include "report.h"
 #include <QApplication>
+#include <QHash>
 #include <QList>
 #include <QMessageBox>
 #include <QString>
@@ -38,7 +39,14 @@ bool WriteRegistryValue(LPCWSTR appName, LPCWSTR keyName, LPCWSTR value,
       if ((attrs != INVALID_FILE_ATTRIBUTES) && (attrs & FILE_ATTRIBUTE_READONLY)) {
         QFileInfo fileInfo(QString("%1").arg(fileName));
 
+        // MO2 Revamped: one answer per file for the session. MO2 writes a file
+        // one key at a time, and a Wabbajack list's read-only INI asked once per
+        // key, seven times before New Vegas started
+        static QHash<QString, QMessageBox::StandardButton> answers;
+        const QString answerKey = fileInfo.absoluteFilePath().toLower();
+
         QMessageBox::StandardButton result =
+            answers.contains(answerKey) ? answers.value(answerKey) :
             MOBase::TaskDialog(qApp->activeModalWidget(),
                                QObject::tr("INI file is read-only"))
                 .main(QObject::tr("INI file is read-only"))
@@ -53,6 +61,7 @@ bool WriteRegistryValue(LPCWSTR appName, LPCWSTR keyName, LPCWSTR value,
                 .button({QObject::tr("Skip this file"), QMessageBox::No})
                 .remember("clearReadOnly", fileInfo.fileName())
                 .exec();
+        answers.insert(answerKey, result);
 
         // clear the read-only flag if requested
         if (result & (QMessageBox::Yes | QMessageBox::Ignore)) {
