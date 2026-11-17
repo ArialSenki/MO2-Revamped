@@ -53,6 +53,7 @@
 #include <QMessageBox>
 #include <QNetworkInterface>
 #include <QProcess>
+#include <QScopeGuard>
 #include <QTimer>
 #include <QUrl>
 #include <QWidget>
@@ -1839,8 +1840,30 @@ std::vector<QString> OrganizerCore::enabledArchives()
   return result;
 }
 
+void OrganizerCore::setDirectoryRefreshDeferred(bool deferred)
+{
+  if (m_DeferDirectoryRefresh == deferred) {
+    return;
+  }
+  m_DeferDirectoryRefresh = deferred;
+  log::debug("directory refreshes {}", deferred ? "deferred" : "no longer deferred");
+  if (!deferred && m_DirectoryRefreshWaiting) {
+    m_DirectoryRefreshWaiting = false;
+    if (m_DirectoryUpdate) {
+      m_RefreshPending = true;
+    } else {
+      refreshDirectoryStructure();
+    }
+  }
+}
+
 void OrganizerCore::refreshDirectoryStructure()
 {
+  if (m_DeferDirectoryRefresh) {
+    m_DirectoryRefreshWaiting = true;
+    return;
+  }
+
   if (m_DirectoryUpdate) {
     log::debug("can't refresh, already in progress");
     return;
@@ -1869,6 +1892,21 @@ void OrganizerCore::refreshDirectoryStructure()
 
 void OrganizerCore::waitForDirectoryRefresh()
 {
+  // a deferred rebuild runs now, and none is deferred until the wait ends:
+  // what waits needs the current structure
+  const bool deferred     = m_DeferDirectoryRefresh;
+  m_DeferDirectoryRefresh = false;
+  const auto keepDeferral = qScopeGuard([this, deferred] {
+    m_DeferDirectoryRefresh = deferred;
+  });
+  if (m_DirectoryRefreshWaiting) {
+    m_DirectoryRefreshWaiting = false;
+    if (m_DirectoryUpdate) {
+      m_RefreshPending = true;
+    } else {
+      refreshDirectoryStructure();
+    }
+  }
   // a loop: another refresh can follow the one that just ended
   while (m_DirectoryUpdate) {
     log::debug("waiting until the directory refresh finishes");

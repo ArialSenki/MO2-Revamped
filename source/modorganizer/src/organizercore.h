@@ -340,6 +340,13 @@ public:
 
   void refreshDirectoryStructure();
 
+  // MO2 Revamped: while a collection installs, each mod's refresh would rebuild
+  // the whole virtual file structure (every mod's files) again, which grows with
+  // the square of the mod count. While deferred, the rebuild waits: it runs
+  // once when deferring ends, and before anything that needs the structure
+  // (a program's start, waitForDirectoryRefresh())
+  void setDirectoryRefreshDeferred(bool deferred);
+
   // returns once a directory refresh in progress has finished; plugins that
   // look up file origins (forced loads, for one) need the finished structure
   void waitForDirectoryRefresh();
@@ -623,6 +630,8 @@ private:
   // refresh was running: the structure it delivers is built from the mods as
   // they were when it started, so another one follows. UI thread only
   bool m_RefreshPending = false;
+  bool m_DeferDirectoryRefresh  = false;
+  bool m_DirectoryRefreshWaiting = false;
 
   // the last refresh failed, so the plugin list and the structure may not match
   // the current profile: they aren't rebuilt or saved until one works, while

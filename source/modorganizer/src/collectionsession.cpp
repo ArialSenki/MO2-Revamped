@@ -278,6 +278,7 @@ CollectionSession::~CollectionSession()
   if (m_stage == Stage::Running) {
     qApp->setProperty(QuietProperty, QVariant());
     qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+    m_core.setDirectoryRefreshDeferred(false);
   }
   for (auto& c : m_connections) {
     c.disconnect();
@@ -609,6 +610,10 @@ void CollectionSession::setStage(Stage s)
   } else {
     m_watchdog.stop();
   }
+  // each installed mod's refresh would rebuild every mod's files into the
+  // virtual structure again: while it runs, that happens once, when it pauses,
+  // finishes or before a program starts (see finalize() for the end)
+  m_core.setDirectoryRefreshDeferred(s == Stage::Running && !m_finalizing);
   emit changed();
 }
 
@@ -2395,6 +2400,10 @@ bool CollectionSession::installEntry(int row)
       m_modFoldersRead = true;
     }
     existingBefore = m_modFolders;
+    // installs resumed after the final step (files put back): deferred again
+    if (m_stage == Stage::Running && !m_finalizing) {
+      m_core.setDirectoryRefreshDeferred(true);
+    }
     installed = m_core.installArchive(e.archive, -1, false, nullptr, e.modName);
   } catch (const std::exception& ex) {
     error = QString::fromUtf8(ex.what());
@@ -3530,6 +3539,9 @@ void CollectionSession::finalize()
     return;
   }
 
+  // the order and the plugins need the whole structure: the deferred rebuild
+  // runs with this refresh
+  m_core.setDirectoryRefreshDeferred(false);
   try {
     applyModOrder();
     applyFileOverrides();
