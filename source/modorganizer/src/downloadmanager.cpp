@@ -723,6 +723,17 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   connect(newDownload->m_Reply, SIGNAL(metaDataChanged()), this,
           SLOT(metaDataChanged()));
 
+  // MO2 Revamped: writing the .meta above runs events (see endDisableDirWatcher()),
+  // as does naming the file in addDownload(): a fast server's data (a small file's,
+  // all of it) arrived then, before readyRead() and downloadProgress() were
+  // connected. It stayed in the reply and the download finished with an empty
+  // file ("Unknown error (0)", then a retry), or, with the reply's buffer full,
+  // stalled for good. It is written now.
+  if (reply->bytesAvailable() > 0) {
+    newDownload->m_HasData = true;
+    writeData(newDownload);
+  }
+
   if (!resume) {
     newDownload->m_PreResumeSize = newDownload->m_Output.size();
     removePending(newDownload->m_FileInfo->gameName, newDownload->m_FileInfo->modID,
@@ -799,8 +810,23 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
       }
       return true;
     }
-  } else
+  } else {
     connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
+    // MO2 Revamped: a resume that finished during the events above sends no
+    // finished() any more: it stayed "downloading" for good
+    if (reply->isFinished()) {
+      const unsigned int downloadID = newDownload->m_DownloadID;
+      QMetaObject::invokeMethod(
+          this,
+          [this, downloadID, reply] {
+            DownloadInfo* info = downloadInfoByID(downloadID);
+            if (info != nullptr && info->m_Reply == reply) {
+              downloadFinished(indexByInfo(info));
+            }
+          },
+          Qt::QueuedConnection);
+    }
+  }
   return true;
 }
 
@@ -2594,7 +2620,8 @@ void DownloadManager::downloadFinished(int index)
     // writeData()); a failed write pauses the download, as does a refused link
     bool writeFailed    = false;
     const bool wasOpen  = info->m_Output.isOpen();
-    if (reply->isOpen() && info->m_HasData && wasOpen) {
+    // what is left in the reply, also when no progress was seen (see startDownload())
+    if (reply->isOpen() && wasOpen && reply->bytesAvailable() > 0) {
       const QByteArray data = reply->readAll();
       if (acceptReplyData(info, reply) && info->m_Output.write(data) < data.size()) {
         writeFailed = true;
@@ -2691,8 +2718,13 @@ void DownloadManager::downloadFinished(int index)
     if (info->m_State == STATE_CANCELING) {
       setState(info, STATE_CANCELED);
     } else if (info->m_State == STATE_PAUSING) {
-      if (info->m_Output.isOpen() && info->m_HasData) {
-        info->m_Output.write(info->m_Reply->readAll());
+      // what came on pausing goes to the file only if it is the file's (not a
+      // refused link's error page)
+      if (info->m_Output.isOpen() && info->m_Reply->bytesAvailable() > 0) {
+        const QByteArray rest = info->m_Reply->readAll();
+        if (acceptReplyData(info, info->m_Reply)) {
+          info->m_Output.write(rest);
+        }
       }
       setState(info, STATE_PAUSED);
     }
@@ -2881,10 +2913,15 @@ void DownloadManager::managedGameChanged(MOBase::IPluginGame const* managedGame)
 void DownloadManager::writeData(DownloadInfo* info)
 {
   if (info != nullptr && info->m_Reply != nullptr) {
-    QNetworkReply* reply  = info->m_Reply;
+    QNetworkReply* reply = info->m_Reply;
+    // MO2 Revamped: with no file open yet the data stays in the reply (read once
+    // it is open, see startDownload()); it was read and thrown away
+    if (!info->m_Output.isOpen()) {
+      return;
+    }
     const QByteArray data = reply->readAll();
     // MO2 Revamped: an error page (an expired link's) isn't the file's
-    if (!acceptReplyData(info, reply) || !info->m_Output.isOpen()) {
+    if (!acceptReplyData(info, reply)) {
       return;
     }
     const qint64 ret = info->m_Output.write(data);
