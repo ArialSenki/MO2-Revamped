@@ -76,9 +76,10 @@ void PluginListSortProxy::updateFilter(const QString& filter)
         }
       }
     }
-  }
 
-  invalidateFilter();
+    // MO2 Revamped: only on a change; showing the tab calls this every time
+    invalidateFilter();
+  }
 }
 
 bool PluginListSortProxy::filterAcceptsRow(int row, const QModelIndex&) const
