@@ -351,7 +351,9 @@ void Profile::doWriteModlist()
         } else {
           file->write("-");
         }
-        file->write(modInfo->name().toUtf8());
+        // MO2 Revamped: the untranslated name, the one the list is read by;
+        // name() is translated for DLC and Creation Club entries
+        file->write(modInfo->internalName().toUtf8());
         file->write("\r\n");
       }
     }
@@ -620,6 +622,22 @@ void Profile::refreshModStatus()
     namesRead.insert(modName);
 
     unsigned int modIndex = ModInfo::getIndex(modName);
+    const qsizetype prefixEnd = modName.indexOf(QStringLiteral(": "));
+    if (modIndex == UINT_MAX && line.at(0) == '*' && prefixEnd > 0) {
+      // MO2 Revamped: older builds wrote foreign entries with a translated
+      // prefix ("Club de Creación: ccbgssse001-fish"); find them by the part
+      // after it, the plugin's name, so they keep their place
+      const QString suffix = modName.mid(prefixEnd);
+      for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+        ModInfo::Ptr foreign = ModInfo::getByIndex(i);
+        if (foreign->isForeign() &&
+            foreign->internalName().endsWith(suffix, Qt::CaseInsensitive)) {
+          modIndex          = i;
+          modStatusModified = true;  // rewritten with the untranslated name
+          break;
+        }
+      }
+    }
     if (modIndex == UINT_MAX) {
       log::debug("mod not found: \"{}\" (profile \"{}\")", modName, m_Directory.path());
       // need to rewrite the modlist to fix this
