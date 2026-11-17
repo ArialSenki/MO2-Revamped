@@ -1604,6 +1604,9 @@ void OrganizerCore::refreshESPList(bool force)
         try {
           m_PluginList.refresh(m_CurrentProfile->name(), *m_DirectoryStructure,
                                m_CurrentProfile->getLockedOrderFileName(), force);
+          if (force) {
+            ++m_ESPListRebuilds;
+          }
         } catch (const std::exception& e) {
           reportError(tr("Failed to refresh list of esps: %1").arg(e.what()));
         }
@@ -1979,6 +1982,7 @@ void OrganizerCore::onDirectoryRefreshed()
   // refresh, where clearing the list afterwards would have dropped it
   boost::signals2::signal<void()> callbacks;
   callbacks.swap(m_OnNextRefreshCallbacks);
+  const unsigned int rebuildsBefore = m_ESPListRebuilds;
   callbacks();
 
   // only now: a save queued while the last refresh had failed would write a
@@ -1986,8 +1990,18 @@ void OrganizerCore::onDirectoryRefreshed()
   m_LastRefreshFailed = false;
 
   if (m_CurrentProfile != nullptr) {
-    log::debug("refreshing lists");
-    refreshLists();
+    if (m_ESPListRebuilds != rebuildsBefore) {
+      // MO2 Revamped: a task above (after a program ran, a mod was enabled)
+      // already rebuilt the plugin list from this structure; a second rebuild
+      // reset the list again and cost as long as the first
+      log::debug("refreshing lists (plugins already rebuilt)");
+      if (m_DirectoryStructure->isPopulated()) {
+        refreshBSAList();
+      }
+    } else {
+      log::debug("refreshing lists");
+      refreshLists();
+    }
   }
 
   emit directoryStructureReady();

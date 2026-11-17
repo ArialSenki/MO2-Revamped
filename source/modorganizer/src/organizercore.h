@@ -638,6 +638,10 @@ private:
   // programs can still be launched
   bool m_LastRefreshFailed = false;
 
+  // full plugin list rebuilds so far: one a post-refresh task already did isn't
+  // done again by refreshLists() at the end of the same refresh
+  unsigned int m_ESPListRebuilds = 0;
+
   std::function<void(const QString&)> m_CollectionHandler;
   QStringList m_PendingCollections;
   std::function<bool(const QString&)> m_CollectionClaims;
