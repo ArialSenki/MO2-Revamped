@@ -159,6 +159,20 @@ public:
   // the note a new instance finds at its start, see startInNewInstance();
   // empty when there is none. It is removed as it is read
   static QString takePendingCollection();
+
+  // a collection started in this instance and not finished: MO2 was closed,
+  // or crashed, midway. The newest one the user hasn't turned down
+  struct Unfinished
+  {
+    QString link;  // nxm://<game>/collections/<slug>/revisions/<n>
+    QString name;
+    QString statePath;
+    int done  = 0;
+    int total = 0;
+  };
+  static std::optional<Unfinished> findUnfinished();
+  // not offered again at start, until the collection is opened again
+  static void stopOfferingResume(const QString& statePath);
   QString profileName() const { return m_profileName; }
   void setProfileName(const QString& name);
   QString separatorName() const { return m_separatorName; }

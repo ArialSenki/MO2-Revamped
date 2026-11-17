@@ -545,6 +545,76 @@ QString CollectionSession::takePendingCollection()
   return isCollectionNxmLink(link) ? link : QString();
 }
 
+std::optional<CollectionSession::Unfinished> CollectionSession::findUnfinished()
+{
+  const QDir dir(QDir(Settings::instance().paths().base()).filePath("collections"));
+  if (!dir.exists()) {
+    return {};
+  }
+  // newest first
+  for (const QFileInfo& fi : dir.entryInfoList({QStringLiteral("*.json")}, QDir::Files,
+                                               QDir::Time)) {
+    if (fi.fileName().compare(QStringLiteral("pending.json"), Qt::CaseInsensitive) == 0) {
+      continue;
+    }
+    QFile f(fi.absoluteFilePath());
+    if (!f.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+    if (!o.value("started").toBool() || o.value("finished").toBool() ||
+        o.value("noResumeOffer").toBool()) {
+      continue;
+    }
+    const QString slug   = o.value("slug").toString();
+    const QString game   = o.value("game").toString();
+    const int revision   = o.value("revision").toInt(-1);
+    const QString link   = QStringLiteral("nxm://%1/collections/%2/revisions/%3")
+                             .arg(game, slug)
+                             .arg(revision);
+    if (game.isEmpty() || !isValidSlug(slug) || revision <= 0 ||
+        !isCollectionNxmLink(link)) {
+      continue;
+    }
+    Unfinished u;
+    u.link      = link;
+    u.name      = o.value("name").toString(slug);
+    u.statePath = fi.absoluteFilePath();
+    for (const auto& v : o.value("entries").toArray()) {
+      const QJsonObject e = v.toObject();
+      const auto status   = statusFromString(e.value("status").toString());
+      if (!e.value("selected").toBool(true) && status != Status::Installed) {
+        continue;
+      }
+      ++u.total;
+      if (status == Status::Installed || status == Status::Skipped) {
+        ++u.done;
+      }
+    }
+    return u;
+  }
+  return {};
+}
+
+void CollectionSession::stopOfferingResume(const QString& path)
+{
+  QFile f(path);
+  if (!f.open(QIODevice::ReadOnly)) {
+    return;
+  }
+  QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+  f.close();
+  if (o.isEmpty()) {
+    return;
+  }
+  o.insert("noResumeOffer", true);
+  QSaveFile out(path);
+  if (!out.open(QIODevice::WriteOnly) ||
+      out.write(QJsonDocument(o).toJson(QJsonDocument::Compact)) < 0 || !out.commit()) {
+    log::warn("collection state couldn't be saved to {}", path);
+  }
+}
+
 void CollectionSession::setProfileName(const QString& name)
 {
   if (m_profileMade) {

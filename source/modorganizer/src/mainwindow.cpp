@@ -178,6 +178,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTime>
 #include <QScreen>
 #include <QTimer>
+#include <QSaveFile>
+#include <QDateTime>
+#include <QLocale>
 #include <QToolButton>
 #include <QToolTip>
 #include <QTranslator>
@@ -2780,6 +2783,10 @@ void MainWindow::showEvent(QShowEvent* event)
     m_WasVisible = true;
     updateProblemsButton();
 
+    QTimer::singleShot(3000, this, [this] {
+      noticeLastCrash();
+    });
+
     // notify plugins that the MO2 is ready
     m_PluginContainer.startPlugins(this);
 
@@ -4990,6 +4997,104 @@ void MainWindow::openPendingCollection(int idleChecks)
   const QString pending = CollectionSession::takePendingCollection();
   if (!pending.isEmpty()) {
     openCollection(pending, true);
+    return;
+  }
+
+  // MO2 Revamped: a collection left midway (MO2 closed or crashed)
+  if (m_CollectionDialog) {
+    return;
+  }
+  const auto unfinished = CollectionSession::findUnfinished();
+  if (!unfinished) {
+    return;
+  }
+  FluentContentDialog dialog(
+      this, QStringLiteral("CollectionResumeDialog"), tr("Unfinished collection"),
+      tr("The collection \"%1\" wasn't finished the last time (%2 of %3 mods done). "
+         "Continue installing it?")
+          .arg(unfinished->name, QString::number(unfinished->done),
+               QString::number(unfinished->total)));
+  auto* resume = dialog.addButton(tr("Continue"), true);
+  auto* later  = dialog.addButton(tr("Not now"));
+  auto* never  = dialog.addButton(tr("Don't ask again"));
+  QPushButton* clicked = nullptr;
+  for (auto* b : {resume, later, never}) {
+    connect(b, &QPushButton::clicked, &dialog, [&dialog, &clicked, b] {
+      clicked = b;
+      dialog.accept();
+    });
+  }
+  dialog.askFirst(later);
+  dialog.exec();
+  if (clicked == resume) {
+    openCollection(unfinished->link, true);
+  } else if (clicked == never) {
+    CollectionSession::stopOfferingResume(unfinished->statePath);
+  }
+}
+
+void MainWindow::noticeLastCrash(int tries)
+{
+  const QString path = QString::fromStdWString(OrganizerCore::getGlobalCoreDumpPath());
+  if (path.isEmpty()) {
+    return;
+  }
+  // the dumps go here; without the folder they land in MO2's folder or %TEMP%
+  QDir dir(path);
+  if (!dir.exists() && !QDir().mkpath(path)) {
+    log::warn("the crash dumps folder couldn't be created: {}", path);
+    return;
+  }
+
+  // MO2's own dumps: the newest one, from the last week, not told about yet
+  const QFileInfoList dumps = dir.entryInfoList({QStringLiteral("ModOrganizer-*.dmp")},
+                                                QDir::Files, QDir::Time);
+  if (dumps.isEmpty() ||
+      dumps.first().lastModified().daysTo(QDateTime::currentDateTime()) > 7) {
+    return;
+  }
+  const QFileInfo newest = dumps.first();
+  const QString marker   = dir.filePath(QStringLiteral("last-noticed.txt"));
+  {
+    QFile f(marker);
+    if (f.open(QIODevice::ReadOnly) &&
+        QString::fromUtf8(f.readAll()).trimmed() == newest.fileName()) {
+      return;
+    }
+  }
+
+  // not over a question or the first-start dialogs
+  if (QApplication::activeModalWidget() != nullptr || !isVisible() || isMinimized()) {
+    if (tries < 60) {
+      QTimer::singleShot(2000, this, [this, tries] {
+        noticeLastCrash(tries + 1);
+      });
+    }
+    return;
+  }
+
+  {
+    QSaveFile f(marker);
+    if (!f.open(QIODevice::WriteOnly) || f.write(newest.fileName().toUtf8()) < 0 ||
+        !f.commit()) {
+      log::warn("couldn't write {}", marker);
+    }
+  }
+
+  log::warn("the last run left a crash dump: {}", newest.absoluteFilePath());
+  FluentContentDialog dialog(
+      this, QStringLiteral("CrashDumpNoticeDialog"), tr("Mod Organizer crashed"),
+      tr("Mod Organizer closed unexpectedly on %1 and saved a crash report:\n%2\n\n"
+         "If it happens again, attach this file (and the logs folder's "
+         "mo_interface.log) when you report the problem.")
+          .arg(QLocale().toString(newest.lastModified(), QLocale::ShortFormat),
+               QDir::toNativeSeparators(newest.absoluteFilePath())));
+  auto* open  = dialog.addButton(tr("Open the folder"), true);
+  auto* close = dialog.addButton(tr("Close"));
+  connect(open, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(close, &QPushButton::clicked, &dialog, &QDialog::reject);
+  if (dialog.exec() == QDialog::Accepted) {
+    shell::Explore(newest.absoluteFilePath());
   }
 }
 

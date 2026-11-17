@@ -7477,7 +7477,41 @@ Erro: %1</translation>
       <source>This game has no collections on Nexus Mods.</source>
       <translation>Este jogo não tem coleções no Nexus Mods.</translation>
     </message>
-  </context>
+      <message>
+      <source>Unfinished collection</source>
+      <translation>Coleção não terminada</translation>
+    </message>
+    <message>
+      <source>The collection &quot;%1&quot; wasn&apos;t finished the last time (%2 of %3 mods done). Continue installing it?</source>
+      <translation>A coleção &quot;%1&quot; não foi terminada da última vez (%2 de %3 mods feitos). Continuar a instalação?</translation>
+    </message>
+    <message>
+      <source>Continue</source>
+      <translation>Continuar</translation>
+    </message>
+    <message>
+      <source>Don&apos;t ask again</source>
+      <translation>Não perguntar de novo</translation>
+    </message>
+    <message>
+      <source>Mod Organizer crashed</source>
+      <translation>O Mod Organizer travou</translation>
+    </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, attach this file (and the logs folder&apos;s mo_interface.log) when you report the problem.</source>
+      <translation>O Mod Organizer fechou inesperadamente em %1 e salvou um relatório do travamento:
+%2
+
+Se acontecer de novo, anexe este arquivo (e o mo_interface.log da pasta logs) ao relatar o problema.</translation>
+    </message>
+    <message>
+      <source>Open the folder</source>
+      <translation>Abrir a pasta</translation>
+    </message>
+</context>
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
@@ -16611,7 +16645,56 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
       <source>The mod's archive has unsafe file names.</source>
       <translation>O arquivo do mod tem nomes de arquivo inseguros.</translation>
     </message>
-  </context>
+      <message numerus="yes">
+      <source>%1 and %n more</source>
+      <translation>
+        <numerusform>%1 e mais %n</numerusform>
+        <numerusform>%1 e mais %n</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Game version: the collection was made with %1, this game is %2. Mods that hook into the game (script extender plugins, Address Library, engine fixes) are built for one version and can crash on another. Look for a collection made for your version, or update the game first.</source>
+      <translation>Versão do jogo: a coleção foi feita com a %1 e este jogo é a %2. Mods que se ligam ao jogo (plugins do script extender, Address Library, correções do motor) são feitos para uma versão e podem travar em outra. Procure uma coleção feita para a sua versão ou atualize o jogo antes.</translation>
+    </message>
+    <message>
+      <source>Game edition: this game is the %1 edition. Collections are almost always made on Steam, and script extenders and DLL plugins often have a separate %1 build, or none. Check those mods&apos; pages for a %1 version.</source>
+      <translation>Edição do jogo: este jogo é a edição %1. Coleções quase sempre são feitas na Steam, e script extenders e plugins DLL costumam ter uma versão separada para %1, ou nenhuma. Veja nas páginas desses mods se há versão para %1.</translation>
+    </message>
+    <message>
+      <source>Script extender: the collection needs %1, which isn&apos;t in the game folder (%2). Download it from its website and copy %3 and its DLL files next to the game&apos;s exe, or install it as a mod with its files in a Root folder. Without it, the mods that need it do nothing or crash the game.</source>
+      <translation>Script extender: a coleção precisa do %1, que não está na pasta do jogo (%2). Baixe-o do site dele e copie o %3 e as DLLs ao lado do exe do jogo, ou instale-o como mod com os arquivos numa pasta Root. Sem ele, os mods que precisam dele não fazem nada ou fecham o jogo.</translation>
+    </message>
+    <message>
+      <source>Missing game content: the collection uses %1, which this game doesn&apos;t have. Get the DLC or Creation Club content (for Skyrim, the Anniversary Edition upgrade) from the store and run the game once. Plugins that need it make the game crash at start until they are disabled.</source>
+      <translation>Conteúdo do jogo faltando: a coleção usa %1, que este jogo não tem. Obtenha a DLC ou o conteúdo do Creation Club (no Skyrim, o upgrade Anniversary Edition) na loja e abra o jogo uma vez. Os plugins que precisam dele fecham o jogo ao iniciar até serem desativados.</translation>
+    </message>
+    <message>
+      <source>Unavailable on Nexus: %1. These were hidden or removed by their authors, or the file was deleted, so their downloads will likely fail. The collection goes on without them and lists them at the end: look for a replacement, or ask the curator for an updated revision.</source>
+      <translation>Indisponíveis no Nexus: %1. Foram ocultados ou removidos pelos autores, ou o arquivo foi apagado, então o download deles provavelmente vai falhar. A coleção continua sem eles e os lista no final: procure um substituto ou peça ao curador uma revisão atualizada.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Free Nexus account: each of the %n file(s) to download needs a click on &quot;Slow download&quot; on its Nexus page. MO2 opens the pages one by one and you can stop and continue at any time; Premium downloads them by itself.</source>
+      <translation>
+        <numerusform>Conta gratuita do Nexus: o %n arquivo a baixar precisa de um clique em &quot;Slow download&quot; na página dele no Nexus. O MO2 abre as páginas uma a uma e você pode parar e continuar quando quiser; com Premium eles baixam sozinhos.</numerusform>
+        <numerusform>Conta gratuita do Nexus: cada um dos %n arquivos a baixar precisa de um clique em &quot;Slow download&quot; na página dele no Nexus. O MO2 abre as páginas uma a uma e você pode parar e continuar quando quiser; com Premium eles baixam sozinhos.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>This profile already has %n active mod(s) of its own. The collection&apos;s mod order and plugin list will be mixed with them, and they may conflict. A new profile (or instance) keeps them apart.</source>
+      <translation>
+        <numerusform>Este perfil já tem %n mod ativo próprio. A ordem de mods e a lista de plugins da coleção serão misturadas com ele e podem entrar em conflito. Um perfil (ou instância) novo os mantém separados.</numerusform>
+        <numerusform>Este perfil já tem %n mods ativos próprios. A ordem de mods e a lista de plugins da coleção serão misturadas com eles e podem entrar em conflito. Um perfil (ou instância) novo os mantém separados.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Before installing</source>
+      <translation>Antes de instalar</translation>
+    </message>
+    <message>
+      <source>A few things may get in the way of this collection here. You can start anyway and fix them later.</source>
+      <translation>Algumas coisas podem atrapalhar esta coleção aqui. Você pode começar mesmo assim e resolvê-las depois.</translation>
+    </message>
+</context>
   <context>
     <name>CollectionBrowser</name>
     <message>

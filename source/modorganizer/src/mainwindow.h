@@ -260,6 +260,8 @@ private:
   void browseCollections();
   // the collection a new instance was made for, once its first start is done
   void openPendingCollection(int idleChecks = 0);
+  // MO2 Revamped: tells the user once about a crash dump the last run left
+  void noticeLastCrash(int tries = 0);
   bool selectProfileByName(const QString& name);
 
   QMenu* createPopupMenu() override;
