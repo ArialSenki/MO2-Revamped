@@ -324,7 +324,8 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
                             errorMessage == QLatin1String("Data error"))) {
       throw MyException(tr("Wrong password, or the archive is damaged."));
     }
-    if (diskFull()) {
+    // a file or folder that couldn't be written, not a damaged archive
+    if (errorMessage.startsWith(QLatin1String("cannot ")) && diskFull()) {
       throw MyException(tr("Extraction failed: the disk is full. Free some space on "
                            "%1 and install the mod again.")
                             .arg(QDir::toNativeSeparators(QStorageInfo(extractPath).rootPath())));
