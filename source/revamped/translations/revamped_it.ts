@@ -5559,6 +5559,18 @@ La maggior parte delle mod non ne ha bisogno: gli script extender e i loader di 
   <context>
     <name>InstallationManager</name>
     <message>
+      <source>Extraction failed: the disk is full. Free some space on %1 and install the mod again.</source>
+      <translation>Estrazione non riuscita: il disco è pieno. Libera spazio su %1 e installa di nuovo la mod.</translation>
+    </message>
+    <message>
+      <source>cancelled</source>
+      <translation>annullato</translation>
+    </message>
+    <message>
+      <source>not enough memory</source>
+      <translation>memoria insufficiente</translation>
+    </message>
+    <message>
       <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
       <translation>WinRAR ha estratto l'archivio con errori: alcuni dei suoi file potrebbero mancare nella mod.</translation>
     </message>

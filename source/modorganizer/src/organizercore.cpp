@@ -1049,7 +1049,7 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
     if (m_DirectoryUpdate) {
       m_RefreshPending = true;
     }
-    refresh();
+    refreshInstalledMod(modName);
 
     const auto modIndex  = ModInfo::getIndex(modName);
     ModInfo::Ptr modInfo = nullptr;
@@ -1583,6 +1583,26 @@ void OrganizerCore::refresh(bool saveChanges)
 
   refreshDirectoryStructure();
 
+  emit refreshTriggered();
+}
+
+void OrganizerCore::refreshInstalledMod(const QString& modName)
+{
+  // a collection installs hundreds of mods: reading every folder after each
+  // one made the installs slower and slower. The collection's last step
+  // reads them all again
+  if (!m_DeferDirectoryRefresh || m_CurrentProfile == nullptr) {
+    refresh();
+    return;
+  }
+
+  m_CurrentProfile->writeModlistNow(true);
+  if (!ModInfo::updateOneFromDisc(m_Settings.paths().mods(), modName, *this)) {
+    updateModInfoFromDisc();
+  }
+  m_CurrentProfile->refreshModStatus();
+  m_ModList.notifyChange(-1);
+  refreshDirectoryStructure();
   emit refreshTriggered();
 }
 

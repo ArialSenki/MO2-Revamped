@@ -13125,6 +13125,18 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
     <context>
     <name>InstallationManager</name>
     <message>
+      <source>Extraction failed: the disk is full. Free some space on %1 and install the mod again.</source>
+      <translation>Error al extraer: el disco está lleno. Libera espacio en %1 e instala el mod de nuevo.</translation>
+    </message>
+    <message>
+      <source>cancelled</source>
+      <translation>cancelado</translation>
+    </message>
+    <message>
+      <source>not enough memory</source>
+      <translation>no hay memoria suficiente</translation>
+    </message>
+    <message>
       <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
       <translation>WinRAR extrajo el archivo con errores: puede que falten algunos de sus archivos en el mod.</translation>
     </message>

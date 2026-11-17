@@ -12899,6 +12899,18 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     <context>
     <name>InstallationManager</name>
     <message>
+      <source>Extraction failed: the disk is full. Free some space on %1 and install the mod again.</source>
+      <translation>Falha na extração: o disco está cheio. Libere espaço em %1 e instale o mod de novo.</translation>
+    </message>
+    <message>
+      <source>cancelled</source>
+      <translation>cancelado</translation>
+    </message>
+    <message>
+      <source>not enough memory</source>
+      <translation>memória insuficiente</translation>
+    </message>
+    <message>
       <source>WinRAR extracted the archive with errors: some of its files may be missing from the mod.</source>
       <translation>O WinRAR extraiu o arquivo com erros: alguns dos seus arquivos podem estar faltando no mod.</translation>
     </message>
