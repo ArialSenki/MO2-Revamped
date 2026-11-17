@@ -978,6 +978,16 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 
     tt.stop();
 
+    // links that came before there was an instance to take them
+    if (!m_waitingLinks.isEmpty()) {
+      QTimer::singleShot(0, this, [this] {
+        const QStringList links = std::exchange(m_waitingLinks, {});
+        for (const QString& link : links) {
+          externalMessage(link);
+        }
+      });
+    }
+
     setStartupDiagnosticPhase("application.run.event_loop");
     writeStartupDiagnosticEvent("application.run.event_loop.begin");
     res = exec();
@@ -1006,8 +1016,11 @@ void MOApplication::externalMessage(const QString& message)
   if (m_core == nullptr) {
     // This can happen if MO2 is started with the --pick option and no instance has
     // been selected yet.
+    // MO2 Revamped: also while MO2 is still starting (a browser's links as it
+    // opens): a link waits for the main window instead of being refused
     if (isNxmLink(message)) {
-      reportError(tr("You need to select an instance before trying to download mods."));
+      log::debug("keeping a link until the main window is open");
+      m_waitingLinks.append(message);
     } else {
       log::warn("ignoring external message, no instance has been selected yet");
     }

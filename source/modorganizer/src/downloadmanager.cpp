@@ -44,6 +44,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QHttp2Configuration>
+#include <QPointer>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -298,7 +299,9 @@ DownloadManager::DownloadManager(NexusInterface* nexusInterface, QObject* parent
   connect(m_NexusInterface, &NexusInterface::nxmRequestDropped, this,
           &DownloadManager::nxmRequestFailed);
   m_TimeoutTimer.setSingleShot(false);
-  // connect(&m_TimeoutTimer, SIGNAL(timeout()), this, SLOT(checkDownloadTimeout()));
+  connect(&m_TimeoutTimer, &QTimer::timeout, this, [this] {
+    checkStalledDownloads();
+  });
   m_TimeoutTimer.start(5 * 1000);
 }
 
@@ -683,6 +686,8 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   newDownload->m_StartTime.start();
   // the clock starts again on a resume or a retry: so does the progress shown
   newDownload->m_ProgressShownAt = -1000;
+  newDownload->m_LastDataAt      = 0;
+  newDownload->m_Stalled         = false;
   createMetaFile(newDownload);
 
   if (!newDownload->m_Output.open(mode)) {
@@ -722,6 +727,17 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
   connect(newDownload->m_Reply, SIGNAL(readyRead()), this, SLOT(downloadReadyRead()));
   connect(newDownload->m_Reply, SIGNAL(metaDataChanged()), this,
           SLOT(metaDataChanged()));
+
+  // MO2 Revamped: writing the .meta above runs events (see endDisableDirWatcher()),
+  // as does naming the file in addDownload(): a fast server's data (a small file's,
+  // all of it) arrived then, before readyRead() and downloadProgress() were
+  // connected. It stayed in the reply and the download finished with an empty
+  // file ("Unknown error (0)", then a retry), or, with the reply's buffer full,
+  // stalled for good. It is written now.
+  if (reply->bytesAvailable() > 0) {
+    newDownload->m_HasData = true;
+    writeData(newDownload);
+  }
 
   if (!resume) {
     newDownload->m_PreResumeSize = newDownload->m_Output.size();
@@ -799,8 +815,23 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
       }
       return true;
     }
-  } else
+  } else {
     connect(newDownload->m_Reply, SIGNAL(finished()), this, SLOT(replyFinished()));
+    // MO2 Revamped: a resume that finished during the events above sends no
+    // finished() any more: it stayed "downloading" for good
+    if (reply->isFinished()) {
+      const unsigned int downloadID = newDownload->m_DownloadID;
+      QMetaObject::invokeMethod(
+          this,
+          [this, downloadID, reply] {
+            DownloadInfo* info = downloadInfoByID(downloadID);
+            if (info != nullptr && info->m_Reply == reply) {
+              downloadFinished(indexByInfo(info));
+            }
+          },
+          Qt::QueuedConnection);
+    }
+  }
   return true;
 }
 
@@ -1154,7 +1185,31 @@ void DownloadManager::cancelDownload(int index)
 
   if (m_ActiveDownloads.at(index)->m_State == STATE_DOWNLOADING) {
     setState(m_ActiveDownloads.at(index), STATE_CANCELING);
+    stopReplySoon(m_ActiveDownloads.at(index));
   }
+}
+
+void DownloadManager::stopReplySoon(DownloadInfo* info)
+{
+  // MO2 Revamped: pausing and canceling waited for the next progress of the
+  // reply; with a stalled server (or one that sends no size) that never came and
+  // the download stayed "pausing" or "canceling". The reply is stopped once the
+  // caller is done (finishing removes a canceled row), unless progress did it.
+  const unsigned int downloadID = info->m_DownloadID;
+  QPointer<QNetworkReply> reply(info->m_Reply);
+  QMetaObject::invokeMethod(
+      this,
+      [this, downloadID, reply] {
+        DownloadInfo* current = downloadInfoByID(downloadID);
+        if (reply.isNull() || current == nullptr || current->m_Reply != reply ||
+            !reply->isRunning()) {
+          return;
+        }
+        if (current->m_State == STATE_PAUSING || current->m_State == STATE_CANCELING) {
+          reply->abort();
+        }
+      },
+      Qt::QueuedConnection);
 }
 
 void DownloadManager::pauseDownload(int index)
@@ -1169,6 +1224,7 @@ void DownloadManager::pauseDownload(int index)
   if (info->m_State == STATE_DOWNLOADING) {
     if ((info->m_Reply != nullptr) && (info->m_Reply->isRunning())) {
       setState(info, STATE_PAUSING);
+      stopReplySoon(info);
     } else {
       setState(info, STATE_PAUSED);
     }
@@ -1232,6 +1288,15 @@ void DownloadManager::resumeDownloadInt(int index)
     QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toUtf8()));
     request.setHeader(QNetworkRequest::UserAgentHeader,
                       m_NexusInterface->getAccessManager()->userAgent());
+    // MO2 Revamped: as a new download asks (see startDownloadURLs()): never from
+    // the cache, and HTTP/2's larger windows
+    request.setAttribute(QNetworkRequest::CacheSaveControlAttribute, false);
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
+                         QNetworkRequest::AlwaysNetwork);
+    QHttp2Configuration h2Conf;
+    h2Conf.setSessionReceiveWindowSize(16777215);
+    h2Conf.setStreamReceiveWindowSize(16777215);
+    request.setHttp2Configuration(h2Conf);
     // MO2 Revamped: an automatic retry after an error goes on from what is there
     // too; an error page never reaches the file (see acceptReplyData()), and a
     // server that ignores the range (200) or refuses it (416) starts it over
@@ -1952,25 +2017,28 @@ void DownloadManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
         info->m_DownloadTimeAcc(elapsed - info->m_DownloadTimeLast);
         info->m_DownloadTimeLast = elapsed;
 
-        // calculate the download speed
-        const double speed = rolling_mean(info->m_DownloadAcc) /
-                             (rolling_mean(info->m_DownloadTimeAcc) / 1000.0);
-        ;
-
-        const qint64 remaining = (bytesTotal - bytesReceived) / speed * 1000;
-
-        info->m_Progress.second = tr("%1% - %2 - ~%3")
-                                      .arg(info->m_Progress.first)
-                                      .arg(MOBase::localizedByteSpeed(speed))
-                                      .arg(MOBase::localizedTimeRemaining(remaining));
-
-        TaskProgressManager::instance().updateProgress(info->m_TaskProgressId,
-                                                       bytesReceived, bytesTotal);
-        // the network reports progress many times a second; the row repaints
-        // when the percentage changes, and otherwise about four times a second
+        // the network reports progress many times a second (each chunk of a
+        // fast download); the row repaints when the percentage changes, and
+        // otherwise about four times a second
         if (info->m_Progress.first != oldProgress ||
             elapsed - info->m_ProgressShownAt >= 250) {
           info->m_ProgressShownAt = elapsed;
+
+          // MO2 Revamped: the text and the taskbar's progress (a call into
+          // Explorer) only for what is shown; they ran for every chunk
+          const double speed = rolling_mean(info->m_DownloadAcc) /
+                               (rolling_mean(info->m_DownloadTimeAcc) / 1000.0);
+          const qint64 remaining =
+              speed > 0 ? static_cast<qint64>((bytesTotal - bytesReceived) / speed * 1000)
+                        : 0;
+
+          info->m_Progress.second = tr("%1% - %2 - ~%3")
+                                        .arg(info->m_Progress.first)
+                                        .arg(MOBase::localizedByteSpeed(speed))
+                                        .arg(MOBase::localizedTimeRemaining(remaining));
+
+          TaskProgressManager::instance().updateProgress(info->m_TaskProgressId,
+                                                         bytesReceived, bytesTotal);
           emit update(index);
         }
       }
@@ -1980,9 +2048,34 @@ void DownloadManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
   }
 }
 
+void DownloadManager::checkStalledDownloads()
+{
+  // a server that keeps the connection open but sends nothing (a stuck CDN
+  // node, a dropped Wi-Fi the system didn't notice) gets this long
+  static const qint64 stallLimit = 60 * 1000;
+  for (DownloadInfo* info : m_ActiveDownloads) {
+    if (info->m_State != STATE_DOWNLOADING || info->m_Reply == nullptr ||
+        !info->m_Reply->isRunning() || info->m_Stalled) {
+      continue;
+    }
+    const qint64 quiet = info->m_StartTime.elapsed() - info->m_LastDataAt;
+    if (quiet >= stallLimit) {
+      log::warn("download \"{}\": no data for {} seconds, stopping it to retry",
+                info->m_FileName, quiet / 1000);
+      info->m_Stalled = true;
+      // finished() comes from here or later; downloadFinished() takes it for a
+      // failure (and retries) because of m_Stalled
+      QMetaObject::invokeMethod(info->m_Reply, "abort", Qt::QueuedConnection);
+    }
+  }
+}
+
 void DownloadManager::downloadReadyRead()
 {
   try {
+    if (DownloadInfo* info = findDownload(this->sender())) {
+      info->m_LastDataAt = info->m_StartTime.elapsed();
+    }
     writeData(findDownload(this->sender()));
   } catch (const std::bad_alloc&) {
     reportError(tr("Memory allocation error (in processing downloaded data)."));
@@ -2594,7 +2687,8 @@ void DownloadManager::downloadFinished(int index)
     // writeData()); a failed write pauses the download, as does a refused link
     bool writeFailed    = false;
     const bool wasOpen  = info->m_Output.isOpen();
-    if (reply->isOpen() && info->m_HasData && wasOpen) {
+    // what is left in the reply, also when no progress was seen (see startDownload())
+    if (reply->isOpen() && wasOpen && reply->bytesAvailable() > 0) {
       const QByteArray data = reply->readAll();
       if (acceptReplyData(info, reply) && info->m_Output.write(data) < data.size()) {
         writeFailed = true;
@@ -2643,7 +2737,9 @@ void DownloadManager::downloadFinished(int index)
 
     bool error = false;
     QString failure;
-    if (!canceling && (info->m_State != STATE_PAUSING)) {
+    // a paused one (its reply aborted by the pause) is no failure either, even
+    // with nothing written yet
+    if (!canceling && info->m_State != STATE_PAUSING && info->m_State != STATE_PAUSED) {
       const QString contentType =
           reply->header(QNetworkRequest::ContentTypeHeader).toString();
       bool textData = contentType.startsWith("text", Qt::CaseInsensitive);
@@ -2652,7 +2748,7 @@ void DownloadManager::downloadFinished(int index)
         log::warn("download \"{}\": content type is {}", info->m_FileName, contentType);
         emit showMessage(tr("Nexus sent a web page instead of the file."));
       }
-      if ((info->m_Output.size() == 0) || (status == 416) ||
+      if ((info->m_Output.size() == 0) || (status == 416) || info->m_Stalled ||
           ((reply->error() != QNetworkReply::NoError) &&
            (reply->error() != QNetworkReply::OperationCanceledError))) {
         if (reply->error() == QNetworkReply::UnknownContentError) {
@@ -2675,7 +2771,10 @@ void DownloadManager::downloadFinished(int index)
                       .arg(reply->error());
         log::warn("download \"{}\" failed: {}", info->m_FileName, failure);
         // MO2 Revamped: kept for the row's tool tip, in words where Qt has none
-        if (status == 416) {
+        if (info->m_Stalled) {
+          failure           = tr("the server stopped sending data");
+          info->m_LastError = failure;
+        } else if (status == 416) {
           info->m_LastError = tr("the server refused to continue the download");
         } else if (reply->error() != QNetworkReply::NoError &&
                    reply->error() != QNetworkReply::OperationCanceledError) {
@@ -2691,8 +2790,13 @@ void DownloadManager::downloadFinished(int index)
     if (info->m_State == STATE_CANCELING) {
       setState(info, STATE_CANCELED);
     } else if (info->m_State == STATE_PAUSING) {
-      if (info->m_Output.isOpen() && info->m_HasData) {
-        info->m_Output.write(info->m_Reply->readAll());
+      // what came on pausing goes to the file only if it is the file's (not a
+      // refused link's error page)
+      if (info->m_Output.isOpen() && info->m_Reply->bytesAvailable() > 0) {
+        const QByteArray rest = info->m_Reply->readAll();
+        if (acceptReplyData(info, info->m_Reply)) {
+          info->m_Output.write(rest);
+        }
       }
       setState(info, STATE_PAUSED);
     }
@@ -2881,10 +2985,15 @@ void DownloadManager::managedGameChanged(MOBase::IPluginGame const* managedGame)
 void DownloadManager::writeData(DownloadInfo* info)
 {
   if (info != nullptr && info->m_Reply != nullptr) {
-    QNetworkReply* reply  = info->m_Reply;
+    QNetworkReply* reply = info->m_Reply;
+    // MO2 Revamped: with no file open yet the data stays in the reply (read once
+    // it is open, see startDownload()); it was read and thrown away
+    if (!info->m_Output.isOpen()) {
+      return;
+    }
     const QByteArray data = reply->readAll();
     // MO2 Revamped: an error page (an expired link's) isn't the file's
-    if (!acceptReplyData(info, reply) || !info->m_Output.isOpen()) {
+    if (!acceptReplyData(info, reply)) {
       return;
     }
     const qint64 ret = info->m_Output.write(data);

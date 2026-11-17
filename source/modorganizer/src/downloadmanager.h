@@ -94,6 +94,10 @@ private:
     QElapsedTimer m_StartTime;
     // when the row last showed new progress (ms since m_StartTime)
     qint64 m_ProgressShownAt = -1000;
+    // MO2 Revamped: when data last came (ms since m_StartTime), and whether the
+    // reply was stopped for sending none for too long (see checkStalledDownloads())
+    qint64 m_LastDataAt = 0;
+    bool m_Stalled      = false;
     qint64 m_PreResumeSize;
     std::pair<int, QString> m_Progress;
     bool m_HasData;
@@ -565,6 +569,11 @@ private:
   // gone then, a resumed one paused)
   bool startDownload(QNetworkReply* reply, DownloadInfo* newDownload, bool resume);
   void resumeDownloadInt(int index);
+  // stops a pausing or canceling download's reply once the caller is done
+  void stopReplySoon(DownloadInfo* info);
+  // stops downloads whose server sent nothing for a while: they fail and are
+  // retried from where they are, instead of "downloading" for good
+  void checkStalledDownloads();
 
   /**
    * @brief start a download from a url
