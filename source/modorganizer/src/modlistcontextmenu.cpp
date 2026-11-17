@@ -6,6 +6,7 @@
 
 #include <map>
 #include <memory>
+#include <QKeySequence>
 #include <set>
 
 #include "modlist.h"
@@ -654,15 +655,21 @@ void ModListContextMenu::addEnableActions()
   }
 
   const bool several = m_selected.size() > 1;
+  // MO2 Revamped: the key the list already takes for it, shown beside it only;
+  // a real shortcut would take Space from the menu, which uses it to pick
+  const QString space =
+      QStringLiteral("	") + QKeySequence(Qt::Key_Space).toString(QKeySequence::NativeText);
+  // Space flips each mod, so it only matches when they all go the same way
+  const QString hint = anyActive != anyInactive ? space : QString();
   if (anyInactive) {
     addAction(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"),
-              several ? tr("Enable selected") : tr("Enable"), [=]() {
+              (several ? tr("Enable selected") : tr("Enable")) + hint, [=]() {
                 m_core.modList()->setActive(m_selected, true);
               });
   }
   if (anyActive) {
     addAction(FluentIcons::icon(":/MO/gui/contextmenu/disable.svg"),
-              several ? tr("Disable selected") : tr("Disable"), [=]() {
+              (several ? tr("Disable selected") : tr("Disable")) + hint, [=]() {
                 m_core.modList()->setActive(m_selected, false);
               });
   }
@@ -1028,8 +1035,11 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
   addSeparator();
   addFolderActions(mod);
 
+  // the Delete key does the same in the list (display only, as Space above)
   m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                         m_selected.size() > 1 ? tr("Remove mods...") : tr("Remove..."),
+                         (m_selected.size() > 1 ? tr("Remove mods...") : tr("Remove...")) +
+                             QStringLiteral("	") +
+                             QKeySequence(QKeySequence::Delete).toString(QKeySequence::NativeText),
                          this);
   connect(m_remove, &QAction::triggered, this, [=]() {
     m_actions.removeMods(m_selected);
