@@ -20,6 +20,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 // For QObject::tr:
 #include <QObject>
 
+#include <optional>
+
 #include "archivefiletree.h"
 
 #include "log.h"
@@ -224,6 +226,48 @@ private:
   mutable std::vector<File> m_Files;
 };
 
+namespace
+{
+// MO2 Revamped: the parts of a path in an archive as they can go on disk. An
+// entry whose path climbs out of the mod's folder ("..", a drive) is
+// left out: written as it is, it would land elsewhere on the PC. Characters
+// Windows doesn't allow in names, and the spaces and dots it drops at their
+// end, are made into names it keeps
+std::optional<QStringList> safeSegments(const QString& archivePath)
+{
+  // a leading slash goes, as the empty parts do
+  QString path = archivePath;
+  path.replace(QLatin1Char('\\'), QLatin1Char('/'));
+  QStringList segments;
+  for (QString segment : path.split('/', Qt::SkipEmptyParts)) {
+    if (segment == QLatin1String(".")) {
+      continue;
+    }
+    if (segment == QLatin1String("..")) {
+      return std::nullopt;
+    }
+    // "C:" first is a drive; anywhere else a colon would write a stream of
+    // the file, and becomes "_" below
+    if (segments.isEmpty() && segment.size() >= 2 && segment[1] == ':') {
+      return std::nullopt;
+    }
+    for (QChar& c : segment) {
+      if (c.unicode() < 32 || QStringLiteral("<>:\"|?*").contains(c)) {
+        c = '_';
+      }
+    }
+    while (segment.endsWith(' ') || segment.endsWith('.')) {
+      segment.chop(1);
+    }
+    if (segment.isEmpty()) {
+      segment = QStringLiteral("_");
+    }
+    segments.append(segment);
+  }
+  return segments;
+}
+}  // namespace
+
 std::shared_ptr<ArchiveFileTree> ArchiveFileTree::makeTree(Archive const& archive)
 {
   auto const& data = archive.getFileList();
@@ -238,11 +282,17 @@ std::shared_ptr<ArchiveFileTree> ArchiveFileTree::makeTree(Archive const& archiv
       continue;
     }
 
-    files.push_back(
-        std::make_tuple(QString::fromStdWString(data[i]->getArchiveFilePath())
-                            .replace("\\", "/")
-                            .split("/", Qt::SkipEmptyParts),
-                        data[i]->isDirectory(), (int)i));
+    const QString archivePath = QString::fromStdWString(data[i]->getArchiveFilePath());
+    auto segments             = safeSegments(archivePath);
+    if (!segments) {
+      log::warn("'{}' in the archive would go outside the mod's folder; left out",
+                archivePath);
+      continue;
+    }
+    if (segments->isEmpty()) {
+      continue;
+    }
+    files.push_back(std::make_tuple(std::move(*segments), data[i]->isDirectory(), (int)i));
   }
 
   auto tree = std::make_shared<ArchiveFileTreeImpl>(nullptr, "", -1, std::move(files));
