@@ -39,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMetaObject>
 #include <QSet>
 #include <QString>
+#include <QThread>
 
 #include <fstream>
 
@@ -260,6 +261,16 @@ void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
                                               const QString& directory,
                                               const QStringList& archives)
 {
+  addModBSAToStructure(root, modName, priority, directory, archives,
+                       m_EnabledArchives);
+}
+
+void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
+                                              const QString& modName, int priority,
+                                              const QString& directory,
+                                              const QStringList& archives,
+                                              const std::set<QString>& enabled)
+{
   QStringList loadOrder;
 
   auto gamePlugins = m_Core.gameFeatures().gameFeature<GamePlugins>();
@@ -278,7 +289,7 @@ void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
   }
 
   std::set<std::wstring> enabledArchives;
-  for (auto&& a : m_EnabledArchives) {
+  for (auto&& a : enabled) {
     enabledArchives.insert(a.toStdWString());
   }
 
@@ -429,6 +440,11 @@ struct ModThread
 
 env::ThreadPool<ModThread> g_threads;
 
+// MO2 Revamped: for the mods the main thread adds to the structure in use (a mod
+// enabled while a refresh runs). Sharing the refresher's pool, its
+// waitForAll() waited for the refresh's own mods too, freezing the window
+env::ThreadPool<ModThread> g_mainThreads;
+
 void DirectoryRefresher::updateProgress(const DirectoryRefreshProgress* p)
 {
   // careful: called from multiple threads
@@ -445,8 +461,11 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
     progress->start(entries.size());
   }
 
+  auto& threads =
+      (QThread::currentThread() == thread()) ? g_threads : g_mainThreads;
+
   log::debug("refresher: using {} threads", m_threadCount);
-  g_threads.setMax(m_threadCount);
+  threads.setMax(m_threadCount);
 
   // from MO2 3ef0db4 (#2239): get the load order once instead of in every thread
   std::vector<std::wstring> loadOrder;
@@ -484,7 +503,7 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
           progress->addDone();
         }
       } else {
-        auto& mt = g_threads.request();
+        auto& mt = threads.request();
 
         mt.gameFeatures = &m_Core.gameFeatures();
         mt.progress     = progress;
@@ -510,7 +529,7 @@ void DirectoryRefresher::addMultipleModsFilesToStructure(
     }
   }
 
-  g_threads.waitForAll();
+  threads.waitForAll();
 
   if constexpr (DirectoryStats::EnableInstrumentation) {
     dumpStats(stats);

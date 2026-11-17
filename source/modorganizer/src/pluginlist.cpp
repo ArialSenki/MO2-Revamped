@@ -854,6 +854,26 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure,
                          directoryStructure.getOriginByID(originid).getPath())))
                      .arg(esp.name);
 
+      ULONGLONG temp = 0;
+      temp           = (145731ULL + esp.priority) * 24 * 60 * 60 * 10000000ULL;
+
+      FILETIME newWriteTime;
+
+      newWriteTime.dwLowDateTime  = (DWORD)(temp & 0xFFFFFFFF);
+      newWriteTime.dwHighDateTime = (DWORD)(temp >> 32);
+
+      // MO2 Revamped: a plugin already dated for its place isn't opened for
+      // writing again; each save opened every plugin of the list (a thousand in
+      // a New Vegas list, each one scanned by the antivirus on open)
+      WIN32_FILE_ATTRIBUTE_DATA attributes;
+      if (::GetFileAttributesExW(ToWString(fileName).c_str(), GetFileExInfoStandard,
+                                 &attributes) &&
+          ::CompareFileTime(&attributes.ftLastWriteTime, &newWriteTime) == 0) {
+        esp.time = newWriteTime;
+        fileEntry->setFileTime(newWriteTime);
+        continue;
+      }
+
       HANDLE file =
           ::CreateFile(ToWString(fileName).c_str(), GENERIC_READ | GENERIC_WRITE, 0,
                        nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -873,14 +893,7 @@ bool PluginList::saveLoadOrder(DirectoryEntry& directoryStructure,
         }
       }
 
-      ULONGLONG temp = 0;
-      temp           = (145731ULL + esp.priority) * 24 * 60 * 60 * 10000000ULL;
-
-      FILETIME newWriteTime;
-
-      newWriteTime.dwLowDateTime  = (DWORD)(temp & 0xFFFFFFFF);
-      newWriteTime.dwHighDateTime = (DWORD)(temp >> 32);
-      esp.time                    = newWriteTime;
+      esp.time = newWriteTime;
       fileEntry->setFileTime(newWriteTime);
       const BOOL timeSet = ::SetFileTime(file, nullptr, nullptr, &newWriteTime);
       const auto timeError = ::GetLastError();

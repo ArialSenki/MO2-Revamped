@@ -116,6 +116,13 @@ public:
                             const QString& modName, int priority,
                             const QString& directory, const QStringList& archives);
 
+  // MO2 Revamped: with the enabled archives given, for the main thread while a
+  // refresh may be running: setMods() would wait for the whole refresh
+  void addModBSAToStructure(MOShared::DirectoryEntry* directoryStructure,
+                            const QString& modName, int priority,
+                            const QString& directory, const QStringList& archives,
+                            const std::set<QString>& enabledArchives);
+
   /**
    * @brief add only regular files ofr a mod to the directory structure
    * @param directoryStructure
