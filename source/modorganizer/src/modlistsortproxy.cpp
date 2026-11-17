@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "modlistsortproxy.h"
+#include "fluentperf.h"
 #include "fluenticons.h"
 #include "fluentstatusdelegate.h"
 #include "messagedialog.h"
@@ -255,6 +256,8 @@ void ModListSortProxy::updateFilter(const QString& filter)
     }
   }
 
+  // MO2_REVAMPED_PERF: the cost of one keystroke in the filter box
+  FluentPerf::Timer perf("ModListSortProxy::updateFilter");
   updateFilterActive();
   invalidateFilter();
   emit filterInvalidated();

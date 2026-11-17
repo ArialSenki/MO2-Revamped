@@ -1,4 +1,5 @@
 #include "revampedtheme.h"
+#include "fluentperf.h"
 /*
 Copyright (C) 2012 Sebastian Herbord. All rights reserved.
 
@@ -619,6 +620,11 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
   // MO2 Revamped: the filter is lifted only around an edit (its editor is what
   // broke); lifting it for a switch click showed every mod for a frame and
   // refiltered the list twice
+  // MO2_REVAMPED_PERF: one switch click, with what the views do in response
+  std::optional<FluentPerf::Timer> perf;
+  if (role == Qt::CheckStateRole) {
+    perf.emplace("ModList::setData(check)");
+  }
   const bool editing = role == Qt::EditRole;
   if (editing) {
     emit aboutToChangeData();
@@ -1792,6 +1798,7 @@ void ModList::changeModsPriority(const QModelIndexList& indices, int priority)
 
 bool ModList::toggleState(const QModelIndexList& indices)
 {
+  FluentPerf::Timer perf("ModList::toggleState");
 
   QList<unsigned int> modsToEnable;
   QList<unsigned int> modsToDisable;
