@@ -629,6 +629,12 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
   if (editing) {
     emit aboutToChangeData();
   }
+  // the filter comes back even when the edit throws (a rename that fails)
+  const auto restoreFilter = qScopeGuard([this, editing] {
+    if (editing) {
+      emit postDataChanged();
+    }
+  });
 
   if (role == Qt::CheckStateRole) {
     bool enabled = value.toInt() == Qt::Checked;
@@ -688,9 +694,6 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
     }
   }
 
-  if (editing) {
-    emit postDataChanged();
-  }
   return result;
 }
 
