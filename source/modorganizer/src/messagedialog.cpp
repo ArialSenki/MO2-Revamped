@@ -335,9 +335,13 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   // installation's progress window is modal too, so the modal window alone
   // doesn't let a notice through)
   const QWidget* front = QApplication::activeModalWidget();
-  const bool fromFrontDialog = front != nullptr && reference != nullptr &&
-                               reference->window() == front->window() &&
-                               qobject_cast<const QProgressDialog*>(front) == nullptr;
+  // (the collection's own window in front isn't a dialog the user opened: each
+  // mod's "Installation successful" came from it)
+  const bool fromFrontDialog =
+      front != nullptr && reference != nullptr &&
+      reference->window() == front->window() &&
+      qobject_cast<const QProgressDialog*>(front) == nullptr &&
+      qstrcmp(front->window()->metaObject()->className(), "CollectionDialog") != 0;
   // bringToFront is the caller saying the user must see it (only Settings)
   if (qApp->property("mo2r.collectionQuiet").toBool() && !fromFrontDialog &&
       !bringToFront) {
