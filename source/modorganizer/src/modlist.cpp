@@ -616,7 +616,13 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
 
   bool result = false;
 
-  emit aboutToChangeData();
+  // MO2 Revamped: the filter is lifted only around an edit (its editor is what
+  // broke); lifting it for a switch click showed every mod for a frame and
+  // refiltered the list twice
+  const bool editing = role == Qt::EditRole;
+  if (editing) {
+    emit aboutToChangeData();
+  }
 
   if (role == Qt::CheckStateRole) {
     bool enabled = value.toInt() == Qt::Checked;
@@ -676,7 +682,9 @@ bool ModList::setData(const QModelIndex& index, const QVariant& value, int role)
     }
   }
 
-  emit postDataChanged();
+  if (editing) {
+    emit postDataChanged();
+  }
   return result;
 }
 
@@ -846,9 +854,7 @@ void ModList::modInfoChanged(ModInfo::Ptr info)
 
     int row = ModInfo::getIndex(info->name());
     info->diskContentModified();
-    emit aboutToChangeData();
-    emit dataChanged(index(row, 0), index(row, columnCount()));
-    emit postDataChanged();
+    emit dataChanged(index(row, 0), index(row, columnCount() - 1));
   } else {
     log::error("modInfoChanged not called after modInfoAboutToChange");
   }
@@ -1786,7 +1792,6 @@ void ModList::changeModsPriority(const QModelIndexList& indices, int priority)
 
 bool ModList::toggleState(const QModelIndexList& indices)
 {
-  emit aboutToChangeData();
 
   QList<unsigned int> modsToEnable;
   QList<unsigned int> modsToDisable;
@@ -1804,8 +1809,6 @@ bool ModList::toggleState(const QModelIndexList& indices)
   m_LastCheck.restart();
 
   emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
-
-  emit postDataChanged();
 
   return true;
 }

@@ -679,8 +679,12 @@ void ModListSortProxy::aboutToChangeData()
   // (at least with some Qt versions)
   // this may be related to the fact that the item being edited may disappear from the
   // view as a result of the edit
-  m_PreChangeCriteria = m_Criteria;
-  setCriteria({});
+  // a second edit before the first restored the filter saved the empty one,
+  // and the filter was lost while its panel still showed it ticked
+  if (m_ChangeDepth++ == 0) {
+    m_PreChangeCriteria = m_Criteria;
+    setCriteria({});
+  }
 }
 
 void ModListSortProxy::postDataChanged()
@@ -688,8 +692,10 @@ void ModListSortProxy::postDataChanged()
   // if the filter is re-activated right away the editor can't be deleted but becomes
   // invisible or at least the view continues to think it's being edited. As a result no
   // new editor can be opened
-  QTimer::singleShot(10, [this]() {
-    setCriteria(m_PreChangeCriteria);
-    m_PreChangeCriteria.clear();
+  QTimer::singleShot(10, this, [this]() {
+    if (m_ChangeDepth > 0 && --m_ChangeDepth == 0) {
+      setCriteria(m_PreChangeCriteria);
+      m_PreChangeCriteria.clear();
+    }
   });
 }
