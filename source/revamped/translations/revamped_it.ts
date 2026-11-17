@@ -16327,6 +16327,28 @@ Installa .NET Desktop Runtime {1} per Windows x64 da {0}, poi avvia di nuovo BG3
   <context>
     <name>CollectionSession</name>
     <message>
+      <source>%1: needs about %2, has %3 free</source>
+      <translation>%1: servono circa %2, liberi %3</translation>
+    </message>
+    <message>
+      <source>Not enough free space</source>
+      <translation>Spazio libero insufficiente</translation>
+    </message>
+    <message>
+      <source>This collection may not fit:
+%1
+
+The sizes are estimates. If the space runs out midway, downloads and installs fail and have to be retried. Free some space, or change the downloads or mods folder in Settings &gt; Paths.</source>
+      <translation>Questa collezione potrebbe non entrarci:
+%1
+
+Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni falliscono e vanno ripetuti. Libera spazio o cambia la cartella dei download o delle mod in Impostazioni &gt; Percorsi.</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Inizia comunque</translation>
+    </message>
+    <message>
       <source>Not selected</source>
       <translation>Non selezionata</translation>
     </message>

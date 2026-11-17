@@ -356,6 +356,8 @@ private:
   bool prepareProfile();
   void startInNewInstance();
   bool askAboutExisting();
+  // enough free space for what's left to download and install, or the user's go
+  bool confirmSpace();
   void finalize();
   // still running in the collection's profile; pauses when not
   bool finalizeCanGoOn();

@@ -48,6 +48,7 @@
 #include <QDirIterator>
 #include <QSaveFile>
 #include <QSettings>
+#include <QStorageInfo>
 #include <QScopeGuard>
 #include <QTemporaryDir>
 #include <QUrl>
@@ -2196,6 +2197,94 @@ void CollectionSession::startInNewInstance()
   }
 }
 
+bool CollectionSession::confirmSpace()
+{
+  // what is left: archives still to download, and every mod still to install
+  // (unpacked, a mod takes about a third more than its archive)
+  qint64 toDownload = 0, toInstall = 0;
+  for (const auto& e : m_entries) {
+    if (!e.selected || e.byHand || e.status == Status::Installed ||
+        e.status == Status::Skipped || e.size <= 0) {
+      continue;
+    }
+    if (e.archive.isEmpty() || !QFileInfo::exists(e.archive)) {
+      toDownload += e.size;
+    }
+    toInstall += e.size + e.size / 3;
+  }
+  if (toDownload + toInstall == 0) {
+    return true;
+  }
+
+  // per drive: the downloads and the mods may be on different ones; a new
+  // instance goes where the instances are
+  const QString downloads = m_core.settings().paths().downloads();
+  const QString mods =
+      m_target == Target::NewInstance && !m_profileMade
+          ? InstanceManager::singleton().globalInstancesRootPath()
+          : m_core.settings().paths().mods();
+  struct Need
+  {
+    QString root;
+    qint64 free  = -1;
+    qint64 bytes = 0;
+  };
+  QList<Need> needs;
+  const auto add = [&needs](const QString& path, qint64 bytes) {
+    QString existing = path;
+    while (!existing.isEmpty() && !QFileInfo::exists(existing)) {
+      const QString up = QFileInfo(existing).absolutePath();
+      if (up == existing) {
+        break;
+      }
+      existing = up;
+    }
+    const QStorageInfo info(existing);
+    if (!info.isValid()) {
+      return;
+    }
+    for (auto& n : needs) {
+      if (n.root == info.rootPath()) {
+        n.bytes += bytes;
+        return;
+      }
+    }
+    needs.append({info.rootPath(), info.bytesAvailable(), bytes});
+  };
+  add(downloads, toDownload);
+  add(mods, toInstall);
+
+  // a little room for the game, Windows and the logs
+  constexpr qint64 margin = 2LL * 1024 * 1024 * 1024;
+  QStringList shortOn;
+  for (const auto& n : needs) {
+    if (n.free >= 0 && n.bytes + margin > n.free) {
+      shortOn.append(tr("%1: needs about %2, has %3 free")
+                         .arg(QDir::toNativeSeparators(n.root),
+                              MOBase::localizedByteSize(n.bytes),
+                              MOBase::localizedByteSize(n.free)));
+    }
+  }
+  if (shortOn.isEmpty()) {
+    return true;
+  }
+
+  log::warn("collection {}: not enough space? {}", m_link.slug, shortOn.join("; "));
+  FluentContentDialog dialog(
+      qApp->activeWindow(), QStringLiteral("CollectionSpaceDialog"),
+      tr("Not enough free space"),
+      tr("This collection may not fit:\n%1\n\nThe sizes are estimates. If the space "
+         "runs out midway, downloads and installs fail and have to be retried. Free "
+         "some space, or change the downloads or mods folder in Settings > Paths.")
+          .arg(shortOn.join(QStringLiteral("\n"))));
+  auto* go     = dialog.addButton(tr("Start anyway"), true);
+  auto* cancel = dialog.addButton(tr("Cancel"));
+  QObject::connect(go, &QPushButton::clicked, &dialog, &QDialog::accept);
+  QObject::connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+  dialog.askFirst(cancel);
+  return dialog.exec() == QDialog::Accepted;
+}
+
 void CollectionSession::start()
 {
   if (m_stage != Stage::Ready && m_stage != Stage::Paused && m_stage != Stage::Done) {
@@ -2205,6 +2294,10 @@ void CollectionSession::start()
     QMessageBox::information(qApp->activeWindow(), tr("Collection"),
                              tr("Another installation is in progress. Try again when "
                                 "it has finished."));
+    return;
+  }
+
+  if (!confirmSpace()) {
     return;
   }
 
