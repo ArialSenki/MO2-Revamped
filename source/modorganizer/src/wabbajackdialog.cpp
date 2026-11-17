@@ -1822,8 +1822,32 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
     if (!gamePath.isEmpty() && QFileInfo(gamePath).isDir() &&
         QDir::cleanPath(QDir::fromNativeSeparators(gamePath))
             .startsWith(m_installFolder + u'/', Qt::CaseInsensitive)) {
+      // the list fills its copy itself when it brings the game's exe there
+      // (Wildlander's SkyrimSE.exe, patched from yours): then a copy that
+      // isn't the game is a failed install, not a step of the guide
+      const QString relative =
+          QDir(m_installFolder)
+              .relativeFilePath(QDir(QDir::fromNativeSeparators(gamePath))
+                                    .filePath(game->binaryName()))
+              .replace(u'/', u'\\');
+      bool listFillsIt = false;
+      for (const auto& d : m_list->directives) {
+        if (QString(d.to).replace(u'/', u'\\').compare(relative, Qt::CaseInsensitive) == 0) {
+          listFillsIt = true;
+          break;
+        }
+      }
       if (game->looksValid(QDir(gamePath))) {
         to.setValue("gamePath", from.value("gamePath"));
+      } else if (listFillsIt) {
+        notes->append(
+            tr("Warning: the list's own copy of the game, %1, should hold %2 after the "
+               "install, and it doesn't: the install didn't finish as it should. Install the "
+               "list again into the same folder. Until then the instance uses your game "
+               "folder.")
+                .arg(QDir::toNativeSeparators(gamePath), game->binaryName()));
+        log::error("wabbajack: {} is missing from the list's copy of the game {}",
+                   game->binaryName(), gamePath);
       } else {
         notes->append(
             tr("The list runs the game from its own copy, %1, but the game isn't there "

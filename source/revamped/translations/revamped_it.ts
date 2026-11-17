@@ -17481,6 +17481,10 @@ Installa .NET Desktop Runtime {1} per Windows x64 da {0}, poi avvia di nuovo BG3
       <source>Programs of the list that run from elsewhere on this PC: %1.</source>
       <translation>Programmi della lista che si avviano da un altro punto di questo PC: %1.</translation>
     </message>
+    <message>
+      <source>Warning: the list's own copy of the game, %1, should hold %2 after the install, and it doesn't: the install didn't finish as it should. Install the list again into the same folder. Until then the instance uses your game folder.</source>
+      <translation>Attenzione: la copia del gioco della lista, %1, dovrebbe contenere %2 dopo l'installazione, e non lo contiene: l'installazione non è finita come doveva. Reinstalla la lista nella stessa cartella. Fino ad allora l'istanza usa la tua cartella del gioco.</translation>
+    </message>
   </context>
   <context>
     <name>Wabbajack</name>
