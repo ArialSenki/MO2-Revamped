@@ -331,7 +331,9 @@ void CommandLine::clear()
 {
   m_vm.clear();
   m_shortcut = {};
-  m_nxmLink  = {};
+  // MO2 Revamped: an nxm link that started MO2 is kept when the instance is
+  // picked again (a broken one, a game to choose): it wasn't handled yet, and
+  // dropping it lost the download without a word
 }
 
 void CommandLine::createOptions()
@@ -770,8 +772,8 @@ std::optional<int> RunCommand::runPostOrganizer(OrganizerCore& core)
           // not found
           reportError(
               QObject::tr("Executable '%1' not found in instance '%2'.")
-                  .arg(program)
-                  .arg(InstanceManager::singleton().currentInstance()->displayName()));
+                  .arg(program,
+                       InstanceManager::singleton().currentInstance()->displayName()));
 
           return 1;
         }
@@ -806,8 +808,7 @@ std::optional<int> RunCommand::runPostOrganizer(OrganizerCore& core)
   } catch (const std::exception& e) {
     reportError(
         QObject::tr("Failed to run '%1'. The logs might have more information. %2")
-            .arg(program)
-            .arg(e.what()));
+            .arg(program, QString::fromUtf8(e.what())));
 
     return 1;
   }

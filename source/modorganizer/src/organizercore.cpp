@@ -721,8 +721,7 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
 
     reportError(tr("The selected profile '%1' does not exist. The profile '%2' will be "
                    "used instead")
-                    .arg(profileName)
-                    .arg(QDir(profileDir).dirName()));
+                    .arg(profileName, QDir(profileDir).dirName()));
   }
 
   // a change still waiting to be written goes to disk first: reloading the

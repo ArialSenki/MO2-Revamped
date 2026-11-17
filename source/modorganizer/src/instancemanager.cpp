@@ -1290,8 +1290,8 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     // instance
 
     reportError(QObject::tr("Can't open %1: its settings file can't be read (%2).")
-                    .arg(instance.displayName())
-                    .arg(QDir::toNativeSeparators(instance.iniPath())));
+                    .arg(instance.displayName(),
+                         QDir::toNativeSeparators(instance.iniPath())));
 
     return SetupInstanceResults::SelectAnother;
   }
@@ -1306,8 +1306,7 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
     reportError(
         QObject::tr("%1's settings file doesn't say which game it manages (%2). Choose "
                     "the game and its folder.")
-            .arg(instance.displayName())
-            .arg(QDir::toNativeSeparators(instance.iniPath())));
+            .arg(instance.displayName(), QDir::toNativeSeparators(instance.iniPath())));
 
     return selectGame(instance, pc);
   }
@@ -1320,8 +1319,7 @@ SetupInstanceResults setupInstance(Instance& instance, PluginContainer& pc)
         QObject::tr("Can't open %1: support for %2 is missing from this Mod "
                     "Organizer. Check your antivirus quarantine, or install Mod Organizer "
                     "again. Choose another instance for now.")
-            .arg(instance.displayName())
-            .arg(instance.gameName()));
+            .arg(instance.displayName(), instance.gameName()));
 
     return SetupInstanceResults::SelectAnother;
   }

@@ -829,7 +829,8 @@ std::vector<QObject*> PluginContainer::loadProxied(const QString& filepath,
     }
   } catch (const std::exception& e) {
     reportError(
-        QObject::tr("failed to initialize plugin %1: %2").arg(filepath).arg(e.what()));
+        QObject::tr("failed to initialize plugin %1: %2")
+                        .arg(filepath, QString::fromUtf8(e.what())));
   }
 
   return proxiedPlugins;

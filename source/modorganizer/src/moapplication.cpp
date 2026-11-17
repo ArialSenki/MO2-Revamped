@@ -1055,8 +1055,7 @@ void MOApplication::externalMessage(const QString& message)
         reportError(
             tr("This shortcut or command line is for instance '%1', but the current "
                "instance is '%2'.")
-                .arg(*i)
-                .arg(ci ? ci->displayName() : QString()));
+                .arg(*i, ci ? ci->displayName() : QString()));
 
         return;
       }
@@ -1067,8 +1066,7 @@ void MOApplication::externalMessage(const QString& message)
         reportError(
             tr("This shortcut or command line is for profile '%1', but the current "
                "profile is '%2'.")
-                .arg(*p)
-                .arg(m_core->profileName()));
+                .arg(*p, m_core->profileName()));
 
         return;
       }

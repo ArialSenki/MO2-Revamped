@@ -1459,7 +1459,7 @@ ModListViewActions::copyFolder(QWidget* parent, const QString& source,
   QString temp;
   for (int n = 1; temp.isEmpty() || QFileInfo::exists(temp); ++n) {
     temp = targetParent.absoluteFilePath(
-        QStringLiteral(".%1.copying%2").arg(targetInfo.fileName()).arg(n));
+        QStringLiteral(".%1.copying%2").arg(targetInfo.fileName(), QString::number(n)));
   }
   if (!QDir().mkpath(temp)) {
     return fail(tr("The folder %1 could not be created.")
