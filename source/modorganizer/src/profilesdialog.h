@@ -82,6 +82,12 @@ public:
   //
   std::optional<QString> selectedProfile() const;
 
+  // true once a setting of the profile in use changed here (archive
+  // invalidation, profile-specific saves or INI files): the main window then
+  // reloads it; without that, closing the dialog leaves the lists as they are
+  //
+  bool activeProfileChanged() const { return m_ActiveProfileChanged; }
+
 signals:
 
   /**
@@ -133,11 +139,15 @@ private:
   void onLocalSavesChanged(bool checked);
   void onLocalIniFilesChanged(bool checked);
 
+  // notes a change to `profile` when it is the one in use
+  void noteChange(const Profile& profile);
+
   GameFeatures& m_GameFeatures;
   bool m_FailState;
   MOBase::IPluginGame const* m_Game;
   QString m_ActiveProfileName;
   std::optional<QString> m_Selected;
+  bool m_ActiveProfileChanged = false;
   bool m_eldenRing;
 
   QListWidget* m_list;

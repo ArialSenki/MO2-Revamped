@@ -268,6 +268,10 @@ private:
   void activateSelectedProfile();
 
   bool refreshProfiles(bool selectProfile = true, QString newProfile = QString());
+  // after the Profiles dialog: shows `target` in the rebuilt profile box; the
+  // profile in use is only reloaded when another one was chosen or the dialog
+  // changed its settings
+  void selectProfileAfterDialog(const QString& target, bool activeChanged);
   void refreshExecutablesList();
 
   bool modifyExecutablesDialog(int selection);

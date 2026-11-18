@@ -3334,11 +3334,13 @@ void MainWindow::on_profileBox_currentIndexChanged(int index)
     // locks the active profile's folder, as the Profiles button does
     m_SavesTab->stopMonitorSaves();
     std::optional<QString> newSelection;
+    bool activeChanged = false;
     {
       ProfilesDialog dlg(previousName, m_OrganizerCore, this);
       dlg.exec();
       // check if the user clicked 'select' to select another profile
-      newSelection = dlg.selectedProfile();
+      newSelection  = dlg.selectedProfile();
+      activeChanged = dlg.activeProfileChanged();
     }
 
     // refresh the profile box; this loops until there is at least one profile
@@ -3351,16 +3353,14 @@ void MainWindow::on_profileBox_currentIndexChanged(int index)
     while (!refreshProfiles(false)) {
       ProfilesDialog dlg(previousName, m_OrganizerCore, this);
       dlg.exec();
-      newSelection = dlg.selectedProfile();
+      newSelection  = dlg.selectedProfile();
+      activeChanged = activeChanged || dlg.activeProfileChanged();
     }
     m_SavesTab->refreshSaveList();
 
-    // note that setCurrentText() is recursive, it will re-execute this function
-    if (newSelection) {
-      ui->profileBox->setCurrentText(*newSelection);
-    } else {
-      ui->profileBox->setCurrentText(previousName);
-    }
+    // note that selecting another entry is recursive, it re-executes this
+    // function
+    selectProfileAfterDialog(newSelection.value_or(previousName), activeChanged);
 
     // nothing else to do because setCurrentText() is recursive and will
     // have re-executed on_profileBox_currentIndexChanged() again, doing all
@@ -3434,6 +3434,40 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
     }
   }
   return profileBox->count() > 1;
+}
+
+void MainWindow::selectProfileAfterDialog(const QString& target, bool activeChanged)
+{
+  QComboBox* box               = ui->profileBox;
+  const Profile* current       = m_OrganizerCore.currentProfile();
+  const QString currentName    = current != nullptr ? current->name() : QString();
+  const bool sameProfile =
+      !currentName.isEmpty() && target.compare(currentName, Qt::CaseInsensitive) == 0;
+
+  if (sameProfile && !activeChanged) {
+    const int index = box->findText(currentName, Qt::MatchFixedString);
+    if (index > 0) {
+      // MO2 Revamped: the box was rebuilt; showing the same profile again
+      // needs no refresh (closing the dialog reloaded every mod and plugin,
+      // which takes a while on big lists)
+      QSignalBlocker blocker(box);
+      box->setCurrentIndex(index);
+      m_OldProfileIndex = index;
+      return;
+    }
+  }
+
+  if (sameProfile && activeChanged) {
+    // the dialog wrote those settings through its own copy of the profile:
+    // read them again before the refresh below
+    m_OrganizerCore.setCurrentProfile(currentName, true);
+  }
+
+  // re-runs on_profileBox_currentIndexChanged(), which activates the profile
+  box->setCurrentText(target);
+  if (box->currentIndex() == 0 && box->count() > 1) {
+    box->setCurrentIndex(1);
+  }
 }
 
 void MainWindow::refreshExecutablesList()
@@ -4303,17 +4337,19 @@ void MainWindow::on_action_Refresh_triggered()
 
 void MainWindow::on_actionAdd_Profile_triggered()
 {
+  const QString previousName = m_OrganizerCore.currentProfile()->name();
+  bool activeChanged          = false;
   for (;;) {
     QString selectedProfile;
     {
-      ProfilesDialog profilesDialog(m_OrganizerCore.currentProfile()->name(),
-                                    m_OrganizerCore, this);
+      ProfilesDialog profilesDialog(previousName, m_OrganizerCore, this);
 
       // workaround: need to disable monitoring of the saves directory, otherwise the
       // active profile directory is locked
       m_SavesTab->stopMonitorSaves();
       profilesDialog.exec();
       selectedProfile = profilesDialog.selectedProfile().value_or("");
+      activeChanged   = activeChanged || profilesDialog.activeProfileChanged();
     }
 
     m_SavesTab->refreshSaveList();  // since the save list may now be outdated we have
@@ -4321,7 +4357,10 @@ void MainWindow::on_actionAdd_Profile_triggered()
 
     // the dialog opens again only while no profile is left: a profile that
     // could not be created, with others there, no longer keeps it coming back
-    if (refreshProfiles(true, selectedProfile)) {
+    if (refreshProfiles(false)) {
+      selectProfileAfterDialog(selectedProfile.isEmpty() ? previousName
+                                                         : selectedProfile,
+                               activeChanged);
       break;
     }
   }
