@@ -1800,6 +1800,8 @@ void OrganizerCore::updateModsInDirectoryStructure(
   // for a running refresh to end (the window froze when a mod was enabled then)
   const std::vector<QString> archives = enabledArchives();
   const std::set<QString> archiveSet(archives.begin(), archives.end());
+  // the load order and the archives converted once, not for every mod
+  const auto archiveContext = m_DirectoryRefresher->archiveContext(archiveSet);
 
   // finally also add files from bsas to the directory structure
   for (auto idx : modInfo.keys()) {
@@ -1810,7 +1812,7 @@ void OrganizerCore::updateModsInDirectoryStructure(
     m_DirectoryRefresher->addModBSAToStructure(
         m_DirectoryStructure, modInfo[idx]->internalName(),
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
-        modInfo[idx]->archives(), archiveSet);
+        modInfo[idx]->archives(), archiveContext);
   }
 }
 
