@@ -57,6 +57,8 @@ protected:
 private:
   QPoint m_toolTipPosition;
   QString m_displayText;
+  // the length of the text the layout last sized the counter for
+  qsizetype m_sizedLength = -1;
 };
 
 #endif  // LCDNUMBER_H

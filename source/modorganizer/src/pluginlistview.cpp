@@ -131,6 +131,7 @@ void PluginListView::updatePluginCount()
   int totalCount = masterCount + mediumMasterCount + lightMasterCount + regularCount;
 
   ui.counter->display(activeVisibleCount);
+  ui.counter->updateGeometry();
   ui.counter->setToolTip(
       tr("<table cellspacing=\"6\">"
          "<tr><th>Type</th><th>Active      </th><th>Total</th></tr>"
