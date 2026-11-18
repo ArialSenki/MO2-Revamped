@@ -859,10 +859,19 @@ private:
 #endif
   }
 
+  // MO2 Revamped: the dock's content, or nullptr once the dock is being taken
+  // apart: QDockWidget::widget() reads its layout without checking it, and as
+  // the window closes the list's viewport still sends a resize or a move after
+  // the dock's layout is gone (a crash in QDockWidget::widget while MO2 closed)
+  QWidget* dockContent() const
+  {
+    return m_Dock->layout() != nullptr ? m_Dock->widget() : nullptr;
+  }
+
   QTreeView* logList() const
   {
-    return m_Dock->widget() != nullptr
-               ? m_Dock->widget()->findChild<QTreeView*>(QStringLiteral("logList"))
+    return dockContent() != nullptr
+               ? dockContent()->findChild<QTreeView*>(QStringLiteral("logList"))
                : nullptr;
   }
 
@@ -977,10 +986,10 @@ private:
   // folded, the list is still there at one pixel: Tab must not land in it
   void setListFocusable(bool focusable)
   {
-    if (m_Dock->widget() == nullptr) {
+    if (dockContent() == nullptr) {
       return;
     }
-    for (auto* view : m_Dock->widget()->findChildren<QAbstractItemView*>()) {
+    for (auto* view : dockContent()->findChildren<QAbstractItemView*>()) {
       // keys must not keep going to a list that was folded away
       if (!focusable && view->hasFocus()) {
         m_Chevron->setFocus();
@@ -991,7 +1000,7 @@ private:
 
   void relaxContentMinimum(bool relax)
   {
-    QWidget* content = m_Dock->widget();
+    QWidget* content = dockContent();
     if (content == nullptr) {
       return;
     }
