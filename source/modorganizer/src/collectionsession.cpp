@@ -676,17 +676,52 @@ void CollectionSession::setStage(Stage s)
   // the per-file notices (and their sound) stay quiet while it runs: the
   // window shows the progress
   qApp->setProperty(QuietProperty, s == Stage::Running ? QVariant(true) : QVariant());
-  // once it stops, one notice says how many were held back (unrelated
-  // downloads and Nexus errors among them), so none goes unnoticed
-  if (wasRunning && s != Stage::Running) {
+
+  // MO2 Revamped: one notice when it starts or goes on (a resume at start,
+  // Continue, Retry failed) and one when it stops, with what came of it;
+  // nothing for each mod in between (the window and the log have them)
+  int mods = 0, installed = 0, failed = 0, skipped = 0;
+  for (const auto& e : m_entries) {
+    if (!e.selected) {
+      continue;
+    }
+    ++mods;
+    installed += e.status == Status::Installed ? 1 : 0;
+    failed += e.status == Status::Failed ? 1 : 0;
+    skipped += e.status == Status::Skipped ? 1 : 0;
+  }
+  if (!wasRunning && s == Stage::Running) {
+    qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+    MessageDialog::showStatus(
+        installed > 0
+            ? tr("Continuing the collection \"%1\": %2 of %3 mods are done. Its "
+                 "window shows the progress.")
+                  .arg(displayName())
+                  .arg(installed)
+                  .arg(mods)
+            : tr("Installing the collection \"%1\" (%2 mods). Its window shows the "
+                 "progress.")
+                  .arg(displayName())
+                  .arg(mods));
+  } else if (wasRunning && s != Stage::Running) {
     const int hidden = qApp->property("mo2r.collectionQuietHidden").toInt();
     qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
-    if (hidden > 0) {
-      MessageDialog::showMessage(
-          QObject::tr("%1 notices weren't shown while the collection installed. "
-                      "They're in MO2's log.")
-              .arg(hidden),
-          nullptr);
+    log::info("collection {}: {} notices weren't shown while it ran", m_link.slug,
+              hidden);
+    if (s == Stage::Done) {
+      MessageDialog::showStatus(
+          tr("The collection \"%1\" is finished: %2 installed, %3 failed, %4 "
+             "skipped.")
+              .arg(displayName())
+              .arg(installed)
+              .arg(failed)
+              .arg(skipped));
+    } else if (s == Stage::Paused) {
+      MessageDialog::showStatus(tr("The collection \"%1\" is paused: %2 of %3 mods "
+                                   "are done.")
+                                    .arg(displayName())
+                                    .arg(installed)
+                                    .arg(mods));
     }
   }
   if (s == Stage::Running) {

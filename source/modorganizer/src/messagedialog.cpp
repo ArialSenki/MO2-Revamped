@@ -71,6 +71,7 @@ struct WaitingNotice
   QString text;
   QPointer<QWidget> reference;
   bool bringToFront;
+  bool status = false;
 };
 
 QList<WaitingNotice>& waitingNotices()
@@ -387,7 +388,7 @@ void MessageDialog::showWaitingNotices()
   waitingTimer().stop();
   const auto waiting = std::exchange(waitingNotices(), {});
   for (const auto& w : waiting) {
-    showMessage(w.text, w.reference, w.bringToFront);
+    showNotice(w.text, w.reference, w.bringToFront, w.status);
   }
 }
 
@@ -403,6 +404,17 @@ void MessageDialog::restack(QWidget* parent)
 
 void MessageDialog::showMessage(const QString& text, QWidget* reference,
                                 bool bringToFront)
+{
+  showNotice(text, reference, bringToFront, false);
+}
+
+void MessageDialog::showStatus(const QString& text)
+{
+  showNotice(text, nullptr, false, true);
+}
+
+void MessageDialog::showNotice(const QString& text, QWidget* reference, bool bringToFront,
+                         bool status)
 {
   log::debug("{}", text);
 
@@ -422,8 +434,16 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
       qstrcmp(front->window()->metaObject()->className(), "CollectionDialog") != 0;
   // bringToFront is the caller saying the user must see it (Settings' restart
   // notice, errors and warnings such as a refused rename)
-  if (qApp->property("mo2r.collectionQuiet").toBool() && !fromFrontDialog &&
-      !bringToFront) {
+  // MO2 Revamped: during a collection only a notice the open dialog gives
+  // for something the user did there (Settings' restart notice) shows: it is
+  // both that dialog's and one the user must see. Callers that name
+  // qApp->activeWindow() looked like the open dialog's own: with the crash
+  // notice open, every mod's "Installation successful" showed over its
+  // buttons. Nothing a collection's install shows gets through
+  const bool collectionQuiet = qApp->property("mo2r.collectionQuiet").toBool();
+  const bool collectionInstall = qApp->property("mo2r.collectionInstall").toBool();
+  if (!status &&
+      ((collectionQuiet && !(fromFrontDialog && bringToFront)) || collectionInstall)) {
     // still in the log, where a user looking for it finds it
     log::info("notice not shown while a collection installs: {}", text);
     qApp->setProperty("mo2r.collectionQuietHidden",
@@ -453,7 +473,7 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   // dialog's own waits until it closes
   if (!fromFrontDialog && front != nullptr && front->isVisible() &&
       qobject_cast<const QProgressDialog*>(front) == nullptr) {
-    waitingNotices().append({text, QPointer<QWidget>(reference), bringToFront});
+    waitingNotices().append({text, QPointer<QWidget>(reference), bringToFront, status});
     log::debug("notice waits for the dialog in front: {}", text);
     if (!waitingTimer().isActive()) {
       waitingTimer().start();

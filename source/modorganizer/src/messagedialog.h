@@ -69,6 +69,11 @@ public:
   static void showMessage(const QString& text, QWidget* reference,
                           bool bringToFront = false);
 
+  // MO2 Revamped: a notice about a whole task (a collection that starts,
+  // pauses or ends): shown even in the collection's quiet mode, the one
+  // notice the user gets for it
+  static void showStatus(const QString& text);
+
   // shows the notices that waited for a dialog to close, once none is open
   static void showWaitingNotices();
 
@@ -101,6 +106,8 @@ private:
   void dismiss();
   // the notices still shown over parent, placed again from the bottom
   static void restack(QWidget* parent);
+  static void showNotice(const QString& text, QWidget* reference, bool bringToFront,
+                   bool status);
 };
 
 #endif  // MESSAGEDIALOG_H
