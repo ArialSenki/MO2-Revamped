@@ -1383,11 +1383,13 @@ class _Redactor:
             # JSON web tokens
             (re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*"),
              self.Removed),
-            # a long run of mixed letters and digits is a key, not a hash or a
-            # path: hashes are hexadecimal and paths have separators
-            (re.compile(r"(?<![A-Za-z0-9+=_-])(?=[A-Za-z0-9+=_-]*[a-z])"
-                        r"(?=[A-Za-z0-9+=_-]*[A-Z])(?=[A-Za-z0-9+=_-]*\d)"
-                        r"[A-Za-z0-9+=_-]{40,}(?![A-Za-z0-9+=_-])"), self.Removed),
+            # a long run of mixed letters and digits is a key (a Nexus API key
+            # is over a hundred): hashes are hexadecimal, paths have
+            # separators and archive names have underscores or dots
+            (re.compile(r"(?<![A-Za-z0-9+=_./\\-])(?=[A-Za-z0-9+=-]*[a-z])"
+                        r"(?=[A-Za-z0-9+=-]*[A-Z])(?=[A-Za-z0-9+=-]*\d)"
+                        r"(?!(?:[A-Za-z0-9+=]*-){5})"
+                        r"[A-Za-z0-9+=-]{64,}(?![A-Za-z0-9+=_./\\-])"), self.Removed),
         ]
         self._email = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 
