@@ -326,7 +326,7 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
     }
   }
 
-  log::debug("downloads: drag data for {} download(s)", names.size());
+  log::info("downloads: drag data for {} download(s)", names.size());
   QMimeData* result = new QMimeData;
   result->setData("application/x-qabstractitemmodeldatalist", encoded);
   if (!names.isEmpty()) {
