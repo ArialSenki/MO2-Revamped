@@ -1079,6 +1079,7 @@ void ProfilesDialog::onInvalidationChanged(bool checked)
     } else {
       profile->deactivateInvalidation();
     }
+    noteChange(*profile);
   } catch (const std::exception& e) {
     reportError(tr("Archive invalidation couldn't be changed: %1").arg(e.what()));
   }
@@ -1092,6 +1093,7 @@ void ProfilesDialog::onLocalSavesChanged(bool checked)
   }
 
   if (profile->enableLocalSaves(checked)) {
+    noteChange(*profile);
     m_transfer->setEnabled(checked);
     m_transfer->setToolTip(checked
                                ? tr("Copy or move saves between this profile and the game")
@@ -1128,5 +1130,15 @@ void ProfilesDialog::onLocalIniFilesChanged(bool checked)
     // revert the switch
     QSignalBlocker blocker(m_localIniFiles);
     m_localIniFiles->setChecked(!checked);
+  } else {
+    noteChange(*profile);
+  }
+}
+
+void ProfilesDialog::noteChange(const Profile& profile)
+{
+  if (!m_ActiveProfileName.isEmpty() &&
+      profile.name().compare(m_ActiveProfileName, Qt::CaseInsensitive) == 0) {
+    m_ActiveProfileChanged = true;
   }
 }

@@ -12,8 +12,8 @@
       <translation>Urheberrecht und Gewährleistung</translation>
     </message>
     <message>
-      <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped on GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-      <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Quellcode und Projektneuigkeiten findest du unter &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped auf GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+      <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped on GitHub&lt;/a&gt; and on &lt;a href="https://www.nexusmods.com/site/mods/2612"&gt;Nexus Mods&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+      <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Quellcode und Projektneuigkeiten findest du unter &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped auf GitHub&lt;/a&gt; und auf &lt;a href="https://www.nexusmods.com/site/mods/2612"&gt;Nexus Mods&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
       <source>Mod Organizer 2: Revamped — Elden Ring Edition</source>
@@ -74,6 +74,34 @@
     <message>
       <source>usvfs %1</source>
       <translation>usvfs %1</translation>
+    </message>
+    <message>
+      <source>About Qt</source>
+      <translation>Über Qt</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped is built with Qt %1, the cross-platform application framework.</source>
+      <translation>MO2 Revamped ist mit Qt %1 gebaut, dem plattformübergreifenden Anwendungs-Framework.</translation>
+    </message>
+    <message>
+      <source>Qt is used under the GNU Lesser General Public License version 3. Its license text is in the licenses folder next to MO2.</source>
+      <translation>Qt wird unter der GNU Lesser General Public License Version 3 verwendet. Der Lizenztext liegt im Ordner „licenses“ neben MO2.</translation>
+    </message>
+    <message>
+      <source>Qt is a trademark of The Qt Company Ltd. More at %1.</source>
+      <translation>Qt ist eine Marke von The Qt Company Ltd. Mehr unter %1.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped auf Nexus Mods</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped third-party notices</source>
+      <translation>Hinweise zu Drittanbietern von MO2 Revamped</translation>
     </message>
   </context>
   <context>
@@ -7667,6 +7695,18 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
       <source>Short help on the dashboard, profiles, downloads, collections, themes, notices and settings.</source>
       <translation>Kurze Hilfe zu Übersicht, Profilen, Downloads, Sammlungen, Designs, Hinweisen und Einstellungen.</translation>
     </message>
+    <message>
+      <source>Endorse</source>
+      <translation>Empfehlen</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped auf Nexus Mods empfehlen</translation>
+    </message>
+    <message>
+      <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
+      <translation>Eine Empfehlung zeigt Nexus Mods, dass sich MO2 Revamped lohnt. Wähle unter Mehr „Nicht empfehlen“, um diese Schaltfläche ohne Empfehlung auszublenden.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8141,6 +8181,26 @@ Er enthält genau das, was die Vorschau gezeigt hat.</translation>
     <message>
       <source>Copied</source>
       <translation>Kopiert</translation>
+    </message>
+    <message>
+      <source>Nexus collections</source>
+      <translation>Nexus-Sammlungen</translation>
+    </message>
+    <message>
+      <source>Browse and install Nexus Mods collections from MO2.</source>
+      <translation>Nexus-Mods-Sammlungen direkt in MO2 durchsuchen und installieren.</translation>
+    </message>
+    <message>
+      <source>Supported games</source>
+      <translation>Unterstützte Spiele</translation>
+    </message>
+    <message>
+      <source>Skyrim Special Edition, Fallout 4, Fallout 3, Fallout: New Vegas, Baldur's Gate 3, Cyberpunk 2077, Elden Ring and Elden Ring Nightreign, plus the other games Mod Organizer 2 supports.</source>
+      <translation>Skyrim Special Edition, Fallout 4, Fallout 3, Fallout: New Vegas, Baldur's Gate 3, Cyberpunk 2077, Elden Ring und Elden Ring Nightreign sowie die übrigen Spiele, die Mod Organizer 2 unterstützt.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped auf Nexus Mods</translation>
     </message>
 </context>
   <context>

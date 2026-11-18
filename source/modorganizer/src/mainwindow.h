@@ -235,6 +235,8 @@ private:
   QToolButton* m_moreActionsButton = nullptr;
   FluentDashboard* m_fluentDashboard = nullptr;
   QAction* m_fluentOverflowAction     = nullptr;
+  // the command bar's Endorse button, shown until the user decides
+  QAction* m_endorseBarAction         = nullptr;
   RunState m_runState              = RunState::Idle;
   // the core outlives the window: the run state callback goes with it
   boost::signals2::scoped_connection m_aboutToRunConnection;
@@ -268,6 +270,10 @@ private:
   void activateSelectedProfile();
 
   bool refreshProfiles(bool selectProfile = true, QString newProfile = QString());
+  // after the Profiles dialog: shows `target` in the rebuilt profile box; the
+  // profile in use is only reloaded when another one was chosen or the dialog
+  // changed its settings
+  void selectProfileAfterDialog(const QString& target, bool activeChanged);
   void refreshExecutablesList();
 
   bool modifyExecutablesDialog(int selection);

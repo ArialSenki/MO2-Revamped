@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "aboutdialog.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentnavigation.h"
 #include "fluentpanels.h"
@@ -68,6 +69,13 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   m_LicenseFiles[LICENSE_ANTLR]   = "AntlrBuildTask.txt";
   m_LicenseFiles[LICENSE_DXTEX]   = "DXTex.txt";
   m_LicenseFiles[LICENSE_VDF]     = "ValveFileVDF.txt";
+  // MO2 Revamped: the notices and licenses it ships in licenses/ itself
+  m_LicenseFiles[LICENSE_REVAMPED] = "MO2-Revamped-THIRD-PARTY-NOTICES.txt";
+  m_LicenseFiles[LICENSE_YAFSML]   = "YAFSML-MIT.txt";
+  m_LicenseFiles[LICENSE_MINHOOK]  = "MinHook-BSD-2-Clause.txt";
+
+  addLicense(tr("MO2 Revamped third-party notices"), LICENSE_REVAMPED);
+  addLicense("Mod Organizer 2 / usvfs", LICENSE_GPL3);
 
   addLicense("Qt", LICENSE_LGPL3);
   addLicense("Qt Json", LICENSE_GPL3);
@@ -90,6 +98,8 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   addLicense("SIP", LICENSE_SIP);
   addLicense("DXTex Headers", LICENSE_DXTEX);
   addLicense("Valve File VDF Reader", LICENSE_VDF);
+  addLicense("MinHook", LICENSE_MINHOOK);
+  addLicense("YAFSML (Elden Ring path resolver)", LICENSE_YAFSML);
 
   const QString applicationName =
       eldenRingEdition ? tr("Mod Organizer 2: Revamped — Elden Ring Edition")
@@ -199,6 +209,12 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     connect(github, &QPushButton::clicked, this, [] {
       MOBase::shell::Open(QUrl(QStringLiteral("https://github.com/ArialSenki/MO2-Revamped")));
     });
+    auto* nexus = new QPushButton(FluentIcons::glyph(0xE774), tr("MO2 Revamped on Nexus Mods"),
+                                  actions);
+    nexus->setAutoDefault(false);
+    connect(nexus, &QPushButton::clicked, this, [] {
+      MOBase::shell::Open(QUrl(QStringLiteral("https://www.nexusmods.com/site/mods/2612")));
+    });
     auto* issue = new QPushButton(FluentIcons::glyph(0xE7BA), tr("Report a problem"),
                                   actions);
     issue->setAutoDefault(false);
@@ -208,6 +224,7 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     });
     actionsLayout->addWidget(copy);
     actionsLayout->addWidget(github);
+    actionsLayout->addWidget(nexus);
     actionsLayout->addWidget(issue);
     actionsLayout->addStretch(1);
     rows->addWidget(actions);
@@ -222,6 +239,39 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
 AboutDialog::~AboutDialog()
 {
   delete ui;
+}
+
+void AboutDialog::showAboutQt(QWidget* parent)
+{
+  FluentContentDialog dialog(
+      parent, QStringLiteral("revampedAboutQtDialog"), tr("About Qt"),
+      tr("MO2 Revamped is built with Qt %1, the cross-platform application "
+         "framework.")
+          .arg(QString::fromLatin1(qVersion())));
+
+  auto* details = new QLabel(&dialog);
+  details->setObjectName(QStringLiteral("fluentDialogText"));
+  details->setWordWrap(true);
+  details->setTextFormat(Qt::RichText);
+  details->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  details->setText(
+      QStringLiteral("<p>%1</p><p>%2</p>")
+          .arg(tr("Qt is used under the GNU Lesser General Public License version 3. "
+                  "Its license text is in the licenses folder next to MO2."),
+               tr("Qt is a trademark of The Qt Company Ltd. More at %1.")
+                   .arg(QStringLiteral(
+                       "<a href=\"https://www.qt.io/licensing/\">qt.io/licensing</a>"))));
+  connect(details, &QLabel::linkActivated, &dialog, [](const QString& link) {
+    MOBase::shell::Open(QUrl(link));
+  });
+  dialog.body()->addWidget(details);
+
+  QPushButton* close = dialog.addButton(tr("Close"), true);
+  connect(close, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+  // laid out once, before it reaches the screen
+  dialog.adjustSize();
+  dialog.exec();
 }
 
 void AboutDialog::addLicense(const QString& name, Licenses license)

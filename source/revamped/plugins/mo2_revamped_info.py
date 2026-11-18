@@ -602,6 +602,12 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                               "isolated MO2 copy for Elden Ring.")
                 if elden_ring_tools
                 else _tr("Choose global or portable setups."))
+        add_row(features, 0xE8F1, _tr("Nexus collections"),
+                _tr("Browse and install Nexus Mods collections from MO2."))
+        add_row(features, 0xE7FC, _tr("Supported games"),
+                _tr("Skyrim Special Edition, Fallout 4, Fallout 3, Fallout: New Vegas, "
+                    "Baldur's Gate 3, Cyberpunk 2077, Elden Ring and Elden Ring "
+                    "Nightreign, plus the other games Mod Organizer 2 supports."))
         add_row(features, 0xE790, _tr("Interface and diagnostics"),
                 _tr("Includes Windows 11 style themes (Light and Dark) "
                     "with Fluent icons, plus tools to prepare diagnostic reports."))
@@ -660,8 +666,10 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         people = add_card(credits)
         add_row(people, 0xE77B, _tr("Revamped authorship"),
                 "MO2 Revamped · ArialSenki\n" + _tr("Independent community edition."),
-                (link_button(0xE8A7, _tr("MO2 Revamped on GitHub"),
-                             "https://github.com/ArialSenki/MO2-Revamped"),))
+                (link_button(0xE774, _tr("MO2 Revamped on Nexus Mods"),
+                             "https://www.nexusmods.com/site/mods/2612"),
+                 link_button(0xE8A7, _tr("MO2 Revamped on GitHub"),
+                             "https://github.com/ArialSenki/MO2-Revamped")))
         add_row(people, 0xE8F1, _tr("Base project"),
                 _tr("Based on Mod Organizer 2 and its contributions. Revamped is not "
                     "an official release from the MO2 team."))

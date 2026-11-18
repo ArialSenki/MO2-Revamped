@@ -307,6 +307,24 @@ void MainWindow::setupFluentCommandBar()
   if (ui->actionHelp->menu() != nullptr) {
     m_fluentOverflowAction->setMenu(ui->actionHelp->menu());
   }
+  // MO2 Revamped: endorsing was two menus deep; until the user endorses (or
+  // declines) it is one button next to More, and it leaves the bar after that
+  // (toggleRevampedEndorseState())
+  m_endorseBarAction = new QAction(tr("Endorse"), this);
+  m_endorseBarAction->setObjectName(QStringLiteral("actionEndorseBar"));
+  m_endorseBarAction->setToolTip(tr("Endorse MO2 Revamped on Nexus Mods"));
+  m_endorseBarAction->setWhatsThis(
+      tr("Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "
+         "\"Won't Endorse\" under More to hide this button without endorsing."));
+  m_endorseBarAction->setVisible(false);
+  connect(m_endorseBarAction, &QAction::triggered, this, &MainWindow::actionEndorseMO);
+  bar->addAction(m_endorseBarAction);
+  if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_endorseBarAction))) {
+    button->setObjectName(QStringLiteral("actionEndorseBar"));
+  }
+  // the bar is built after the first endorsement check
+  toggleRevampedEndorseState();
+
   bar->addAction(m_fluentOverflowAction);
   if (auto* button = qobject_cast<QToolButton*>(bar->widgetForAction(m_fluentOverflowAction))) {
     button->setPopupMode(QToolButton::InstantPopup);
@@ -489,6 +507,15 @@ void MainWindow::applyFluentActionIcons()
     if (action->priority() != QAction::LowPriority &&
         !action->iconText().startsWith(QLatin1Char(' '))) {
       action->setIconText(QLatin1Char(' ') + action->iconText());
+    }
+  }
+
+  // the Endorse button's heart-like thumb in the accent, so it is noticed
+  // without being loud
+  if (m_endorseBarAction != nullptr) {
+    m_endorseBarAction->setIcon(FluentIcons::glyph(0xE8E1, FluentIcons::Tone::Accent));
+    if (!m_endorseBarAction->iconText().startsWith(QLatin1Char(' '))) {
+      m_endorseBarAction->setIconText(QLatin1Char(' ') + m_endorseBarAction->iconText());
     }
   }
 }
