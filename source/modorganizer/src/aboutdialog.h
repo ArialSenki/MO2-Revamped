@@ -69,6 +69,9 @@ private:
     LICENSE_ANTLR,
     LICENSE_DXTEX,
     LICENSE_VDF,
+    LICENSE_REVAMPED,
+    LICENSE_YAFSML,
+    LICENSE_MINHOOK,
   };
 
 private:

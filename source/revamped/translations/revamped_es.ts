@@ -20,8 +20,8 @@
       <translation>Derechos de autor y garantía</translation>
     </message>
     <message>
-      <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped on GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-      <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El código fuente y las novedades del proyecto están disponibles en &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped en GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+      <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped on GitHub&lt;/a&gt; and on &lt;a href="https://www.nexusmods.com/site/mods/2612"&gt;Nexus Mods&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+      <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El código fuente y las novedades del proyecto están disponibles en &lt;a href="https://github.com/ArialSenki/MO2-Revamped"&gt;MO2 Revamped en GitHub&lt;/a&gt; y en &lt;a href="https://www.nexusmods.com/site/mods/2612"&gt;Nexus Mods&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
       <source>Mod Organizer 2: Revamped — Elden Ring Edition</source>
@@ -102,6 +102,14 @@
     <message>
       <source>Qt is a trademark of The Qt Company Ltd. More at %1.</source>
       <translation>Qt es una marca de The Qt Company Ltd. Más en %1.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped en Nexus Mods</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped third-party notices</source>
+      <translation>Avisos de terceros de MO2 Revamped</translation>
     </message>
   </context>
   <context>
@@ -8003,6 +8011,26 @@ OpenSSL · {openssl}</translation>
       <message>
       <source>You are now a developer. Open Settings again to see Settings &gt; Developer.</source>
       <translation>Ya eres desarrollador. Abre Ajustes otra vez para ver Ajustes &gt; Desarrollador.</translation>
+    </message>
+    <message>
+      <source>Nexus collections</source>
+      <translation>Colecciones de Nexus</translation>
+    </message>
+    <message>
+      <source>Browse and install Nexus Mods collections from MO2.</source>
+      <translation>Explora e instala colecciones de Nexus Mods desde MO2.</translation>
+    </message>
+    <message>
+      <source>Supported games</source>
+      <translation>Juegos compatibles</translation>
+    </message>
+    <message>
+      <source>Skyrim Special Edition, Fallout 4, Fallout 3, Fallout: New Vegas, Baldur's Gate 3, Cyberpunk 2077, Elden Ring and Elden Ring Nightreign, plus the other games Mod Organizer 2 supports.</source>
+      <translation>Skyrim Special Edition, Fallout 4, Fallout 3, Fallout: New Vegas, Baldur's Gate 3, Cyberpunk 2077, Elden Ring y Elden Ring Nightreign, además de los demás juegos que admite Mod Organizer 2.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped en Nexus Mods</translation>
     </message>
 </context>
   <context>

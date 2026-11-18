@@ -69,6 +69,13 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   m_LicenseFiles[LICENSE_ANTLR]   = "AntlrBuildTask.txt";
   m_LicenseFiles[LICENSE_DXTEX]   = "DXTex.txt";
   m_LicenseFiles[LICENSE_VDF]     = "ValveFileVDF.txt";
+  // MO2 Revamped: the notices and licenses it ships in licenses/ itself
+  m_LicenseFiles[LICENSE_REVAMPED] = "MO2-Revamped-THIRD-PARTY-NOTICES.txt";
+  m_LicenseFiles[LICENSE_YAFSML]   = "YAFSML-MIT.txt";
+  m_LicenseFiles[LICENSE_MINHOOK]  = "MinHook-BSD-2-Clause.txt";
+
+  addLicense(tr("MO2 Revamped third-party notices"), LICENSE_REVAMPED);
+  addLicense("Mod Organizer 2 / usvfs", LICENSE_GPL3);
 
   addLicense("Qt", LICENSE_LGPL3);
   addLicense("Qt Json", LICENSE_GPL3);
@@ -91,6 +98,8 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   addLicense("SIP", LICENSE_SIP);
   addLicense("DXTex Headers", LICENSE_DXTEX);
   addLicense("Valve File VDF Reader", LICENSE_VDF);
+  addLicense("MinHook", LICENSE_MINHOOK);
+  addLicense("YAFSML (Elden Ring path resolver)", LICENSE_YAFSML);
 
   const QString applicationName =
       eldenRingEdition ? tr("Mod Organizer 2: Revamped — Elden Ring Edition")
@@ -200,6 +209,12 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     connect(github, &QPushButton::clicked, this, [] {
       MOBase::shell::Open(QUrl(QStringLiteral("https://github.com/ArialSenki/MO2-Revamped")));
     });
+    auto* nexus = new QPushButton(FluentIcons::glyph(0xE774), tr("MO2 Revamped on Nexus Mods"),
+                                  actions);
+    nexus->setAutoDefault(false);
+    connect(nexus, &QPushButton::clicked, this, [] {
+      MOBase::shell::Open(QUrl(QStringLiteral("https://www.nexusmods.com/site/mods/2612")));
+    });
     auto* issue = new QPushButton(FluentIcons::glyph(0xE7BA), tr("Report a problem"),
                                   actions);
     issue->setAutoDefault(false);
@@ -209,6 +224,7 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
     });
     actionsLayout->addWidget(copy);
     actionsLayout->addWidget(github);
+    actionsLayout->addWidget(nexus);
     actionsLayout->addWidget(issue);
     actionsLayout->addStretch(1);
     rows->addWidget(actions);

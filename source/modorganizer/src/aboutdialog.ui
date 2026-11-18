@@ -181,7 +181,7 @@
             <item>
              <widget class="QLabel" name="label_3">
               <property name="text">
-               <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Copyright © 2011-2016 Sebastian Herbord&lt;br/&gt;Copyright © 2016-2023 Mod Organizer 2 Contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Copyright © 2011-2016 Sebastian Herbord&lt;br/&gt;Copyright © 2016-2023 Mod Organizer 2 Contributors&lt;br/&gt;Copyright © 2026 MO2 Revamped Contributors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
@@ -201,7 +201,7 @@
          <item>
           <widget class="LinkLabel" name="sourceText">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href=&quot;https://github.com/ArialSenki/MO2-Revamped&quot;&gt;MO2 Revamped on GitHub&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Source code and project updates are available at &lt;a href=&quot;https://github.com/ArialSenki/MO2-Revamped&quot;&gt;MO2 Revamped on GitHub&lt;/a&gt; and on &lt;a href=&quot;https://www.nexusmods.com/site/mods/2612&quot;&gt;Nexus Mods&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
@@ -267,6 +267,11 @@
               <property name="selectionMode">
                <enum>QAbstractItemView::NoSelection</enum>
               </property>
+              <item>
+               <property name="text">
+                <string notr="true">ArialSenki (MO2 Revamped)</string>
+               </property>
+              </item>
               <item>
                <property name="text">
                 <string>LePresidente (Project Lead)</string>
