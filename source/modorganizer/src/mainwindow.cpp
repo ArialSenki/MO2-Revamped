@@ -208,6 +208,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <shlobj.h>
+#include <dwmapi.h>
 
 #include <exception>
 #include <algorithm>
@@ -440,6 +441,11 @@ public:
     // folding resizes the dock vertically: on a side it would do nothing yet be
     // saved as folded, so the log docks at the bottom (or floats)
     dock->setAllowedAreas(Qt::BottomDockWidgetArea);
+    // MO2 Revamped: it floats with the float button (or a double-click) into
+    // a window of its own; dragging the row folds it rather than tearing it
+    // out as a frameless strip
+    dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetMovable);
+    dock->installEventFilter(this);
     if (m_Foldable) {
       setCursor(Qt::PointingHandCursor);
     }
@@ -520,9 +526,7 @@ public:
 
     connect(closeButton, &QToolButton::clicked, dock,
             [dock] { dock->hide(); });
-    connect(m_FloatButton, &QToolButton::clicked, dock, [dock] {
-      dock->setFloating(!dock->isFloating());
-    });
+    connect(m_FloatButton, &QToolButton::clicked, this, [this] { toggleFloating(); });
     connect(dock, &QDockWidget::windowTitleChanged, this, [this](const QString& title) {
       m_Title->setText(title);
       updateSummary();
@@ -536,13 +540,31 @@ public:
     });
     connect(dock, &QDockWidget::topLevelChanged, this, [this](bool floating) {
       updateFloatControl(floating);
-      // a folded log that leaves the window (float button or a drag) opens
-      // again; a floating window only one row tall would hide the list
       if (floating) {
+        // shown: the user floated it now; hidden: Qt restores it floating at
+        // start, at the place it was left
+        const bool byUser = !m_Dock->isHidden();
+        // the docked height and fold come back when it docks again (the
+        // float button notes them; a log floating at start never had them)
+        if (!byUser) {
+          m_DockedHeight      = 0;
+          m_FoldedBeforeFloat = false;
+        } else if (!m_PlaceFloating) {
+          m_FoldedBeforeFloat = !m_Expanded;
+          m_DockedHeight      = m_Expanded ? m_Dock->height() : m_ExpandedHeight;
+        }
+        m_PlaceFloating = false;
+        // a folded log that leaves the window opens again; a floating
+        // window only one row tall would hide the list. The moves made here
+        // are not the user's: not remembered
+        m_Arranging = true;
         unfoldNow();
-        // Qt floats the log where it was docked, which can leave the bottom
-        // of the window under the taskbar
+        makeFloatingWindow(byUser);
+        m_Arranging = false;
         QTimer::singleShot(0, m_Dock, [this] { keepFloatingOnScreen(); });
+      } else {
+        // after the main window has laid the dock out again
+        QTimer::singleShot(0, this, [this] { restoreDockedSize(); });
       }
     });
     updateFloatControl(dock->isFloating());
@@ -572,6 +594,33 @@ public:
       setExpanded(false);
     } else {
       m_FoldWhenShown = true;
+    }
+  }
+
+  // where the floating log was last, kept between sessions (see MainWindow)
+  QRect floatGeometry() const { return m_FloatGeometry; }
+  void setFloatGeometry(const QRect& geometry) { m_FloatGeometry = geometry; }
+
+  // a log left floating and open last time: Qt restores it floating, but
+  // hidden once it is a window of its own (see makeFloatingWindow())
+  void showFloating()
+  {
+    if (!m_Dock->isFloating()) {
+      return;
+    }
+    m_Dock->show();
+    matchFloatingTitleBar();
+    QTimer::singleShot(0, m_Dock, [this] {
+      matchFloatingTitleBar();
+      keepFloatingOnScreen();
+    });
+  }
+
+  // the native title bar of the floating log follows a theme change
+  void themeChanged()
+  {
+    if (m_Dock->isFloating()) {
+      matchFloatingTitleBar();
     }
   }
 
@@ -681,7 +730,125 @@ protected:
     updateSummary();
   }
 
+  bool eventFilter(QObject* watched, QEvent* e) override
+  {
+    // where the user puts the floating log, for the next time it floats
+    if (watched == m_Dock && !m_Arranging && m_Dock->isFloating() &&
+        m_Dock->isVisible() && !m_Dock->isMaximized() &&
+        (e->type() == QEvent::Move || e->type() == QEvent::Resize)) {
+      m_FloatGeometry = m_Dock->geometry();
+    }
+    return QWidget::eventFilter(watched, e);
+  }
+
 private:
+  void toggleFloating()
+  {
+    if (m_Dock->isFloating()) {
+      m_Dock->setFloating(false);
+      return;
+    }
+
+    // what it docks back to
+    m_FoldedBeforeFloat = !m_Expanded;
+    m_DockedHeight      = m_Expanded ? m_Dock->height() : m_ExpandedHeight;
+    m_PlaceFloating     = true;
+    m_Dock->setFloating(true);
+  }
+
+  // Qt floats a dock with a custom title bar as a frameless strip: no border,
+  // shadow or resizing, laid over the window where it was docked. The log
+  // becomes a window of the main window's own instead, with Windows' frame;
+  // setFloating(false) gives the dock back its usual flags when it docks
+  void makeFloatingWindow(bool place)
+  {
+    // new window flags leave a widget hidden; a log restored floating at start
+    // is hidden here already and is shown by showFloating()
+    const bool shown     = !m_Dock->isHidden();
+    const QRect geometry = m_Dock->geometry();
+    m_Dock->setWindowFlags(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint |
+                           Qt::WindowSystemMenuHint | Qt::WindowMaximizeButtonHint |
+                           Qt::WindowCloseButtonHint);
+    // docked, the main window's surface is behind the log; as a window it
+    // paints the theme's background itself
+    m_Dock->setAttribute(Qt::WA_StyledBackground, true);
+    // shown first: the geometry is for the window inside its new frame
+    if (shown) {
+      m_Dock->show();
+#ifdef Q_OS_WIN
+      // Qt changes the styles of the window it already had; Windows keeps the
+      // frameless frame (no title bar) until it is told the frame changed
+      SetWindowPos(reinterpret_cast<HWND>(m_Dock->winId()), nullptr, 0, 0, 0, 0,
+                   SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                       SWP_NOACTIVATE);
+#endif
+    }
+    // floated now: its own place; restored: where Qt put it. Qt's geometry
+    // for a float now is the docked strip, which may not fit with a frame
+    if (place) {
+      placeFloating();
+    } else {
+      m_Dock->setGeometry(geometry);
+    }
+    matchFloatingTitleBar();
+    // Qt sets the frame mode again while the window settles
+    QTimer::singleShot(0, m_Dock, [this] { matchFloatingTitleBar(); });
+  }
+
+  void matchFloatingTitleBar()
+  {
+#ifdef Q_OS_WIN
+    if (!m_Dock->isFloating() || !m_Dock->testAttribute(Qt::WA_WState_Created)) {
+      return;
+    }
+    const BOOL dark = MOBase::RevampedTheme::isDark() ? TRUE : FALSE;
+    // DWMWA_USE_IMMERSIVE_DARK_MODE
+    DwmSetWindowAttribute(reinterpret_cast<HWND>(m_Dock->winId()), 20, &dark, sizeof(dark));
+#endif
+  }
+
+  // the first time, a window at the main window's lower right, wide enough
+  // for a log line and as tall as the opened log; afterwards where it was
+  void placeFloating()
+  {
+    if (m_FloatGeometry.isValid()) {
+      m_Dock->setGeometry(m_FloatGeometry);
+      return;
+    }
+
+    const QWidget* window = m_Dock->parentWidget();
+    if (window == nullptr) {
+      return;
+    }
+    const QRect area = window->geometry();
+    const int width  = std::clamp(area.width() * 55 / 100, 640, 1100);
+    const int height = std::clamp(qMax(m_ExpandedHeight, 360), 240, qMax(240, area.height() / 2));
+    m_Dock->setGeometry(QRect(area.right() - width - 40, area.bottom() - height - 64, width,
+                              height));
+  }
+
+  // back in the window: the height it had before it floated, folded again if
+  // it was folded then
+  void restoreDockedSize()
+  {
+    if (m_Dock->isFloating()) {
+      return;
+    }
+    m_Dock->setAttribute(Qt::WA_StyledBackground, false);
+    const int height =
+        qMax(m_DockedHeight > 0 ? m_DockedHeight : m_ExpandedHeight, m_ExpandedMinimum);
+    if (auto* window = qobject_cast<QMainWindow*>(m_Dock->parentWidget())) {
+      window->resizeDocks({m_Dock}, {height}, Qt::Vertical);
+    }
+    if (m_FoldedBeforeFloat) {
+      m_FoldedBeforeFloat = false;
+      m_ExpandedHeight    = height;
+      m_KeepHeight        = true;
+      setExpanded(false);
+    }
+    m_DockedHeight = 0;
+  }
+
   void keepFloatingOnScreen()
   {
     if (!m_Dock->isFloating() || m_Dock->screen() == nullptr) {
@@ -823,8 +990,12 @@ private:
     }
 
     m_FloatButton->setFloating(floating);
-    // a floating log can't fold: no chevron, and the row isn't a button
+    // a floating log can't fold: no chevron, and the row isn't a button; its
+    // window frame has the close button
     m_Chevron->setVisible(m_Foldable && !floating);
+    if (m_CloseButton != nullptr) {
+      m_CloseButton->setVisible(!floating);
+    }
     setCursor(m_Foldable && !floating ? Qt::PointingHandCursor : Qt::ArrowCursor);
     const QString action = floating ? QObject::tr("Dock log panel")
                                     : QObject::tr("Float log panel");
@@ -844,6 +1015,11 @@ private:
   bool m_KeepHeight     = false;
   bool m_FoldWhenShown  = false;
   bool m_PressFloating  = false;
+  bool m_PlaceFloating     = false;
+  bool m_Arranging         = false;
+  bool m_FoldedBeforeFloat = false;
+  int m_DockedHeight       = 0;
+  QRect m_FloatGeometry;
   QTimer m_SummaryTimer;
   bool m_Expanded       = true;
   int m_ExpandedHeight  = 175;
@@ -2081,6 +2257,9 @@ void MainWindow::allowListResize()
 
 void MainWindow::updateStyle(const QString&)
 {
+  if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
+    logBar->themeChanged();
+  }
   refreshExecutablesList();
   resetActionIcons();
   createEndorseMenu();
@@ -2728,6 +2907,8 @@ void MainWindow::showEvent(QShowEvent* event)
       constexpr auto logExpandedKey = "Settings/fluent_v4_log_expanded";
       constexpr auto logHeightKey   = "Settings/fluent_v4_log_height";
       const QSettings saved(file, QSettings::IniFormat);
+      // the floating log's window opens where it was left
+      logBar->setFloatGeometry(saved.value("Settings/fluent_v4_log_float_geometry").toRect());
       if (!saved.value(logExpandedKey, false).toBool()) {
         const int height = saved.value(logHeightKey, 0).toInt();
         QTimer::singleShot(0, logBar, [logBar, height] { logBar->foldAtStart(height); });
@@ -3804,6 +3985,13 @@ void MainWindow::readSettings()
       dockWidgetArea(ui->logDock) != Qt::BottomDockWidgetArea) {
     addDockWidget(Qt::BottomDockWidgetArea, ui->logDock);
   }
+  if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget());
+      logBar != nullptr && ui->logDock->isFloating() &&
+      QSettings(s.filename(), QSettings::IniFormat)
+          .value("Settings/fluent_v4_log_floating_open", false)
+          .toBool()) {
+    logBar->showFloating();
+  }
   s.geometry().restoreToolbars(this);
   // the command bar holds every main command now that the menu bar is gone, so
   // it can't stay hidden from an older session
@@ -3911,6 +4099,16 @@ void MainWindow::storeSettings()
   s.geometry().saveState(this);
   s.geometry().saveGeometry(this);
   s.geometry().saveDocks(this);
+  // MO2 Revamped: where the log's window goes the next time it floats (Qt's
+  // state above keeps it only while it is floating)
+  if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
+    QSettings saved(s.filename(), QSettings::IniFormat);
+    if (logBar->floatGeometry().isValid()) {
+      saved.setValue("Settings/fluent_v4_log_float_geometry", logBar->floatGeometry());
+    }
+    saved.setValue("Settings/fluent_v4_log_floating_open",
+                   ui->logDock->isFloating() && ui->logDock->isVisible());
+  }
 
   s.geometry().saveVisibility(ui->statusBar);
   s.geometry().saveToolbars(this);
