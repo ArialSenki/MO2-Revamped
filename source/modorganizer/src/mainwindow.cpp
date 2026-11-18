@@ -2925,6 +2925,15 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 bool MainWindow::canExit()
 {
+  // MO2 Revamped: a collection's install extracts with no window of its own
+  // in front, so the main window can be closed in the middle of it
+  if (m_OrganizerCore.installationManager()->isRunning()) {
+    QMessageBox::information(this, tr("Installation in progress"),
+                             tr("A mod is being installed. Close Mod Organizer once "
+                                "it has finished."));
+    return false;
+  }
+
   if (m_OrganizerCore.downloadManager()->downloadsInProgressNoPause()) {
     if (QMessageBox::question(
             this, tr("Downloads in progress"),

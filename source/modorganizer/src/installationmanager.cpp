@@ -113,6 +113,13 @@ InstallationManager::InstallationManager() : m_ParentWidget(nullptr), m_IsRunnin
 
 InstallationManager::~InstallationManager() {}
 
+void InstallationManager::cancelExtraction()
+{
+  if (m_ArchiveHandler) {
+    m_ArchiveHandler->cancel();
+  }
+}
+
 void InstallationManager::setParentWidget(QWidget* widget)
 {
   m_ParentWidget = widget;
@@ -213,37 +220,48 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     });
     future.waitForFinished();
   } else {
-    QProgressDialog* installationProgress = new QProgressDialog(m_ParentWidget);
+    // MO2 Revamped: a collection's installs show their progress in the
+    // collection's window. A progress window per mod, app-modal and owned by
+    // the main window, blocked the collection's own buttons, flashed the
+    // taskbar for each of hundreds of mods and, as it closed, brought the main
+    // window over the collection's
+    const bool ownWindow = !qApp->property("mo2r.collectionInstall").toBool();
+    QProgressDialog* installationProgress = ownWindow ? new QProgressDialog(m_ParentWidget)
+                                                      : nullptr;
     ON_BLOCK_EXIT([=]() {
-      installationProgress->cancel();
-      installationProgress->hide();
-      installationProgress->deleteLater();
+      if (installationProgress != nullptr) {
+        installationProgress->cancel();
+        installationProgress->hide();
+        installationProgress->deleteLater();
+      }
     });
-    installationProgress->setWindowFlags(installationProgress->windowFlags() &
-                                         (~Qt::WindowContextHelpButtonHint));
-    installationProgress->setWindowTitle(title.isEmpty() ? tr("Installing") : title);
-    installationProgress->setWindowModality(Qt::WindowModal);
-    // the width stays when the file names change
-    installationProgress->setFixedWidth(600);
-
-    // Turn off auto-reset otherwize the progress dialog is reset before the end. This
-    // is kind of annoying because updateProgress consider percentage of progression
-    // through the archive (pack), while we are waiting for extracting archive entries,
-    // so the percentage of in updateProgress is not really related to the percentage of
-    // files extracted...
-    installationProgress->setAutoReset(false);
-
     // Note: Using a loop with a progressUpdate() that only wake-up the loop. The
     // event-loop will be used in a loop and not via exec() because connecting to
     // QProgressDialog::setValue and using .exec() creates huge recursion that leads to
     // stack-overflow. See https://bugreports.qt.io/browse/QTBUG-10561
     QEventLoop loop;
 
-    // Cancelling progress only cancel the extraction, we do not force exiting the
-    // event-loop:
-    connect(installationProgress, &QProgressDialog::canceled, [this]() {
-      m_ArchiveHandler->cancel();
-    });
+    if (ownWindow) {
+      installationProgress->setWindowFlags(installationProgress->windowFlags() &
+                                           (~Qt::WindowContextHelpButtonHint));
+      installationProgress->setWindowTitle(title.isEmpty() ? tr("Installing") : title);
+      installationProgress->setWindowModality(Qt::WindowModal);
+      // the width stays when the file names change
+      installationProgress->setFixedWidth(600);
+
+      // Turn off auto-reset otherwize the progress dialog is reset before the end. This
+      // is kind of annoying because updateProgress consider percentage of progression
+      // through the archive (pack), while we are waiting for extracting archive entries,
+      // so the percentage of in updateProgress is not really related to the percentage of
+      // files extracted...
+      installationProgress->setAutoReset(false);
+
+      // Cancelling progress only cancel the extraction, we do not force exiting the
+      // event-loop:
+      connect(installationProgress, &QProgressDialog::canceled, [this]() {
+        m_ArchiveHandler->cancel();
+      });
+    }
 
     // MO2 Revamped: the extraction only notes where it is, and the dialog shows
     // it a few times a second. Waking the interface for each written block and
@@ -282,12 +300,25 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
                                        errorCallback);
     }));
 
-    installationProgress->setModal(true);
-    installationProgress->show();
+    if (installationProgress != nullptr) {
+      installationProgress->setModal(true);
+      installationProgress->show();
+    }
 
+    int shown = -1;
+    if (installationProgress == nullptr) {
+      emit extractionProgress(0);
+    }
     while (!futureWatcher.isFinished()) {
       loop.processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
       const int progress = currentProgress;
+      if (installationProgress == nullptr) {
+        if (progress != shown) {
+          shown = progress;
+          emit extractionProgress(progress);
+        }
+        continue;
+      }
       if (progress != installationProgress->value()) {
         installationProgress->setValue(progress);
       }
@@ -302,7 +333,11 @@ bool InstallationManager::extractFiles(QString extractPath, QString title,
     }
     tick.stop();
 
-    installationProgress->hide();
+    if (installationProgress != nullptr) {
+      installationProgress->hide();
+    } else {
+      emit extractionProgress(100);
+    }
 
     future = futureWatcher.future();
   }

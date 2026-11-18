@@ -134,6 +134,10 @@ public:
   int count(Status s) const;
   bool started() const { return m_started; }
   bool finalizing() const { return m_finalizing; }
+  // MO2 Revamped: the row being installed (-1: none) and how far its files
+  // are extracted, in percent (-1: not known yet)
+  int installingRow() const { return m_installRow; }
+  int installPercent() const { return m_installPercent; }
   // where it installs can no longer change: started, or in the instance made for it
   bool placeFixed() const { return m_started || m_profileMade || m_placeFixed; }
 
@@ -313,6 +317,8 @@ private:
   bool m_refetched     = false;  // a damaged archive was fetched again
   bool m_reduced       = false;  // read from the Nexus list, without the archive
   bool m_finalizing    = false;
+  int m_installRow     = -1;
+  int m_installPercent = -1;
   bool m_offerLoot     = false;
   QStringList m_modCycles;
   QStringList m_pluginCycles;
