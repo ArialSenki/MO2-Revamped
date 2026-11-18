@@ -245,9 +245,17 @@ void NexusBridge::nxmRequestFailed(QString gameName, int modID, int fileID,
 
 QAtomicInt NexusInterface::NXMRequestInfo::s_NextID(0);
 
+namespace
+{
+// the refusal codes Nexus sends in "message": the ones its own client (Vortex)
+// knows for endorsements, and the "already" ones, taken as they are named
+const char* const KnownProblemCodes[] = {
+    "IS_OWN_MOD",       "IS_OWN_CONTENT",    "NOT_DOWNLOADED_MOD", "TOO_SOON_AFTER_DOWNLOAD",
+    "ALREADY_ENDORSED", "ALREADY_ABSTAINED", "UNAUTHORIZED"};
+}  // namespace
+
 QString NexusInterface::knownProblem(const QString& code)
 {
-  // the codes Nexus' own client (Vortex) knows for endorsements
   if (code == QLatin1String("IS_OWN_MOD") || code == QLatin1String("IS_OWN_CONTENT")) {
     return tr("Nexus doesn't let you endorse your own mod.");
   } else if (code == QLatin1String("NOT_DOWNLOADED_MOD")) {
@@ -256,23 +264,30 @@ QString NexusInterface::knownProblem(const QString& code)
   } else if (code == QLatin1String("TOO_SOON_AFTER_DOWNLOAD")) {
     return tr("Nexus takes endorsements 15 minutes after the download. Try again "
               "later.");
+  } else if (code == QLatin1String("ALREADY_ENDORSED")) {
+    return tr("You've already endorsed this mod on Nexus.");
+  } else if (code == QLatin1String("ALREADY_ABSTAINED")) {
+    return tr("You already chose not to endorse this mod on Nexus.");
+  } else if (code == QLatin1String("UNAUTHORIZED")) {
+    return tr("Sign in to Nexus first, in Settings > Nexus.");
   }
   return {};
 }
 
-bool NexusInterface::isKnownProblem(const QString& text)
+QString NexusInterface::problemCode(const QString& text)
 {
-  for (const char* code : {"IS_OWN_MOD", "NOT_DOWNLOADED_MOD", "TOO_SOON_AFTER_DOWNLOAD"}) {
+  if (text.isEmpty()) {
+    return {};
+  }
+  for (const char* code : KnownProblemCodes) {
     if (text == knownProblem(QLatin1String(code))) {
-      return true;
+      // both "own" codes give the same sentence
+      return QLatin1String(code) == QLatin1String("IS_OWN_CONTENT")
+                 ? QStringLiteral("IS_OWN_MOD")
+                 : QString::fromLatin1(code);
     }
   }
-  return false;
-}
-
-bool NexusInterface::isOwnModProblem(const QString& text)
-{
-  return !text.isEmpty() && text == knownProblem(QStringLiteral("IS_OWN_MOD"));
+  return {};
 }
 
 APILimits NexusInterface::defaultAPILimits()
