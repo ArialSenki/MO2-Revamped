@@ -30,6 +30,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility.h>
 
 #include <QApplication>
+#include <QDateTime>
 #include <QJsonDocument>
 #include <QNetworkCookieJar>
 #include <QRegularExpression>
@@ -37,6 +38,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <regex>
 #include <vector>
+
+namespace
+{
+QString apiBase();
+}
 
 using namespace MOBase;
 using namespace MOShared;
@@ -1000,37 +1006,35 @@ void NexusInterface::nextRequest()
     }
   }
 
+  // MO2 Revamped: after a 429 the queue waits; the timer goes on
+  if (m_PausedUntil.isValid()) {
+    if (QDateTime::currentDateTimeUtc() < m_PausedUntil) {
+      // a timer may come a moment early: it is set again for what is left
+      if (m_ResumeTimer != nullptr && !m_ResumeTimer->isActive()) {
+        m_ResumeTimer->start(static_cast<int>(qMax<qint64>(
+            200, QDateTime::currentDateTimeUtc().msecsTo(m_PausedUntil) + 200)));
+      }
+      return;
+    }
+    m_PausedUntil = QDateTime();
+    // the counts are the ones from before the wait: one request asks again
+    m_User.limits(APILimits{m_User.limits().maxDailyRequests, 1,
+                            m_User.limits().maxHourlyRequests, 1});
+  }
+
   if (m_User.exhausted()) {
-    const auto dropped = m_RequestQueue;
-    m_RequestQueue.clear();
-    // the hourly limit refills at five past the hour: this hour's until then
-    // (MO2 Revamped: it said the next hour's, an hour off in the first
-    // minutes), the next one's after; counted on the date and time, so 23:xx
-    // doesn't come out as a negative wait
+    // MO2 Revamped: the queue waits for the next hourly batch instead of
+    // dropping every request (each a failed download, a failed collection mod)
     const QDateTime now = QDateTime::currentDateTime();
     QDateTime target    = now;
     target.setTime(QTime(now.time().hour(), 5, 0));
     if (target <= now) {
       target = target.addSecs(3600);
     }
-    const qint64 wait = qMax<qint64>(0, now.secsTo(target));
-    QString warning = tr("You've exceeded the Nexus API rate limit and requests are "
-                         "now being throttled. "
-                         "Your next batch of requests will be available in "
-                         "approximately %1 minutes and %2 seconds.")
-                          .arg(wait / 60)
-                          .arg(wait % 60);
-
-    log::warn("{}", warning);
-
-    // who waits for them is told; on the next turn of the event loop, as the
-    // request that got here may not have returned its id yet
-    QTimer::singleShot(0, this, [this, dropped, warning] {
-      for (const auto& request : dropped) {
-        emit nxmRequestDropped(request.m_GameName, request.m_ModID, request.m_FileID,
-                               request.m_UserData, request.m_ID, 429, warning);
-      }
-    });
+    log::warn("All Nexus API requests have been used up; the {} queued ones wait "
+              "until {}.",
+              m_RequestQueue.size(), target.toString(QStringLiteral("HH:mm")));
+    pauseRequests(target.toUTC());
     return;
   }
 
@@ -1159,10 +1163,10 @@ void NexusInterface::nextRequest()
       url = QStringLiteral("%1/games/%2").arg(info.m_URL).arg(info.m_GameName);
     } break;
     case NXMRequestInfo::TYPE_GRAPHQL: {
-      url = QStringLiteral("https://api.nexusmods.com/v2/graphql");
+      url = apiBase() + QStringLiteral("/v2/graphql");
     } break;
     case NXMRequestInfo::TYPE_APIPATH: {
-      url = QStringLiteral("https://api.nexusmods.com") + info.m_Path;
+      url = apiBase() + info.m_Path;
     } break;
     }
   } else {
@@ -1208,6 +1212,86 @@ void NexusInterface::nextRequest()
   m_ActiveRequest.push_back(info);
 }
 
+QDateTime NexusInterface::pausedUntil() const
+{
+  return m_PausedUntil.isValid() && QDateTime::currentDateTimeUtc() < m_PausedUntil
+             ? m_PausedUntil
+             : QDateTime();
+}
+
+void NexusInterface::pauseRequests(const QDateTime& until)
+{
+  const bool already = pausedUntil().isValid();
+  if (!already || until > m_PausedUntil) {
+    m_PausedUntil = until;
+  }
+  if (m_ResumeTimer == nullptr) {
+    m_ResumeTimer = new QTimer(this);
+    m_ResumeTimer->setSingleShot(true);
+    // a coarse timer may fire before the time: the queue would stay waiting
+    m_ResumeTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_ResumeTimer, &QTimer::timeout, this, [this] {
+      log::info("Nexus requests go on ({} waiting).", m_RequestQueue.size());
+      // as many as may run at once
+      for (int i = 0; i < MAX_ACTIVE_DOWNLOADS; ++i) {
+        nextRequest();
+      }
+    });
+  }
+  const qint64 ms =
+      qMax<qint64>(1000, QDateTime::currentDateTimeUtc().msecsTo(m_PausedUntil) + 500);
+  m_ResumeTimer->start(static_cast<int>(qMin<qint64>(ms, 3 * 3600 * 1000)));
+  // one notice for a pause, not one for each request in it
+  if (!already) {
+    emit requestsPaused(m_PausedUntil);
+  }
+}
+
+QDateTime
+NexusInterface::resumeTimeAfter429(const QList<QNetworkReply::RawHeaderPair>& headers,
+                                   bool exhausted, int attempt, const QDateTime& now)
+{
+  QDateTime until;
+  QDateTime hourlyReset, dailyReset;
+  for (const auto& pair : headers) {
+    const QByteArray name  = pair.first.toLower();
+    const QString value    = QString::fromLatin1(pair.second).trimmed();
+    if (name == "retry-after") {
+      bool number = false;
+      const int seconds = value.toInt(&number);
+      if (number) {
+        until = now.addSecs(seconds);
+      } else {
+        const QDateTime date = QDateTime::fromString(value, Qt::RFC2822Date);
+        if (date.isValid()) {
+          until = date.toUTC();
+        }
+      }
+    } else if (name == "x-rl-hourly-reset" || name == "x-rl-daily-reset") {
+      // "2026-11-18T02:00:00+00:00" or "2026-11-18 02:00:00 +0000"
+      QString iso = value;
+      iso.replace(QLatin1Char(' '), QLatin1Char('T'));
+      static const QRegularExpression offset(QStringLiteral("T?([+-]\\d\\d):?(\\d\\d)$"));
+      iso.replace(offset, QStringLiteral("\\1:\\2"));
+      QDateTime date = QDateTime::fromString(iso, Qt::ISODate);
+      if (date.isValid()) {
+        (name == "x-rl-hourly-reset" ? hourlyReset : dailyReset) = date.toUTC();
+      }
+    }
+  }
+
+  if (!until.isValid() && exhausted) {
+    until = hourlyReset.isValid() && hourlyReset > now ? hourlyReset : dailyReset;
+  }
+  if (!until.isValid() || until <= now) {
+    // a short limit (requests too close together): 15 s, 30 s, 1 min... up to 5
+    const int step = qBound(1, attempt, 6);
+    until          = now.addSecs(qMin(15 << (step - 1), 300));
+  }
+  // never past two hours: the next request asks again
+  return qMin(until, now.addSecs(2 * 3600));
+}
+
 void NexusInterface::downloadRequestedNXM(const QString& url)
 {
   emit requestNXMDownload(url);
@@ -1226,6 +1310,27 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
         iter->m_AllowedErrors[error].contains(statusCode)) {
       // These errors are allows to silently happen.  They should be handled in
       // nxmRequestFailed below.
+    } else if (statusCode == 429 && iter->m_RateLimited < 6) {
+      // MO2 Revamped: too many requests: this one goes back to the front of
+      // the queue and the queue waits until Nexus takes requests again; the
+      // receiver isn't told (it would show one error, fail one download, for
+      // each request in the queue)
+      m_User.limits(parseLimits(reply, m_User.limits()));
+      emit requestsChanged(getAPIStats(), m_User);
+      NXMRequestInfo again = *iter;
+      ++again.m_RateLimited;
+      again.m_Reply   = nullptr;
+      again.m_Timeout = nullptr;
+      m_RequestQueue.prepend(again);
+      const QDateTime until = resumeTimeAfter429(
+          reply->rawHeaderPairs(), m_User.exhausted(), again.m_RateLimited,
+          QDateTime::currentDateTimeUtc());
+      log::warn("Nexus answered 429 (too many requests) for {}; {} requests wait "
+                "until {}.",
+                withoutQuery(reply->url().toString()), m_RequestQueue.size(),
+                until.toLocalTime().toString(QStringLiteral("HH:mm:ss")));
+      pauseRequests(until);
+      return;
     } else if (statusCode == 429) {
       m_User.limits(parseLimits(reply, m_User.limits()));
 
@@ -1418,9 +1523,28 @@ APIStats NexusInterface::getAPIStats() const
 
 namespace
 {
+// MO2 Revamped: the API's address; MO2R_NEXUS_API_BASE replaces it for tests
+// against a local stub (a fake 429), and only with an address on this
+// computer, so the API key never goes anywhere else
+QString apiBase()
+{
+  static const QString base = [] {
+    const QString value = qEnvironmentVariable("MO2R_NEXUS_API_BASE").trimmed();
+    const QUrl url(value);
+    if (!value.isEmpty() && url.scheme() == QLatin1String("http") &&
+        (url.host() == QLatin1String("127.0.0.1") ||
+         url.host() == QLatin1String("localhost"))) {
+      log::warn("Nexus API requests go to the test address {}", value);
+      return value.endsWith(QLatin1Char('/')) ? value.chopped(1) : value;
+    }
+    return QStringLiteral("https://api.nexusmods.com");
+  }();
+  return base;
+}
+
 QString get_management_url()
 {
-  return "https://api.nexusmods.com/v1";
+  return apiBase() + QStringLiteral("/v1");
 }
 }  // namespace
 
