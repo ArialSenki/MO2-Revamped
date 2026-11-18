@@ -4696,6 +4696,13 @@ void MainWindow::modInstalled(const QString& modName)
   if (!m_OrganizerCore.settings().interface().checkUpdateAfterInstallation()) {
     return;
   }
+  // MO2 Revamped: not for a collection's mods: the collection names the exact
+  // file, and one update check per mod (a list of all its files) is what ran
+  // into Nexus' request limit with hundreds of mods
+  if (qApp->property("mo2r.collectionInstall").toBool() ||
+      qApp->property("mo2r.collectionQuiet").toBool()) {
+    return;
+  }
 
   unsigned int index = ModInfo::getIndex(modName);
 
