@@ -19,7 +19,7 @@ from PyQt6.QtCore import (
 
 import mobase
 
-from . import bg3_utils
+from . import bg3_utils, lspk_reader
 
 
 # MO2 Revamped: a mod's meta.ini as MO2 writes it. Python's parser lower-cased
@@ -170,6 +170,14 @@ def _plain_value(value: str) -> str:
         return re.sub(r"\\(.)", r"\1", value[1:-1])
     return value
 
+
+
+def _open_package(file: Path) -> "lspk_reader.Package | None":
+    try:
+        return lspk_reader.Package(file)
+    except (lspk_reader.Unsupported, OSError, ValueError) as e:
+        qDebug(f"{file.name} read by Divine instead: {e}")
+        return None
 
 
 def _subfolders(path: Path) -> list[Path]:
@@ -342,7 +350,31 @@ class BG3PakParser:
                         str(meta_file)[:-4] if self._utils.extract_full_package else ""
                     )
                     can_continue = True
-                    if self.run_divine(
+                    # MO2 Revamped: meta.lsx and the file list read here, no
+                    # Divine.exe started (see lspk_reader); Divine only for
+                    # the packages that reader doesn't know, or for the full
+                    # extraction the settings ask for
+                    package = (
+                        None
+                        if self._utils.extract_full_package
+                        else _open_package(file)
+                    )
+                    if package is not None:
+                        try:
+                            entry = package.find("meta.lsx")
+                            meta_data = package.read(entry) if entry else None
+                        except (lspk_reader.Unsupported, OSError) as e:
+                            qDebug(f"{file.name} read by Divine instead: {e}")
+                            package = None
+                    if package is not None:
+                        if meta_data is None:
+                            qInfo(
+                                f"No meta.lsx files found in {file.name}, {file.name} determined to be an override mod"
+                            )
+                            can_continue = False
+                        else:
+                            meta_file.write_bytes(meta_data)
+                    elif self.run_divine(
                         f'{"extract-package" if self._utils.extract_full_package else "extract-single-file -f meta.lsx"} -d "{meta_file if not self._utils.extract_full_package else out_dir}"',
                         file,
                     ).returncode:
@@ -380,6 +412,7 @@ class BG3PakParser:
                         can_continue,
                         lambda: meta_file,
                         _wanted_in_load_order(config, file),
+                        package.names if package is not None else None,
                     )
                 finally:
                     if self._utils.remove_extracted_metadata:
@@ -469,6 +502,7 @@ class BG3PakParser:
         condition: bool,
         to_parse: Callable[[], Path],
         in_load_order: bool = False,
+        listing: list[str] | None = None,
     ):
         # MO2 Revamped: the config is the mod's for all its paks
         # (get_metadata_for_files_in_mod); if this pak can't be read, its old
@@ -476,7 +510,7 @@ class BG3PakParser:
         previous = dict(config[file.name]) if config.has_section(file.name) else None
         try:
             return self._metadata_to_ini(
-                config, file, mod, meta_ini, condition, to_parse, in_load_order
+                config, file, mod, meta_ini, condition, to_parse, in_load_order, listing
             )
         except Exception:
             config.remove_section(file.name)
@@ -493,6 +527,7 @@ class BG3PakParser:
         condition: bool,
         to_parse: Callable[[], Path],
         in_load_order: bool,
+        listing: list[str] | None,
     ):
         config[file.name] = {}
         if condition:
@@ -516,6 +551,14 @@ class BG3PakParser:
                     )
                 elif in_load_order:
                     self._mod_cache[file] = True
+                elif listing is not None:
+                    # MO2 Revamped: the same test as Divine's list-package
+                    # below, on the list read with the pak (cheap, so a pak
+                    # updated since is judged again)
+                    pattern = re.compile(
+                        f"(/{re.escape(folder_name)}/(?!meta\\.lsx))|(Public/Engine/Timeline/MaterialGroups)"
+                    )
+                    self._mod_cache[file] = any(map(pattern.search, listing))
                 elif file not in self._mod_cache:
                     # a mod which has a meta.lsx and is not an override mod meets at least one of three conditions:
                     # 1. it has files in Public/Engine/Timeline/MaterialGroups, or
