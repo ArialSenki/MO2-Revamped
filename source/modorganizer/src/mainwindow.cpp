@@ -1990,8 +1990,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
             MessageDialog::showMessage(
                 tr("Nexus request limit reached: downloads continue by themselves at "
                    "%1.")
-                    .arg(QLocale().toString(until.toLocalTime().time(),
-                                            QLocale::ShortFormat)),
+                    .arg((QDateTime::currentDateTimeUtc().secsTo(until) < 120
+                         ? QLocale().toString(until.toLocalTime().time(),
+                                              QStringLiteral("HH:mm:ss"))
+                         : QLocale().toString(until.toLocalTime().time(),
+                                              QLocale::ShortFormat))),
                 this);
           });
 

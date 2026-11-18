@@ -1560,8 +1560,11 @@ void CollectionDialog::updateButtons()
       m_status->setText(
           tr("Nexus request limit reached: continuing by itself at %1. Nothing has "
              "failed.")
-              .arg(QLocale().toString(nexusWait.toLocalTime().time(),
-                                      QLocale::ShortFormat)));
+              .arg((QDateTime::currentDateTimeUtc().secsTo(nexusWait) < 120
+                         ? QLocale().toString(nexusWait.toLocalTime().time(),
+                                              QStringLiteral("HH:mm:ss"))
+                         : QLocale().toString(nexusWait.toLocalTime().time(),
+                                              QLocale::ShortFormat))));
     } else if (stage == Stage::Running) {
       m_status->setText(
           automatic ? tr("Premium: up to three files download at a time.")
