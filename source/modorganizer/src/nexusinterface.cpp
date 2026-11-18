@@ -1393,7 +1393,7 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
       QByteArray data = reply->readAll();
       if (!data.isEmpty()) {
         // MO2 Revamped: what Nexus said, for the log (its answers carry no key)
-        log::debug("Nexus answered {} for {}: {}", statusCode,
+        log::warn("Nexus answered {} for {}: {}", statusCode,
                    withoutQuery(reply->url().toString()),
                    QString::fromUtf8(data.left(500)).simplified());
         QJsonDocument responseDoc = QJsonDocument::fromJson(data);
