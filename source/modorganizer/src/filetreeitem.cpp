@@ -107,7 +107,8 @@ FileTreeItem::FileTreeItem(FileTreeModel* model, FileTreeItem* parent,
                            std::wstring dataRelativeParentPath, bool isDirectory,
                            std::wstring file)
     : m_model(model), m_parent(parent), m_indexGuess(NoIndexGuess),
-      m_virtualParentPath(QString::fromStdWString(dataRelativeParentPath)),
+      m_virtualParentPath(model != nullptr ? model->sharedString(dataRelativeParentPath)
+                                           : QString::fromStdWString(dataRelativeParentPath)),
       m_wsFile(file), m_wsLcFile(ToLowerCopy(file)), m_key(m_wsLcFile),
       m_file(QString::fromStdWString(file)), m_isDirectory(isDirectory), m_originID(-1),
       m_flags(NoFlags), m_loaded(false), m_expanded(false), m_sortingStale(true)
@@ -134,10 +135,9 @@ void FileTreeItem::setOrigin(int originID, const std::wstring& realPath, Flags f
                              const std::wstring& mod)
 {
   m_originID   = originID;
-  m_wsRealPath = realPath;
   m_realPath   = QString::fromStdWString(realPath);
   m_flags      = flags;
-  m_mod        = QString::fromStdWString(mod);
+  m_mod        = m_model != nullptr ? m_model->sharedString(mod) : QString::fromStdWString(mod);
 
   m_fileSize.reset();
   m_lastModified.reset();
@@ -343,7 +343,7 @@ std::optional<uint64_t> FileTreeItem::fileSize() const
 {
   if (m_fileSize.empty() && !m_isDirectory) {
     std::error_code ec;
-    const auto size = fs::file_size(fs::path(m_wsRealPath), ec);
+    const auto size = fs::file_size(fs::path(m_realPath.toStdWString()), ec);
 
     if (ec) {
       log::error("can't get file size for '{}', {}", m_realPath, ec.message());
@@ -398,7 +398,7 @@ void FileTreeItem::getFileType() const
     return;
   }
 
-  const auto& t = cachedFileType(m_wsRealPath, !isFromArchive());
+  const auto& t = cachedFileType(m_realPath.toStdWString(), !isFromArchive());
   if (t.isEmpty()) {
     m_fileType.fail();
   } else {
