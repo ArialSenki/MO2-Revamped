@@ -190,7 +190,26 @@ void DataTab::ensureFullyLoaded()
 {
   if (!m_filetree->fullyLoaded()) {
     m_filter.setFilteringEnabled(false);
+
+    // MO2 Revamped: the tree is told once, at the end, that its rows changed.
+    // Loading every folder (546k files on a Nolvus list) sent it one insertion
+    // per folder, and the view looks each one's parent up among its visible
+    // rows: with a big folder open that was most of the 7 s of the first
+    // letter typed in the filter. The proxy keeps its own mapping (and the
+    // view's selection and open folders) up to date meanwhile
+    auto* proxy = m_filter.proxyModel();
+    if (proxy != nullptr) {
+      emit proxy->layoutAboutToBeChanged();
+      proxy->blockSignals(true);
+    }
+
     m_filetree->ensureFullyLoaded();
+
+    if (proxy != nullptr) {
+      proxy->blockSignals(false);
+      emit proxy->layoutChanged();
+    }
+
     m_filter.setFilteringEnabled(true);
   }
 }
