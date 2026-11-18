@@ -11195,6 +11195,14 @@ Exemplos:
       <source>%1 notices weren't shown while the collection installed. They're in MO2's log.</source>
       <translation>%1 avisos não foram mostrados enquanto a coleção era instalada. Estão no registro do MO2.</translation>
     </message>
+    <message>
+      <source>Time</source>
+      <translation>Hora</translation>
+    </message>
+    <message>
+      <source>Message</source>
+      <translation>Mensagem</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
