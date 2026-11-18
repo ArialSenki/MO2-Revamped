@@ -69,6 +69,11 @@ public:
   static void showMessage(const QString& text, QWidget* reference,
                           bool bringToFront = false);
 
+  // MO2 Revamped: a notice about a whole task (a collection that starts,
+  // pauses or ends): shown even in the collection's quiet mode, the one
+  // notice the user gets for it
+  static void showStatus(const QString& text);
+
   // shows the notices that waited for a dialog to close, once none is open
   static void showWaitingNotices();
 
@@ -80,6 +85,9 @@ protected:
   void leaveEvent(QEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
+  // MO2 Revamped: clicks outside the card (its shadow) go to what is under it
+  bool nativeEvent(const QByteArray& eventType, void* message,
+                   qintptr* result) override;
 
 private:
   QString m_text;
@@ -98,6 +106,8 @@ private:
   void dismiss();
   // the notices still shown over parent, placed again from the bottom
   static void restack(QWidget* parent);
+  static void showNotice(const QString& text, QWidget* reference, bool bringToFront,
+                   bool status);
 };
 
 #endif  // MESSAGEDIALOG_H

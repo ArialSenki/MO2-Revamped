@@ -17134,6 +17134,22 @@ Instala .NET Desktop Runtime {1} para Windows x64 desde {0} y vuelve a abrir BG3
   <context>
     <name>CollectionSession</name>
     <message>
+      <source>Continuing the collection &quot;%1&quot;: %2 of %3 mods are done. Its window shows the progress.</source>
+      <translation>Continuando la colección «%1»: %2 de %3 mods hechos. Su ventana muestra el progreso.</translation>
+    </message>
+    <message>
+      <source>Installing the collection &quot;%1&quot; (%2 mods). Its window shows the progress.</source>
+      <translation>Instalando la colección «%1» (%2 mods). Su ventana muestra el progreso.</translation>
+    </message>
+    <message>
+      <source>The collection &quot;%1&quot; is finished: %2 installed, %3 failed, %4 skipped.</source>
+      <translation>La colección «%1» ha terminado: %2 instalados, %3 con error, %4 omitidos.</translation>
+    </message>
+    <message>
+      <source>The collection &quot;%1&quot; is paused: %2 of %3 mods are done.</source>
+      <translation>La colección «%1» está en pausa: %2 de %3 mods hechos.</translation>
+    </message>
+    <message>
       <source>%1: needs about %2, has %3 free</source>
       <translation>%1: necesita unos %2 y tiene %3 libres</translation>
     </message>
