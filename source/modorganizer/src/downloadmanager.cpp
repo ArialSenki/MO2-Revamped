@@ -28,6 +28,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "nxmurl.h"
 #include "organizercore.h"
+#include "modinfo.h"
 #include "collectionmanifest.h"
 #include "plugincontainer.h"
 #include "selectiondialog.h"
@@ -140,6 +141,13 @@ DownloadManager::DownloadInfo::createNew(const ModRepositoryFileInfo* fileInfo,
   info->m_TaskProgressId = TaskProgressManager::instance().getId();
   info->m_Reply          = nullptr;
 
+  return info;
+}
+
+DownloadManager::DownloadInfo* DownloadManager::DownloadInfo::createBlank()
+{
+  DownloadInfo* info = new DownloadInfo;
+  info->m_DownloadID = s_NextDownloadID++;
   return info;
 }
 
@@ -580,6 +588,12 @@ void DownloadManager::refreshList()
       }
     }
 
+    // MO2 Revamped: the read-only sources, after the downloads folder: an
+    // archive that is in both is listed once, from the downloads folder
+    if (!m_ReadOnlySources.empty()) {
+      addReadOnlySources(cx.seen, nameFilters);
+    }
+
     log::debug("saw {} downloads", m_ActiveDownloads.size());
 
     emit update(-1);
@@ -587,6 +601,153 @@ void DownloadManager::refreshList()
   } catch (const std::bad_alloc&) {
     reportError(tr("Memory allocation error (in refreshing directory)."));
   }
+}
+
+void DownloadManager::setReadOnlySources(std::vector<std::pair<QString, QString>> sources)
+{
+  for (auto& source : sources) {
+    source.first = QDir::fromNativeSeparators(source.first);
+  }
+  m_ReadOnlySources = std::move(sources);
+}
+
+bool DownloadManager::isReadOnly(int index) const
+{
+  return index >= 0 && index < m_ActiveDownloads.size() &&
+         m_ActiveDownloads.at(index)->m_ReadOnly;
+}
+
+void DownloadManager::addReadOnlySources(std::set<std::wstring>& seen,
+                                         const std::vector<std::wstring>& extensions)
+{
+  QElapsedTimer timer;
+  timer.start();
+
+  // the archives the mods were installed from show as installed, with the
+  // mod's name (Nolvus records the full path in each mod's meta.ini)
+  QHash<QString, QString> installedBy;
+  for (unsigned int i = 0; i < ModInfo::getNumMods(); ++i) {
+    const auto mod     = ModInfo::getByIndex(i);
+    const QString file = mod->installationFile();
+    if (!file.isEmpty() && QDir::isAbsolutePath(file)) {
+      installedBy.insert(QDir::fromNativeSeparators(file).toCaseFolded(), mod->name());
+    }
+  }
+
+  const QString gameName =
+      m_ManagedGame != nullptr ? m_ManagedGame->gameShortName() : QString();
+  // Nexus' file names: <name>-<mod id>-<version>-<upload time>
+  static const QRegularExpression nexusName(
+      QStringLiteral("^(.+?)-(\\d+)-(.+)-(\\d{9,11})$"));
+
+  struct Found
+  {
+    QString path;
+    uint64_t size;
+    FILETIME time;
+  };
+  struct Walk
+  {
+    std::wstring root;
+    std::vector<std::wstring> folders;
+    const std::vector<std::wstring>* extensions;
+    std::wstring unfinished;
+    std::vector<Found> files;
+  };
+
+  std::size_t added = 0;
+  for (const auto& [folder, group] : m_ReadOnlySources) {
+    Walk walk;
+    walk.root       = QDir::toNativeSeparators(folder).toStdWString();
+    walk.extensions = &extensions;
+    walk.unfinished = QString(UNFINISHED).toStdWString();
+
+    env::forEachEntry(
+        walk.root, &walk,
+        [](void* data, std::wstring_view name) {
+          static_cast<Walk*>(data)->folders.emplace_back(name);
+        },
+        [](void* data, std::wstring_view) {
+          static_cast<Walk*>(data)->folders.pop_back();
+        },
+        [](void* data, std::wstring_view f, FILETIME ft, uint64_t size) {
+          auto& walk            = *static_cast<Walk*>(data);
+          const std::wstring lc = MOShared::ToLowerCopy(f);
+          if (lc.ends_with(walk.unfinished)) {
+            return;
+          }
+          const bool interesting =
+              std::any_of(walk.extensions->begin(), walk.extensions->end(),
+                          [&](const std::wstring& ext) {
+                            return lc.ends_with(ext);
+                          });
+          if (!interesting) {
+            return;
+          }
+          std::wstring path = walk.root;
+          for (const auto& part : walk.folders) {
+            path += L'\\';
+            path += part;
+          }
+          path += L'\\';
+          path.append(f);
+          walk.files.push_back(
+              {QDir::fromNativeSeparators(QString::fromStdWString(path)), size, ft});
+        });
+
+    for (const auto& file : walk.files) {
+      const QString fileName = QFileInfo(file.path).fileName();
+      std::wstring lc        = fileName.toLower().toStdWString();
+      if (seen.contains(lc)) {
+        continue;
+      }
+      seen.insert(std::move(lc));
+
+      DownloadInfo* info = DownloadInfo::createBlank();
+      info->m_ReadOnly   = true;
+      info->m_Hidden     = false;
+      info->m_FileName   = fileName;
+
+      const auto installed = installedBy.constFind(file.path.toCaseFolded());
+      const bool isInstalled = installed != installedBy.constEnd();
+      info->m_State          = isInstalled ? STATE_INSTALLED : STATE_READY;
+
+      info->m_Output.setFileName(file.path);
+      info->m_TotalSize      = static_cast<qint64>(file.size);
+      info->m_PreResumeSize  = info->m_TotalSize;
+      info->m_CurrentUrl     = 0;
+      info->m_Tries          = 0;
+      info->m_TaskProgressId = TaskProgressManager::instance().getId();
+
+      ULARGE_INTEGER t;
+      t.LowPart       = file.time.dwLowDateTime;
+      t.HighPart      = file.time.dwHighDateTime;
+      info->m_Created = QDateTime::fromMSecsSinceEpoch(
+          static_cast<qint64>(t.QuadPart / 10000) - 11644473600000LL);
+
+      const QString base     = QFileInfo(fileName).completeBaseName();
+      const auto match       = nexusName.match(base);
+      const int modID        = match.hasMatch() ? match.captured(2).toInt() : 0;
+      info->m_FileInfo       = new ModRepositoryFileInfo(gameName, modID, 0);
+      info->m_FileInfo->name = match.hasMatch() ? match.captured(1) : base;
+      info->m_FileInfo->modName =
+          isInstalled ? installed.value() : info->m_FileInfo->name;
+      info->m_FileInfo->gameName = gameName;
+      info->m_FileInfo->modID    = modID;
+      if (match.hasMatch()) {
+        info->m_FileInfo->version.parse(
+            match.captured(3).replace(QLatin1Char('-'), QLatin1Char('.')));
+      }
+      info->m_FileInfo->repository = QStringLiteral("Nexus");
+      info->m_SourceList           = group;
+      info->m_Reply                = nullptr;
+
+      m_ActiveDownloads.push_back(info);
+      ++added;
+    }
+  }
+
+  log::debug("read-only sources: {} archives listed in {} ms", added, timer.elapsed());
 }
 
 bool DownloadManager::addDownload(const QStringList& URLs, QString gameName, int modID,
@@ -1072,6 +1233,12 @@ bool DownloadManager::removeFile(int index, bool deleteFile)
   }
 
   DownloadInfo* download = m_ActiveDownloads.at(index);
+  if (download->m_ReadOnly) {
+    // MO2 Revamped: a read-only source's archive is neither hidden nor deleted
+    log::debug("not removing '{}': it belongs to a read-only source",
+               download->m_Output.fileName());
+    return false;
+  }
   QString filePath       = m_OutputDirectory + "/" + download->m_FileName;
   if ((download->m_State == STATE_STARTED) ||
       (download->m_State == STATE_DOWNLOADING)) {
@@ -1161,7 +1328,7 @@ void DownloadManager::restoreDownload(int index)
     }
 
     DownloadInfo* download = m_ActiveDownloads.at(index);
-    if (download->m_Hidden) {
+    if (download->m_Hidden && !download->m_ReadOnly) {
       download->m_Hidden = false;
 
       QString filePath = m_OutputDirectory + "/" + download->m_FileName;
@@ -1407,6 +1574,12 @@ void DownloadManager::queryInfo(int index)
   }
   DownloadInfo* info = m_ActiveDownloads[index];
 
+  if (info->m_ReadOnly) {
+    // its .meta would be written beside it
+    log::debug("not querying '{}': it belongs to a read-only source", info->m_FileName);
+    return;
+  }
+
   if (info->m_FileInfo->repository != "Nexus") {
     log::warn("re-querying file info is currently only possible with Nexus");
     return;
@@ -1482,6 +1655,11 @@ void DownloadManager::queryInfoMd5(int index)
     return;
   }
   DownloadInfo* info = m_ActiveDownloads[index];
+
+  if (info->m_ReadOnly) {
+    log::debug("not querying '{}': it belongs to a read-only source", info->m_FileName);
+    return;
+  }
 
   if (info->m_FileInfo->repository != "Nexus") {
     log::warn("re-querying file info is currently only possible with Nexus");
@@ -1583,6 +1761,11 @@ void DownloadManager::openFile(int index)
     return;
   }
 
+  if (m_ActiveDownloads.at(index)->m_ReadOnly) {
+    shell::Open(getFilePath(index));
+    return;
+  }
+
   QDir path = QDir(m_OutputDirectory);
   if (path.exists(getFileName(index))) {
     shell::Open(getFilePath(index));
@@ -1603,6 +1786,12 @@ void DownloadManager::openMetaFile(int index)
   const auto path     = QDir(m_OutputDirectory);
   const auto filePath = getFilePath(index);
   const auto metaPath = filePath + ".meta";
+
+  // a read-only source's archive gets no .meta; its folder opens instead
+  if (m_ActiveDownloads.at(index)->m_ReadOnly) {
+    shell::Explore(filePath);
+    return;
+  }
 
   if (path.exists(metaPath)) {
     shell::Open(metaPath);
@@ -1668,7 +1857,11 @@ QString DownloadManager::getFilePath(int index) const
     throw MyException(tr("get path: invalid download index %1").arg(index));
   }
 
-  return m_OutputDirectory + "/" + m_ActiveDownloads.at(index)->m_FileName;
+  const DownloadInfo* info = m_ActiveDownloads.at(index);
+  if (info->m_ReadOnly) {
+    return info->m_Output.fileName();
+  }
+  return m_OutputDirectory + "/" + info->m_FileName;
 }
 
 QString DownloadManager::getFileTypeString(int fileType)
@@ -1869,9 +2062,11 @@ void DownloadManager::markInstalled(int index)
   ScopedDisableDirWatcher scopedDirWatcher(this);
 
   DownloadInfo* info = m_ActiveDownloads.at(index);
-  QSettings metaFile(info->m_Output.fileName() + ".meta", QSettings::IniFormat);
-  metaFile.setValue("installed", true);
-  metaFile.setValue("uninstalled", false);
+  if (!info->m_ReadOnly) {
+    QSettings metaFile(info->m_Output.fileName() + ".meta", QSettings::IniFormat);
+    metaFile.setValue("installed", true);
+    metaFile.setValue("uninstalled", false);
+  }
 
   setState(m_ActiveDownloads.at(index), STATE_INSTALLED);
 }
@@ -1916,8 +2111,10 @@ void DownloadManager::markUninstalled(int index)
   ScopedDisableDirWatcher scopedDirWatcher(this);
 
   DownloadInfo* info = m_ActiveDownloads.at(index);
-  QSettings metaFile(info->m_Output.fileName() + ".meta", QSettings::IniFormat);
-  metaFile.setValue("uninstalled", true);
+  if (!info->m_ReadOnly) {
+    QSettings metaFile(info->m_Output.fileName() + ".meta", QSettings::IniFormat);
+    metaFile.setValue("uninstalled", true);
+  }
 
   setState(m_ActiveDownloads.at(index), STATE_UNINSTALLED);
 }
@@ -3145,13 +3342,21 @@ int DownloadManager::indexByArchivePath(const QString& path) const
     return indexByName(path);
   }
 
-  const QString folder = QDir::fromNativeSeparators(m_OutputDirectory);
+  const QString fullPath = QDir::fromNativeSeparators(file.absoluteFilePath());
+  const QString folder   = QDir::fromNativeSeparators(m_OutputDirectory);
   if (QDir::fromNativeSeparators(file.absolutePath()).compare(folder, Qt::CaseInsensitive) !=
       0) {
+    // MO2 Revamped: a read-only source's archive, found by its full path
+    for (int i = 0; i < m_ActiveDownloads.size(); ++i) {
+      if (m_ActiveDownloads[i]->m_ReadOnly &&
+          m_ActiveDownloads[i]->m_Output.fileName().compare(fullPath, Qt::CaseInsensitive) ==
+              0) {
+        return i;
+      }
+    }
     return -1;
   }
 
-  const QString fullPath = QDir::fromNativeSeparators(file.absoluteFilePath());
   for (int i = 0; i < m_ActiveDownloads.size(); ++i) {
     if (QDir::fromNativeSeparators(QFileInfo(m_ActiveDownloads[i]->m_Output.fileName())
                                        .absoluteFilePath())

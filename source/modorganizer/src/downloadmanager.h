@@ -41,6 +41,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <idownloadmanager.h>
 #include <modrepositoryfileinfo.h>
 #include <set>
+#include <utility>
+#include <vector>
 using namespace boost::accumulators;
 
 namespace MOBase
@@ -126,6 +128,14 @@ private:
     // MO2 Revamped: the list (a Wabbajack list, a collection) this archive was
     // downloaded for, when its .meta names one ("sourceList")
     QString m_SourceList;
+
+    // MO2 Revamped: an archive of a read-only source (the Nolvus archives):
+    // listed and installable, but nothing is written, renamed or deleted
+    // beside it
+    bool m_ReadOnly = false;
+
+    // MO2 Revamped: an empty entry with its id, filled by the caller
+    static DownloadInfo* createBlank();
 
     static DownloadInfo* createNew(const MOBase::ModRepositoryFileInfo* fileInfo,
                                    const QStringList& URLs);
@@ -215,6 +225,13 @@ public:
    * @param outputDirectory the new output directory
    **/
   void setOutputDirectory(const QString& outputDirectory, const bool refresh = true);
+
+  // MO2 Revamped: folders whose archives are listed too, read-only, each in
+  // the group named with it (Nolvus' archives); applied at the next refresh
+  void setReadOnlySources(std::vector<std::pair<QString, QString>> sources);
+
+  // whether the download comes from a read-only source
+  bool isReadOnly(int index) const;
 
   /**
    * @brief disables feedback from the downloads file system watcher until
@@ -670,7 +687,12 @@ private:
 
   QVector<DownloadInfo*> m_ActiveDownloads;
 
+  // lists the archives of m_ReadOnlySources not seen yet (refreshList())
+  void addReadOnlySources(std::set<std::wstring>& seen,
+                          const std::vector<std::wstring>& extensions);
+
   QString m_OutputDirectory;
+  std::vector<std::pair<QString, QString>> m_ReadOnlySources;
   std::set<int> m_RequestIDs;
   QVector<int> m_AlphabeticalTranslation;
 

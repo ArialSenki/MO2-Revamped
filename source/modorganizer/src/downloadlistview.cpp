@@ -426,7 +426,22 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
         };
       };
 
-      if (state >= DownloadManager::STATE_READY) {
+      // MO2 Revamped: an archive of a read-only source (Nolvus' archives) can
+      // be installed and looked at; nothing is written or deleted beside it
+      const bool readOnly = m_Manager->isReadOnly(row);
+      if (state >= DownloadManager::STATE_READY && readOnly) {
+        setDefaultMenuAction(&menu, 
+            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
+        if (m_Manager->getModID(row) > 0) {
+          addAction(menu, tr("Visit on Nexus"), svg(":/MO/gui/contextmenu/visit.svg"),
+                    onRow(&DownloadListView::issueVisitOnNexus));
+        }
+        addAction(menu, tr("Open"), svg(":/MO/gui/mainwindow/files/archive.svg"), onRow(&DownloadListView::issueOpenFile));
+        menu.addSeparator();
+        addAction(menu, tr("Show in folder"), menuGlyph(MenuGlyphs::Folder), onRow(&DownloadListView::issueOpenInDownloadsFolder));
+        addCopyMenu(&menu, {{tr("File name"), QFileInfo(filePath).fileName()},
+                            {tr("File path"), nativePath(filePath)}});
+      } else if (state >= DownloadManager::STATE_READY) {
         setDefaultMenuAction(&menu, 
             addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
         if (m_Manager->isInfoIncomplete(row)) {
@@ -689,6 +704,10 @@ QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
   QStringList names;
   for (int i = 0; i < m_Manager->numTotalDownloads(); ++i) {
     const auto state = m_Manager->getState(i);
+    // a read-only source's archives are never deleted
+    if (m_Manager->isReadOnly(i)) {
+      continue;
+    }
     if ((mode == -1 && state >= DownloadManager::STATE_READY) ||
         (mode == -2 && state == DownloadManager::STATE_INSTALLED) ||
         (mode == -3 && state == DownloadManager::STATE_UNINSTALLED)) {
