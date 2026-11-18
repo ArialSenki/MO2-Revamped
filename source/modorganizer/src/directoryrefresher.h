@@ -123,6 +123,19 @@ public:
                             const QString& directory, const QStringList& archives,
                             const std::set<QString>& enabledArchives);
 
+  // the load order and the enabled archives, converted once for several mods
+  struct ArchiveContext
+  {
+    std::vector<std::wstring> loadOrder;
+    std::set<std::wstring> enabledArchives;
+  };
+  ArchiveContext archiveContext(const std::set<QString>& enabledArchives) const;
+
+  void addModBSAToStructure(MOShared::DirectoryEntry* directoryStructure,
+                            const QString& modName, int priority,
+                            const QString& directory, const QStringList& archives,
+                            const ArchiveContext& context);
+
   /**
    * @brief add only regular files ofr a mod to the directory structure
    * @param directoryStructure

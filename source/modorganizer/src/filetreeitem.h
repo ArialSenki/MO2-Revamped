@@ -226,7 +226,6 @@ private:
 
   int m_originID;
   QString m_realPath;
-  std::wstring m_wsRealPath;
   Flags m_flags;
   QString m_mod;
 

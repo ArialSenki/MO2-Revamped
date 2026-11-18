@@ -3,6 +3,7 @@
 
 #include "filetreeitem.h"
 #include "shared/fileregisterfwd.h"
+#include <unordered_map>
 #include <unordered_set>
 
 class OrganizerCore;
@@ -73,12 +74,18 @@ public:
   void sortItem(FileTreeItem& item, bool force);
   void queueSortItem(FileTreeItem* item);
 
+  // MO2 Revamped: one copy of each folder path and mod name, shared by the
+  // items that show it; each of the 546k files of a Nolvus list kept its own
+  const QString& sharedString(const std::wstring& s) const;
+
 private:
   class Range;
 
 
   OrganizerCore& m_core;
   bool m_enabled;
+  // before m_root: the root item is made with it
+  mutable std::unordered_map<std::wstring, QString> m_sharedStrings;
   mutable FileTreeItem::Ptr m_root;
   Flags m_flags;
   SortInfo m_sort;

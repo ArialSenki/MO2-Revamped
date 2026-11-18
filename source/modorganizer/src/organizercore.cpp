@@ -1693,8 +1693,24 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
   int enabled = 0;
   for (auto index : modIndices) {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
-    QDir dir(modInfo->absolutePath());
-    for (const QString& esm : dir.entryList(QStringList() << "*.esm", QDir::Files)) {
+    // MO2 Revamped: the folder is listed once for the three kinds, not three
+    // times: turning thousands of mods on or off listed every folder thrice
+    QStringList esms, esls, esps;
+    for (const QString& file :
+         QDir(modInfo->absolutePath())
+             .entryList({QStringLiteral("*.esm"), QStringLiteral("*.esl"),
+                         QStringLiteral("*.esp")},
+                        QDir::Files)) {
+      if (file.endsWith(QLatin1String(".esm"), Qt::CaseInsensitive)) {
+        esms.append(file);
+      } else if (file.endsWith(QLatin1String(".esl"), Qt::CaseInsensitive)) {
+        esls.append(file);
+      } else {
+        esps.append(file);
+      }
+    }
+
+    for (const QString& esm : esms) {
       const FileEntryPtr file = m_DirectoryStructure->findFile(ToWString(esm));
       if (file.get() == nullptr) {
         log::warn("failed to activate {}", esm);
@@ -1708,7 +1724,7 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
       }
     }
 
-    for (const QString& esl : dir.entryList(QStringList() << "*.esl", QDir::Files)) {
+    for (const QString& esl : esls) {
       const FileEntryPtr file = m_DirectoryStructure->findFile(ToWString(esl));
       if (file.get() == nullptr) {
         log::warn("failed to activate {}", esl);
@@ -1722,7 +1738,6 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         ++enabled;
       }
     }
-    QStringList esps = dir.entryList(QStringList() << "*.esp", QDir::Files);
     for (const QString& esp : esps) {
       const FileEntryPtr file = m_DirectoryStructure->findFile(ToWString(esp));
       if (file.get() == nullptr) {
@@ -1800,6 +1815,8 @@ void OrganizerCore::updateModsInDirectoryStructure(
   // for a running refresh to end (the window froze when a mod was enabled then)
   const std::vector<QString> archives = enabledArchives();
   const std::set<QString> archiveSet(archives.begin(), archives.end());
+  // the load order and the archives converted once, not for every mod
+  const auto archiveContext = m_DirectoryRefresher->archiveContext(archiveSet);
 
   // finally also add files from bsas to the directory structure
   for (auto idx : modInfo.keys()) {
@@ -1810,7 +1827,7 @@ void OrganizerCore::updateModsInDirectoryStructure(
     m_DirectoryRefresher->addModBSAToStructure(
         m_DirectoryStructure, modInfo[idx]->internalName(),
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
-        modInfo[idx]->archives(), archiveSet);
+        modInfo[idx]->archives(), archiveContext);
   }
 }
 

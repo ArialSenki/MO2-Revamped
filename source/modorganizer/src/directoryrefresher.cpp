@@ -271,33 +271,47 @@ void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
                                               const QStringList& archives,
                                               const std::set<QString>& enabled)
 {
-  QStringList loadOrder;
+  addModBSAToStructure(root, modName, priority, directory, archives,
+                       archiveContext(enabled));
+}
+
+DirectoryRefresher::ArchiveContext
+DirectoryRefresher::archiveContext(const std::set<QString>& enabled) const
+{
+  ArchiveContext context;
 
   auto gamePlugins = m_Core.gameFeatures().gameFeature<GamePlugins>();
   if (gamePlugins) {
-    loadOrder = gamePlugins->getLoadOrder();
+    const QStringList loadOrder = gamePlugins->getLoadOrder();
+    context.loadOrder.reserve(static_cast<std::size_t>(loadOrder.size()));
+    for (auto&& s : loadOrder) {
+      context.loadOrder.push_back(s.toStdWString());
+    }
   }
 
-  std::vector<std::wstring> lo;
-  for (auto&& s : loadOrder) {
-    lo.push_back(s.toStdWString());
+  for (auto&& a : enabled) {
+    context.enabledArchives.insert(a.toStdWString());
   }
 
+  return context;
+}
+
+void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
+                                              const QString& modName, int priority,
+                                              const QString& directory,
+                                              const QStringList& archives,
+                                              const ArchiveContext& context)
+{
   std::vector<std::wstring> archivesW;
   for (auto&& a : archives) {
     archivesW.push_back(a.toStdWString());
-  }
-
-  std::set<std::wstring> enabledArchives;
-  for (auto&& a : enabled) {
-    enabledArchives.insert(a.toStdWString());
   }
 
   DirectoryStats dummy;
 
   root->addFromAllBSAs(modName.toStdWString(),
                        QDir::toNativeSeparators(directory).toStdWString(), priority,
-                       archivesW, enabledArchives, lo, dummy);
+                       archivesW, context.enabledArchives, context.loadOrder, dummy);
 }
 
 void DirectoryRefresher::stealModFilesIntoStructure(DirectoryEntry* directoryStructure,

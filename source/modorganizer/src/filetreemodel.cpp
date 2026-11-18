@@ -207,6 +207,15 @@ void FileTreeModel::refresh()
   sortItem(*m_root, false);
 }
 
+const QString& FileTreeModel::sharedString(const std::wstring& s) const
+{
+  auto it = m_sharedStrings.find(s);
+  if (it == m_sharedStrings.end()) {
+    it = m_sharedStrings.emplace(s, QString::fromStdWString(s)).first;
+  }
+  return it->second;
+}
+
 void FileTreeModel::clear()
 {
   m_fullyLoaded = false;
