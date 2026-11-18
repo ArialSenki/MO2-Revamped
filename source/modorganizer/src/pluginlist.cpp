@@ -50,6 +50,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QSortFilterProxyModel>
+#include <QTimer>
 #include <QString>
 #include <QtDebug>
 
@@ -1092,8 +1093,29 @@ void PluginList::setState(const QString& name, PluginStates state)
         (state == IPluginList::STATE_ACTIVE && !m_ESPs[iter->second].forceDisabled) ||
         m_ESPs[iter->second].forceLoaded || m_ESPs[iter->second].forceEnabled;
   } else {
-    log::warn("Plugin not found: {}", name);
+    // a list names hundreds when its optional mods are off: one line for all
+    if (m_missingStates.isEmpty()) {
+      QTimer::singleShot(0, this, &PluginList::logMissingStates);
+    }
+    m_missingStates.append(name);
   }
+}
+
+void PluginList::logMissingStates()
+{
+  if (m_missingStates.isEmpty()) {
+    return;
+  }
+  const int count = static_cast<int>(m_missingStates.size());
+  QStringList shown = m_missingStates.mid(0, 5);
+  if (count > shown.size()) {
+    shown << QStringLiteral("...");
+  }
+  log::warn("{} plugins in the profile's plugin list weren't found (their mods are "
+            "missing or inactive): {}",
+            count, shown.join(QStringLiteral(", ")));
+  log::debug("plugins not found: {}", m_missingStates.join(QStringLiteral(", ")));
+  m_missingStates.clear();
 }
 
 void PluginList::setLoadOrder(const QStringList& pluginList)
