@@ -50,6 +50,10 @@ public:
 private:
   DownloadManager* m_Manager;
   DownloadListView* m_List;
+
+  // a group's header: arrow, icon, name, count and the size of its downloads
+  void paintGroup(QPainter* painter, const QStyleOptionViewItem& option,
+                  const QModelIndex& index) const;
 };
 
 class DownloadListHeader : public QHeaderView
@@ -84,6 +88,15 @@ public:
 
   void setManager(DownloadManager* manager);
 
+  // MO2 Revamped: the model under the search's proxy, whose groups the view
+  // opens and closes as the user left them
+  void setGroupsModel(DownloadList* model);
+  // while searching every group is open, so no match is hidden in one
+  void setSearching(bool searching);
+
+  // the download behind a row of the view, -1 for a group
+  int downloadRow(const QModelIndex& index) const;
+
 signals:
   void installDownload(int index);
   void queryInfoMd5(int index);
@@ -102,6 +115,14 @@ protected:
   void paintEvent(QPaintEvent* event) override;
 
   void keyPressEvent(QKeyEvent* event) override;
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseDoubleClickEvent(QMouseEvent* event) override;
+
+  // downloads dragged onto a category move into it
+  void dragEnterEvent(QDragEnterEvent* event) override;
+  void dragMoveEvent(QDragMoveEvent* event) override;
+  void dragLeaveEvent(QDragLeaveEvent* event) override;
+  void dropEvent(QDropEvent* event) override;
 
 private slots:
   void onDoubleClick(const QModelIndex& index);
@@ -138,8 +159,23 @@ private slots:
 
 private:
   DownloadManager* m_Manager;
+  DownloadList* m_Groups = nullptr;
+  bool m_Restoring       = false;
+  bool m_Searching       = false;
+  // the group a drag is over
+  QPersistentModelIndex m_DropGroup;
 
   void resizeEvent(QResizeEvent* event);
+
+  // opens or closes the groups as saved (all open while searching), and lets
+  // their headers span the row
+  void applyGroupState(int first = 0, int last = -1);
+  void rememberGroupState(const QModelIndex& index, bool expanded);
+  // the group a drop at that point goes to, if downloads can move there
+  QModelIndex dropGroupAt(const QPoint& pos) const;
+  QStringList selectedFileNames() const;
+  void addGroupActions(QMenu& menu, const QModelIndex& index);
+  void newCategory(const QStringList& moveHere);
 };
 
 #endif  // DOWNLOADLISTWIDGET_H

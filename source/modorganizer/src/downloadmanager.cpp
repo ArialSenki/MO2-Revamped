@@ -211,6 +211,7 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
   info->m_FileInfo->fileCategory = metaFile.value("fileCategory", 0).toInt();
   info->m_FileInfo->repository   = metaFile.value("repository", "Nexus").toString();
   info->m_FileInfo->userData     = metaFile.value("userData").toMap();
+  info->m_SourceList             = metaFile.value("sourceList").toString().trimmed();
   info->m_Reply                  = nullptr;
 
   return info;
@@ -1769,6 +1770,14 @@ bool DownloadManager::isHidden(int index) const
     throw MyException(tr("ishidden: invalid download index %1").arg(index));
   }
   return m_ActiveDownloads.at(index)->m_Hidden;
+}
+
+QString DownloadManager::getSourceList(int index) const
+{
+  if ((index < 0) || (index >= m_ActiveDownloads.size())) {
+    return {};
+  }
+  return m_ActiveDownloads.at(index)->m_SourceList;
 }
 
 const ModRepositoryFileInfo* DownloadManager::getFileInfo(int index) const

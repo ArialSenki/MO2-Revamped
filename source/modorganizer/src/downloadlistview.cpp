@@ -22,16 +22,21 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluenticons.h"
 #include "menuutils.h"
 #include "downloadlist.h"
+#include "downloadgroups.h"
 #include "startupdiagnostics.h"
 #include <QApplication>
 #include <QCheckBox>
+#include <QDrag>
+#include <QDragMoveEvent>
 #include <QHeaderView>
+#include <QInputDialog>
 #include <QIcon>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QStyle>
+#include <QTimer>
 #include <QSortFilterProxyModel>
 #include <QWidgetAction>
 #include <functional>
@@ -57,17 +62,19 @@ void DownloadProgressDelegate::paint(QPainter* painter,
                                      const QStyleOptionViewItem& option,
                                      const QModelIndex& index) const
 {
-  QModelIndex sourceIndex;
-
-  if (auto* proxy = dynamic_cast<QSortFilterProxyModel*>(m_List->model())) {
-    sourceIndex = proxy->mapToSource(index);
-  } else {
-    sourceIndex = index;
+  const int row = m_List->downloadRow(index);
+  if (row < 0) {
+    if (index.data(DownloadList::GroupKindRole).isValid()) {
+      paintGroup(painter, option, index);
+    } else {
+      QStyledItemDelegate::paint(painter, option, index);
+    }
+    return;
   }
 
-  bool pendingDownload = (sourceIndex.row() >= m_Manager->numTotalDownloads());
-  if (sourceIndex.column() == DownloadList::COL_STATUS && !pendingDownload &&
-      m_Manager->getState(sourceIndex.row()) == DownloadManager::STATE_DOWNLOADING) {
+  bool pendingDownload = (row >= m_Manager->numTotalDownloads());
+  if (index.column() == DownloadList::COL_STATUS && !pendingDownload &&
+      m_Manager->getState(row) == DownloadManager::STATE_DOWNLOADING) {
     QProgressBar progressBar;
     progressBar.setProperty("downloadView", option.widget->property("downloadView"));
     progressBar.setProperty("downloadProgress", true);
@@ -76,8 +83,8 @@ void DownloadProgressDelegate::paint(QPainter* painter,
     progressBar.setAlignment(Qt::AlignCenter);
     progressBar.setMinimum(0);
     progressBar.setMaximum(100);
-    progressBar.setValue(m_Manager->getProgress(sourceIndex.row()).first);
-    progressBar.setFormat(m_Manager->getProgress(sourceIndex.row()).second);
+    progressBar.setValue(m_Manager->getProgress(row).first);
+    progressBar.setFormat(m_Manager->getProgress(row).second);
     progressBar.setStyle(QApplication::style());
 
     // paint the background with default delegate first to preserve table cell styling
@@ -90,6 +97,105 @@ void DownloadProgressDelegate::paint(QPainter* painter,
   } else {
     QStyledItemDelegate::paint(painter, option, index);
   }
+}
+
+void DownloadProgressDelegate::paintGroup(QPainter* painter,
+                                          const QStyleOptionViewItem& option,
+                                          const QModelIndex& index) const
+{
+  // the row's background, hover included, as the theme draws an item
+  QStyleOptionViewItem opt(option);
+  initStyleOption(&opt, index);
+  opt.text.clear();
+  opt.icon = QIcon();
+  opt.features &= ~QStyleOptionViewItem::HasDecoration;
+  const QWidget* widget = opt.widget;
+  QStyle* style         = widget ? widget->style() : QApplication::style();
+  style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
+
+  const QModelIndex first = index.siblingAtColumn(0);
+  const bool expanded     = m_List->isExpanded(first);
+  const auto kind         = static_cast<DownloadList::GroupKind>(
+      index.data(DownloadList::GroupKindRole).toInt());
+  char16_t glyph = 0xE8B7;  // folder: the user's own category
+  switch (kind) {
+  case DownloadList::GROUP_LIST:
+    glyph = 0xE8F1;  // library: a collection or list
+    break;
+  case DownloadList::GROUP_NEXUS:
+    glyph = 0xE753;  // cloud
+    break;
+  case DownloadList::GROUP_OTHER:
+    glyph = 0xE774;  // globe
+    break;
+  default:
+    break;
+  }
+
+  const QColor ink   = opt.palette.color(QPalette::Text);
+  const QColor muted = FluentIcons::color(FluentIcons::Tone::Muted);
+  const QRect area   = opt.rect.adjusted(6, 0, -10, 0);
+
+  painter->save();
+  painter->setRenderHint(QPainter::TextAntialiasing);
+  painter->setRenderHint(QPainter::Antialiasing);
+
+  // chevron right when closed, down when open
+  const QRect chevron(area.left(), area.top(), 16, area.height());
+  painter->setFont(FluentIcons::font(11));
+  painter->setPen(ink);
+  painter->drawText(chevron, Qt::AlignCenter,
+                    QString(QChar(expanded ? 0xE70D : 0xE76C)));
+
+  const QRect icon(chevron.right() + 6, area.center().y() - 8, 16, 16);
+  FluentIcons::glyph(glyph, FluentIcons::Tone::Muted).paint(painter, icon);
+
+  // what the search left of the group, and its size on the right
+  const int count    = index.model()->rowCount(first);
+  const QString size = index.data(DownloadList::GroupSizeRole).toString();
+  const QFont normal = opt.font;
+  QFont bold         = opt.font;
+  bold.setWeight(QFont::DemiBold);
+  const QFontMetrics boldMetrics(bold);
+  const QFontMetrics normalMetrics(normal);
+
+  const int sizeWidth  = size.isEmpty() ? 0 : normalMetrics.horizontalAdvance(size);
+  const QString counted = QString::number(count);
+  const int countWidth  = normalMetrics.horizontalAdvance(counted);
+  const int textLeft    = icon.right() + 8;
+  const int nameRoom =
+      std::max(0, area.right() - textLeft - countWidth - sizeWidth - 32);
+  const QString name = boldMetrics.elidedText(
+      index.data(DownloadList::GroupNameRole).toString(), Qt::ElideRight, nameRoom);
+
+  painter->setFont(bold);
+  painter->setPen(ink);
+  const QRect nameRect(textLeft, area.top(), boldMetrics.horizontalAdvance(name),
+                       area.height());
+  painter->drawText(nameRect, Qt::AlignVCenter | Qt::AlignLeft, name);
+
+  painter->setFont(normal);
+  painter->setPen(muted);
+  const QRect countRect(nameRect.right() + 8, area.top(), countWidth, area.height());
+  painter->drawText(countRect, Qt::AlignVCenter | Qt::AlignLeft, counted);
+
+  // a quiet line up to the size, as between the groups of a file window
+  const int lineLeft  = countRect.right() + 12;
+  const int lineRight = area.right() - sizeWidth - (sizeWidth > 0 ? 12 : 0);
+  if (lineRight > lineLeft) {
+    QColor line = muted;
+    line.setAlphaF(0.35);
+    painter->setPen(QPen(line, 1));
+    const int y = area.center().y();
+    painter->drawLine(lineLeft, y, lineRight, y);
+  }
+  if (sizeWidth > 0) {
+    painter->setPen(muted);
+    painter->drawText(
+        QRect(area.right() - sizeWidth, area.top(), sizeWidth, area.height()),
+        Qt::AlignVCenter | Qt::AlignRight, size);
+  }
+  painter->restore();
 }
 
 void DownloadListHeader::compactSections()
@@ -176,6 +282,12 @@ DownloadListView::DownloadListView(QWidget* parent) : QTreeView(parent)
 
   setUniformRowHeights(true);
   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  // several downloads can be moved into a category at once
+  setSelectionMode(QAbstractItemView::ExtendedSelection);
+  // a group opens and closes with one click on its header
+  setRootIsDecorated(false);
+  setExpandsOnDoubleClick(false);
+  setItemsExpandable(true);
   sortByColumn(1, Qt::DescendingOrder);
 
   connect(header(), SIGNAL(customContextMenuRequested(QPoint)), this,
@@ -205,17 +317,16 @@ void DownloadListView::setManager(DownloadManager* manager)
 
 void DownloadListView::onDoubleClick(const QModelIndex& index)
 {
-  QModelIndex sourceIndex =
-      qobject_cast<QSortFilterProxyModel*>(model())->mapToSource(index);
-  // a pending row (an nxm link still resolving) has no state yet
-  if (sourceIndex.row() < 0 || sourceIndex.row() >= m_Manager->numTotalDownloads()) {
+  const int row = downloadRow(index);
+  // a group, or a pending row (an nxm link still resolving), has no state
+  if (row < 0 || row >= m_Manager->numTotalDownloads()) {
     return;
   }
-  if (m_Manager->getState(sourceIndex.row()) >= DownloadManager::STATE_READY)
-    emit installDownload(sourceIndex.row());
-  else if ((m_Manager->getState(sourceIndex.row()) == DownloadManager::STATE_PAUSED) ||
-           (m_Manager->getState(sourceIndex.row()) == DownloadManager::STATE_PAUSING))
-    emit resumeDownload(sourceIndex.row());
+  if (m_Manager->getState(row) >= DownloadManager::STATE_READY)
+    emit installDownload(row);
+  else if ((m_Manager->getState(row) == DownloadManager::STATE_PAUSED) ||
+           (m_Manager->getState(row) == DownloadManager::STATE_PAUSING))
+    emit resumeDownload(row);
 }
 
 void DownloadListView::onHeaderCustomContextMenu(const QPoint& point)
@@ -288,10 +399,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   std::function<void()> removePending;
 
   try {
-    const int sourceRow =
-        index.row() >= 0
-            ? qobject_cast<QSortFilterProxyModel*>(model())->mapToSource(index).row()
-            : -1;
+    const int sourceRow = downloadRow(index);
     if (sourceRow >= m_Manager->numTotalDownloads()) {
       // found again by its ids: the rows can change while the menu is open
       const auto pending =
@@ -299,7 +407,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       removePending = [this, pending] {
         m_Manager->removePendingDownload(pending);
       };
-    } else if (index.row() >= 0) {
+    } else if (sourceRow >= 0) {
       const int row = sourceRow;
       DownloadManager::DownloadState state = m_Manager->getState(row);
 
@@ -369,6 +477,9 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
     // display download-specific actions
   }
 
+  // categories and groups
+  addGroupActions(menu, index);
+
   // the whole list: the folder, then hiding and deleting by state
   menu.addSeparator();
   addAction(menu, tr("Open downloads folder"), menuGlyph(MenuGlyphs::Folder), [this] {
@@ -420,9 +531,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
 void DownloadListView::keyPressEvent(QKeyEvent* event)
 {
   if (selectionModel()->hasSelection()) {
-    const int row = qobject_cast<QSortFilterProxyModel*>(model())
-                        ->mapToSource(currentIndex())
-                        .row();
+    const int row = downloadRow(currentIndex());
     // a pending row (an nxm link still resolving) has no state yet; Delete
     // takes it off the list (MO2 Revamped)
     if (row >= m_Manager->numTotalDownloads() &&
@@ -676,12 +785,22 @@ void DownloadListView::paintEvent(QPaintEvent* event)
 {
   QTreeView::paintEvent(event);
 
-  // a filter that hides every row is not an empty list
-  const QAbstractItemModel* source = model();
-  if (auto* proxy = qobject_cast<const QAbstractProxyModel*>(source)) {
-    source = proxy->sourceModel();
+  // where downloads dragged here would go
+  if (m_DropGroup.isValid()) {
+    QPainter p(viewport());
+    p.setRenderHint(QPainter::Antialiasing);
+    QRect target = visualRect(m_DropGroup);
+    target.setLeft(0);
+    target.setRight(viewport()->width() - 1);
+    p.setPen(QPen(palette().color(QPalette::Highlight), 2));
+    p.setBrush(Qt::NoBrush);
+    p.drawRoundedRect(QRectF(target).adjusted(1, 1, -1, -1), 4, 4);
   }
-  if (source == nullptr || source->rowCount() > 0) {
+
+  // a filter that hides every row is not an empty list, nor are categories
+  // still empty
+  if (m_Manager == nullptr ||
+      m_Manager->numTotalDownloads() + m_Manager->numPendingDownloads() > 0) {
     return;
   }
 
@@ -717,4 +836,376 @@ void DownloadListView::paintEvent(QPaintEvent* event)
       Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, helpText);
   const QRect help(area.left(), title.bottom() + 4, area.width(), needed.height());
   p.drawText(help, Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, helpText);
+}
+
+// --- MO2 Revamped: groups and categories ------------------------------------
+
+int DownloadListView::downloadRow(const QModelIndex& index) const
+{
+  if (!index.isValid()) {
+    return -1;
+  }
+  const QVariant row = index.data(DownloadList::DownloadRowRole);
+  return row.isValid() ? row.toInt() : -1;
+}
+
+void DownloadListView::setGroupsModel(DownloadList* model)
+{
+  m_Groups = model;
+  // the window's layout file turns these off for the flat list it had
+  setItemsExpandable(true);
+  setRootIsDecorated(false);
+  setExpandsOnDoubleClick(false);
+
+  QAbstractItemModel* shown = this->model();
+  if (shown == nullptr) {
+    return;
+  }
+
+  connect(shown, &QAbstractItemModel::modelReset, this, [this] {
+    applyGroupState();
+  });
+  // a group the search had hidden comes back closed: it is opened again as
+  // it was left
+  connect(shown, &QAbstractItemModel::rowsInserted, this,
+          [this](const QModelIndex& parent, int first, int last) {
+            if (!parent.isValid()) {
+              applyGroupState(first, last);
+            }
+          });
+  connect(this, &QTreeView::expanded, this, [this](const QModelIndex& index) {
+    rememberGroupState(index, true);
+  });
+  connect(this, &QTreeView::collapsed, this, [this](const QModelIndex& index) {
+    rememberGroupState(index, false);
+  });
+
+  applyGroupState();
+}
+
+void DownloadListView::setSearching(bool searching)
+{
+  if (m_Searching == searching) {
+    return;
+  }
+  m_Searching = searching;
+  applyGroupState();
+}
+
+void DownloadListView::applyGroupState(int first, int last)
+{
+  if (m_Groups == nullptr || model() == nullptr) {
+    return;
+  }
+  const int count = model()->rowCount();
+  if (last < 0 || last >= count) {
+    last = count - 1;
+  }
+
+  m_Restoring = true;
+  for (int row = std::max(0, first); row <= last; ++row) {
+    const QModelIndex index = model()->index(row, 0);
+    const QVariant key      = index.data(DownloadList::GroupKeyRole);
+    if (!key.isValid()) {
+      continue;  // not grouped: the rows are downloads
+    }
+    setFirstColumnSpanned(row, QModelIndex(), true);
+    const bool open = m_Searching || !m_Groups->groups().isCollapsed(key.toString());
+    if (isExpanded(index) != open) {
+      setExpanded(index, open);
+    }
+  }
+  m_Restoring = false;
+}
+
+void DownloadListView::rememberGroupState(const QModelIndex& index, bool expanded)
+{
+  // only what the user did; opening every group for a search isn't kept
+  if (m_Restoring || m_Searching || m_Groups == nullptr) {
+    return;
+  }
+  const QVariant key = index.data(DownloadList::GroupKeyRole);
+  if (key.isValid()) {
+    m_Groups->groups().setCollapsed(key.toString(), !expanded);
+  }
+}
+
+QStringList DownloadListView::selectedFileNames() const
+{
+  QStringList names;
+  if (selectionModel() == nullptr) {
+    return names;
+  }
+  for (const QModelIndex& index : selectionModel()->selectedRows()) {
+    const int row = downloadRow(index);
+    if (row >= 0 && row < m_Manager->numTotalDownloads()) {
+      names << m_Manager->getFileName(row);
+    }
+  }
+  return names;
+}
+
+void DownloadListView::newCategory(const QStringList& moveHere)
+{
+  if (m_Groups == nullptr) {
+    return;
+  }
+  DownloadGroups& groups = m_Groups->groups();
+  QString name;
+  for (;;) {
+    bool ok = false;
+    name    = QInputDialog::getText(this, tr("New category"),
+                                    tr("Name of the new category:"), QLineEdit::Normal,
+                                    name, &ok)
+               .trimmed();
+    if (!ok || name.isEmpty()) {
+      return;
+    }
+    if (!groups.hasCategory(name)) {
+      break;
+    }
+    QMessageBox::information(this, tr("New category"),
+                             tr("There already is a category named \"%1\".").arg(name));
+  }
+
+  groups.addCategory(name);
+  if (!moveHere.isEmpty()) {
+    groups.setCategory(moveHere, name);
+  }
+  // grouping is what shows a category
+  groups.setGrouped(true);
+}
+
+void DownloadListView::addGroupActions(QMenu& menu, const QModelIndex& index)
+{
+  if (m_Groups == nullptr) {
+    return;
+  }
+  DownloadGroups& groups = m_Groups->groups();
+  menu.addSeparator();
+
+  // the selected downloads: into a category, or out of one
+  const QStringList selected = selectedFileNames();
+  if (!selected.isEmpty()) {
+    QString current = groups.categoryOf(selected.first());
+    for (const QString& name : selected) {
+      if (groups.categoryOf(name) != current) {
+        current.clear();
+        break;
+      }
+    }
+    bool anyInCategory = false;
+    for (const QString& name : selected) {
+      if (!groups.categoryOf(name).isEmpty()) {
+        anyInCategory = true;
+        break;
+      }
+    }
+
+    auto* move = menu.addMenu(menuGlyph(0xE8DE),
+                              selected.size() == 1
+                                  ? tr("Move to category")
+                                  : tr("Move %1 downloads to category").arg(selected.size()));
+    for (const QString& category : groups.categories()) {
+      QAction* action = move->addAction(category, [this, selected, category] {
+        m_Groups->groups().setCategory(selected, category);
+        m_Groups->groups().setGrouped(true);
+      });
+      action->setCheckable(true);
+      action->setChecked(category == current);
+    }
+    if (!groups.categories().isEmpty()) {
+      move->addSeparator();
+    }
+    move->addAction(tr("New category..."), [this, selected] {
+      newCategory(selected);
+    });
+    if (anyInCategory) {
+      move->addSeparator();
+      move->addAction(tr("Back to where it came from"), [this, selected] {
+        m_Groups->groups().setCategory(selected, QString());
+      });
+    }
+  }
+
+  // a category's own header
+  const QVariant kind = index.data(DownloadList::GroupKindRole);
+  if (kind.isValid() && kind.toInt() == DownloadList::GROUP_CATEGORY) {
+    const QString name = index.data(DownloadList::GroupNameRole).toString();
+    menu.addAction(menuGlyph(0xE8AC), tr("Rename category..."), [this, name] {
+      bool ok = false;
+      const QString to =
+          QInputDialog::getText(this, tr("Rename category"), tr("New name:"),
+                                QLineEdit::Normal, name, &ok)
+              .trimmed();
+      if (ok && !to.isEmpty() && to != name &&
+          !m_Groups->groups().renameCategory(name, to)) {
+        QMessageBox::information(this, tr("Rename category"),
+                                 tr("There already is a category named \"%1\".").arg(to));
+      }
+    });
+    menu.addAction(menuGlyph(0xE74D), tr("Remove category"), [this, name] {
+      // nothing is deleted: its downloads go back to where they came from
+      m_Groups->groups().removeCategory(name);
+    });
+  } else if (selected.isEmpty()) {
+    menu.addAction(menuGlyph(0xE8F4), tr("New category..."), [this] {
+      newCategory({});
+    });
+  }
+
+  QAction* grouped = menu.addAction(tr("Group by origin"), [this](bool on) {
+    m_Groups->groups().setGrouped(on);
+  });
+  grouped->setCheckable(true);
+  grouped->setChecked(groups.grouped());
+
+  if (groups.grouped() && model() != nullptr && model()->rowCount() > 1) {
+    menu.addAction(tr("Expand all groups"), [this] {
+      expandAll();
+    });
+    menu.addAction(tr("Collapse all groups"), [this] {
+      collapseAll();
+    });
+  }
+}
+
+void DownloadListView::mousePressEvent(QMouseEvent* event)
+{
+  // one click on a group's header opens or closes it
+  if (event->button() == Qt::LeftButton && event->modifiers() == Qt::NoModifier) {
+    const QModelIndex index = indexAt(event->position().toPoint());
+    if (index.isValid() && index.data(DownloadList::GroupKeyRole).isValid()) {
+      const QModelIndex first = index.siblingAtColumn(0);
+      setExpanded(first, !isExpanded(first));
+      setCurrentIndex(first);
+      event->accept();
+      return;
+    }
+  }
+  QTreeView::mousePressEvent(event);
+}
+
+void DownloadListView::mouseDoubleClickEvent(QMouseEvent* event)
+{
+  // a quick second click on a header toggles it back, as a click does
+  const QModelIndex index = indexAt(event->position().toPoint());
+  if (event->button() == Qt::LeftButton && index.isValid() &&
+      index.data(DownloadList::GroupKeyRole).isValid()) {
+    mousePressEvent(event);
+    return;
+  }
+  QTreeView::mouseDoubleClickEvent(event);
+}
+
+QModelIndex DownloadListView::dropGroupAt(const QPoint& pos) const
+{
+  if (m_Groups == nullptr || !m_Groups->groups().grouped()) {
+    return {};
+  }
+  QModelIndex index = indexAt(pos);
+  if (!index.isValid()) {
+    return {};
+  }
+  if (!index.data(DownloadList::GroupKeyRole).isValid()) {
+    index = index.parent();
+  }
+  if (!index.isValid()) {
+    return {};
+  }
+  index = index.siblingAtColumn(0);
+
+  // into a category; or, onto where they came from, out of their category
+  const QStringList selected = selectedFileNames();
+  if (selected.isEmpty()) {
+    return {};
+  }
+  const DownloadGroups& groups = m_Groups->groups();
+  if (index.data(DownloadList::GroupKindRole).toInt() == DownloadList::GROUP_CATEGORY) {
+    const QString name = index.data(DownloadList::GroupNameRole).toString();
+    for (const QString& file : selected) {
+      if (groups.categoryOf(file) != name) {
+        return index;
+      }
+    }
+    return {};
+  }
+  for (const QString& file : selected) {
+    if (!groups.categoryOf(file).isEmpty()) {
+      return index;
+    }
+  }
+  return {};
+}
+
+void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
+{
+  if (event->source() == this) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+    return;
+  }
+  QTreeView::dragEnterEvent(event);
+}
+
+void DownloadListView::dragMoveEvent(QDragMoveEvent* event)
+{
+  if (event->source() != this) {
+    QTreeView::dragMoveEvent(event);
+    return;
+  }
+  const QModelIndex target = dropGroupAt(event->position().toPoint());
+  if (QPersistentModelIndex(target) != m_DropGroup) {
+    m_DropGroup = target;
+    viewport()->update();
+  }
+  if (target.isValid()) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+  } else {
+    event->ignore();
+  }
+  // near the edges the list scrolls, as for any drag
+  QAbstractItemView::dragMoveEvent(event);
+  if (target.isValid()) {
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+  } else {
+    event->ignore();
+  }
+}
+
+void DownloadListView::dragLeaveEvent(QDragLeaveEvent* event)
+{
+  m_DropGroup = QPersistentModelIndex();
+  viewport()->update();
+  QTreeView::dragLeaveEvent(event);
+}
+
+void DownloadListView::dropEvent(QDropEvent* event)
+{
+  m_DropGroup = QPersistentModelIndex();
+  viewport()->update();
+  if (event->source() != this) {
+    QTreeView::dropEvent(event);
+    return;
+  }
+
+  const QModelIndex target = dropGroupAt(event->position().toPoint());
+  if (!target.isValid()) {
+    event->ignore();
+    return;
+  }
+  const QStringList selected = selectedFileNames();
+  const bool category =
+      target.data(DownloadList::GroupKindRole).toInt() == DownloadList::GROUP_CATEGORY;
+  // copy: the view must not take the rows out of the model after the drop
+  event->setDropAction(Qt::CopyAction);
+  event->accept();
+  const QString to = category ? target.data(DownloadList::GroupNameRole).toString()
+                              : QString();
+  // after the drag has ended: moving regroups the list
+  QTimer::singleShot(0, this, [this, selected, to] {
+    m_Groups->groups().setCategory(selected, to);
+  });
 }

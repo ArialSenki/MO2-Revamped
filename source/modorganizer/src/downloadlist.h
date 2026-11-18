@@ -20,16 +20,18 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef DOWNLOADLIST_H
 #define DOWNLOADLIST_H
 
-#include <QAbstractTableModel>
+#include <QAbstractItemModel>
+#include <vector>
 
 class OrganizerCore;
 class DownloadManager;
+class DownloadGroups;
 class Settings;
 
 /**
  * @brief model of the list of active and completed downloads
  **/
-class DownloadList : public QAbstractTableModel
+class DownloadList : public QAbstractItemModel
 {
 
   Q_OBJECT
@@ -50,8 +52,42 @@ public:
     COL_COUNT
   };
 
+  // MO2 Revamped: the list can be grouped by where the downloads came from
+  // and into the user's own categories; a group is a row with the downloads
+  // as its children
+  enum GroupKind
+  {
+    GROUP_CATEGORY = 0,
+    GROUP_LIST,
+    GROUP_NEXUS,
+    GROUP_OTHER
+  };
+
+  enum Roles
+  {
+    // the download's index in the download manager, -1 on a group row
+    DownloadRowRole = Qt::UserRole + 40,
+    // a group row's key ("cat:<name>", "list:<name>", "nexus", "other")
+    GroupKeyRole,
+    // a group row's GroupKind
+    GroupKindRole,
+    // a group row's name, without its count
+    GroupNameRole,
+    // the size of a group's downloads, as text
+    GroupSizeRole
+  };
+
 public:
   explicit DownloadList(OrganizerCore& core, QObject* parent = 0);
+
+  DownloadGroups& groups() { return *m_groups; }
+
+  // the download behind an index of this model, -1 for a group row
+  int downloadRow(const QModelIndex& index) const;
+  static bool isGroup(const QModelIndex& index);
+
+  // the downloads' grouping changed (categories, a move, grouping on or off)
+  void regroup();
 
   /**
    * @brief retrieve the number of rows to display. Invoked by Qt
@@ -66,6 +102,7 @@ public:
   QModelIndex parent(const QModelIndex& child) const;
   Qt::ItemFlags flags(const QModelIndex& idx) const override;
   QMimeData* mimeData(const QModelIndexList& indexes) const override;
+  QStringList mimeTypes() const override;
 
   virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
@@ -81,7 +118,9 @@ public:
 
   // used in DownloadsTab as the sorting predicate for the filter widget
   //
-  bool lessThanPredicate(const QModelIndex& left, const QModelIndex& right);
+  // groups keep their own order whichever way the list is sorted
+  bool lessThanPredicate(const QModelIndex& left, const QModelIndex& right,
+                         Qt::SortOrder order);
 
 public slots:
 
@@ -95,8 +134,27 @@ public slots:
   void aboutToUpdate();
 
 private:
+  struct Group
+  {
+    QString key;
+    QString name;
+    GroupKind kind;
+    std::vector<int> rows;
+    qint64 size = 0;
+  };
+
   DownloadManager& m_manager;
   Settings& m_settings;
+  DownloadGroups* m_groups;
+  bool m_grouped = false;
+  std::vector<Group> m_groupList;
+  // for each download (pending ones after the others): its group and its
+  // place in it
+  std::vector<int> m_groupOf;
+  std::vector<int> m_placeOf;
+
+  void buildGroups();
+  QVariant groupData(const Group& group, const QModelIndex& index, int role) const;
   // MO2 Revamped: a reset aboutToUpdate() began and update(-1) has not ended
   bool m_resetting = false;
 };

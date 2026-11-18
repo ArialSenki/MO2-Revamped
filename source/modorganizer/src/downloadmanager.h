@@ -123,6 +123,10 @@ private:
 
     bool m_Hidden;
 
+    // MO2 Revamped: the list (a Wabbajack list, a collection) this archive was
+    // downloaded for, when its .meta names one ("sourceList")
+    QString m_SourceList;
+
     static DownloadInfo* createNew(const MOBase::ModRepositoryFileInfo* fileInfo,
                                    const QStringList& URLs);
     static DownloadInfo* createFromMeta(const QString& filePath, bool showHidden,
@@ -385,6 +389,12 @@ public:
    * @return true if the specified file is supposed to be hidden
    */
   bool isHidden(int index) const;
+
+  /**
+   * @brief the list (a Wabbajack list or a collection) the download was made
+   *        for, as its .meta names it ("sourceList"), or empty
+   */
+  QString getSourceList(int index) const;
 
   /**
    * @brief retrieve all nexus info of the download specified by index
