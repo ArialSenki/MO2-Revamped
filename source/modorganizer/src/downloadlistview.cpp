@@ -1175,8 +1175,44 @@ QModelIndex DownloadListView::dropGroupAt(const QPoint& pos,
   return any ? index : QModelIndex();
 }
 
+void DownloadListView::startDrag(Qt::DropActions supportedActions)
+{
+  // MO2 Revamped: the dragged downloads only; no picture of every column of
+  // every row, and only ever copied (nothing is taken out of the list)
+  QModelIndexList indexes;
+  if (selectionModel() != nullptr) {
+    for (const QModelIndex& index : selectionModel()->selectedIndexes()) {
+      if (model()->flags(index) & Qt::ItemIsDragEnabled) {
+        indexes << index;
+      }
+    }
+  }
+  if (indexes.isEmpty()) {
+    log::debug("downloads: nothing to drag");
+    return;
+  }
+  QMimeData* data = model()->mimeData(indexes);
+  if (data == nullptr) {
+    return;
+  }
+
+  const int count = static_cast<int>(draggedFiles(data).size());
+  auto* drag      = new QDrag(this);
+  drag->setMimeData(data);
+  drag->setPixmap(FluentIcons::file(QStringLiteral("archive.zip"), false)
+                      .pixmap(QSize(32, 32), devicePixelRatioF()));
+  drag->setHotSpot(QPoint(-8, -8));
+
+  log::debug("downloads: dragging {} download(s)", count);
+  const Qt::DropAction action =
+      drag->exec(supportedActions | Qt::CopyAction, Qt::CopyAction);
+  log::debug("downloads: drag ended ({})", static_cast<int>(action));
+}
+
 void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
 {
+  log::debug("downloads: drag entered, {} download(s)",
+             draggedFiles(event->mimeData()).size());
   // a drag of this list's downloads (the names say so; the source is only
   // known while a real drag runs)
   if (!draggedFiles(event->mimeData()).isEmpty()) {
@@ -1221,6 +1257,7 @@ void DownloadListView::dropEvent(QDropEvent* event)
   m_DropGroup = QPersistentModelIndex();
   viewport()->update();
   const QStringList files = draggedFiles(event->mimeData());
+  log::debug("downloads: drop of {} download(s)", files.size());
   if (files.isEmpty()) {
     QTreeView::dropEvent(event);
     return;

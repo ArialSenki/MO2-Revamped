@@ -123,6 +123,8 @@ protected:
   void dragMoveEvent(QDragMoveEvent* event) override;
   void dragLeaveEvent(QDragLeaveEvent* event) override;
   void dropEvent(QDropEvent* event) override;
+  // logs where a drag gets (it is hard to see from outside)
+  void startDrag(Qt::DropActions supportedActions) override;
 
 private slots:
   void onDoubleClick(const QModelIndex& index);
