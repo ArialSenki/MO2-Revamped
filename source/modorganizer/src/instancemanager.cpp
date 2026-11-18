@@ -113,7 +113,9 @@ QString Instance::displayName() const
     return QObject::tr("Portable");
   }
 
-  return QObject::tr("Portable - %1").arg(QDir(m_dir).dirName());
+  // MO2 Revamped: a named portable instance by its name; the lists and the
+  // instance window say "Portable" beside it already
+  return QDir(m_dir).dirName();
 }
 
 QString Instance::gameName() const
