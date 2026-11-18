@@ -186,6 +186,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSaveFile>
 #include <QDateTime>
 #include <QElapsedTimer>
+#include <QRegularExpression>
 #include <QLocale>
 #include <QToolButton>
 #include <QToolTip>
@@ -6709,7 +6710,12 @@ void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant,
     } else if (!code.isEmpty()) {
       text = NexusInterface::knownProblem(code);
     } else {
-      text = tr("Nexus didn't accept the endorsement: %1").arg(errorString);
+      // what the server said, not Qt's "Error transferring <address> - server
+      // replied: ..." around it
+      static const QRegularExpression replied(QStringLiteral("server replied: (.+)$"));
+      const auto m = replied.match(errorString);
+      text = tr("Nexus didn't accept the endorsement: %1")
+                 .arg(m.hasMatch() ? m.captured(1).trimmed() : errorString);
     }
     log::warn("MO2 Revamped endorsement: {} ({})", text, errorCode);
     toggleRevampedEndorseState();
