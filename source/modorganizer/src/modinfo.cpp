@@ -46,6 +46,11 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QDirIterator>
 #include <QMutexLocker>
+#include <QSettings>
+#include <algorithm>
+#include <execution>
+#include <memory>
+#include <numeric>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -310,12 +315,34 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     QDir mods(QDir::fromNativeSeparators(modsDirectory));
     mods.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
     QDirIterator modIter(mods);
+    std::vector<QString> modPaths;
     while (modIter.hasNext()) {
       const QString modPath = modIter.next();
       if (modIter.fileName() != QLatin1String(MOShared::ReplacedModsFolder)) {
-        createFrom(QDir(modPath), core);
+        modPaths.push_back(modPath);
       }
     }
+
+    // MO2 Revamped: the meta.ini files are parsed in parallel first. Qt keeps
+    // one parsed copy per file while a QSettings has it open and doesn't read
+    // an unchanged file again, so the mods made one by one below only look
+    // the values up; parsing ~3600 of them on the interface thread took about
+    // a second of every refresh and profile switch on a Nolvus list
+    std::vector<std::unique_ptr<QSettings>> parsed(modPaths.size());
+    std::vector<std::size_t> order(modPaths.size());
+    std::iota(order.begin(), order.end(), std::size_t(0));
+    std::for_each(std::execution::par, order.begin(), order.end(), [&](std::size_t i) {
+      parsed[i] = std::make_unique<QSettings>(modPaths[i] + QStringLiteral("/meta.ini"),
+                                              QSettings::IniFormat);
+    });
+
+    for (const QString& modPath : modPaths) {
+      createFrom(QDir(modPath), core);
+    }
+
+    std::for_each(std::execution::par, parsed.begin(), parsed.end(), [](auto& settings) {
+      settings.reset();
+    });
   }
 
   auto* game     = core.managedGame();
