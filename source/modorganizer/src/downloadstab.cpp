@@ -31,9 +31,18 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
       QCoreApplication::translate("FluentDashboard", "Search downloads"));
 
   m_filter.setList(ui.list);
-  m_filter.setSortPredicate([sourceModel](auto&& left, auto&& right) {
-    return sourceModel->lessThanPredicate(left, right);
+  DownloadListView* list = ui.list;
+  m_filter.setSortPredicate([sourceModel, list](auto&& left, auto&& right) {
+    return sourceModel->lessThanPredicate(left, right,
+                                          list->header()->sortIndicatorOrder());
   });
+  // the list is shown through the search's proxy from here on: the view keeps
+  // the groups' open state and opens them all while searching
+  list->setGroupsModel(sourceModel);
+  connect(&m_filter, &MOBase::FilterWidget::changed, list,
+          [list](const QString&, const QString& text) {
+            list->setSearching(!text.isEmpty());
+          });
 
   connect(ui.refresh, &QPushButton::clicked, [&] {
     refresh();

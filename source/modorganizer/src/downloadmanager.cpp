@@ -50,6 +50,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QRegularExpression>
 #include <QTextDocument>
 #include <QTimer>
+#include <atomic>
+#include <thread>
 #include <QUrlQuery>
 
 #include <boost/bind/bind.hpp>
@@ -141,10 +143,48 @@ DownloadManager::DownloadInfo::createNew(const ModRepositoryFileInfo* fileInfo,
   return info;
 }
 
+DownloadManager::DownloadInfo::MetaData
+DownloadManager::DownloadInfo::readMeta(const QString& filePath)
+{
+  MetaData m;
+  {
+    QSettings metaFile(filePath + ".meta", QSettings::IniFormat);
+    m.removed       = metaFile.value("removed", false).toBool();
+    m.paused        = metaFile.value("paused", false).toBool();
+    m.uninstalled   = metaFile.value("uninstalled", false).toBool();
+    m.installed     = metaFile.value("installed", false).toBool();
+    m.url           = metaFile.value("url", "").toString();
+    m.gameName      = metaFile.value("gameName", "").toString();
+    m.modID         = metaFile.value("modID", 0).toInt();
+    m.fileID        = metaFile.value("fileID", 0).toInt();
+    m.name          = metaFile.value("name", "").toString();
+    m.modName       = metaFile.value("modName", "").toString();
+    m.description   = metaFile.value("description").toString();
+    m.version       = metaFile.value("version", "0").toString();
+    m.newestVersion = metaFile.value("newestVersion", "0").toString();
+    m.category      = metaFile.value("category", 0).toInt();
+    m.fileCategory  = metaFile.value("fileCategory", 0).toInt();
+    m.repository    = metaFile.value("repository", "Nexus").toString();
+    m.userData      = metaFile.value("userData").toMap();
+    m.sourceList    = metaFile.value("sourceList").toString().trimmed();
+  }
+
+  // the date the list shows and sorts by, as getFileTime() finds it: one look
+  // at each file here instead of one per file at the first sort
+  const QFileInfo fileInfo(filePath);
+  m.created = fileInfo.birthTime();
+  if (!m.created.isValid())
+    m.created = fileInfo.metadataChangeTime();
+  if (!m.created.isValid())
+    m.created = fileInfo.lastModified();
+  return m;
+}
+
 DownloadManager::DownloadInfo*
 DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool showHidden,
                                               const QString outputDirectory,
-                                              std::optional<uint64_t> fileSize)
+                                              std::optional<uint64_t> fileSize,
+                                              const MetaData* meta)
 {
   QString metaFileName = filePath + ".meta";
   QFileInfo metaFileInfo(metaFileName);
@@ -152,15 +192,21 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
           .compare(QDir::fromNativeSeparators(outputDirectory), Qt::CaseInsensitive) !=
       0)
     return nullptr;
-  QSettings metaFile(metaFileName, QSettings::IniFormat);
+
+  MetaData read;
+  if (meta == nullptr) {
+    read = readMeta(filePath);
+    meta = &read;
+  }
+
   // a hidden download isn't listed; created only past this point so it can't
   // leak, as it did on every refresh for each hidden download
-  if (!showHidden && metaFile.value("removed", false).toBool()) {
+  if (!showHidden && meta->removed) {
     return nullptr;
   }
 
   DownloadInfo* info = new DownloadInfo;
-  info->m_Hidden     = metaFile.value("removed", false).toBool();
+  info->m_Hidden     = meta->removed;
 
   QString fileName = QFileInfo(filePath).fileName();
 
@@ -171,11 +217,11 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
   } else {
     info->m_FileName = fileName;
 
-    if (metaFile.value("paused", false).toBool()) {
+    if (meta->paused) {
       info->m_State = STATE_PAUSED;
-    } else if (metaFile.value("uninstalled", false).toBool()) {
+    } else if (meta->uninstalled) {
       info->m_State = STATE_UNINSTALLED;
-    } else if (metaFile.value("installed", false).toBool()) {
+    } else if (meta->installed) {
       info->m_State = STATE_INSTALLED;
     } else {
       info->m_State = STATE_READY;
@@ -187,30 +233,28 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
   info->m_TotalSize      = fileSize ? *fileSize : QFileInfo(filePath).size();
   info->m_PreResumeSize  = info->m_TotalSize;
   info->m_CurrentUrl     = 0;
-  info->m_Urls           = metaFile.value("url", "").toString().split(";");
+  info->m_Urls           = meta->url.split(";");
   info->m_Tries          = 0;
   info->m_TaskProgressId = TaskProgressManager::instance().getId();
-  QString gameName       = metaFile.value("gameName", "").toString();
-  int modID              = metaFile.value("modID", 0).toInt();
-  int fileID             = metaFile.value("fileID", 0).toInt();
-  info->m_FileInfo       = new ModRepositoryFileInfo(gameName, modID, fileID);
-  info->m_FileInfo->name = metaFile.value("name", "").toString();
+  info->m_Created        = meta->created;
+  info->m_FileInfo = new ModRepositoryFileInfo(meta->gameName, meta->modID, meta->fileID);
+  info->m_FileInfo->name = meta->name;
   if (info->m_FileInfo->name == "0") {
     // bug in earlier version
     info->m_FileInfo->name = "";
   }
-  info->m_FileInfo->modName     = metaFile.value("modName", "").toString();
-  info->m_FileInfo->gameName    = gameName;
-  info->m_FileInfo->modID       = modID;
-  info->m_FileInfo->fileID      = fileID;
-  info->m_FileInfo->description = metaFile.value("description").toString();
-  info->m_FileInfo->version.parse(metaFile.value("version", "0").toString());
-  info->m_FileInfo->newestVersion.parse(
-      metaFile.value("newestVersion", "0").toString());
-  info->m_FileInfo->categoryID   = metaFile.value("category", 0).toInt();
-  info->m_FileInfo->fileCategory = metaFile.value("fileCategory", 0).toInt();
-  info->m_FileInfo->repository   = metaFile.value("repository", "Nexus").toString();
-  info->m_FileInfo->userData     = metaFile.value("userData").toMap();
+  info->m_FileInfo->modName     = meta->modName;
+  info->m_FileInfo->gameName    = meta->gameName;
+  info->m_FileInfo->modID       = meta->modID;
+  info->m_FileInfo->fileID      = meta->fileID;
+  info->m_FileInfo->description = meta->description;
+  info->m_FileInfo->version.parse(meta->version);
+  info->m_FileInfo->newestVersion.parse(meta->newestVersion);
+  info->m_FileInfo->categoryID   = meta->category;
+  info->m_FileInfo->fileCategory = meta->fileCategory;
+  info->m_FileInfo->repository   = meta->repository;
+  info->m_FileInfo->userData     = meta->userData;
+  info->m_SourceList             = meta->sourceList;
   info->m_Reply                  = nullptr;
 
   return info;
@@ -460,9 +504,11 @@ void DownloadManager::refreshList()
       DownloadManager& self;
       std::set<std::wstring>& seen;
       std::vector<std::wstring>& extensions;
+      // the archives to list, with their sizes
+      std::vector<std::pair<QString, uint64_t>> found;
     };
 
-    Context cx = {*this, seen, nameFilters};
+    Context cx = {*this, seen, nameFilters, {}};
 
     for (auto&& d : m_ActiveDownloads) {
       cx.seen.insert(d->m_FileName.toLower().toStdWString());
@@ -493,21 +539,46 @@ void DownloadManager::refreshList()
             return;
           }
 
-          QString fileName = QDir::fromNativeSeparators(cx.self.m_OutputDirectory) +
-                             "/" + QString::fromWCharArray(f.data(), f.size());
-
-          DownloadInfo* info = DownloadInfo::createFromMeta(
-              fileName, cx.self.m_ShowHidden, cx.self.m_OutputDirectory, size);
-
-          if (info == nullptr) {
-            return;
-          }
-
-          cx.self.m_ActiveDownloads.push_front(info);
+          cx.found.push_back(
+              {QDir::fromNativeSeparators(cx.self.m_OutputDirectory) + "/" +
+                   QString::fromWCharArray(f.data(), f.size()),
+               size});
           cx.seen.insert(std::move(lc));
-          cx.seen.insert(
-              QFileInfo(info->m_Output.fileName()).fileName().toLower().toStdWString());
         });
+
+    // MO2 Revamped: the .meta files are read on several threads (thousands of
+    // them for a big list, each its own small file), then the downloads are
+    // made here, in the order the folder listed them
+    std::vector<DownloadInfo::MetaData> metas(cx.found.size());
+    {
+      std::atomic<std::size_t> next{0};
+      const auto work = [&] {
+        for (std::size_t i = next++; i < cx.found.size(); i = next++) {
+          metas[i] = DownloadInfo::readMeta(cx.found[i].first);
+        }
+      };
+      // a few threads are enough: each file is small, the time is in opening
+      // it (and in what scans it on the way)
+      const std::size_t threads = std::min<std::size_t>(
+          {8, std::max(1u, std::thread::hardware_concurrency()), cx.found.size() / 64});
+      std::vector<std::thread> pool;
+      for (std::size_t t = 1; t < threads; ++t) {
+        pool.emplace_back(work);
+      }
+      work();
+      for (auto& thread : pool) {
+        thread.join();
+      }
+    }
+
+    for (std::size_t i = 0; i < cx.found.size(); ++i) {
+      DownloadInfo* info = DownloadInfo::createFromMeta(
+          cx.found[i].first, m_ShowHidden, m_OutputDirectory, cx.found[i].second,
+          &metas[i]);
+      if (info != nullptr) {
+        m_ActiveDownloads.push_front(info);
+      }
+    }
 
     log::debug("saw {} downloads", m_ActiveDownloads.size());
 
@@ -1769,6 +1840,14 @@ bool DownloadManager::isHidden(int index) const
     throw MyException(tr("ishidden: invalid download index %1").arg(index));
   }
   return m_ActiveDownloads.at(index)->m_Hidden;
+}
+
+QString DownloadManager::getSourceList(int index) const
+{
+  if ((index < 0) || (index >= m_ActiveDownloads.size())) {
+    return {};
+  }
+  return m_ActiveDownloads.at(index)->m_SourceList;
 }
 
 const ModRepositoryFileInfo* DownloadManager::getFileInfo(int index) const

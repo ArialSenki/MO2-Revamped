@@ -932,6 +932,30 @@ Los cambios se guardan al elegir Aceptar.</translation>
   <context>
     <name>DownloadList</name>
     <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Other sites and manual</source>
+      <translation>Otros sitios y manuales</translation>
+    </message>
+    <message>
+      <source>Your category. Drag downloads here, or use "Move to category" in their menu.</source>
+      <translation>Tu categoría. Arrastra descargas aquí o usa "Mover a categoría" en su menú.</translation>
+    </message>
+    <message>
+      <source>Downloaded for the collection or list "%1".</source>
+      <translation>Descargado para la colección o lista "%1".</translation>
+    </message>
+    <message>
+      <source>Downloaded from Nexus Mods.</source>
+      <translation>Descargado de Nexus Mods.</translation>
+    </message>
+    <message>
+      <source>Downloaded from other sites, or added by hand.</source>
+      <translation>Descargado de otros sitios o añadido a mano.</translation>
+    </message>
+    <message>
       <source>Pausing</source>
       <translation>Pausando</translation>
     </message>
@@ -950,6 +974,62 @@ Los cambios se guardan al elegir Aceptar.</translation>
   </context>
   <context>
     <name>DownloadListView</name>
+    <message>
+      <source>Move to category</source>
+      <translation>Mover a categoría</translation>
+    </message>
+    <message>
+      <source>Move %1 downloads to category</source>
+      <translation>Mover %1 descargas a categoría</translation>
+    </message>
+    <message>
+      <source>New category...</source>
+      <translation>Nueva categoría...</translation>
+    </message>
+    <message>
+      <source>Back to where it came from</source>
+      <translation>Devolver a su origen</translation>
+    </message>
+    <message>
+      <source>Rename category...</source>
+      <translation>Renombrar categoría...</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Quitar categoría</translation>
+    </message>
+    <message>
+      <source>Group by origin</source>
+      <translation>Agrupar por origen</translation>
+    </message>
+    <message>
+      <source>Expand all groups</source>
+      <translation>Expandir todos los grupos</translation>
+    </message>
+    <message>
+      <source>Collapse all groups</source>
+      <translation>Contraer todos los grupos</translation>
+    </message>
+    <message>
+      <source>New category</source>
+      <translation>Nueva categoría</translation>
+    </message>
+    <message>
+      <source>Name of the new category:</source>
+      <translation>Nombre de la nueva categoría:</translation>
+    </message>
+    <message>
+      <source>There already is a category named "%1".</source>
+      <translation>Ya hay una categoría llamada "%1".</translation>
+    </message>
+    <message>
+      <source>Rename category</source>
+      <translation>Renombrar categoría</translation>
+    </message>
+    <message>
+      <source>New name:</source>
+      <translation>Nuevo nombre:</translation>
+    </message>
     <message>
       <source>This will remove all uninstalled downloads from this list (but NOT from disk).</source>
       <translation>Esto quita de la lista todas las descargas sin instalar (pero NO las borra del disco).</translation>

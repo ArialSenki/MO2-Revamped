@@ -924,6 +924,30 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   <context>
     <name>DownloadList</name>
     <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Other sites and manual</source>
+      <translation>Andere Seiten und manuell</translation>
+    </message>
+    <message>
+      <source>Your category. Drag downloads here, or use "Move to category" in their menu.</source>
+      <translation>Deine Kategorie. Zieh Downloads hierher oder nutze "In Kategorie verschieben" in ihrem Menü.</translation>
+    </message>
+    <message>
+      <source>Downloaded for the collection or list "%1".</source>
+      <translation>Für die Sammlung oder Liste "%1" heruntergeladen.</translation>
+    </message>
+    <message>
+      <source>Downloaded from Nexus Mods.</source>
+      <translation>Von Nexus Mods heruntergeladen.</translation>
+    </message>
+    <message>
+      <source>Downloaded from other sites, or added by hand.</source>
+      <translation>Von anderen Seiten heruntergeladen oder von Hand hinzugefügt.</translation>
+    </message>
+    <message>
       <source>Game %1, mod %2, file %3</source>
       <translation>Spiel %1, Mod %2, Datei %3</translation>
     </message>
@@ -938,6 +962,62 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   </context>
   <context>
     <name>DownloadListView</name>
+    <message>
+      <source>Move to category</source>
+      <translation>In Kategorie verschieben</translation>
+    </message>
+    <message>
+      <source>Move %1 downloads to category</source>
+      <translation>%1 Downloads in Kategorie verschieben</translation>
+    </message>
+    <message>
+      <source>New category...</source>
+      <translation>Neue Kategorie...</translation>
+    </message>
+    <message>
+      <source>Back to where it came from</source>
+      <translation>Zurück zur Herkunft</translation>
+    </message>
+    <message>
+      <source>Rename category...</source>
+      <translation>Kategorie umbenennen...</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Kategorie entfernen</translation>
+    </message>
+    <message>
+      <source>Group by origin</source>
+      <translation>Nach Herkunft gruppieren</translation>
+    </message>
+    <message>
+      <source>Expand all groups</source>
+      <translation>Alle Gruppen aufklappen</translation>
+    </message>
+    <message>
+      <source>Collapse all groups</source>
+      <translation>Alle Gruppen zuklappen</translation>
+    </message>
+    <message>
+      <source>New category</source>
+      <translation>Neue Kategorie</translation>
+    </message>
+    <message>
+      <source>Name of the new category:</source>
+      <translation>Name der neuen Kategorie:</translation>
+    </message>
+    <message>
+      <source>There already is a category named "%1".</source>
+      <translation>Es gibt bereits eine Kategorie namens "%1".</translation>
+    </message>
+    <message>
+      <source>Rename category</source>
+      <translation>Kategorie umbenennen</translation>
+    </message>
+    <message>
+      <source>New name:</source>
+      <translation>Neuer Name:</translation>
+    </message>
     <message>
       <source>Cancel download</source>
       <translation>Download abbrechen</translation>

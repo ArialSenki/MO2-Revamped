@@ -916,6 +916,30 @@ As alterações são salvas quando você escolhe OK.</translation>
   <context>
     <name>DownloadList</name>
     <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Other sites and manual</source>
+      <translation>Outros sites e manuais</translation>
+    </message>
+    <message>
+      <source>Your category. Drag downloads here, or use "Move to category" in their menu.</source>
+      <translation>Sua categoria. Arraste downloads para cá ou use "Mover para categoria" no menu deles.</translation>
+    </message>
+    <message>
+      <source>Downloaded for the collection or list "%1".</source>
+      <translation>Baixado para a coleção ou lista "%1".</translation>
+    </message>
+    <message>
+      <source>Downloaded from Nexus Mods.</source>
+      <translation>Baixado do Nexus Mods.</translation>
+    </message>
+    <message>
+      <source>Downloaded from other sites, or added by hand.</source>
+      <translation>Baixado de outros sites ou adicionado manualmente.</translation>
+    </message>
+    <message>
       <source>Game %1, mod %2, file %3</source>
       <translation>Jogo %1, mod %2, arquivo %3</translation>
     </message>
@@ -930,6 +954,62 @@ As alterações são salvas quando você escolhe OK.</translation>
   </context>
   <context>
     <name>DownloadListView</name>
+    <message>
+      <source>Move to category</source>
+      <translation>Mover para categoria</translation>
+    </message>
+    <message>
+      <source>Move %1 downloads to category</source>
+      <translation>Mover %1 downloads para categoria</translation>
+    </message>
+    <message>
+      <source>New category...</source>
+      <translation>Nova categoria...</translation>
+    </message>
+    <message>
+      <source>Back to where it came from</source>
+      <translation>Voltar para a origem</translation>
+    </message>
+    <message>
+      <source>Rename category...</source>
+      <translation>Renomear categoria...</translation>
+    </message>
+    <message>
+      <source>Remove category</source>
+      <translation>Remover categoria</translation>
+    </message>
+    <message>
+      <source>Group by origin</source>
+      <translation>Agrupar por origem</translation>
+    </message>
+    <message>
+      <source>Expand all groups</source>
+      <translation>Expandir todos os grupos</translation>
+    </message>
+    <message>
+      <source>Collapse all groups</source>
+      <translation>Recolher todos os grupos</translation>
+    </message>
+    <message>
+      <source>New category</source>
+      <translation>Nova categoria</translation>
+    </message>
+    <message>
+      <source>Name of the new category:</source>
+      <translation>Nome da nova categoria:</translation>
+    </message>
+    <message>
+      <source>There already is a category named "%1".</source>
+      <translation>Já existe uma categoria chamada "%1".</translation>
+    </message>
+    <message>
+      <source>Rename category</source>
+      <translation>Renomear categoria</translation>
+    </message>
+    <message>
+      <source>New name:</source>
+      <translation>Novo nome:</translation>
+    </message>
     <message>
       <source>Cancel download</source>
       <translation>Cancelar download</translation>
