@@ -223,6 +223,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentscrollbar
 	fluentmotion
 	fluenttabwidget
+	revampedguide
 	usertheme
 	filetree
 	filetreeitem

@@ -22,6 +22,7 @@ from PyQt6.QtGui import (
     QFont,
     QFontMetrics,
     QIcon,
+    QFontDatabase,
     QPainter,
     QPalette,
     QPixmap,
@@ -38,6 +39,7 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
     QMenu,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -692,16 +694,18 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         )
         report = add_card(diagnostics)
         add_row(report, 0xE8A5, _tr("Report contents"),
-                self._game_tr("Includes the main MO2 log, recent USVFS logs and the current and "
-                              "previous Elden Ring bridge logs when available, along with program, "
-                              "system, game and instance versions.")
+                self._game_tr("The end of the MO2 log, recent USVFS logs and the Elden Ring "
+                              "bridge logs, with the versions of MO2, Windows, the GPU, the "
+                              "game and the plugins, and the instance and mod counts.")
                 if elden_ring_tools
-                else _tr("Includes the main MO2 log and recent USVFS logs, along with "
-                         "program, system, game and instance versions."))
+                else _tr("The end of the MO2 log and recent USVFS logs, with the versions "
+                         "of MO2, Windows, the GPU, the game and the plugins, and the "
+                         "instance and mod counts."))
         add_row(report, 0xE72E, _tr("Privacy"),
-                _tr("Mods, downloads, saves, Nexus keys and memory dumps are not included. "
-                    "Logs can contain Windows paths and profile names; review them "
-                    "before sharing."))
+                _tr("Your Windows user name, the PC name, e-mail addresses, Nexus keys, "
+                    "tokens and cookies are replaced. Mods, downloads, saves and crash "
+                    "dumps are not included. A preview shows every file before you save "
+                    "or copy it."))
         add_row(report, 0xE7BA, _tr("If MO2 does not start"),
                 _tr("Attach the latest installer log shown in its error message. "
                     "If MO2 closes unexpectedly, also keep the file from crashDumps."))
@@ -752,89 +756,376 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         except Exception:
             return "unavailable"
 
-    def _diagnostics_context(self) -> str:
-        app_dir = Path(QApplication.applicationDirPath())
-        game_name = "Not detected"
-        profile_name = "Not selected"
-        profile_path = "Not available"
-        game_path = "Not available"
-        game_data_path = "Not available"
+    # --- the bug report ------------------------------------------------------
+    # Every text of the report goes through _Redactor before it is shown or
+    # saved; the preview shows exactly the texts the ZIP and the clipboard get.
+
+    # how many of the last lines of each log go into the report
+    LogLines = {"logs/mo_interface.log": 3000}
+    DefaultLogLines = 800
+
+    def _game_facts(self) -> list[str]:
+        lines = []
         try:
             game = self._organizer.managedGame()
-            if game is not None:
-                game_name = self._safe_text(game.gameName())
+        except Exception:
+            game = None
+        if game is None:
+            return ["Game: not detected"]
+
+        def ask(method: str) -> str:
+            try:
+                value = getattr(game, method)()
+                if hasattr(value, "absolutePath"):
+                    value = value.absolutePath()
+                return self._safe_text(value) or "-"
+            except Exception:
+                return "unavailable"
+
+        lines.append(f"Game: {ask('gameName')} ({ask('gameShortName')})")
+        lines.append(f"Game version: {ask('gameVersion')}")
+        try:
+            variants = list(game.gameVariants())
+            if len(variants) > 1:
+                lines.append("Game variants: " + ", ".join(map(str, variants)))
+        except Exception:
+            pass
+        lines.append(f"Game directory: {ask('gameDirectory')}")
+        lines.append(f"Game data directory: {ask('dataDirectory')}")
+        return lines
+
+    def _instance_facts(self) -> list[str]:
+        app_dir = Path(QApplication.applicationDirPath())
+        if (app_dir / "eldenring-only.portable").is_file():
+            mode = "Isolated portable (Elden Ring only)"
+        elif (app_dir / "portable.txt").is_file():
+            mode = "Portable"
+        else:
+            mode = "Global"
+        base = self._organizer_path("basePath")
+        return [
+            f"Instance type: {mode}",
+            f"Instance name: {Path(base).name if base != 'Not available' else base}",
+            f"Application directory: {app_dir}",
+            f"Instance directory: {base}",
+            f"Mods directory: {self._organizer_path('modsPath')}",
+            f"Downloads directory: {self._organizer_path('downloadsPath')}",
+            f"Overwrite directory: {self._organizer_path('overwritePath')}",
+        ]
+
+    def _mod_facts(self) -> list[str]:
+        """The profile, its mod counts and the Root folders the VFS deploys."""
+        lines = []
+        try:
+            profile = self._organizer.profile()
+            lines.append(f"Active profile: {self._safe_text(profile.name())}")
+            for label, method in (
+                ("local saves", "localSavesEnabled"),
+                ("local game settings", "localSettingsEnabled"),
+            ):
                 try:
-                    game_path = self._safe_text(game.gameDirectory().absolutePath())
+                    lines.append(
+                        f"Profile {label}: {'yes' if getattr(profile, method)() else 'no'}"
+                    )
                 except Exception:
                     pass
+        except Exception:
+            lines.append("Active profile: not selected")
+        try:
+            mod_list = self._organizer.modList()
+            names = list(mod_list.allModsByProfilePriority())
+            active_flag = mobase.ModState.ACTIVE
+
+            def kind(name: str) -> str:
+                # the game's own DLC and Creation Club files show as mods too
                 try:
-                    game_data_path = self._safe_text(game.dataDirectory().absolutePath())
+                    mod = mod_list.getMod(name)
+                    if mod.isOverwrite():
+                        return "overwrite"
+                    if mod.isForeign():
+                        return "game"
+                    if mod.isSeparator():
+                        return "separator"
                 except Exception:
-                    pass
+                    if name.endswith("_separator"):
+                        return "separator"
+                return "mod"
+
+            kinds = {n: kind(n) for n in names}
+            mods = [n for n in names if kinds[n] == "mod"]
+            active = [n for n in mods if mod_list.state(n) & active_flag]
+            lines.append(
+                f"Mods: {len(active)} enabled of {len(mods)} "
+                f"({sum(k == 'separator' for k in kinds.values())} separators, "
+                f"{sum(k == 'game' for k in kinds.values())} game files listed as mods)"
+            )
+            mods_dir = Path(self._organizer.modsPath())
+            with_root = sum(1 for n in active if (mods_dir / n / "Root").is_dir())
+            lines.append(f"Enabled mods with a Root folder: {with_root}")
+        except Exception as error:
+            lines.append(f"Mods: unavailable ({error})")
+        try:
+            plugins = self._organizer.pluginList()
+            plugin_names = list(plugins.pluginNames())
+            active_plugins = sum(
+                1 for n in plugin_names
+                if plugins.state(n) == mobase.PluginState.ACTIVE
+            )
+            if plugin_names:
+                lines.append(f"Game plugins: {active_plugins} active of {len(plugin_names)}")
         except Exception:
             pass
         try:
-            profile = self._organizer.profile()
-            if profile is not None:
-                profile_name = self._safe_text(profile.name())
-                profile_path = self._safe_text(profile.absolutePath())
+            short = self._organizer.managedGame().gameShortName()
+            state = Path(self._organizer.basePath()) / "rootcopy-backup" / short / "manifest.json"
+            lines.append(
+                "Root copies waiting to be restored: "
+                + ("yes" if state.is_file() else "no")
+            )
         except Exception:
             pass
+        lines.append("Virtual file system: USVFS 0.5.7.2")
+        return lines
 
-        mode = "Standard (global instance)"
-        if (app_dir / "eldenring-only.portable").is_file():
-            mode = "Isolated portable - Elden Ring only"
-        elif (app_dir / "portable.txt").is_file():
-            mode = "Portable"
+    @staticmethod
+    def _windows_facts() -> list[str]:
+        lines = []
+        try:
+            import winreg
 
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+            ) as key:
+                def value(name: str):
+                    try:
+                        return winreg.QueryValueEx(key, name)[0]
+                    except OSError:
+                        return ""
+
+                build = str(value("CurrentBuild") or sys.getwindowsversion().build)
+                product = str(value("ProductName") or "Windows")
+                # Windows 11 still says "Windows 10" in ProductName
+                if build.isdigit() and int(build) >= 22000:
+                    product = product.replace("Windows 10", "Windows 11")
+                ubr = value("UBR")
+                display = value("DisplayVersion") or value("ReleaseId")
+                lines.append(
+                    f"Windows: {product} {display} (build {build}"
+                    + (f".{ubr}" if ubr != "" else "") + ")"
+                )
+        except Exception:
+            lines.append(f"Windows: {platform.platform()}")
+        lines.append(f"Architecture: {platform.machine()}")
+        try:
+            import ctypes
+
+            class _Memory(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+
+            memory = _Memory()
+            memory.dwLength = ctypes.sizeof(_Memory)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(memory)):
+                lines.append(
+                    f"Memory: {memory.ullTotalPhys / 2**30:.1f} GiB, "
+                    f"{memory.ullAvailPhys / 2**30:.1f} GiB free"
+                )
+        except Exception:
+            pass
+        # the display adapters as Windows lists them, with their drivers
+        try:
+            import winreg
+
+            gpus = []
+            adapters = (
+                r"SYSTEM\CurrentControlSet\Control\Class"
+                r"\{4d36e968-e325-11ce-bfc1-08002be10318}"
+            )
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, adapters) as root:
+                for index in range(64):
+                    try:
+                        sub = winreg.EnumKey(root, index)
+                    except OSError:
+                        break
+                    if not sub.isdigit():
+                        continue
+                    try:
+                        with winreg.OpenKey(root, sub) as key:
+                            name = winreg.QueryValueEx(key, "DriverDesc")[0]
+                            try:
+                                driver = winreg.QueryValueEx(key, "DriverVersion")[0]
+                            except OSError:
+                                driver = "?"
+                    except OSError:
+                        continue
+                    entry = f"{name} (driver {driver})"
+                    if entry not in gpus:
+                        gpus.append(entry)
+            lines.extend(f"GPU: {gpu}" for gpu in gpus or ["not found"])
+        except Exception:
+            lines.append("GPU: unavailable")
+        return lines
+
+    @staticmethod
+    def _file_version(path: Path) -> str:
+        """The version resource of a DLL, as Explorer shows it."""
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            version = ctypes.windll.version
+            size = version.GetFileVersionInfoSizeW(str(path), None)
+            if not size:
+                return ""
+            buffer = ctypes.create_string_buffer(size)
+            if not version.GetFileVersionInfoW(str(path), 0, size, buffer):
+                return ""
+            pointer = ctypes.c_void_p()
+            length = wintypes.UINT()
+            if not version.VerQueryValueW(
+                buffer, "\\", ctypes.byref(pointer), ctypes.byref(length)
+            ):
+                return ""
+            fixed = ctypes.cast(pointer, ctypes.POINTER(ctypes.c_uint32 * 13)).contents
+            ms, ls = fixed[2], fixed[3]
+            return f"{ms >> 16}.{ms & 0xFFFF}.{ls >> 16}.{ls & 0xFFFF}"
+        except Exception:
+            return ""
+
+    def _plugin_facts(self) -> list[str]:
+        """MO2's plugins in the plugins folder, with the versions they carry."""
+        plugins_dir = Path(QApplication.applicationDirPath()) / "plugins"
+        pattern = re.compile(
+            r"VersionInfo\(\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+))?(?:\s*,\s*(\d+))?"
+            r"|^\s*Version\s*=\s*\"([^\"]+)\"",
+            re.MULTILINE,
+        )
+
+        def python_version(*files: Path) -> str:
+            for file in files:
+                try:
+                    match = pattern.search(file.read_text(encoding="utf-8", errors="replace"))
+                except OSError:
+                    continue
+                if match:
+                    if match.group(5):
+                        return match.group(5)
+                    return ".".join(g for g in match.groups()[:4] if g is not None)
+            return ""
+
+        lines = []
+        try:
+            entries = sorted(plugins_dir.iterdir(), key=lambda p: p.name.casefold())
+        except OSError:
+            return ["Plugins: the plugins folder could not be read"]
+        for entry in entries:
+            name = entry.name
+            if name.startswith((".", "__")) or name.endswith((".bak", ".pyc")) or ".bak-" in name:
+                continue
+            version = ""
+            if entry.is_file() and name.casefold().endswith(".dll"):
+                # MO2's own plugin DLLs carry no version: their date tells
+                # which build they came with
+                version = self._file_version(entry) or "built " + datetime.fromtimestamp(
+                    entry.stat().st_mtime, timezone.utc
+                ).strftime("%Y-%m-%d")
+            elif entry.is_file() and name.casefold().endswith(".py"):
+                version = python_version(entry)
+            elif entry.is_dir() and (entry / "__init__.py").is_file():
+                version = python_version(
+                    entry / "__init__.py", *sorted(entry.glob("*.py"))[:8]
+                )
+            elif entry.is_dir():
+                # data, plugin_python's own folder and other helpers
+                continue
+            else:
+                continue
+            lines.append(f"  {name}: {version or 'no version'}")
+        return [f"Plugins ({len(lines)}):", *lines]
+
+    def _crash_dump_facts(self) -> list[str]:
+        """Where the last crash dump is; the dump itself is never included."""
+        try:
+            folder = Path(self._organizer.basePath()) / "crashDumps"
+            dumps = sorted(
+                folder.glob("*.dmp"), key=lambda p: p.stat().st_mtime, reverse=True
+            )
+        except Exception:
+            return ["Last crash dump: unavailable"]
+        if not dumps:
+            return ["Last crash dump: none"]
+        last = dumps[0]
+        when = datetime.fromtimestamp(last.stat().st_mtime, timezone.utc).isoformat()
+        return [
+            f"Crash dumps: {len(dumps)}",
+            f"Last crash dump: {last} (modified UTC {when}, "
+            f"{last.stat().st_size // 1024} KiB, not included)",
+        ]
+
+    def _report_summary(self) -> str:
+        versions = self._component_versions()
         try:
             pyqt_version = QtCore.PYQT_VERSION_STR
         except Exception:
-            pyqt_version = "Unavailable"
-        try:
-            qt_version = QtCore.qVersion()
-        except Exception:
-            qt_version = "Unavailable"
-        versions = self._component_versions()
-        try:
-            import ssl
-            openssl_version = ssl.OPENSSL_VERSION
-        except Exception:
-            openssl_version = "Unavailable"
+            pyqt_version = "unavailable"
+        revamped = versions.get("revamped") or "unknown"
+        channel = "stable"
+        lowered = revamped.casefold()
+        if "-beta" in lowered or "-rc" in lowered:
+            channel = "beta"
+        elif any(tag in lowered for tag in ("-alpha", "-dev", "-test", "-preview")):
+            channel = "development"
+        app = QCoreApplication.instance()
+        build = app.property("revampedBuild") if app is not None else None
+        developer = bool(app.property("revampedDeveloperMode")) if app is not None else False
 
-        return "\n".join(
-            (
-                "MO2 Revamped diagnostic report",
-                f"Created UTC: {datetime.now(timezone.utc).isoformat()}",
-                f"MO2 Revamped: {versions.get('revamped') or 'unknown'}",
+        sections = [
+            ("MO2 Revamped", [
+                f"Version: {revamped}",
+                f"Channel: {channel}",
+                f"Build: {build or 'unknown'}",
                 f"Base: Mod Organizer {versions['mo2']}",
-                "USVFS: 0.5.7.2",
-                f"Windows: {platform.platform()}",
-                f"Architecture: {platform.machine()}",
-                f"Python: {sys.version.replace(os.linesep, ' ')}",
-                f"OpenSSL: {openssl_version}",
-                f"Qt: {qt_version}",
+                f"Qt: {versions['qt']}",
                 f"PyQt: {pyqt_version}",
-                f"Application directory: {app_dir}",
-                f"Instance directory: {self._organizer_path('basePath')}",
-                f"Mods directory: {self._organizer_path('modsPath')}",
-                f"Downloads directory: {self._organizer_path('downloadsPath')}",
-                f"Overwrite directory: {self._organizer_path('overwritePath')}",
-                f"Instance mode: {mode}",
-                f"Active game: {game_name}",
-                f"Game directory: {game_path}",
-                f"Game data directory: {game_data_path}",
-                f"Active profile: {profile_name}",
-                f"Profile directory: {profile_path}",
-                f"Elden Ring game plugin: {versions['plugin']}",
+                f"Python: {platform.python_version()}",
+                f"OpenSSL: {versions['openssl']}",
+                f"Developer mode: {'on' if developer else 'off'}",
+            ]),
+            ("System", self._windows_facts()),
+            ("Game", self._game_facts()),
+            ("Instance", self._instance_facts()),
+            ("Profile and mods", self._mod_facts()),
+            ("Crashes", self._crash_dump_facts()),
+        ]
+        if self._has_elden_ring_tools():
+            sections.append(("Elden Ring tools", [
+                f"Game plugin: {versions['plugin']}",
                 f"Native bridge: {versions['bridge']}",
                 f"Archive layout installer: {versions['installer']}",
                 f"Save isolation: {versions['saves']}",
                 f"Startup options: {versions['startup']}",
-                "",
-                "Review this report and the included logs before sharing; paths and profile names may identify your Windows account.",
-            )
-        )
+            ]))
+        sections.append(("Plugins", self._plugin_facts()))
+
+        out = [
+            "MO2 Revamped bug report",
+            f"Created UTC: {datetime.now(timezone.utc).isoformat(timespec='seconds')}",
+            "Private data was replaced: the Windows user name (%USERNAME%), the PC "
+            "name (<pc>), e-mail addresses (<email>), Nexus keys, tokens and cookies "
+            "(<removed>).",
+        ]
+        for title, lines in sections:
+            out.append("")
+            out.append(f"[{title}]")
+            out.extend(lines)
+        return "\n".join(out) + "\n"
 
     def _organizer_path(self, method_name: str) -> str:
         try:
@@ -910,6 +1201,53 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return candidates
 
     @staticmethod
+    def _log_tail(path: Path, lines: int) -> tuple[str, int, bool]:
+        """The last lines of a log, its size, and whether lines were left out.
+        Only the end of the file is read: mo_interface.log can grow to
+        hundreds of MiB in a long session."""
+        with path.open("rb") as stream:
+            size = os.fstat(stream.fileno()).st_size
+            window = min(size, max(256 * 1024, lines * 400))
+            stream.seek(size - window)
+            data = stream.read(window)
+        text = data.decode("utf-8", errors="replace")
+        parts = text.splitlines()
+        # the first line of a window that starts mid-file is cut
+        if window < size and parts:
+            parts = parts[1:]
+        cut = window < size or len(parts) > lines
+        return "\n".join(parts[-lines:]) + "\n", size, cut
+
+    def _build_report(self) -> list[tuple[str, str]]:
+        """Every file of the report with its anonymized text, in order."""
+        redact = _Redactor()
+        files = [("report.txt", redact(self._report_summary()))]
+        included = []
+        errors = []
+        for archive_name, source in self._diagnostic_log_files():
+            limit = self.LogLines.get(archive_name, self.DefaultLogLines)
+            try:
+                text, size, cut = self._log_tail(source, limit)
+                modified = datetime.fromtimestamp(
+                    source.stat().st_mtime, timezone.utc
+                ).isoformat(timespec="seconds")
+            except OSError as error:
+                errors.append(f"Could not read {archive_name}: {error}")
+                continue
+            if cut:
+                text = f"[MO2 Revamped report: only the last {limit} lines]\n" + text
+            files.append((archive_name, redact(text)))
+            included.append(
+                f"{archive_name}\tmodified UTC {modified}\t{size} bytes"
+                + (f"\tlast {limit} lines" if cut else "")
+            )
+        files.append((
+            "included-files.txt",
+            redact("\n".join(included + errors) or "No log files were available.") + "\n",
+        ))
+        return files
+
+    @staticmethod
     def _show_report_notice(
         parent, object_name: str, title: str, heading: str, details: str
     ) -> None:
@@ -934,40 +1272,18 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         message.exec()
 
     def _create_diagnostics_bundle(self, parent) -> None:
-        confirmation = QMessageBox(parent)
-        confirmation.setObjectName("MO2RevampedReportConfirmDialog")
-        confirmation.setOption(QMessageBox.Option.DontUseNativeDialog, True)
-        confirmation.setWindowTitle(_tr("Create bug report"))
-        confirmation.setIcon(QMessageBox.Icon.NoIcon)
-        confirmation.setText(_tr("Review the report before sharing it"))
-        confirmation.setInformativeText(
-            self._game_tr("Includes MO2, USVFS and Elden Ring bridge logs. They can contain "
-                          "Windows paths and profile names. The ZIP does not include mods, "
-                          "downloads, saves, Nexus keys or memory dumps.")
-            if self._has_elden_ring_tools()
-            else _tr("Includes MO2 and USVFS logs. They can contain "
-                     "Windows paths and profile names. The ZIP does not include mods, "
-                     "downloads, saves, Nexus keys or memory dumps.")
-        )
-        create_button = confirmation.addButton(
-            _tr("Create report"), QMessageBox.ButtonRole.AcceptRole
-        )
-        create_button.setObjectName("mo2RevampedReportCreateButton")
-        cancel_button = confirmation.addButton(
-            _tr("Cancel"), QMessageBox.ButtonRole.RejectRole
-        )
-        cancel_button.setObjectName("mo2RevampedReportCancelButton")
-        confirmation.setDefaultButton(cancel_button)
-        confirmation.setEscapeButton(cancel_button)
-        for label_name in ("qt_msgbox_label", "qt_msgbox_informativelabel"):
-            label = confirmation.findChild(QLabel, label_name)
-            if label is not None:
-                label.setWordWrap(True)
-        confirmation.exec()
-        if confirmation.clickedButton() is not create_button:
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            files = self._build_report()
+        except Exception as error:
+            QApplication.restoreOverrideCursor()
+            self._report_failed(parent, error, None)
             return
+        QApplication.restoreOverrideCursor()
+        _ReportPreview(parent, files, lambda dialog: self._save_report(dialog, files)).exec()
 
-        filename = "MO2-Revamped-Diagnostics-" + datetime.now().strftime(
+    def _save_report(self, parent, files: list[tuple[str, str]]) -> bool:
+        filename = "MO2-Revamped-Report-" + datetime.now().strftime(
             "%Y%m%d-%H%M%S"
         ) + ".zip"
         initial_path = Path.home() / "Desktop" / filename
@@ -992,94 +1308,219 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         save_dialog.setMinimumSize(760, 500)
         save_dialog.resize(860, 560)
         if save_dialog.exec() != QDialog.DialogCode.Accepted:
-            return
+            return False
         selected_files = save_dialog.selectedFiles()
         destination = selected_files[0] if selected_files else ""
         if not destination:
-            return
+            return False
         if not destination.casefold().endswith(".zip"):
             destination += ".zip"
 
         archive_started = False
         try:
-            included = []
-            collection_errors = []
             with zipfile.ZipFile(
                 destination, "w", compression=zipfile.ZIP_DEFLATED
             ) as archive:
                 archive_started = True
-                archive.writestr("diagnostics.txt", self._diagnostics_context())
-                for archive_name, source_path in self._diagnostic_log_files():
-                    try:
-                        limit = 2 * 1024 * 1024
-                        # only the end of a large log is read: mo_interface.log
-                        # can grow to hundreds of MiB in a long session
-                        with source_path.open("rb") as stream:
-                            metadata = os.fstat(stream.fileno())
-                            original_size = metadata.st_size
-                            truncated = original_size > limit
-                            if truncated:
-                                stream.seek(original_size - limit)
-                            data = stream.read(limit)
-                        if truncated:
-                            data = (
-                                b"[MO2 Revamped report: only the last 2 MiB are included]\n"
-                                + data
-                            )
-                        archive.writestr(archive_name, data)
-                        modified = datetime.fromtimestamp(
-                            metadata.st_mtime, timezone.utc
-                        ).isoformat()
-                        included.append(
-                            f"{archive_name}\tmodified UTC={modified}\tsize={original_size} bytes"
-                            + ("\tcontent limited to last 2 MiB" if truncated else "")
-                        )
-                    except OSError as error:
-                        collection_errors.append(
-                            f"Could not read {archive_name}: {error}"
-                        )
-                archive.writestr(
-                    "included-files.txt",
-                    "\n".join(included) if included else "No application log files were available.",
-                )
-                if collection_errors:
-                    archive.writestr(
-                        "collection-errors.txt",
-                        "\n".join(collection_errors),
-                    )
-            self._show_report_notice(
-                parent,
-                "MO2RevampedReportSuccessDialog",
-                _tr("Report created"),
-                _tr("The report was saved"),
-                _tr("Location:\n{path}\n\n"
-                    "Review the ZIP and remove private paths before sharing it.").format(
-                    path=destination
-                ),
-            )
+                for name, text in files:
+                    archive.writestr(name, text.encode("utf-8"))
         except Exception as error:
-            # PyQt passes Qt's log functions ASCII only; a path with an accent
-            # in the traceback must not stop this handler
-            qCritical(
-                (
-                    "MO2 Revamped: could not create diagnostic report.\n"
-                    + traceback.format_exc()
-                ).encode("ascii", "backslashreplace").decode("ascii")
-            )
-            # an unfinished ZIP is not left behind to be shared by mistake
-            # (a file MO2 could not even open is left alone)
-            if archive_started:
-                try:
-                    Path(destination).unlink(missing_ok=True)
-                except OSError:
-                    pass
-            self._show_report_notice(
-                parent,
-                "MO2RevampedReportErrorDialog",
-                _tr("Could not create the report"),
-                _tr("MO2 Revamped could not save the bug report"),
-                _tr("{error}\n\nCheck the MO2 log for details.").format(error=error),
-            )
+            self._report_failed(parent, error, destination if archive_started else None)
+            return False
+        self._show_report_notice(
+            parent,
+            "MO2RevampedReportSuccessDialog",
+            _tr("Report created"),
+            _tr("The report was saved"),
+            _tr("Location:\n{path}\n\nIt holds exactly what the preview showed.").format(
+                path=destination
+            ),
+        )
+        return True
+
+    def _report_failed(self, parent, error: Exception, unfinished: str | None) -> None:
+        # PyQt passes Qt's log functions ASCII only; a path with an accent
+        # in the traceback must not stop this handler
+        qCritical(
+            (
+                "MO2 Revamped: could not create diagnostic report.\n"
+                + traceback.format_exc()
+            ).encode("ascii", "backslashreplace").decode("ascii")
+        )
+        # an unfinished ZIP is not left behind to be shared by mistake
+        # (a file MO2 could not even open is left alone)
+        if unfinished:
+            try:
+                Path(unfinished).unlink(missing_ok=True)
+            except OSError:
+                pass
+        self._show_report_notice(
+            parent,
+            "MO2RevampedReportErrorDialog",
+            _tr("Could not create the report"),
+            _tr("MO2 Revamped could not save the bug report"),
+            _tr("{error}\n\nCheck the MO2 log for details.").format(error=error),
+        )
+
+
+class _Redactor:
+    """Takes private data out of a report's text: the Windows user name and
+    the PC name, e-mail addresses, and Nexus keys, tokens and cookies."""
+
+    Removed = "<removed>"
+
+    def __init__(self):
+        users = {
+            os.environ.get("USERNAME", ""),
+            Path.home().name,
+            Path(os.environ.get("USERPROFILE", "")).name,
+        }
+        try:
+            import getpass
+
+            users.add(getpass.getuser())
+        except Exception:
+            pass
+        computers = {
+            os.environ.get("COMPUTERNAME", ""),
+            platform.node(),
+            os.environ.get("USERDOMAIN", ""),
+        }
+        # "a" or "pc" would wipe half the text: names that short are left
+        self._users = sorted({u for u in users if len(u) >= 2}, key=len, reverse=True)
+        self._computers = sorted(
+            {c for c in computers if len(c) >= 2 and c.casefold() != "workgroup"},
+            key=len, reverse=True,
+        )
+        secret = r"[^\s\"'&;,<>]+"
+        self._secrets = [
+            # Nexus links and API requests: the download key and the account
+            (re.compile(r"(?i)(\b(?:key|apikey|api_key|api-key|access_token|"
+                        r"refresh_token|id_token|token|password|secret|session|"
+                        r"user_id|userid)\b\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
+            # headers with keys and cookies, to the end of the line
+            (re.compile(r"(?im)^(.*?\b(?:cookie|set-cookie|authorization|apikey)\s*:\s*).*$"),
+             r"\1" + self.Removed),
+            (re.compile(r"(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}"), r"\1 " + self.Removed),
+            # JSON web tokens
+            (re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*"),
+             self.Removed),
+            # a long run of mixed letters and digits is a key (a Nexus API key
+            # is over a hundred): hashes are hexadecimal, paths have
+            # separators and archive names have underscores or dots
+            (re.compile(r"(?<![A-Za-z0-9+=_./\\-])(?=[A-Za-z0-9+=-]*[a-z])"
+                        r"(?=[A-Za-z0-9+=-]*[A-Z])(?=[A-Za-z0-9+=-]*\d)"
+                        r"(?!(?:[A-Za-z0-9+=]*-){5})"
+                        r"[A-Za-z0-9+=-]{64,}(?![A-Za-z0-9+=_./\\-])"), self.Removed),
+        ]
+        self._email = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+
+    def __call__(self, text: str) -> str:
+        for pattern, replacement in self._secrets:
+            text = pattern.sub(replacement, text)
+        text = self._email.sub("<email>", text)
+        for user in self._users:
+            name = re.escape(user)
+            # C:\Users\<name> and /Users/<name>, as the task's paths say
+            text = re.sub(r"(?i)([\\/]Users[\\/]+)" + name + r"(?![A-Za-z0-9_])",
+                          r"\1<user>", text)
+            text = re.sub(r"(?i)(?<![A-Za-z0-9_])" + name + r"(?![A-Za-z0-9_])",
+                          "%USERNAME%", text)
+        for computer in self._computers:
+            text = re.sub(r"(?i)(?<![A-Za-z0-9_%])" + re.escape(computer)
+                          + r"(?![A-Za-z0-9_%])", "<pc>", text)
+        return text
+
+
+class _ReportPreview(QDialog):
+    """Shows every file of the report as it will be saved or copied."""
+
+    def __init__(self, parent, files: list[tuple[str, str]], save):
+        super().__init__(parent)
+        self.setObjectName("MO2RevampedReportPreview")
+        self.setWindowTitle(_tr("Create bug report"))
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        self.setMinimumSize(820, 540)
+        self.resize(980, 660)
+        self._files = files
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 12)
+        layout.setSpacing(10)
+        heading = QLabel(_tr("This is exactly what the report will share"), self)
+        heading.setProperty("wizardPageTitle", True)
+        layout.addWidget(heading)
+        intro = QLabel(
+            _tr("Your Windows user name, the PC name, e-mail addresses, Nexus keys, "
+                "tokens and cookies were replaced. Mods, downloads, saves and crash "
+                "dumps are not included. Read the files before you share them."),
+            self,
+        )
+        intro.setProperty("wizardPageText", True)
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
+        body = QHBoxLayout()
+        body.setSpacing(12)
+        self._list = QListWidget(self)
+        self._list.setObjectName("mo2RevampedReportFiles")
+        self._list.setAccessibleName(_tr("Files in the report"))
+        self._list.setFixedWidth(240)
+        for name, text in files:
+            item = QListWidgetItem(name, self._list)
+            item.setToolTip(_tr("{lines} lines").format(lines=text.count("\n")))
+        body.addWidget(self._list)
+        self._text = QPlainTextEdit(self)
+        self._text.setObjectName("mo2RevampedReportText")
+        self._text.setReadOnly(True)
+        self._text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self._text.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self._text.setAccessibleName(_tr("Contents of the selected file"))
+        body.addWidget(self._text, 1)
+        layout.addLayout(body, 1)
+        self._list.currentRowChanged.connect(self._show_file)
+        # screen readers select a file without moving the current row
+        self._list.itemSelectionChanged.connect(
+            lambda: self._show_file(self._list.row(self._list.selectedItems()[0]))
+            if self._list.selectedItems() else None
+        )
+        self._list.setCurrentRow(0)
+
+        buttons = QDialogButtonBox(self)
+        save_button = buttons.addButton(_tr("Save ZIP…"), QDialogButtonBox.ButtonRole.AcceptRole)
+        save_button.setObjectName("mo2RevampedReportSaveZipButton")
+        save_button.setToolTip(_tr("Save every file of the list in a ZIP to attach to your report."))
+        self._copy_button = buttons.addButton(
+            _tr("Copy summary"), QDialogButtonBox.ButtonRole.ActionRole
+        )
+        self._copy_button.setObjectName("mo2RevampedReportCopyButton")
+        self._copy_button.setToolTip(
+            _tr("Copy report.txt, to paste it in an issue or a post.")
+        )
+        close_button = buttons.addButton(_tr("Close"), QDialogButtonBox.ButtonRole.RejectRole)
+        close_button.setObjectName("mo2RevampedReportCloseButton")
+        save_button.setDefault(True)
+        save_button.clicked.connect(lambda _checked=False: save(self) and self.accept())
+        self._copy_button.clicked.connect(self._copy_summary)
+        close_button.clicked.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _show_file(self, row: int) -> None:
+        if 0 <= row < len(self._files):
+            self._text.setPlainText(self._files[row][1])
+
+    def _copy_summary(self) -> None:
+        QApplication.clipboard().setText(self._files[0][1])
+        idle = _tr("Copy summary")
+        self._copy_button.setText(_tr("Copied"))
+
+        def restore() -> None:
+            try:
+                self._copy_button.setText(idle)
+            except RuntimeError:
+                pass  # the preview was closed meanwhile
+
+        QtCore.QTimer.singleShot(2000, restore)
 
 
 def createPlugin() -> Mo2RevampedInfo:

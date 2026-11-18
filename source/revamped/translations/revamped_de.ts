@@ -5162,7 +5162,35 @@ Die Spielstände, die ersetzt wurden, liegen in:
       <source>Show mods with updates</source>
       <translation>Mods mit Updates anzeigen</translation>
     </message>
-  </context>
+    <message>
+      <source>The game this instance manages, the active profile, the program to start and when the game last saved. Run starts the program with the profile.</source>
+      <translation>Das Spiel dieser Instanz, das aktive Profil, das Programm, das gestartet wird, und wann das Spiel zuletzt gespeichert hat. Starten startet das Programm mit dem Profil.</translation>
+    </message>
+    <message>
+      <source>How many mods of the profile are on, of all it has.</source>
+      <translation>Wie viele Mods des Profils aktiv sind, von allen, die es hat.</translation>
+    </message>
+    <message>
+      <source>Mods that share files with others. The mod lower in the list wins; Show filters the list to them.</source>
+      <translation>Mods, die Dateien mit anderen teilen. Der Mod weiter unten in der Liste gewinnt; Anzeigen filtert die Liste auf sie.</translation>
+    </message>
+    <message>
+      <source>Files programs created while running through MO2. Manage opens them, to move them into a mod or delete them.</source>
+      <translation>Dateien, die Programme beim Lauf über MO2 angelegt haben. Verwalten öffnet sie, um sie in einen Mod zu verschieben oder zu löschen.</translation>
+    </message>
+    <message>
+      <source>Mods with a newer version on Nexus. Show filters the list to them.</source>
+      <translation>Mods mit einer neueren Version auf Nexus. Anzeigen filtert die Liste auf sie.</translation>
+    </message>
+    <message>
+      <source>Shows all mods, only the active ones, or only those with conflicts.</source>
+      <translation>Zeigt alle Mods, nur die aktiven oder nur die mit Konflikten.</translation>
+    </message>
+    <message>
+      <source>Opens the filters by category and state, combined with And or Or.</source>
+      <translation>Öffnet die Filter nach Kategorie und Status, verknüpft mit Und oder Oder.</translation>
+    </message>
+</context>
   <context>
     <name>ForcedLoadDialog</name>
     <message>
@@ -7523,6 +7551,18 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
       <source>Open the folder</source>
       <translation>Ordner öffnen</translation>
     </message>
+    <message>
+      <source>Preview a report with the logs and versions, without your private data, then save or copy it.</source>
+      <translation>Zeigt einen Bericht mit Protokollen und Versionen ohne deine privaten Daten an, den du dann speichern oder kopieren kannst.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped guide</source>
+      <translation>MO2-Revamped-Anleitung</translation>
+    </message>
+    <message>
+      <source>Short help on the dashboard, profiles, downloads, collections, themes, notices and settings.</source>
+      <translation>Kurze Hilfe zu Übersicht, Profilen, Downloads, Sammlungen, Designs, Hinweisen und Einstellungen.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -7931,6 +7971,72 @@ OpenSSL · {openssl}</translation>
       <message>
       <source>You are now a developer. Open Settings again to see Settings &gt; Developer.</source>
       <translation>Du bist jetzt Entwickler. Öffne die Einstellungen erneut, um Einstellungen &gt; Entwickler zu sehen.</translation>
+    </message>
+    <message>
+      <source>The end of the MO2 log, recent USVFS logs and the Elden Ring bridge logs, with the versions of MO2, Windows, the GPU, the game and the plugins, and the instance and mod counts.</source>
+      <translation>Das Ende des MO2-Protokolls, aktuelle USVFS-Protokolle und die Protokolle der Elden-Ring-Brücke, mit den Versionen von MO2, Windows, GPU, Spiel und Plugins sowie Instanz und Mod-Anzahl.</translation>
+    </message>
+    <message>
+      <source>The end of the MO2 log and recent USVFS logs, with the versions of MO2, Windows, the GPU, the game and the plugins, and the instance and mod counts.</source>
+      <translation>Das Ende des MO2-Protokolls und aktuelle USVFS-Protokolle, mit den Versionen von MO2, Windows, GPU, Spiel und Plugins sowie Instanz und Mod-Anzahl.</translation>
+    </message>
+    <message>
+      <source>Your Windows user name, the PC name, e-mail addresses, Nexus keys, tokens and cookies are replaced. Mods, downloads, saves and crash dumps are not included. A preview shows every file before you save or copy it.</source>
+      <translation>Dein Windows-Benutzername, der PC-Name, E-Mail-Adressen, Nexus-Schlüssel, Tokens und Cookies werden ersetzt. Mods, Downloads, Spielstände und Absturzabbilder sind nicht enthalten. Eine Vorschau zeigt jede Datei, bevor du sie speicherst oder kopierst.</translation>
+    </message>
+    <message>
+      <source>Location:
+{path}
+
+It holds exactly what the preview showed.</source>
+      <translation>Speicherort:
+{path}
+
+Er enthält genau das, was die Vorschau gezeigt hat.</translation>
+    </message>
+    <message>
+      <source>This is exactly what the report will share</source>
+      <translation>Genau das teilt der Bericht</translation>
+    </message>
+    <message>
+      <source>Your Windows user name, the PC name, e-mail addresses, Nexus keys, tokens and cookies were replaced. Mods, downloads, saves and crash dumps are not included. Read the files before you share them.</source>
+      <translation>Dein Windows-Benutzername, der PC-Name, E-Mail-Adressen, Nexus-Schlüssel, Tokens und Cookies wurden ersetzt. Mods, Downloads, Spielstände und Absturzabbilder sind nicht enthalten. Lies die Dateien, bevor du sie teilst.</translation>
+    </message>
+    <message>
+      <source>Files in the report</source>
+      <translation>Dateien im Bericht</translation>
+    </message>
+    <message>
+      <source>{lines} lines</source>
+      <translation>{lines} Zeilen</translation>
+    </message>
+    <message>
+      <source>Contents of the selected file</source>
+      <translation>Inhalt der ausgewählten Datei</translation>
+    </message>
+    <message>
+      <source>Save ZIP…</source>
+      <translation>ZIP speichern…</translation>
+    </message>
+    <message>
+      <source>Save every file of the list in a ZIP to attach to your report.</source>
+      <translation>Speichert alle Dateien der Liste in einem ZIP, das du deinem Bericht anhängen kannst.</translation>
+    </message>
+    <message>
+      <source>Copy summary</source>
+      <translation>Zusammenfassung kopieren</translation>
+    </message>
+    <message>
+      <source>Copy report.txt, to paste it in an issue or a post.</source>
+      <translation>Kopiert report.txt, um es in ein Issue oder einen Beitrag einzufügen.</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>Copied</source>
+      <translation>Kopiert</translation>
     </message>
 </context>
   <context>
@@ -17132,6 +17238,509 @@ If MO2 Revamped is installed in a protected folder such as Program Files, run it
 %2
 
 Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, starte es einmal als Administrator, um dort Designs zu speichern, oder installiere es in einem anderen Ordner.</translation>
+    </message>
+</context>
+  <context>
+    <name>RevampedGuide</name>
+    <message>
+      <source>Getting around</source>
+      <translation>Sich zurechtfinden</translation>
+    </message>
+    <message>
+      <source>The parts of the main window and how to move between them.</source>
+      <translation>Die Teile des Hauptfensters und wie man zwischen ihnen wechselt.</translation>
+    </message>
+    <message>
+      <source>Top bar</source>
+      <translation>Obere Leiste</translation>
+    </message>
+    <message>
+      <source>Shows the game, the profile and the program to start. &lt;b&gt;Run&lt;/b&gt; starts it with the active profile; its arrow has the shortcut options. The last line says when the game last saved.</source>
+      <translation>Zeigt das Spiel, das Profil und das Programm, das gestartet wird. &lt;b&gt;Starten&lt;/b&gt; startet es mit dem aktiven Profil; sein Pfeil hat die Verknüpfungsoptionen. Die letzte Zeile sagt, wann das Spiel zuletzt gespeichert hat.</translation>
+    </message>
+    <message>
+      <source>Summary tiles</source>
+      <translation>Übersicht</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Active mods&lt;/b&gt;, &lt;b&gt;With conflicts&lt;/b&gt;, &lt;b&gt;Overwrite&lt;/b&gt; and &lt;b&gt;Updates&lt;/b&gt; count what may need a look. Their buttons filter the mod list or open Overwrite.</source>
+      <translation>&lt;b&gt;Aktive Mods&lt;/b&gt;, &lt;b&gt;Mit Konflikten&lt;/b&gt;, &lt;b&gt;Overwrite&lt;/b&gt; und &lt;b&gt;Updates&lt;/b&gt; zählen, was einen Blick brauchen könnte. Ihre Schaltflächen filtern die Mod-Liste oder öffnen Overwrite.</translation>
+    </message>
+    <message>
+      <source>Mod list</source>
+      <translation>Mod-Liste</translation>
+    </message>
+    <message>
+      <source>The chips &lt;b&gt;All&lt;/b&gt;, &lt;b&gt;Active&lt;/b&gt; and &lt;b&gt;Conflicts&lt;/b&gt; filter it, &lt;b&gt;Search mods&lt;/b&gt; finds a mod and &lt;b&gt;Filter options&lt;/b&gt; opens the category filters. Drag a mod to change its priority: a mod lower in the list wins a conflict.</source>
+      <translation>Die Schaltflächen &lt;b&gt;Alle&lt;/b&gt;, &lt;b&gt;Aktiv&lt;/b&gt; und &lt;b&gt;Konflikte&lt;/b&gt; filtern sie, die Mod-Suche findet einen Mod und &lt;b&gt;Filteroptionen&lt;/b&gt; öffnet die Kategoriefilter. Ziehe einen Mod, um seine Priorität zu ändern: Der Mod weiter unten in der Liste gewinnt einen Konflikt.</translation>
+    </message>
+    <message>
+      <source>Tabs on the right</source>
+      <translation>Reiter rechts</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Plugins&lt;/b&gt;, &lt;b&gt;Archives&lt;/b&gt;, &lt;b&gt;Data&lt;/b&gt;, &lt;b&gt;Saves&lt;/b&gt; and &lt;b&gt;Downloads&lt;/b&gt;. Games without plugins or archives don't show those tabs.</source>
+      <translation>&lt;b&gt;Plugins&lt;/b&gt;, &lt;b&gt;Archive&lt;/b&gt;, &lt;b&gt;Daten&lt;/b&gt;, &lt;b&gt;Spielstände&lt;/b&gt; und &lt;b&gt;Downloads&lt;/b&gt;. Spiele ohne Plugins oder Archive zeigen diese Reiter nicht.</translation>
+    </message>
+    <message>
+      <source>Command bar</source>
+      <translation>Befehlsleiste</translation>
+    </message>
+    <message>
+      <source>Instances, &lt;b&gt;Install&lt;/b&gt;, &lt;b&gt;Nexus&lt;/b&gt;, &lt;b&gt;Profiles&lt;/b&gt;, &lt;b&gt;Refresh&lt;/b&gt;, &lt;b&gt;Executables&lt;/b&gt;, &lt;b&gt;Tools&lt;/b&gt;, &lt;b&gt;Settings&lt;/b&gt; and the bell with the notifications. &lt;b&gt;…&lt;/b&gt; holds the links, updates and help.</source>
+      <translation>Instanzen, &lt;b&gt;Installieren&lt;/b&gt;, &lt;b&gt;Nexus&lt;/b&gt;, &lt;b&gt;Profile&lt;/b&gt;, &lt;b&gt;Aktualisieren&lt;/b&gt;, &lt;b&gt;Ausführbare Dateien&lt;/b&gt;, &lt;b&gt;Werkzeuge&lt;/b&gt;, &lt;b&gt;Einstellungen&lt;/b&gt; und die Glocke mit den Benachrichtigungen. &lt;b&gt;…&lt;/b&gt; enthält die Links, Updates und die Hilfe.</translation>
+    </message>
+    <message>
+      <source>Keyboard</source>
+      <translation>Tastatur</translation>
+    </message>
+    <message>
+      <source>Ctrl+M install a mod · Ctrl+P profiles · Ctrl+E executables · Ctrl+I tools · Ctrl+S settings · Ctrl+N Nexus · Ctrl+H help · F5 refresh · Ctrl+F search the list · Esc clear the search.</source>
+      <translation>Strg+M Mod installieren · Strg+P Profile · Strg+E ausführbare Dateien · Strg+I Werkzeuge · Strg+S Einstellungen · Strg+N Nexus · Strg+H Hilfe · F5 aktualisieren · Strg+F Liste durchsuchen · Esc Suche leeren.</translation>
+    </message>
+    <message>
+      <source>Help on the interface</source>
+      <translation>Hilfe zur Oberfläche</translation>
+    </message>
+    <message>
+      <source>Choose &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Help on the interface&lt;/b&gt;, then click any part of the window to read what it does.</source>
+      <translation>Wähle &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Hilfe zur Oberfläche&lt;/b&gt; und klicke dann auf einen beliebigen Teil des Fensters, um zu lesen, was er tut.</translation>
+    </message>
+    <message>
+      <source>Profiles</source>
+      <translation>Profile</translation>
+    </message>
+    <message>
+      <source>Each profile keeps its own mod list and plugin order.</source>
+      <translation>Jedes Profil hat seine eigene Mod-Liste und Plugin-Reihenfolge.</translation>
+    </message>
+    <message>
+      <source>Manage profiles</source>
+      <translation>Profile verwalten</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Profiles&lt;/b&gt; (Ctrl+P) creates, duplicates, renames and deletes profiles, and &lt;b&gt;Use this profile&lt;/b&gt; switches to one. The top bar switches profiles too.</source>
+      <translation>&lt;b&gt;Profile&lt;/b&gt; (Strg+P) erstellt, dupliziert, benennt und löscht Profile, und &lt;b&gt;Dieses Profil verwenden&lt;/b&gt; wechselt zu einem. Auch die obere Leiste wechselt Profile.</translation>
+    </message>
+    <message>
+      <source>Profile options</source>
+      <translation>Profiloptionen</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves...&lt;/b&gt; copies saves between profiles.</source>
+      <translation>&lt;b&gt;Profileigene Spielstände&lt;/b&gt; und &lt;b&gt;Profileigene INI-Dateien des Spiels&lt;/b&gt; trennen Spielstände und Spieleinstellungen je Profil. &lt;b&gt;Spielstände übertragen...&lt;/b&gt; kopiert Spielstände zwischen Profilen.</translation>
+    </message>
+    <message>
+      <source>Defaults</source>
+      <translation>Standardwerte</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; General &amp;gt; &lt;b&gt;Profile defaults&lt;/b&gt; chooses the options a new profile starts with.</source>
+      <translation>Einstellungen &amp;gt; Allgemein &amp;gt; &lt;b&gt;Profil-Standardeinstellungen&lt;/b&gt; legt fest, mit welchen Optionen ein neues Profil beginnt.</translation>
+    </message>
+    <message>
+      <source>When it can't change</source>
+      <translation>Wann es nicht geht</translation>
+    </message>
+    <message>
+      <source>A profile can't be renamed or deleted while it is the current one or while the game runs.</source>
+      <translation>Ein Profil lässt sich nicht umbenennen oder löschen, solange es das aktuelle ist oder das Spiel läuft.</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <translation>Downloads</translation>
+    </message>
+    <message>
+      <source>The archives you download from Nexus or add yourself.</source>
+      <translation>Die Archive, die du von Nexus herunterlädst oder selbst hinzufügst.</translation>
+    </message>
+    <message>
+      <source>Downloads tab</source>
+      <translation>Reiter Downloads</translation>
+    </message>
+    <message>
+      <source>Lists this instance's archives and their status. Double-click one to install it, or drag it onto the mod list to choose its place.</source>
+      <translation>Listet die Archive dieser Instanz und ihren Status. Doppelklicke eins, um es zu installieren, oder ziehe es auf die Mod-Liste, um seinen Platz zu wählen.</translation>
+    </message>
+    <message>
+      <source>Right-click</source>
+      <translation>Rechtsklick</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Pause&lt;/b&gt;, &lt;b&gt;Resume&lt;/b&gt; or &lt;b&gt;Cancel&lt;/b&gt; a download; &lt;b&gt;Query info&lt;/b&gt;, &lt;b&gt;Visit on Nexus&lt;/b&gt;, &lt;b&gt;Show in folder&lt;/b&gt;, &lt;b&gt;Hide&lt;/b&gt; or &lt;b&gt;Delete&lt;/b&gt; a finished one. Right-click an empty spot to hide or delete many at once; deleted files go to the Recycle Bin.</source>
+      <translation>&lt;b&gt;Pausieren&lt;/b&gt;, &lt;b&gt;Fortsetzen&lt;/b&gt; oder &lt;b&gt;Abbrechen&lt;/b&gt; eines Downloads; &lt;b&gt;Infos abfragen&lt;/b&gt;, auf Nexus öffnen, &lt;b&gt;Im Ordner anzeigen&lt;/b&gt;, &lt;b&gt;Ausblenden&lt;/b&gt; oder &lt;b&gt;Löschen&lt;/b&gt; eines fertigen. Rechtsklicke auf eine leere Stelle, um viele auf einmal auszublenden oder zu löschen; gelöschte Dateien landen im Papierkorb.</translation>
+    </message>
+    <message>
+      <source>Nexus links</source>
+      <translation>Nexus-Links</translation>
+    </message>
+    <message>
+      <source>The &lt;b&gt;Mod manager download&lt;/b&gt; buttons on Nexus send files to MO2. Connect your account in Settings &amp;gt; Nexus.</source>
+      <translation>Die Schaltflächen &lt;b&gt;Mod manager download&lt;/b&gt; auf Nexus schicken Dateien an MO2. Verbinde dein Konto unter Einstellungen &amp;gt; Nexus.</translation>
+    </message>
+    <message>
+      <source>Options</source>
+      <translation>Optionen</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; General &amp;gt; &lt;b&gt;Download list&lt;/b&gt; can hide archives once they are installed and make the list compact.</source>
+      <translation>Einstellungen &amp;gt; Allgemein &amp;gt; &lt;b&gt;Download Liste&lt;/b&gt; kann Archive nach der Installation ausblenden und die Liste kompakt machen.</translation>
+    </message>
+    <message>
+      <source>Root folder</source>
+      <translation>Root-Ordner</translation>
+    </message>
+    <message>
+      <source>Files that go next to the game's program instead of its data folder.</source>
+      <translation>Dateien, die neben das Programm des Spiels gehören statt in seinen Datenordner.</translation>
+    </message>
+    <message>
+      <source>What it is</source>
+      <translation>Was das ist</translation>
+    </message>
+    <message>
+      <source>Some mods need files beside the game's .exe: script extenders, ENB, ReShade or DXVK. Put them in a folder named &lt;b&gt;Root&lt;/b&gt; at the top of the mod. MO2 shows them in the game folder without copying them.</source>
+      <translation>Manche Mods brauchen Dateien neben der .exe des Spiels: Skript-Erweiterungen, ENB, ReShade oder DXVK. Lege sie in einen Ordner namens &lt;b&gt;Root&lt;/b&gt; oben im Mod. MO2 zeigt sie im Spielordner, ohne sie zu kopieren.</translation>
+    </message>
+    <message>
+      <source>When files are copied</source>
+      <translation>Wann Dateien kopiert werden</translation>
+    </message>
+    <message>
+      <source>A few DLLs only load from the real game folder. MO2 copies them in for the run, backs up any game file they replace, and takes them out again once the game closes.</source>
+      <translation>Einige DLLs laden nur aus dem echten Spielordner. MO2 kopiert sie für den Start hinein, sichert jede Spieldatei, die sie ersetzen, und nimmt sie wieder heraus, sobald das Spiel beendet ist.</translation>
+    </message>
+    <message>
+      <source>New files</source>
+      <translation>Neue Dateien</translation>
+    </message>
+    <message>
+      <source>Files a program creates there go to &lt;b&gt;Overwrite/Root&lt;/b&gt;.</source>
+      <translation>Dateien, die ein Programm dort anlegt, landen in &lt;b&gt;Overwrite/Root&lt;/b&gt;.</translation>
+    </message>
+    <message>
+      <source>Root Builder</source>
+      <translation>Root Builder</translation>
+    </message>
+    <message>
+      <source>If the Root Builder plugin is installed and on, it stays in charge of the Root folders.</source>
+      <translation>Ist das Plugin Root Builder installiert und aktiv, kümmert es sich weiter um die Root-Ordner.</translation>
+    </message>
+    <message>
+      <source>Nexus collections</source>
+      <translation>Nexus-Sammlungen</translation>
+    </message>
+    <message>
+      <source>Install a whole Nexus collection in one go.</source>
+      <translation>Eine ganze Nexus-Sammlung in einem Zug installieren.</translation>
+    </message>
+    <message>
+      <source>Find a collection</source>
+      <translation>Eine Sammlung finden</translation>
+    </message>
+    <message>
+      <source>In &lt;b&gt;Tools&lt;/b&gt; or &lt;b&gt;Nexus&lt;/b&gt;: &lt;b&gt;Browse collections…&lt;/b&gt; to search, or &lt;b&gt;Download a Nexus collection…&lt;/b&gt; for a link. A collection link from the browser opens it too.</source>
+      <translation>Unter &lt;b&gt;Werkzeuge&lt;/b&gt; oder &lt;b&gt;Nexus&lt;/b&gt;: &lt;b&gt;Sammlungen durchsuchen…&lt;/b&gt; zum Suchen oder &lt;b&gt;Nexus-Sammlung herunterladen…&lt;/b&gt; für einen Link. Auch ein Sammlungslink aus dem Browser öffnet sie.</translation>
+    </message>
+    <message>
+      <source>Collection window</source>
+      <translation>Sammlungsfenster</translation>
+    </message>
+    <message>
+      <source>Shows &lt;b&gt;What it needs&lt;/b&gt;, the author's notes and the mods. &lt;b&gt;Install into&lt;/b&gt; chooses the current profile, a new profile or a new instance. Then three steps: download, install, order and finish.</source>
+      <translation>Zeigt &lt;b&gt;Was sie braucht&lt;/b&gt;, die Notizen des Autors und die Mods. &lt;b&gt;Installieren in&lt;/b&gt; wählt das aktuelle Profil, ein neues Profil oder eine neue Instanz. Dann drei Schritte: herunterladen, installieren, ordnen und abschließen.</translation>
+    </message>
+    <message>
+      <source>Checks before installing</source>
+      <translation>Prüfungen vor der Installation</translation>
+    </message>
+    <message>
+      <source>On the first &lt;b&gt;Start&lt;/b&gt;, MO2 looks for things that may get in the way: another game version, a missing script extender or DLC, mods removed from Nexus, mods already active in the profile, or many files to click with a free account. You can start anyway and fix them later.</source>
+      <translation>Beim ersten &lt;b&gt;Starten&lt;/b&gt; sucht MO2 nach dem, was stören könnte: eine andere Spielversion, eine fehlende Skript-Erweiterung oder DLC, von Nexus entfernte Mods, schon aktive Mods im Profil oder viele Dateien zum Anklicken mit einem kostenlosen Konto. Du kannst trotzdem starten und es später beheben.</translation>
+    </message>
+    <message>
+      <source>Free and Premium</source>
+      <translation>Kostenlos und Premium</translation>
+    </message>
+    <message>
+      <source>Premium downloads on its own, up to three files at a time. A free account opens each file's page on Nexus for its slow download click.</source>
+      <translation>Premium lädt selbst herunter, bis zu drei Dateien gleichzeitig. Ein kostenloses Konto öffnet die Seite jeder Datei auf Nexus für ihren Klick auf den langsamen Download.</translation>
+    </message>
+    <message>
+      <source>Pause and come back</source>
+      <translation>Pausieren und weitermachen</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Pause&lt;/b&gt;, &lt;b&gt;Continue&lt;/b&gt; and &lt;b&gt;Retry failed&lt;/b&gt; work at any time. An unfinished collection is offered again later. Notices wait while it installs.</source>
+      <translation>&lt;b&gt;Pausieren&lt;/b&gt;, &lt;b&gt;Weiter&lt;/b&gt; und &lt;b&gt;Fehlgeschlagene erneut versuchen&lt;/b&gt; gehen jederzeit. Eine unfertige Sammlung wird später erneut angeboten. Hinweise warten, solange sie installiert wird.</translation>
+    </message>
+    <message>
+      <source>Themes</source>
+      <translation>Designs</translation>
+    </message>
+    <message>
+      <source>Light, Dark, or a theme of your own.</source>
+      <translation>Hell, Dunkel oder ein eigenes Design.</translation>
+    </message>
+    <message>
+      <source>Choose a theme</source>
+      <translation>Ein Design wählen</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; &lt;b&gt;Theme&lt;/b&gt; &amp;gt; &lt;b&gt;Interface theme&lt;/b&gt;. Your own themes show with their base, such as "Ember (on Dark)".</source>
+      <translation>Einstellungen &amp;gt; &lt;b&gt;Design&lt;/b&gt; &amp;gt; &lt;b&gt;Oberflächendesign&lt;/b&gt;. Eigene Designs erscheinen mit ihrer Basis, etwa "Ember (auf Dunkel)".</translation>
+    </message>
+    <message>
+      <source>Theme editor</source>
+      <translation>Design-Editor</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;New theme...&lt;/b&gt; asks for a name, a base (Light or Dark) and six colors, and the window shows them as you pick. &lt;b&gt;Save&lt;/b&gt; keeps them; &lt;b&gt;Cancel&lt;/b&gt; goes back. &lt;b&gt;Edit theme...&lt;/b&gt; changes one of yours.</source>
+      <translation>&lt;b&gt;Neues Design...&lt;/b&gt; fragt nach einem Namen, einer Basis (Hell oder Dunkel) und sechs Farben, und das Fenster zeigt sie beim Auswählen. &lt;b&gt;Speichern&lt;/b&gt; behält sie; &lt;b&gt;Abbrechen&lt;/b&gt; geht zurück. &lt;b&gt;Design bearbeiten...&lt;/b&gt; ändert eins deiner Designs.</translation>
+    </message>
+    <message>
+      <source>Theme files</source>
+      <translation>Design-Dateien</translation>
+    </message>
+    <message>
+      <source>Themes are .qss files in the &lt;b&gt;stylesheets&lt;/b&gt; folder (&lt;b&gt;Open themes folder&lt;/b&gt;), and MO2 reloads one when its file is saved. Don't edit Light.qss or dark.qss: updates replace them.</source>
+      <translation>Designs sind .qss-Dateien im Ordner &lt;b&gt;stylesheets&lt;/b&gt; (&lt;b&gt;Design-Ordner öffnen&lt;/b&gt;), und MO2 lädt eins neu, wenn seine Datei gespeichert wird. Bearbeite Light.qss und dark.qss nicht: Updates ersetzen sie.</translation>
+    </message>
+    <message>
+      <source>Classic MO2 themes</source>
+      <translation>Klassische MO2-Designs</translation>
+    </message>
+    <message>
+      <source>Older MO2 themes load on top of Dark or Light. docs/THEMES.md in the MO2 Revamped repository explains how to write one.</source>
+      <translation>Ältere MO2-Designs laden auf Dunkel oder Hell. docs/THEMES.md im Repository von MO2 Revamped erklärt, wie man eins schreibt.</translation>
+    </message>
+    <message>
+      <source>Highlight colors</source>
+      <translation>Hervorhebungsfarben</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Mod and plugin highlight colors&lt;/b&gt; sets the conflict colors; &lt;b&gt;Restore default colors&lt;/b&gt; brings them back.</source>
+      <translation>&lt;b&gt;Hervorhebungsfarben für Mods und Plugins&lt;/b&gt; legt die Konfliktfarben fest; &lt;b&gt;Standardfarben wiederherstellen&lt;/b&gt; holt sie zurück.</translation>
+    </message>
+    <message>
+      <source>Notices</source>
+      <translation>Hinweise</translation>
+    </message>
+    <message>
+      <source>Short messages at the bottom of the window, and the notification bell.</source>
+      <translation>Kurze Meldungen unten im Fenster und die Benachrichtigungsglocke.</translation>
+    </message>
+    <message>
+      <source>Small cards such as "Installation successful" rise at the bottom and fade on their own. Hover over one to keep it, click it to close it. A repeated notice shows a counter instead of a new card.</source>
+      <translation>Kleine Karten wie "Installation erfolgreich" erscheinen unten und verblassen von selbst. Fahre mit der Maus darüber, um eine zu behalten, und klicke sie an, um sie zu schließen. Ein wiederholter Hinweis zeigt einen Zähler statt einer neuen Karte.</translation>
+    </message>
+    <message>
+      <source>Sound only</source>
+      <translation>Nur Ton</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; General: &lt;b&gt;Notices: sound only, without the card&lt;/b&gt; plays Windows' notification sound instead. The notices are still in MO2's log, and questions and errors still show.</source>
+      <translation>Einstellungen &amp;gt; Allgemein: &lt;b&gt;Hinweise: nur Ton, ohne Karte&lt;/b&gt; spielt stattdessen den Benachrichtigungston von Windows. Die Hinweise stehen weiter im MO2-Protokoll, und Fragen und Fehler erscheinen weiterhin.</translation>
+    </message>
+    <message>
+      <source>Notifications</source>
+      <translation>Benachrichtigungen</translation>
+    </message>
+    <message>
+      <source>The bell on the command bar lists problems that plugins found, such as a missing script extender. A dot on the bell means there is something to read; &lt;b&gt;Fix it&lt;/b&gt; solves a problem when it can.</source>
+      <translation>Die Glocke in der Befehlsleiste listet Probleme, die Plugins gefunden haben, etwa eine fehlende Skript-Erweiterung. Ein Punkt auf der Glocke heißt, dass es etwas zu lesen gibt; &lt;b&gt;Beheben&lt;/b&gt; löst ein Problem, wenn es kann.</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <translation>Einstellungen</translation>
+    </message>
+    <message>
+      <source>What each page of Settings (Ctrl+S) holds.</source>
+      <translation>Was jede Seite der Einstellungen (Strg+S) enthält.</translation>
+    </message>
+    <message>
+      <source>General</source>
+      <translation>Allgemein</translation>
+    </message>
+    <message>
+      <source>Language, interface size, notices, the download list, updates, profile defaults and the toolbar.</source>
+      <translation>Sprache, Oberflächengröße, Hinweise, die Download-Liste, Updates, Profil-Standardeinstellungen und die Werkzeugleiste.</translation>
+    </message>
+    <message>
+      <source>Theme</source>
+      <translation>Design</translation>
+    </message>
+    <message>
+      <source>The interface theme, your own themes and the highlight colors.</source>
+      <translation>Das Oberflächendesign, deine eigenen Designs und die Hervorhebungsfarben.</translation>
+    </message>
+    <message>
+      <source>How the mod list shows mods, separators and conflicts, and how installing and dragging behave.</source>
+      <translation>Wie die Mod-Liste Mods, Trenner und Konflikte zeigt und wie Installieren und Ziehen funktionieren.</translation>
+    </message>
+    <message>
+      <source>Paths</source>
+      <translation>Pfade</translation>
+    </message>
+    <message>
+      <source>Where this instance keeps its downloads, mods, profiles, caches and Overwrite.</source>
+      <translation>Wo diese Instanz ihre Downloads, Mods, Profile, Caches und Overwrite ablegt.</translation>
+    </message>
+    <message>
+      <source>Nexus</source>
+      <translation>Nexus</translation>
+    </message>
+    <message>
+      <source>Connect your Nexus account, see its API use and choose the download servers.</source>
+      <translation>Verbinde dein Nexus-Konto, sieh seine API-Nutzung und wähle die Download-Server.</translation>
+    </message>
+    <message>
+      <source>Plugins</source>
+      <translation>Plugins</translation>
+    </message>
+    <message>
+      <source>Turn MO2's plugins on or off and change their options.</source>
+      <translation>Schalte die Plugins von MO2 ein oder aus und ändere ihre Optionen.</translation>
+    </message>
+    <message>
+      <source>Workarounds</source>
+      <translation>Workarounds</translation>
+    </message>
+    <message>
+      <source>Steam, network and virtual file system settings for problem cases.</source>
+      <translation>Einstellungen für Steam, Netzwerk und das virtuelle Dateisystem für Problemfälle.</translation>
+    </message>
+    <message>
+      <source>Diagnostics</source>
+      <translation>Diagnose</translation>
+    </message>
+    <message>
+      <source>How much MO2 logs, crash dumps, and where the logs are.</source>
+      <translation>Wie viel MO2 protokolliert, Absturzabbilder und wo die Protokolle liegen.</translation>
+    </message>
+    <message>
+      <source>Developer mode</source>
+      <translation>Entwicklermodus</translation>
+    </message>
+    <message>
+      <source>Features in testing, for those who want to try them.</source>
+      <translation>Funktionen im Test, für alle, die sie ausprobieren möchten.</translation>
+    </message>
+    <message>
+      <source>Turn it on</source>
+      <translation>Einschalten</translation>
+    </message>
+    <message>
+      <source>In &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;About MO2 Revamped&lt;/b&gt; &amp;gt; &lt;b&gt;Components&lt;/b&gt;, tap the &lt;b&gt;MO2 base&lt;/b&gt; row seven times, as with a phone's build number.</source>
+      <translation>Tippe unter &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Über MO2 Revamped&lt;/b&gt; &amp;gt; &lt;b&gt;Komponenten&lt;/b&gt; siebenmal auf die Zeile &lt;b&gt;MO2-Basis&lt;/b&gt;, wie bei der Build-Nummer eines Handys.</translation>
+    </message>
+    <message>
+      <source>Settings &gt; Developer</source>
+      <translation>Einstellungen &gt; Entwickler</translation>
+    </message>
+    <message>
+      <source>A page at the end of Settings lists the features in testing. None of them is needed to play.</source>
+      <translation>Eine Seite am Ende der Einstellungen listet die Funktionen im Test. Keine davon braucht man zum Spielen.</translation>
+    </message>
+    <message>
+      <source>Turn it off</source>
+      <translation>Ausschalten</translation>
+    </message>
+    <message>
+      <source>Clear &lt;b&gt;Developer mode&lt;/b&gt; on that page. The page is gone the next time Settings opens.</source>
+      <translation>Deaktiviere &lt;b&gt;Entwicklermodus&lt;/b&gt; auf dieser Seite. Die Seite ist beim nächsten Öffnen der Einstellungen verschwunden.</translation>
+    </message>
+    <message>
+      <source>Getting help</source>
+      <translation>Hilfe bekommen</translation>
+    </message>
+    <message>
+      <source>When something goes wrong.</source>
+      <translation>Wenn etwas schiefgeht.</translation>
+    </message>
+    <message>
+      <source>Create bug report</source>
+      <translation>Fehlerbericht erstellen</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Create bug report&lt;/b&gt; shows a report with the logs and versions, without your user name, PC name, e-mail or Nexus keys. Save it as a ZIP or copy its summary.</source>
+      <translation>&lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Fehlerbericht erstellen&lt;/b&gt; zeigt einen Bericht mit Protokollen und Versionen, ohne deinen Benutzernamen, den PC-Namen, deine E-Mail oder Nexus-Schlüssel. Speichere ihn als ZIP oder kopiere seine Zusammenfassung.</translation>
+    </message>
+    <message>
+      <source>Report a problem</source>
+      <translation>Problem melden</translation>
+    </message>
+    <message>
+      <source>Opens the MO2 Revamped issue tracker on GitHub. Attach the report ZIP to your issue.</source>
+      <translation>Öffnet die Problemverfolgung von MO2 Revamped auf GitHub. Hänge das ZIP des Berichts an dein Issue an.</translation>
+    </message>
+    <message>
+      <source>Log panel</source>
+      <translation>Protokollbereich</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Log panel&lt;/b&gt; shows MO2's log at the bottom of the window.</source>
+      <translation>&lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Protokollbereich&lt;/b&gt; zeigt das Protokoll von MO2 unten im Fenster.</translation>
+    </message>
+    <message>
+      <source>Documentation</source>
+      <translation>Dokumentation</translation>
+    </message>
+    <message>
+      <source>The Mod Organizer 2 documentation still covers everything MO2 Revamped keeps.</source>
+      <translation>Die Dokumentation von Mod Organizer 2 deckt weiterhin alles ab, was MO2 Revamped beibehält.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped guide</source>
+      <translation>MO2-Revamped-Anleitung</translation>
+    </message>
+    <message>
+      <source>Search the guide</source>
+      <translation>Anleitung durchsuchen</translation>
+    </message>
+    <message>
+      <source>Switch to another MO2 instance, or create or manage instances. Each instance has its own game, mods, downloads and profiles.</source>
+      <translation>Wechsle zu einer anderen MO2-Instanz oder erstelle und verwalte Instanzen. Jede Instanz hat ihr eigenes Spiel, ihre Mods, Downloads und Profile.</translation>
+    </message>
+    <message>
+      <source>Install a mod from an archive on your PC. Archives in the Downloads tab install with a double-click.</source>
+      <translation>Installiere einen Mod aus einem Archiv auf deinem PC. Archive im Reiter Downloads installieren sich per Doppelklick.</translation>
+    </message>
+    <message>
+      <source>Open the game's page on Nexus Mods. Its menu also finds and installs Nexus collections.</source>
+      <translation>Öffnet die Seite des Spiels auf Nexus Mods. Sein Menü findet und installiert auch Nexus-Sammlungen.</translation>
+    </message>
+    <message>
+      <source>Create, copy, rename or delete profiles. Each profile has its own mod list, plugin order and, if you want, its own saves and game settings.</source>
+      <translation>Profile erstellen, kopieren, umbenennen oder löschen. Jedes Profil hat seine eigene Mod-Liste, Plugin-Reihenfolge und, wenn du willst, eigene Spielstände und Spieleinstellungen.</translation>
+    </message>
+    <message>
+      <source>Read the mods, plugins and downloads again, after changing files outside MO2.</source>
+      <translation>Liest Mods, Plugins und Downloads neu ein, nachdem du Dateien außerhalb von MO2 geändert hast.</translation>
+    </message>
+    <message>
+      <source>Add or change the programs MO2 can start through its virtual file system, such as the game, a script extender or a tool.</source>
+      <translation>Füge die Programme hinzu, die MO2 über sein virtuelles Dateisystem starten kann, oder ändere sie, etwa das Spiel, eine Skript-Erweiterung oder ein Werkzeug.</translation>
+    </message>
+    <message>
+      <source>Tools from MO2's plugins, such as the INI editor and Nexus collections.</source>
+      <translation>Werkzeuge aus den Plugins von MO2, etwa der INI-Editor und die Nexus-Sammlungen.</translation>
+    </message>
+    <message>
+      <source>MO2's settings: language, theme, mod list, paths, Nexus, plugins and diagnostics.</source>
+      <translation>Die Einstellungen von MO2: Sprache, Design, Mod-Liste, Pfade, Nexus, Plugins und Diagnose.</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods, or say you won't.</source>
+      <translation>Empfiehl MO2 Revamped auf Nexus Mods oder sage, dass du es nicht tust.</translation>
+    </message>
+    <message>
+      <source>Plugins, archives, the game's files as the game sees them (Data), saves and downloads. Games without plugins or archives don't show those tabs.</source>
+      <translation>Plugins, Archive, die Dateien des Spiels, wie das Spiel sie sieht (Daten), Spielstände und Downloads. Spiele ohne Plugins oder Archive zeigen diese Reiter nicht.</translation>
+    </message>
+    <message>
+      <source>MO2's log. Errors and warnings here help to find a problem; Create bug report in the … menu saves them without your private data.</source>
+      <translation>Das Protokoll von MO2. Seine Fehler und Warnungen helfen, ein Problem zu finden; Fehlerbericht erstellen im Menü … speichert sie ohne deine privaten Daten.</translation>
     </message>
 </context>
 </TS>

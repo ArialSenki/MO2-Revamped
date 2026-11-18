@@ -164,6 +164,9 @@ void FluentDashboard::setupBanner(QWidget* central)
   // last played, and Run
   m_banner = new FluentHeroBanner(central);
   m_banner->setFixedHeight(56);
+  m_banner->setWhatsThis(
+      tr("The game this instance manages, the active profile, the program to start "
+         "and when the game last saved. Run starts the program with the profile."));
 
   auto* row = new QHBoxLayout(m_banner);
   row->setContentsMargins(16, 0, 10, 0);
@@ -240,6 +243,15 @@ void FluentDashboard::setupStats(QWidget* central)
   for (auto* tile : {m_active, m_conflicts, m_overwrite, m_updates}) {
     row->addWidget(tile, 1);
   }
+  m_active->setWhatsThis(tr("How many mods of the profile are on, of all it has."));
+  m_conflicts->setWhatsThis(
+      tr("Mods that share files with others. The mod lower in the list wins; Show "
+         "filters the list to them."));
+  m_overwrite->setWhatsThis(
+      tr("Files programs created while running through MO2. Manage opens them, to move "
+         "them into a mod or delete them."));
+  m_updates->setWhatsThis(
+      tr("Mods with a newer version on Nexus. Show filters the list to them."));
 
   m_conflictsAction = m_conflicts->addAction(tr("Show"));
   // two buttons say "Show": screen readers hear what each one shows
@@ -289,6 +301,8 @@ void FluentDashboard::setupModsHeader()
     chip->setChecked(id == -1);
     chip->setCursor(Qt::PointingHandCursor);
     chip->setProperty("specialCategory", id);
+    chip->setWhatsThis(tr("Shows all mods, only the active ones, or only those with "
+                          "conflicts."));
     connect(chip, &QPushButton::clicked, this, [this, chip, id] {
       // a chip is a choice, not a toggle; the filter change sets the states
       chip->setChecked(!chip->isChecked());
@@ -374,6 +388,8 @@ void FluentDashboard::applyTabTexts()
   // a narrow window keeps the whole choice readable
   ui->groupCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   ui->displayCategoriesBtn->setAccessibleName(tr("Filter options"));
+  ui->displayCategoriesBtn->setWhatsThis(
+      tr("Opens the filters by category and state, combined with And or Or."));
   ui->modList->setAccessibleName(tr("Mods"));
   ui->espList->setAccessibleName(tr("Plugins"));
   ui->dataTree->setAccessibleName(tr("Files"));
