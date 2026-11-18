@@ -245,6 +245,36 @@ void NexusBridge::nxmRequestFailed(QString gameName, int modID, int fileID,
 
 QAtomicInt NexusInterface::NXMRequestInfo::s_NextID(0);
 
+QString NexusInterface::knownProblem(const QString& code)
+{
+  // the codes Nexus' own client (Vortex) knows for endorsements
+  if (code == QLatin1String("IS_OWN_MOD") || code == QLatin1String("IS_OWN_CONTENT")) {
+    return tr("Nexus doesn't let you endorse your own mod.");
+  } else if (code == QLatin1String("NOT_DOWNLOADED_MOD")) {
+    return tr("Nexus only takes endorsements for mods you downloaded from it with "
+              "this account. Download it from Nexus first.");
+  } else if (code == QLatin1String("TOO_SOON_AFTER_DOWNLOAD")) {
+    return tr("Nexus takes endorsements 15 minutes after the download. Try again "
+              "later.");
+  }
+  return {};
+}
+
+bool NexusInterface::isKnownProblem(const QString& text)
+{
+  for (const char* code : {"IS_OWN_MOD", "NOT_DOWNLOADED_MOD", "TOO_SOON_AFTER_DOWNLOAD"}) {
+    if (text == knownProblem(QLatin1String(code))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool NexusInterface::isOwnModProblem(const QString& text)
+{
+  return !text.isEmpty() && text == knownProblem(QStringLiteral("IS_OWN_MOD"));
+}
+
 APILimits NexusInterface::defaultAPILimits()
 {
   // https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/
@@ -1362,12 +1392,22 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
     } else {
       QByteArray data = reply->readAll();
       if (!data.isEmpty()) {
+        // MO2 Revamped: what Nexus said, for the log (its answers carry no key)
+        log::debug("Nexus answered {} for {}: {}", statusCode,
+                   withoutQuery(reply->url().toString()),
+                   QString::fromUtf8(data.left(500)).simplified());
         QJsonDocument responseDoc = QJsonDocument::fromJson(data);
         if (!responseDoc.isNull()) {
           auto result = responseDoc.toVariant().toMap();
           auto error  = result.find("error");
           if (error != result.end())
             errorMsg = result.value("error").toString();
+          // MO2 Revamped: refusals such as endorsing one's own mod come as a
+          // code in "message" (NOT_DOWNLOADED_MOD, IS_OWN_MOD...)
+          const QString known = knownProblem(result.value("message").toString());
+          if (!known.isEmpty()) {
+            errorMsg = known;
+          }
         }
       }
     }

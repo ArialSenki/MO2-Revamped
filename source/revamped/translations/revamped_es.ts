@@ -14163,6 +14163,18 @@ Revisa las opciones del juego antes de jugar.</translation>
       <source>Nexus redirected the request to another address.</source>
       <translation>Nexus redirigió la petición a otra dirección.</translation>
     </message>
+    <message>
+      <source>Nexus doesn't let you endorse your own mod.</source>
+      <translation>Nexus no permite respaldar un mod propio.</translation>
+    </message>
+    <message>
+      <source>Nexus only takes endorsements for mods you downloaded from it with this account. Download it from Nexus first.</source>
+      <translation>Nexus solo acepta respaldos de mods que descargaste de Nexus con esta cuenta. Descárgalo antes desde Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus takes endorsements 15 minutes after the download. Try again later.</source>
+      <translation>Nexus acepta respaldos 15 minutos después de la descarga. Inténtalo más tarde.</translation>
+    </message>
   </context>
   <context>
     <name>UpdateNoticeDialog</name>

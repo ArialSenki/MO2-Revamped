@@ -13780,6 +13780,18 @@ Confira as opções do jogo antes de jogar.</translation>
       <source>Nexus redirected the request to another address.</source>
       <translation>O Nexus redirecionou a solicitação para outro endereço.</translation>
     </message>
+    <message>
+      <source>Nexus doesn't let you endorse your own mod.</source>
+      <translation>O Nexus não permite endossar o seu próprio mod.</translation>
+    </message>
+    <message>
+      <source>Nexus only takes endorsements for mods you downloaded from it with this account. Download it from Nexus first.</source>
+      <translation>O Nexus só aceita endossos de mods baixados dele com esta conta. Baixe-o primeiro pelo Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus takes endorsements 15 minutes after the download. Try again later.</source>
+      <translation>O Nexus aceita endossos 15 minutos depois do download. Tente novamente mais tarde.</translation>
+    </message>
   </context>
   <context>
     <name>UpdateNoticeDialog</name>

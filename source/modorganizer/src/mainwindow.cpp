@@ -272,6 +272,75 @@ namespace {
 
 constexpr int kRevampedNexusModId = MO2R_NEXUS_MOD_ID;
 
+// MO2 Revamped: Nexus doesn't let an author endorse their own mod (it answers
+// 403, IS_OWN_MOD). Whether the signed-in account uploaded the MO2 Revamped
+// page is asked at most once a day per account and kept in the global
+// settings; for its author the endorse button doesn't show
+const QString OwnListingUser    = QStringLiteral("revamped_listing/user");
+const QString OwnListingIsOwn   = QStringLiteral("revamped_listing/own");
+const QString OwnListingChecked = QStringLiteral("revamped_listing/checked");
+int s_ownerCheckRequest         = -1;
+
+bool ownsRevampedListing()
+{
+  const auto user = NexusInterface::instance().getAPIUserAccount();
+  return user.isValid() && !user.id().isEmpty() &&
+         GlobalSettings::value(OwnListingUser).toString() == user.id() &&
+         GlobalSettings::value(OwnListingIsOwn, false).toBool();
+}
+
+void rememberListingOwner(const QString& userId, bool own)
+{
+  GlobalSettings::setValue(OwnListingUser, userId);
+  GlobalSettings::setValue(OwnListingIsOwn, own);
+  GlobalSettings::setValue(OwnListingChecked, QDateTime::currentDateTimeUtc());
+}
+
+// asks Nexus who uploaded the page unless this account was checked within a
+// day; changed() runs once the answer is kept
+void checkListingOwner(const APIUserAccount& user, QObject* context,
+                       std::function<void()> changed)
+{
+  if (!user.isValid() || user.id().isEmpty() || s_ownerCheckRequest >= 0 ||
+      !Settings::instance().nexus().endorsementIntegration()) {
+    return;
+  }
+  const QDateTime checked = GlobalSettings::value(OwnListingChecked).toDateTime();
+  if (GlobalSettings::value(OwnListingUser).toString() == user.id() &&
+      checked.isValid() && checked.secsTo(QDateTime::currentDateTimeUtc()) < 24 * 3600) {
+    return;
+  }
+
+  auto& nexus = NexusInterface::instance();
+  auto done   = std::make_shared<QMetaObject::Connection>();
+  *done       = QObject::connect(
+      &nexus, &NexusInterface::nxmApiV2Available, context,
+      [done, user, changed](QVariant, QVariant result, int requestID) {
+        if (requestID != s_ownerCheckRequest) {
+          return;
+        }
+        s_ownerCheckRequest = -1;
+        QObject::disconnect(*done);
+        const QVariantMap mod      = result.toMap();
+        const QVariantMap uploader = mod.value(QStringLiteral("user")).toMap();
+        const bool own =
+            uploader.value(QStringLiteral("member_id")).toString() == user.id() ||
+            (!user.name().isEmpty() &&
+             mod.value(QStringLiteral("uploaded_by")).toString().compare(
+                 user.name(), Qt::CaseInsensitive) == 0);
+        rememberListingOwner(user.id(), own);
+        changed();
+      });
+  s_ownerCheckRequest = nexus.requestApiPath(
+      QStringLiteral("/v1/games/%1/mods/%2.json")
+          .arg(QStringLiteral(MO2R_NEXUS_DOMAIN))
+          .arg(kRevampedNexusModId),
+      QVariant(), QStringLiteral("listing"));
+  if (s_ownerCheckRequest < 0) {
+    QObject::disconnect(*done);
+  }
+}
+
 // the category setup choices (Segoe Fluent Icons)
 constexpr char16_t ImportNexusGlyph      = 0xE896;  // Download
 constexpr char16_t OldDefaultsGlyph      = 0xE81C;  // History
@@ -2095,6 +2164,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   connect(NexusInterface::instance().getAccessManager(),
           &NXMAccessManager::credentialsReceived, this, &MainWindow::updateWindowTitle);
+  connect(NexusInterface::instance().getAccessManager(),
+          &NXMAccessManager::credentialsReceived, this, [this](const APIUserAccount& user) {
+            checkListingOwner(user, this, [this] {
+              toggleRevampedEndorseState();
+            });
+            toggleRevampedEndorseState();
+          });
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
           &StatusBar::setAPI);
   // MO2 Revamped: one calm notice when Nexus' limit pauses the requests (a
@@ -5941,6 +6017,11 @@ void MainWindow::on_actionUpdate_triggered()
 
 void MainWindow::actionEndorseMO()
 {
+  if (ownsRevampedListing()) {
+    MessageDialog::showMessage(NexusInterface::knownProblem(QStringLiteral("IS_OWN_MOD")),
+                               this);
+    return;
+  }
   if (askNexusEndorsement(
           this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
@@ -5972,13 +6053,15 @@ void MainWindow::toggleRevampedEndorseState()
   const auto& s = m_OrganizerCore.settings();
 
   // the command bar's button: only while there is a decision to make
+  // (never for the page's own author: Nexus refuses it)
+  const bool own = ownsRevampedListing();
   if (m_endorseBarAction != nullptr) {
-    m_endorseBarAction->setVisible(s.nexus().endorsementIntegration() &&
+    m_endorseBarAction->setVisible(s.nexus().endorsementIntegration() && !own &&
                                    s.nexus().endorsementState() ==
                                        EndorsementState::NoDecision);
   }
 
-  if (!s.nexus().endorsementIntegration()) {
+  if (!s.nexus().endorsementIntegration() || own) {
     ui->actionEndorseMO->setVisible(false);
     return;
   }
@@ -6497,9 +6580,29 @@ void MainWindow::nxmGameInfoAvailable(QString gameName, QVariant, QVariant resul
   }
 }
 
-void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, int,
-                                  int errorCode, const QString& errorString)
+void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant,
+                                  int requestID, int errorCode,
+                                  const QString& errorString)
 {
+  // MO2 Revamped: the check of who uploaded the MO2 Revamped page fails quietly
+  if (requestID >= 0 && requestID == s_ownerCheckRequest) {
+    s_ownerCheckRequest = -1;
+    log::debug("couldn't ask Nexus who uploaded the MO2 Revamped page: {}", errorString);
+    return;
+  }
+  // a refusal Nexus explains (endorsing one's own mod, a mod not downloaded):
+  // its sentence, without the error code and address
+  if (NexusInterface::isKnownProblem(errorString)) {
+    if (NexusInterface::isOwnModProblem(errorString) &&
+        gameName.compare(QStringLiteral(MO2R_NEXUS_DOMAIN), Qt::CaseInsensitive) == 0 &&
+        modID == kRevampedNexusModId) {
+      rememberListingOwner(NexusInterface::instance().getAPIUserAccount().id(), true);
+      toggleRevampedEndorseState();
+    }
+    log::info("{}", errorString);
+    MessageDialog::showMessage(errorString, this);
+    return;
+  }
   if (errorCode == QNetworkReply::ContentAccessDenied ||
       errorCode == QNetworkReply::ContentNotFoundError) {
     log::debug("{}",
