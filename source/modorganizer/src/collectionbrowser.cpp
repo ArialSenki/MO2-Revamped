@@ -239,6 +239,14 @@ CollectionBrowser::CollectionBrowser(const QString& gameDomain, const QString& g
     fitter->place(screen, overWindow ? anchor->frameGeometry().center()
                                      : screen->availableGeometry().center());
   }
+  // MO2 Revamped: maximized unless the user left it otherwise, so the table
+  // and the details fit; the size above is the one it restores to
+  if (ScreenFitter::opensMaximized(QStringLiteral("collection_browser"))) {
+    setWindowState(windowState() | Qt::WindowMaximized);
+  }
+  connect(this, &QDialog::finished, this, [this] {
+    ScreenFitter::rememberMaximized(QStringLiteral("collection_browser"), this);
+  });
 
   showDetails();
   search(false);

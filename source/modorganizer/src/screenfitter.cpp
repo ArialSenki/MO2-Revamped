@@ -1,4 +1,5 @@
 #include "screenfitter.h"
+#include "settings.h"
 
 #include <QEvent>
 #include <QGuiApplication>
@@ -7,6 +8,7 @@
 #include <QRect>
 #include <QResizeEvent>
 #include <QScreen>
+#include <QSettings>
 #include <QWidget>
 #include <QWindow>
 
@@ -28,6 +30,23 @@ QSize ScreenFitter::wantedSize(const QRect& available, QSize least)
   QSize wanted(qMin(available.width() * 7 / 10, 1500),
                qMin(available.height() * 8 / 10, 1000));
   return wanted.expandedTo(least).boundedTo(available.size() - FrameRoom);
+}
+
+bool ScreenFitter::opensMaximized(const QString& key)
+{
+  return QSettings(Settings::instance().filename(), QSettings::IniFormat)
+      .value(QStringLiteral("Geometry/%1_maximized").arg(key), true)
+      .toBool();
+}
+
+void ScreenFitter::rememberMaximized(const QString& key, const QWidget* window)
+{
+  // a minimized window says nothing of what the user wants
+  if (window == nullptr || window->isMinimized()) {
+    return;
+  }
+  QSettings(Settings::instance().filename(), QSettings::IniFormat)
+      .setValue(QStringLiteral("Geometry/%1_maximized").arg(key), window->isMaximized());
 }
 
 void ScreenFitter::place(QScreen* screen, const QPoint& middle)

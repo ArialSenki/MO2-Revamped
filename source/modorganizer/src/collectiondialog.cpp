@@ -200,6 +200,11 @@ CollectionDialog::~CollectionDialog() = default;
 
 void CollectionDialog::placeWindow()
 {
+  // maximized, it already fills the main window's screen; un-maximizing gives
+  // back the size placed below
+  if (isMaximized()) {
+    return;
+  }
   QWidget* anchor = m_anchor;
   QScreen* screen = anchor != nullptr ? anchor->screen() : QGuiApplication::primaryScreen();
   if (screen == nullptr) {
@@ -212,12 +217,20 @@ void CollectionDialog::placeWindow()
   setMinimumSize(least);
 
   // where the user left it, when that is on the main window's monitor
+  // MO2 Revamped: maximized unless the user left it otherwise, so the mod
+  // table and the details fit; the size below is the one it restores to
+  const bool maximize = ScreenFitter::opensMaximized(QStringLiteral("collection_dialog"));
   if (Settings::instance().geometry().restoreGeometry(this) &&
       QGuiApplication::screenAt(geometry().center()) == screen &&
       available.contains(geometry().center()) && width() >= least.width() &&
       height() >= least.height()) {
-    resize(size().boundedTo(available.size() - QSize(16, 40)));
+    if (!isMaximized()) {
+      resize(size().boundedTo(available.size() - QSize(16, 40)));
+    }
     m_fitter->setUserSized(true);
+    if (maximize) {
+      setWindowState(windowState() | Qt::WindowMaximized);
+    }
     return;
   }
 
@@ -227,6 +240,9 @@ void CollectionDialog::placeWindow()
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
   m_fitter->place(screen, overWindow ? anchor->frameGeometry().center() : available.center());
+  if (maximize) {
+    setWindowState(windowState() | Qt::WindowMaximized);
+  }
 }
 
 bool CollectionDialog::eventFilter(QObject* watched, QEvent* event)
@@ -1673,6 +1689,7 @@ void CollectionDialog::chooseFile(int row)
 void CollectionDialog::closeEvent(QCloseEvent* e)
 {
   Settings::instance().geometry().saveGeometry(this);
+  ScreenFitter::rememberMaximized(QStringLiteral("collection_dialog"), this);
   if (m_session->stage() == Stage::Running) {
     // nothing is lost: it continues from the same place next time
     m_session->pause();
