@@ -70,8 +70,15 @@ protected:
   // the search follows the shared "Use regular expressions" option, which
   // another list's search can change while this tab is hidden
   void showEvent(QShowEvent* event) override;
+  void resizeEvent(QResizeEvent* event) override;
 
 private:
+  // MO2 Revamped: in a narrow list the name, which takes what's left, was cut
+  // to "Sk..." by the other columns' fixed widths; those shrink to their
+  // contents first (never grow)
+  void fitColumnsToWidth();
+  void queueFit();
+  bool m_fitQueued = false;
   struct PluginListViewUi
   {
     // the plguin counter
