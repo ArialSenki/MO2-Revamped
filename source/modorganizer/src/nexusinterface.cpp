@@ -750,7 +750,11 @@ int NexusInterface::requestToggleEndorsement(QString gameName, int modID,
                                              const QString& subModule,
                                              MOBase::IPluginGame const* game)
 {
-  if (game == nullptr) {
+  // MO2 Revamped: Nexus' Modding Tools section ("site", where MO2 Revamped
+  // lives) has no game plugin; its domain goes as it is (getGame() would have
+  // given the managed game for it)
+  const bool site = gameName.compare(QStringLiteral("site"), Qt::CaseInsensitive) == 0;
+  if (game == nullptr && !site) {
     return failNoGamePlugin(gameName, modID, 0, receiver, userData, subModule);
   }
 
@@ -759,8 +763,15 @@ int NexusInterface::requestToggleEndorsement(QString gameName, int modID,
     return -1;
   }
 
-  NXMRequestInfo requestInfo(modID, modVersion, NXMRequestInfo::TYPE_TOGGLEENDORSEMENT,
-                             userData, subModule, game);
+  NXMRequestInfo requestInfo =
+      site ? NXMRequestInfo(NXMRequestInfo::TYPE_TOGGLEENDORSEMENT, userData, subModule)
+           : NXMRequestInfo(modID, modVersion, NXMRequestInfo::TYPE_TOGGLEENDORSEMENT,
+                            userData, subModule, game);
+  if (site) {
+    requestInfo.m_ModID      = modID;
+    requestInfo.m_ModVersion = modVersion;
+    requestInfo.m_GameName   = QStringLiteral("site");
+  }
   requestInfo.m_Endorse = endorse;
   m_RequestQueue.enqueue(requestInfo);
 
