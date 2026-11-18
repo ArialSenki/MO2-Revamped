@@ -24,12 +24,16 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/util.h"
 #include <QCoreApplication>
 #include <QDateTime>
+#include <QEventLoop>
 #include <QProgressDialog>
 #include <QTemporaryFile>
+#include <QTimer>
+#include <atomic>
 #include <iomanip>
 #include <memory>
 #include <qstandardpaths.h>
 #include <sstream>
+#include <thread>
 #include <usvfs.h>
 
 static const char SHMID[] = "mod_organizer_instance";
@@ -210,41 +214,69 @@ void UsvfsConnector::updateMapping(const MappingType& mapping)
   progress.setMaximum(static_cast<int>(mapping.size()));
   progress.show();
 
-  int value = 0;
-  int files = 0;
-  int dirs  = 0;
+  std::atomic<int> value{0};
+  std::atomic<int> files{0};
+  std::atomic<int> dirs{0};
+  std::atomic<bool> cancel{false};
+  std::atomic<bool> finished{false};
 
   log::debug("Updating VFS mappings...");
 
   usvfsClearVirtualMappings();
 
-  for (auto map : mapping) {
-    if (progress.wasCanceled()) {
-      usvfsClearVirtualMappings();
-      throw UsvfsConnectorException("VFS mapping canceled by user");
-    }
-    progress.setValue(value++);
-    if (value % 10 == 0) {
-      QCoreApplication::processEvents();
-    }
+  // MO2 Revamped: the links are made on a worker thread, one after the other as
+  // before. usvfs reads every file of each folder it links, which takes
+  // seconds for one big mod on a large list (Nolvus: ~25 s for 3600 mods), and
+  // the window stayed frozen in between; now it keeps painting and Cancel
+  // answers at once
+  std::thread worker([&] {
+    for (const auto& map : mapping) {
+      if (cancel) {
+        break;
+      }
 
-    if (map.isDirectory) {
-      usvfsVirtualLinkDirectoryStatic(
-          map.source.toStdWString().c_str(), map.destination.toStdWString().c_str(),
-          (map.createTarget ? LINKFLAG_CREATETARGET : 0) | LINKFLAG_RECURSIVE);
-      ++dirs;
-    } else {
-      usvfsVirtualLinkFile(map.source.toStdWString().c_str(),
-                           map.destination.toStdWString().c_str(), 0);
-      ++files;
+      const std::wstring source      = map.source.toStdWString();
+      const std::wstring destination = map.destination.toStdWString();
+      if (map.isDirectory) {
+        usvfsVirtualLinkDirectoryStatic(
+            source.c_str(), destination.c_str(),
+            (map.createTarget ? LINKFLAG_CREATETARGET : 0) | LINKFLAG_RECURSIVE);
+        ++dirs;
+      } else {
+        usvfsVirtualLinkFile(source.c_str(), destination.c_str(), 0);
+        ++files;
+      }
+      ++value;
     }
+    finished = true;
+  });
+
+  QEventLoop loop;
+  QTimer poll;
+  poll.setInterval(30);
+  QObject::connect(&poll, &QTimer::timeout, &loop, [&] {
+    progress.setValue(value);
+    if (progress.wasCanceled()) {
+      cancel = true;
+    }
+    if (finished) {
+      loop.quit();
+    }
+  });
+  poll.start();
+  loop.exec();
+  worker.join();
+
+  if (cancel) {
+    usvfsClearVirtualMappings();
+    throw UsvfsConnectorException("VFS mapping canceled by user");
   }
 
   const auto end  = std::chrono::high_resolution_clock::now();
   const auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
   // MO2 Revamped: at info, so a slow start can be traced from a user's log
-  log::info("VFS mappings updated, linked {} dirs and {} files in {}ms", dirs, files,
+  log::info("VFS mappings updated, linked {} dirs and {} files in {}ms", dirs.load(), files.load(),
              time.count());
 }
 
