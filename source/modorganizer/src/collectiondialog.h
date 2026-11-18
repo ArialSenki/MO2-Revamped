@@ -54,6 +54,11 @@ public:
   const Collections::CollectionLink& link() const { return m_session->link(); }
   bool isRunning() const;
 
+  // MO2 Revamped: before an action that would break a running collection
+  // (running a program, another profile): asks to pause it. True when it
+  // isn't running or was paused; false leaves everything as it was
+  bool askToPause(QWidget* parent, const QString& action);
+
   // a file link the browser sent for this collection: no notice for it
   bool claims(const QString& nxmUrl) const;
   void setAutoStart(bool b);

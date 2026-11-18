@@ -3280,6 +3280,11 @@ void MainWindow::startExeAction()
     return;
   }
 
+  // MO2 Revamped: the collection's files aren't in the virtual folder yet
+  if (m_CollectionDialog && !m_CollectionDialog->askToPause(this, tr("Running a program"))) {
+    return;
+  }
+
   action->setEnabled(false);
   Guard g([&] {
     action->setEnabled(true);
@@ -3305,6 +3310,25 @@ void MainWindow::activateSelectedProfile()
 void MainWindow::on_profileBox_currentIndexChanged(int index)
 {
   if (!ui->profileBox->isEnabled()) {
+    return;
+  }
+
+  // MO2 Revamped: a running collection activates its mods in the current
+  // profile; another one would get them
+  if (m_CollectionDialog && m_OldProfileIndex > 0 && index != m_OldProfileIndex &&
+      !m_CollectionDialog->askToPause(this, tr("Switching profiles"))) {
+    QSignalBlocker block(ui->profileBox);
+    ui->profileBox->setCurrentIndex(m_OldProfileIndex);
+    return;
+  }
+  // nor in the middle of one mod's install (paused, the one under way ends)
+  if (m_OldProfileIndex > 0 && index != m_OldProfileIndex &&
+      m_OrganizerCore.installationManager()->isRunning()) {
+    QSignalBlocker block(ui->profileBox);
+    ui->profileBox->setCurrentIndex(m_OldProfileIndex);
+    MessageDialog::showMessage(
+        tr("A mod is being installed. Switch profiles once it has finished."), this,
+        true);
     return;
   }
 
@@ -3933,6 +3957,11 @@ void MainWindow::launchSelectedExecutable()
 {
   const Executable* selectedExecutable = getSelectedExecutable();
   if (!selectedExecutable) {
+    return;
+  }
+
+  // MO2 Revamped: the collection's files aren't in the virtual folder yet
+  if (m_CollectionDialog && !m_CollectionDialog->askToPause(this, tr("Running a program"))) {
     return;
   }
 

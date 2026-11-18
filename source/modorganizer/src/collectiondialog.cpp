@@ -310,6 +310,39 @@ bool CollectionDialog::isRunning() const
   return m_session->stage() == Stage::Running;
 }
 
+bool CollectionDialog::askToPause(QWidget* parent, const QString& action)
+{
+  if (!isRunning()) {
+    return true;
+  }
+  int mods = 0, installed = 0;
+  for (const auto& e : m_session->entries()) {
+    if (e.selected && e.status != Status::Skipped) {
+      ++mods;
+      installed += e.status == Status::Installed ? 1 : 0;
+    }
+  }
+  FluentContentDialog dialog(
+      parent, QStringLiteral("CollectionPauseDialog"), tr("A collection is installing"),
+      tr("\"%1\" is being installed (%2 of %3 mods). %4 now would use the mods as "
+         "they were before it started, or put its mods in the wrong profile. Pause "
+         "the collection first? It continues from the same place when you press "
+         "Continue in its window.")
+          .arg(m_session->displayName())
+          .arg(installed)
+          .arg(mods)
+          .arg(action));
+  auto* pause = dialog.addButton(tr("Pause and go on"), true);
+  auto* keep  = dialog.addButton(tr("Keep installing"));
+  connect(pause, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(keep, &QPushButton::clicked, &dialog, &QDialog::reject);
+  if (dialog.exec() != QDialog::Accepted) {
+    return false;
+  }
+  m_session->pause();
+  return true;
+}
+
 std::optional<CollectionLink> CollectionDialog::askLink(QWidget* parent)
 {
   FluentContentDialog dlg(
