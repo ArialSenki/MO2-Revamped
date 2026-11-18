@@ -32,6 +32,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QInputDialog>
 #include <QIcon>
 #include <QMenu>
+#include <QMimeData>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
@@ -875,6 +876,9 @@ void DownloadListView::setGroupsModel(DownloadList* model)
   setItemsExpandable(true);
   setRootIsDecorated(false);
   setExpandsOnDoubleClick(false);
+  // opening a group must not narrow the list: the columns are fitted to its
+  // width, and a scroll bar showing up only then moved every header
+  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
   QAbstractItemModel* shown = this->model();
   if (shown == nullptr) {
@@ -1117,9 +1121,19 @@ void DownloadListView::mouseDoubleClickEvent(QMouseEvent* event)
   QTreeView::mouseDoubleClickEvent(event);
 }
 
-QModelIndex DownloadListView::dropGroupAt(const QPoint& pos) const
+QStringList DownloadListView::draggedFiles(const QMimeData* mime)
 {
-  if (m_Groups == nullptr || !m_Groups->groups().grouped()) {
+  if (mime == nullptr || !mime->hasFormat(DownloadList::namesMimeType())) {
+    return {};
+  }
+  return QString::fromUtf8(mime->data(DownloadList::namesMimeType()))
+      .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+}
+
+QModelIndex DownloadListView::dropGroupAt(const QPoint& pos,
+                                          const QStringList& files) const
+{
+  if (m_Groups == nullptr || !m_Groups->groups().grouped() || files.isEmpty()) {
     return {};
   }
   QModelIndex index = indexAt(pos);
@@ -1135,31 +1149,37 @@ QModelIndex DownloadListView::dropGroupAt(const QPoint& pos) const
   index = index.siblingAtColumn(0);
 
   // into a category; or, onto where they came from, out of their category
-  const QStringList selected = selectedFileNames();
-  if (selected.isEmpty()) {
-    return {};
-  }
   const DownloadGroups& groups = m_Groups->groups();
   if (index.data(DownloadList::GroupKindRole).toInt() == DownloadList::GROUP_CATEGORY) {
     const QString name = index.data(DownloadList::GroupNameRole).toString();
-    for (const QString& file : selected) {
+    for (const QString& file : files) {
       if (groups.categoryOf(file) != name) {
         return index;
       }
     }
     return {};
   }
-  for (const QString& file : selected) {
-    if (!groups.categoryOf(file).isEmpty()) {
-      return index;
+  // only back to the group each of them comes from: dropped on another, they
+  // would land somewhere else than where they were dropped
+  const QString key = index.data(DownloadList::GroupKeyRole).toString();
+  bool any          = false;
+  for (const QString& file : files) {
+    if (groups.categoryOf(file).isEmpty()) {
+      continue;
     }
+    if (m_Groups->originKey(m_Manager->indexByName(file)) != key) {
+      return {};
+    }
+    any = true;
   }
-  return {};
+  return any ? index : QModelIndex();
 }
 
 void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
 {
-  if (event->source() == this) {
+  // a drag of this list's downloads (the names say so; the source is only
+  // known while a real drag runs)
+  if (!draggedFiles(event->mimeData()).isEmpty()) {
     event->setDropAction(Qt::CopyAction);
     event->accept();
     return;
@@ -1169,22 +1189,17 @@ void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
 
 void DownloadListView::dragMoveEvent(QDragMoveEvent* event)
 {
-  if (event->source() != this) {
+  const QStringList files = draggedFiles(event->mimeData());
+  if (files.isEmpty()) {
     QTreeView::dragMoveEvent(event);
     return;
   }
-  const QModelIndex target = dropGroupAt(event->position().toPoint());
+  const QModelIndex target = dropGroupAt(event->position().toPoint(), files);
   if (QPersistentModelIndex(target) != m_DropGroup) {
     m_DropGroup = target;
     viewport()->update();
   }
-  if (target.isValid()) {
-    event->setDropAction(Qt::CopyAction);
-    event->accept();
-  } else {
-    event->ignore();
-  }
-  // near the edges the list scrolls, as for any drag
+  // near the edges the list scrolls, as for any drag; the answer is ours
   QAbstractItemView::dragMoveEvent(event);
   if (target.isValid()) {
     event->setDropAction(Qt::CopyAction);
@@ -1205,17 +1220,17 @@ void DownloadListView::dropEvent(QDropEvent* event)
 {
   m_DropGroup = QPersistentModelIndex();
   viewport()->update();
-  if (event->source() != this) {
+  const QStringList files = draggedFiles(event->mimeData());
+  if (files.isEmpty()) {
     QTreeView::dropEvent(event);
     return;
   }
 
-  const QModelIndex target = dropGroupAt(event->position().toPoint());
+  const QModelIndex target = dropGroupAt(event->position().toPoint(), files);
   if (!target.isValid()) {
     event->ignore();
     return;
   }
-  const QStringList selected = selectedFileNames();
   const bool category =
       target.data(DownloadList::GroupKindRole).toInt() == DownloadList::GROUP_CATEGORY;
   // copy: the view must not take the rows out of the model after the drop
@@ -1224,7 +1239,9 @@ void DownloadListView::dropEvent(QDropEvent* event)
   const QString to = category ? target.data(DownloadList::GroupNameRole).toString()
                               : QString();
   // after the drag has ended: moving regroups the list
-  QTimer::singleShot(0, this, [this, selected, to] {
-    m_Groups->groups().setCategory(selected, to);
+  QTimer::singleShot(0, this, [this, files, to] {
+    if (m_Groups != nullptr) {
+      m_Groups->groups().setCategory(files, to);
+    }
   });
 }

@@ -130,29 +130,18 @@ void DownloadList::buildGroups()
       }
     }
 
-    const MOBase::ModRepositoryFileInfo* info = m_manager.getFileInfo(row);
-    QString list = m_manager.getSourceList(row);
-    if (list.isEmpty() && info != nullptr) {
-      list = m_groups->listOf(info->modID, info->fileID, fileName);
-    }
+    QString list;
+    const QString key = originKey(row, &list);
     if (!list.isEmpty()) {
-      const QString key = QStringLiteral("list:") + list;
-      auto it           = listByKey.constFind(key);
+      auto it = listByKey.constFind(key);
       if (it == listByKey.constEnd()) {
         it = listByKey.insert(key, static_cast<int>(lists.size()));
         lists.push_back({key, list, GROUP_LIST, {}});
       }
       add(lists[it.value()], row, size);
-      continue;
+    } else {
+      add(key == QLatin1String("nexus") ? nexus : other, row, size);
     }
-
-    // a Nexus download knows its mod; one from elsewhere or added by hand
-    // doesn't
-    const bool fromNexus =
-        info != nullptr && info->modID > 0 &&
-        (info->repository.isEmpty() ||
-         info->repository.compare(QStringLiteral("Nexus"), Qt::CaseInsensitive) == 0);
-    add(fromNexus ? nexus : other, row, size);
   }
 
   // a link still asking Nexus for its file
@@ -180,6 +169,32 @@ void DownloadList::buildGroups()
       m_placeOf[rows[place]] = place;
     }
   }
+}
+
+QString DownloadList::originKey(int row, QString* listName) const
+{
+  if (row < 0 || row >= m_manager.numTotalDownloads()) {
+    return QStringLiteral("nexus");  // a link still asking Nexus for its file
+  }
+  const MOBase::ModRepositoryFileInfo* info = m_manager.getFileInfo(row);
+  QString list = m_manager.getSourceList(row);
+  if (list.isEmpty() && info != nullptr) {
+    list = m_groups->listOf(info->modID, info->fileID, m_manager.getFileName(row));
+  }
+  if (listName != nullptr) {
+    *listName = list;
+  }
+  if (!list.isEmpty()) {
+    return QStringLiteral("list:") + list;
+  }
+
+  // a Nexus download knows its mod; one from elsewhere or added by hand
+  // doesn't
+  const bool fromNexus =
+      info != nullptr && info->modID > 0 &&
+      (info->repository.isEmpty() ||
+       info->repository.compare(QStringLiteral("Nexus"), Qt::CaseInsensitive) == 0);
+  return fromNexus ? QStringLiteral("nexus") : QStringLiteral("other");
 }
 
 int DownloadList::rowCount(const QModelIndex& parent) const
@@ -295,6 +310,7 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
   // not their places inside a group
   QByteArray encoded;
   QDataStream stream(&encoded, QIODevice::WriteOnly);
+  QStringList names;
   for (const QModelIndex& index : indexes) {
     const int row = downloadRow(index);
     if (row < 0) {
@@ -303,10 +319,18 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
     QMap<int, QVariant> roles;
     roles.insert(Qt::DisplayRole, index.data(Qt::DisplayRole));
     stream << row << index.column() << roles;
+    // which downloads move when dropped on a group: by name, as the rows can
+    // change while dragging
+    if (index.column() == 0 && row < m_manager.numTotalDownloads()) {
+      names << m_manager.getFileName(row);
+    }
   }
 
   QMimeData* result = new QMimeData;
   result->setData("application/x-qabstractitemmodeldatalist", encoded);
+  if (!names.isEmpty()) {
+    result->setData(namesMimeType(), names.join(QLatin1Char('\n')).toUtf8());
+  }
   result->setData("text/plain", ModListDropInfo::DownloadText);
   return result;
 }
@@ -314,7 +338,12 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
 QStringList DownloadList::mimeTypes() const
 {
   return {QStringLiteral("application/x-qabstractitemmodeldatalist"),
-          QStringLiteral("text/plain")};
+          QStringLiteral("text/plain"), namesMimeType()};
+}
+
+QString DownloadList::namesMimeType()
+{
+  return QStringLiteral("application/x-mo2revamped-download-names");
 }
 
 QVariant DownloadList::groupData(const Group& group, const QModelIndex& index,
