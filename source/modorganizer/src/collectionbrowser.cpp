@@ -8,6 +8,7 @@
 #include <utility.h>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDateTime>
 #include <QGuiApplication>
@@ -140,10 +141,15 @@ CollectionBrowser::CollectionBrowser(const QString& gameDomain, const QString& g
   m_sort->addItem(tr("Most endorsed"), QStringLiteral("endorsements"));
   m_sort->addItem(tr("Most downloaded"), QStringLiteral("downloads"));
   m_sort->addItem(tr("Recently updated"), QStringLiteral("updatedAt"));
+  // MO2 Revamped: hidden unless asked for, as on Nexus' own site; the API
+  // doesn't know the account's adult content preference
+  m_adult = new QCheckBox(tr("Adult content"), this);
+  m_adult->setToolTip(tr("Also lists collections Nexus marks as adult (NSFW)."));
   auto* go = new QPushButton(tr("Search"), this);
   go->setAutoDefault(false);
   bar->addWidget(m_search, 1);
   bar->addWidget(m_sort);
+  bar->addWidget(m_adult);
   bar->addWidget(go);
   layout->addLayout(bar);
 
@@ -212,6 +218,9 @@ CollectionBrowser::CollectionBrowser(const QString& gameDomain, const QString& g
     search(false);
   });
   connect(m_sort, &QComboBox::activated, this, [this] {
+    search(false);
+  });
+  connect(m_adult, &QCheckBox::toggled, this, [this] {
     search(false);
   });
   connect(m_more, &QPushButton::clicked, this, [this] {
@@ -283,6 +292,10 @@ void CollectionBrowser::search(bool more)
   if (!text.isEmpty()) {
     filter.insert("generalSearch",
                   QJsonArray{QJsonObject{{"value", text}, {"op", "WILDCARD"}}});
+  }
+  if (!m_adult->isChecked()) {
+    filter.insert("adultContent",
+                  QJsonArray{QJsonObject{{"value", false}, {"op", "EQUALS"}}});
   }
   QJsonObject vars;
   vars.insert("filter", filter);

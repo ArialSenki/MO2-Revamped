@@ -5939,37 +5939,17 @@ void MainWindow::on_actionUpdate_triggered()
   showUpdateNotice(false);
 }
 
-// the listing lives under Elden Ring on Nexus; without the Elden Ring plugin the
-// request would go to the same mod id of the managed game
-
-static bool revampedListingReachable(PluginContainer& plugins)
-{
-  const auto games = plugins.plugins<IPluginGame>();
-  const bool found = std::any_of(games.begin(), games.end(), [](IPluginGame* game) {
-    return game != nullptr && game->gameShortName().compare(QStringLiteral("eldenring"),
-                                                            Qt::CaseInsensitive) == 0;
-  });
-  if (!found) {
-    log::warn("the Elden Ring game plugin isn't loaded, the MO2 Revamped listing "
-              "can't be reached");
-    return false;
-  }
-  return true;
-}
-
 void MainWindow::actionEndorseMO()
 {
   if (askNexusEndorsement(
           this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
           tr("Endorse"), tr("Cancel"))) {
-    if (!revampedListingReachable(m_PluginContainer)) {
-      return;
-    }
+    // the Modding Tools page has no game plugin
     NexusInterface::instance().requestToggleEndorsement(
-        QStringLiteral("eldenring"), kRevampedNexusModId,
-        SelfUpdater::revampedVersionString(), true, this, QVariant(),
-        QString());
+        QStringLiteral(MO2R_NEXUS_DOMAIN), kRevampedNexusModId,
+        SelfUpdater::revampedVersionString(), true, this, QVariant(), QString(),
+        nullptr);
   }
 }
 
@@ -5979,13 +5959,11 @@ void MainWindow::actionWontEndorseMO()
           this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
           tr("This will record your choice not to endorse the listing on Nexus Mods."),
           tr("Won't Endorse"), tr("Cancel"))) {
-    if (!revampedListingReachable(m_PluginContainer)) {
-      return;
-    }
+    // the Modding Tools page has no game plugin
     NexusInterface::instance().requestToggleEndorsement(
-        QStringLiteral("eldenring"), kRevampedNexusModId,
-        SelfUpdater::revampedVersionString(), false, this, QVariant(),
-        QString());
+        QStringLiteral(MO2R_NEXUS_DOMAIN), kRevampedNexusModId,
+        SelfUpdater::revampedVersionString(), false, this, QVariant(), QString(),
+        nullptr);
   }
 }
 
@@ -6057,6 +6035,7 @@ void MainWindow::nxmEndorsementsAvailable(QVariant userData, QVariant resultData
     m_OrganizerCore.settings().nexus().setEndorsementState(
         EndorsementState::NoDecision);
   }
+  QString revampedStatus, oldPageStatus;
 
   for (auto endorsementData : data) {
     QVariantMap endorsement      = endorsementData.toMap();
@@ -6065,12 +6044,21 @@ void MainWindow::nxmEndorsementsAvailable(QVariant userData, QVariant resultData
     const QString status         = endorsement["status"].toString();
     sorted.emplace(domainName, std::make_pair(modId, status));
 
-    if (endorsementIntegration &&
-        domainName.compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) == 0 &&
+    if (domainName.compare(QStringLiteral(MO2R_NEXUS_DOMAIN), Qt::CaseInsensitive) == 0 &&
         modId == kRevampedNexusModId) {
-      m_OrganizerCore.settings().nexus().setEndorsementState(
-          endorsementStateFromString(status));
+      revampedStatus = status;
+    } else if (domainName.compare(QStringLiteral(MO2R_NEXUS_OLD_DOMAIN),
+                                  Qt::CaseInsensitive) == 0 &&
+               modId == MO2R_NEXUS_OLD_MOD_ID) {
+      oldPageStatus = status;
     }
+  }
+
+  // the Modding Tools page decides; a decision made on the old Elden Ring page
+  // still counts, so the button doesn't ask again
+  if (endorsementIntegration && (!revampedStatus.isEmpty() || !oldPageStatus.isEmpty())) {
+    m_OrganizerCore.settings().nexus().setEndorsementState(endorsementStateFromString(
+        !revampedStatus.isEmpty() ? revampedStatus : oldPageStatus));
   }
 
   for (auto game : games) {
@@ -6365,7 +6353,7 @@ void MainWindow::nxmEndorsementToggled(QString gameName, int modID, QVariant,
   // the signal is shared by every endorsement: after a failed one for MO2
   // Revamped this slot stays connected, and endorsing any other mod must not
   // count as endorsing MO2 Revamped
-  if (gameName.compare(QStringLiteral("eldenring"), Qt::CaseInsensitive) != 0 ||
+  if (gameName.compare(QStringLiteral(MO2R_NEXUS_DOMAIN), Qt::CaseInsensitive) != 0 ||
       modID != kRevampedNexusModId) {
     return;
   }

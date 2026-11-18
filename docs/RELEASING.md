@@ -18,8 +18,10 @@ The version is written in two places, and they must agree:
 Change both, then rebuild `ModOrganizer.exe`. `Build-Release.ps1` refuses to
 package when the header or the executable names another version.
 
-The same header holds the Nexus page (`MO2R_NEXUS_MOD_ID`, 11314 under Elden
-Ring), which the notice links to and endorsements go to.
+The same header holds the Nexus page: `MO2R_NEXUS_PAGE_URL`, which the notice
+links to, and `MO2R_NEXUS_DOMAIN`/`MO2R_NEXUS_MOD_ID` (site/2612 in Modding
+Tools), which the endorse button endorses. `MO2R_NEXUS_SSO_SLUG` stays empty
+until Nexus registers MO2 Revamped's own sign-in.
 
 ## Tag and channel
 

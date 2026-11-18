@@ -12202,6 +12202,10 @@ Esempio:
       <source>Message</source>
       <translation>Messaggio</translation>
     </message>
+    <message>
+      <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Connettiti con la chiave API personale della pagina del tuo account Nexus. I messaggi di connessione compaiono accanto a queste azioni.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -14345,6 +14349,10 @@ Controlla le opzioni del gioco prima di giocare.</translation>
     <message>
       <source>This link was made for another Nexus account, or it needs Premium. Sign in with the account that clicked it.</source>
       <translation>Questo link è stato creato per un altro account Nexus, oppure richiede Premium. Accedi con l'account che l'ha cliccato.</translation>
+    </message>
+    <message>
+      <source>Nexus redirected the request to another address.</source>
+      <translation>Nexus ha reindirizzato la richiesta a un altro indirizzo.</translation>
     </message>
   </context>
   <context>
@@ -18150,6 +18158,14 @@ Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni
     <message>
       <source>Adult content (NSFW).</source>
       <translation>Contenuti per adulti (NSFW).</translation>
+    </message>
+    <message>
+      <source>Adult content</source>
+      <translation>Contenuti per adulti</translation>
+    </message>
+    <message>
+      <source>Also lists collections Nexus marks as adult (NSFW).</source>
+      <translation>Mostra anche le collezioni che Nexus segna come per adulti (NSFW).</translation>
     </message>
   </context>
 <context>

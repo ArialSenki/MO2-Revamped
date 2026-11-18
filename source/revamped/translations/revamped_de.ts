@@ -11714,6 +11714,10 @@ Firefox.exe</translation>
       <source>Message</source>
       <translation>Meldung</translation>
     </message>
+    <message>
+      <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Verbinde dich mit dem persönlichen API-Schlüssel von deiner Nexus-Kontoseite. Verbindungsmeldungen erscheinen neben diesen Aktionen.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>
@@ -14104,6 +14108,10 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
     <message>
       <source>This link was made for another Nexus account, or it needs Premium. Sign in with the account that clicked it.</source>
       <translation>Dieser Link wurde für ein anderes Nexus-Konto erstellt oder braucht Premium. Melde dich mit dem Konto an, das ihn angeklickt hat.</translation>
+    </message>
+    <message>
+      <source>Nexus redirected the request to another address.</source>
+      <translation>Nexus hat die Anfrage an eine andere Adresse umgeleitet.</translation>
     </message>
   </context>
   <context>
@@ -17928,6 +17936,14 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
     <message>
       <source>Adult content (NSFW).</source>
       <translation>Inhalte für Erwachsene (NSFW).</translation>
+    </message>
+    <message>
+      <source>Adult content</source>
+      <translation>Inhalte für Erwachsene</translation>
+    </message>
+    <message>
+      <source>Also lists collections Nexus marks as adult (NSFW).</source>
+      <translation>Zeigt auch Sammlungen, die Nexus als nur für Erwachsene (NSFW) markiert.</translation>
     </message>
   </context>
 <context>
