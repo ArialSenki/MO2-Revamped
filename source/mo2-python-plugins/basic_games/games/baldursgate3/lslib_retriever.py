@@ -127,13 +127,23 @@ class LSLibRetriever:
                         progress = self._utils.create_progress_window(
                             "Downloading LSLib", 100, cancelable=False
                         )
-                        urllib.request.urlretrieve(
-                            assets["browser_download_url"], str(zip_path), reporthook
-                        )
-                        progress.close()
+                        # MO2 Revamped: downloaded under another name first, so
+                        # a download cut halfway isn't taken next time for the
+                        # finished archive; the window closes whatever happens
+                        part_path = zip_path.with_name(zip_path.name + ".part")
+                        try:
+                            urllib.request.urlretrieve(
+                                assets["browser_download_url"],
+                                str(part_path),
+                                reporthook,
+                            )
+                            os.replace(part_path, zip_path)
+                        finally:
+                            progress.close()
+                            part_path.unlink(missing_ok=True)
                         downloaded = True
                         for archive in old_archives:
-                            archive.unlink()
+                            archive.unlink(missing_ok=True)
                         old_archives = []
                 else:
                     old_archives = []
@@ -155,38 +165,11 @@ class LSLibRetriever:
             )
             err.exec()
             return False
+        if old_archives:
+            zip_path = sorted(old_archives)[-1]
+        verify_only = bool(old_archives) or not downloaded
         try:
-            if old_archives:
-                zip_path = sorted(old_archives)[-1]
-            if old_archives or not downloaded:
-                dialog_message = "Ensuring all necessary LSLib files have been extracted from archive..."
-                win_title = "Verifying LSLib files"
-            else:
-                dialog_message = "Extracting/Updating LSLib files..."
-                win_title = "Extracting LSLib"
-            with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                names = list(
-                    filter(
-                        lambda name: name.startswith("Packed/Tools"), zip_ref.namelist()
-                    )
-                )
-                qDebug(f"found files: {','.join(names)}")
-                x_progress = self._utils.create_progress_window(
-                    win_title, len(names), msg=dialog_message
-                )
-                for file in names:
-                    shutil.move(
-                        zip_ref.extract(file, self._utils.tools_dir),
-                        self._utils.tools_dir,
-                    )
-                    x_progress.setValue(x_progress.value() + 1)
-                    QApplication.processEvents()
-                    if x_progress.wasCanceled():
-                        x_progress.close()
-                        qWarning("processing canceled by user")
-                        return False
-                x_progress.close()
-                shutil.rmtree(self._utils.tools_dir / "Packed", ignore_errors=True)
+            return self._install_tools(zip_path, verify_only)
         except Exception as e:
             qDebug(f"Extraction failed: {e}")
             err = QMessageBox(self._utils.main_window)
@@ -198,4 +181,95 @@ class LSLibRetriever:
             )
             err.exec()
             return False
+
+    def _install_tools(self, zip_path: Path, verify_only: bool) -> bool:
+        """MO2 Revamped: the archive's Packed/Tools/ files into the tools folder.
+
+        They were moved one by one onto the files already there, which failed
+        on the second extraction ("Destination path ... Tools already exists",
+        the archive's own folder entry) and left the progress window open. Now
+        the new files are unpacked into a folder of their own first and swapped
+        in only once all are there; the old tools stay as they were if that
+        fails or is cancelled, and are put back if a swap fails halfway (a
+        Divine.exe still running). Verifying skips the files already in place."""
+        tools_dir = self._utils.tools_dir
+        prefix = "Packed/Tools/"
+        if verify_only:
+            dialog_message = "Ensuring all necessary LSLib files have been extracted from archive..."
+            win_title = "Verifying LSLib files"
+        else:
+            dialog_message = "Extracting/Updating LSLib files..."
+            win_title = "Extracting LSLib"
+        staging = tools_dir.with_name(tools_dir.name + ".new")
+        backup = tools_dir.with_name(tools_dir.name + ".old")
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            members: list[tuple[zipfile.ZipInfo, Path]] = []
+            for info in zip_ref.infolist():
+                if info.is_dir() or not info.filename.startswith(prefix):
+                    continue
+                rel = Path(info.filename[len(prefix) :])
+                if rel.is_absolute() or ".." in rel.parts or not rel.parts:
+                    continue
+                target = tools_dir / rel
+                if verify_only:
+                    try:
+                        if target.stat().st_size == info.file_size:
+                            continue
+                    except OSError:
+                        pass
+                members.append((info, rel))
+            qDebug(f"LSLib files to extract: {','.join(i.filename for i, _ in members)}")
+            if members:
+                shutil.rmtree(staging, ignore_errors=True)
+                x_progress = self._utils.create_progress_window(
+                    win_title, len(members) + 1, msg=dialog_message
+                )
+                try:
+                    for info, rel in members:
+                        dest = staging / rel
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        with zip_ref.open(info) as src, open(dest, "wb") as out:
+                            shutil.copyfileobj(src, out, 1 << 20)
+                        x_progress.setValue(x_progress.value() + 1)
+                        QApplication.processEvents()
+                        if x_progress.wasCanceled():
+                            qWarning("processing canceled by user")
+                            return False
+                    self._swap_in(staging, backup, [rel for _, rel in members])
+                    x_progress.setValue(len(members) + 1)
+                finally:
+                    x_progress.close()
+                    shutil.rmtree(staging, ignore_errors=True)
+        # what earlier versions of this plugin left: the archive's folders
+        # (Packed/, and Tools/ when it was moved in whole)
+        shutil.rmtree(tools_dir / "Packed", ignore_errors=True)
+        stray = tools_dir / "Tools"
+        if stray.is_dir() and not any(stray.iterdir()):
+            stray.rmdir()
         return True
+
+    def _swap_in(self, staging: Path, backup: Path, files: list[Path]) -> None:
+        tools_dir = self._utils.tools_dir
+        shutil.rmtree(backup, ignore_errors=True)
+        moved: list[Path] = []
+        try:
+            for rel in files:
+                target = tools_dir / rel
+                if target.exists():
+                    (backup / rel).parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(target, backup / rel)
+                moved.append(rel)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                os.replace(staging / rel, target)
+        except OSError:
+            # the old files back, as they were
+            for rel in moved:
+                target = tools_dir / rel
+                old = backup / rel
+                if old.exists():
+                    os.replace(old, target)
+                else:
+                    target.unlink(missing_ok=True)
+            raise
+        finally:
+            shutil.rmtree(backup, ignore_errors=True)
