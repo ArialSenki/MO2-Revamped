@@ -387,12 +387,69 @@ Link readLink(const QString& iniPath)
   link.modsPath          = s.value(Section + QStringLiteral("/modsPath")).toString();
   link.linkedAt          = s.value(Section + QStringLiteral("/linkedAt")).toDateTime();
   link.sourceProfileTime = s.value(Section + QStringLiteral("/sourceProfileTime")).toDateTime();
+  link.transferred       = s.value(Section + QStringLiteral("/transferred"), false).toBool();
+  link.registerNxm       = s.value(Section + QStringLiteral("/registerNxm"), false).toBool();
   return link;
 }
 
 bool isLinked(const QString& iniPath)
 {
-  return readLink(iniPath).valid;
+  const Link link = readLink(iniPath);
+  return link.valid && !link.transferred;
+}
+
+bool skipsNxmRegistration(const QString& iniPath)
+{
+  const Link link = readLink(iniPath);
+  return link.valid && (!link.transferred || !link.registerNxm);
+}
+
+QString cleanPath(const QString& path)
+{
+  return clean(path);
+}
+
+bool samePaths(const QString& a, const QString& b)
+{
+  return samePath(a, b);
+}
+
+QString iniValue(const QSettings& s, const QString& key)
+{
+  return iniString(s, key);
+}
+
+void copyIniGroup(const QSettings& from, QSettings& to, const QString& group)
+{
+  copyGroup(from, to, group);
+}
+
+void writeCarriedSettings(const QSettings& source, QSettings& ini)
+{
+  if (const QString version = iniString(source, QStringLiteral("version"));
+      !version.isEmpty()) {
+    ini.setValue(QStringLiteral("version"), version);
+  }
+
+  // the interface settings of Nolvus' MO2; not its folders, theme, log level
+  // or update checks, which are this instance's
+  static const QStringList skipped{
+      QStringLiteral("base_directory"),  QStringLiteral("download_directory"),
+      QStringLiteral("mod_directory"),   QStringLiteral("cache_directory"),
+      QStringLiteral("profiles_directory"), QStringLiteral("overwrite_directory"),
+      QStringLiteral("style"),           QStringLiteral("log_level"),
+      QStringLiteral("check_for_updates"), QStringLiteral("use_prereleases")};
+  for (const QString& key : source.allKeys()) {
+    if (!key.startsWith(QStringLiteral("Settings/"))) {
+      continue;
+    }
+    const QString name = key.mid(QStringLiteral("Settings/").size());
+    if (!skipped.contains(name, Qt::CaseInsensitive) && !ini.contains(key)) {
+      ini.setValue(key, source.value(key));
+    }
+  }
+
+  ini.setValue(QStringLiteral("Settings/revamped_theme_choice_prompt_completed"), true);
 }
 
 QString label(const QString& version, const QString& variant)
@@ -511,6 +568,7 @@ QString createLinkedInstance(const InstanceInfo& info, QString* error)
       ini.setValue(QStringLiteral("game_edition"), edition);
     }
     ini.setValue(QStringLiteral("first_start"), false);
+    writeCarriedSettings(source, ini);
 
     // mods and overwrite are Nolvus'; profiles, downloads and the cache are
     // this instance's
@@ -686,7 +744,7 @@ QStringList preRunWarnings(const Link& link, const QString& iniPath,
 
   // a Nolvus update changed its profiles after they were copied
   const QDateTime source = newestSourceProfile(link.modsPath);
-  if (source.isValid() && link.sourceProfileTime.isValid() &&
+  if (!link.transferred && source.isValid() && link.sourceProfileTime.isValid() &&
       source > link.sourceProfileTime.addSecs(2)) {
     warnings << Text::tr("Nolvus' profiles changed on %1, after this instance copied "
                          "them (a Nolvus update?). The mod order here may be older. "

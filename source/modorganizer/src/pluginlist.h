@@ -370,6 +370,11 @@ private:
   void syncLoadOrder();
   void updateIndices();
 
+  // MO2 Revamped: plugins a profile names that no mod has (a list's optional
+  // mods left off); logged as one line once the profile is read
+  QStringList m_missingStates;
+  void logMissingStates();
+
   void writeLockedOrder(const QString& fileName) const;
 
   void readLockedOrderFrom(const QString& fileName);

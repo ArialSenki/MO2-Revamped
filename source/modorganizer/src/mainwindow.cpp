@@ -3112,7 +3112,7 @@ void MainWindow::showEvent(QShowEvent* event)
     QTimer::singleShot(250, this, [this] {
       // MO2 Revamped: a Nolvus instance leaves the nxm:// handler as it is;
       // Settings > Nexus still registers it on request
-      if (Nolvus::isLinked(m_OrganizerCore.settings().filename())) {
+      if (Nolvus::skipsNxmRegistration(m_OrganizerCore.settings().filename())) {
         log::debug("Nolvus instance: not registering for nxm:// links");
         return;
       }

@@ -110,6 +110,12 @@ public:
   void findNolvusElsewhere();
   // copies Nolvus' profiles over the selected linked instance's copy again
   void copyNolvusProfilesAgain();
+  // turns a found Nolvus instance, or the selected linked one, into a normal
+  // instance (nolvustransfer.h)
+  void transferNolvus(std::size_t index);
+  void transferSelectedNolvus();
+  // puts the selected instance's moved Nolvus folders back
+  void undoNolvusTransfer();
 
   // saves geometry
   //

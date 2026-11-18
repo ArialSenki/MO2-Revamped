@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+class QSettings;
 class QWidget;
 
 // MO2 Revamped: Nolvus instances, opened as linked instances.
@@ -52,6 +53,10 @@ struct Link
       mo2Path, modsPath;
   // when the Nolvus profiles were copied, and their modlist.txt time then
   QDateTime linkedAt, sourceProfileTime;
+  // transferred into a normal instance (nolvustransfer.h): its folders are
+  // its own, its profiles too; whether it registers for nxm:// links
+  bool transferred = false;
+  bool registerNxm = false;
 };
 
 // the folder the Dashboard installs to by default
@@ -71,7 +76,10 @@ std::vector<InstanceInfo> findInstances(const QString& root);
 
 // the [Nolvus] section of an instance's ini; valid is false for any other
 Link readLink(const QString& iniPath);
+// linked, not transferred
 bool isLinked(const QString& iniPath);
+// a linked instance, or a transferred one whose user said no to nxm:// links
+bool skipsNxmRegistration(const QString& iniPath);
 
 // "Nolvus 6.0.21 · Redux", for captions
 QString label(const QString& version, const QString& variant);
@@ -100,6 +108,18 @@ bool confirmLaunch(QWidget* parent, const QString& iniPath, const QString& profi
 // copies Nolvus' profiles over the linked instance's copy again (after a
 // Nolvus update); the previous copy is kept in profiles-backup-<time>
 bool refreshProfiles(const QString& iniPath, QString* error);
+
+// shared with nolvustransfer.cpp
+QString cleanPath(const QString& path);
+bool samePaths(const QString& a, const QString& b);
+QString iniValue(const QSettings& s, const QString& key);
+void copyIniGroup(const QSettings& from, QSettings& to, const QString& group);
+
+// what an instance made from Nolvus' MO2 ini carries over so its first start
+// asks nothing Nolvus already answered: the MO2 version it was made with (no
+// category mapping question), the interface settings, and the theme question
+// as done
+void writeCarriedSettings(const QSettings& source, QSettings& ini);
 
 }  // namespace Nolvus
 

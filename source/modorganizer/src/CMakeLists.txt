@@ -203,6 +203,7 @@ mo2_add_filter(NAME src/instances GROUPS
 	instancemanager
 	instancemanagerdialog
 	nolvus
+	nolvustransfer
 )
 
 mo2_add_filter(NAME src/loot GROUPS
