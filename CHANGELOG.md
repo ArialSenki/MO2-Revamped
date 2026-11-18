@@ -1,5 +1,77 @@
 # Changelog
 
+## 1.1.0-beta.14 (pre-release) — November 18, 2026
+
+Beta 13 plus **native installation of Wabbajack modlists**, which until now
+was only in the separate experimental builds (1.1.0-dev.1 to dev.3). The
+experimental file is retired: everything it had is in this beta.
+
+### Wabbajack lists
+
+Tools > Wabbajack lists opens a `.wabbajack` file, or browses Wabbajack's own
+gallery, and installs the list into an instance of its own, without
+Wabbajack:
+
+- shows what the list needs and which archives are already downloaded;
+- downloads its archives (Nexus, Wabbajack's CDN, direct links; Google Drive
+  and other files from the browser's Downloads folder), with pause and
+  resume, and checks every file by its hash;
+- installs it into a new instance with the author's profile, load order,
+  categories, notes, colours and programs, fixed for this PC; Stock Game only
+  when it really holds the game;
+- a summary of what was done and what the guide still leaves by hand.
+
+The [1.1.0-dev.1](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.1)
+to [dev.3](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-dev.3)
+entries below have the details. Tested lists (installed with no failures,
+then the new instance opened; none played in game yet): Baldur's Gate 3
+Enhanced Edition, Viva New Vegas, The Midnight Ride (Fallout 4), Waters of
+Life (Fallout 3) and Mini Wildlander (Skyrim SE). Not done yet: MergedPatch
+(zEdit merges) and the MO2 plugins a list brings.
+
+### New since dev.3
+
+- **Manual steps of a list:** Tools > Wabbajack lists > Manual steps of this
+  list (and a button on the notice a new list instance shows) names the folders
+  a list leaves for its guide ("__Files Requiring Manual Install", "__Vanilla
+  BSAs Patcher"...) and what each needs. It works for instances installed
+  before, too.
+  - Game-file folders: a button copies their files into the game folder as
+    they are laid out (for example `nvse_loader.exe`,
+    `Data\NVSE\nvse_config.ini`). Files they replace are backed up first to
+    `.mo2r-install\game-backup\<time>`; a failure on the way puts back what was
+    already replaced. Identical files are skipped.
+  - Patchers run only from their own button, after a question that says MO2
+    doesn't check what they do.
+  - Other folders (DXVK versions, Steam overlay variants, GECK) are named with
+    a button to open them; the guide says which one to use.
+- **The list's notes in the instance:** an instance made from a list keeps the
+  list's name, guide, the game version it was made for and the folders its
+  guide has you copy by hand. The first time it opens, a notice names those
+  folders and compares the game version.
+- **Game version before Run:** when the game isn't the version the list was
+  made for (Fallout 3 updated to 1.7.0.4 while the list's FOSE wants 1.7.0.3),
+  MO2 asks whether to start anyway, once per session.
+- **A screen size the screen can't show:** before a Gamebryo/Creation game
+  starts, a prefs INI asking for a window larger than the screen, or a full
+  screen mode the display doesn't list, gets the screen's size. Viva New Vegas
+  stopped with "Failed to initialize renderer" after asking for 2560x1440 on a
+  1920x1080 screen.
+- **Stock Game:** when the list brings the game's exe into its own copy of the
+  game (Wildlander) and that copy still isn't the game at the end, the summary
+  says the install didn't finish and should be run again, instead of telling
+  you to fill it by hand.
+
+### Merged with beta 13
+
+- Downloads keep beta 13's settings (never from the cache; a server that stops sending
+  counts as a failure) and the Wabbajack line's retry over HTTP/1.1 for replies that end
+  short.
+- Closing MO2 during a Wabbajack install asks first; closing it during a
+  collection install still waits, as in beta 13.
+- A Wabbajack list that started MO2 is kept when the instance has to be picked
+  again, as an nxm link is.
+
 ## 1.1.0-beta.13 (pre-release) — November 18, 2026
 
 A full audit of every window and option, two rounds of fixes from hands-on
