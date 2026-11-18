@@ -1,7 +1,9 @@
 #ifndef MODORGANIZER_INSTANCEMANAGERDIALOG_INCLUDED
 #define MODORGANIZER_INSTANCEMANAGERDIALOG_INCLUDED
 
+#include "nolvus.h"
 #include <QDialog>
+#include <QHash>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -16,6 +18,7 @@ class QPushButton;
 class QStandardItemModel;
 class QStackedWidget;
 class QToolButton;
+class QVBoxLayout;
 
 // a dialog to manage existing instances: the instances in a card on the left,
 // the selected one's folders and actions in a card on the right, and Switch
@@ -100,6 +103,14 @@ public:
   //
   void setRestartOnSelect(bool b);
 
+  // MO2 Revamped: Nolvus instances (nolvus.h). Links the found instance and
+  // opens it, after the one-time explanation
+  void openNolvus(std::size_t index);
+  // asks for another folder the Nolvus Dashboard installed to
+  void findNolvusElsewhere();
+  // copies Nolvus' profiles over the selected linked instance's copy again
+  void copyNolvusProfilesAgain();
+
   // saves geometry
   //
   void done(int r) override;
@@ -134,6 +145,14 @@ private:
   QLineEdit* m_filter;
   QListView* m_list;
   QPushButton* m_new;
+
+  // the Nolvus instances found that aren't linked yet, and the linked ones'
+  // labels by instance folder
+  QWidget* m_nolvusCard          = nullptr;
+  QVBoxLayout* m_nolvusRows      = nullptr;
+  std::vector<Nolvus::InstanceInfo> m_nolvus;
+  QHash<QString, QString> m_nolvusLabels;
+  void updateNolvus();
 
   QStackedWidget* m_detailsStack;
   QLabel* m_emptyText;

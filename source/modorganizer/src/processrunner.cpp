@@ -1,4 +1,5 @@
 #include "processrunner.h"
+#include "nolvus.h"
 #include <memory>
 #include <optional>
 #include "env.h"
@@ -911,6 +912,14 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
         !ScriptExtenderSetup::confirmLaunch(parent, *extender, *game)) {
       return Error;
     }
+  }
+
+  // MO2 Revamped: a Nolvus instance: what Nolvus needs that doesn't look
+  // right, said before the program runs (it can still run)
+  if (!Nolvus::confirmLaunch(parent, settings.filename(),
+                             QDir(settings.paths().profiles()).filePath(m_profileName),
+                             m_sp.binary.absoluteFilePath())) {
+    return Error;
   }
 
   // MO2 Revamped: the display settings of the Run menu's borderless window

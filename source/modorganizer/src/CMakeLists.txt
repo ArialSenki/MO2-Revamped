@@ -202,6 +202,7 @@ mo2_add_filter(NAME src/instances GROUPS
 	createinstancedialogui
 	instancemanager
 	instancemanagerdialog
+	nolvus
 )
 
 mo2_add_filter(NAME src/loot GROUPS

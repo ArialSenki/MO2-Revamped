@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "mainwindow.h"
+#include "nolvus.h"
 #include "eldenringsavesettings.h"
 #include "fluenticons.h"
 #include "menuutils.h"
@@ -3100,6 +3101,12 @@ void MainWindow::showEvent(QShowEvent* event)
     // starts a helper program; nothing here waits for it, so not while the
     // window is coming up
     QTimer::singleShot(250, this, [this] {
+      // MO2 Revamped: a Nolvus instance leaves the nxm:// handler as it is;
+      // Settings > Nexus still registers it on request
+      if (Nolvus::isLinked(m_OrganizerCore.settings().filename())) {
+        log::debug("Nolvus instance: not registering for nxm:// links");
+        return;
+      }
       m_OrganizerCore.settings().nexus().registerAsNXMHandler(false);
     });
     m_WasVisible = true;

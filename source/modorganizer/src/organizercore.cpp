@@ -1,4 +1,5 @@
 #include "organizercore.h"
+#include "nolvus.h"
 #include "collectionmanifest.h"
 #include <QDateTime>
 #include "categoriesdialog.h"
@@ -115,6 +116,8 @@ OrganizerCore::OrganizerCore(Settings& settings)
       m_PluginListsWriter(std::bind(&OrganizerCore::savePluginList, this))
 {
   env::setHandleCloserThreadCount(settings.refreshThreadCount());
+  // MO2 Revamped: a Nolvus instance lists Nolvus' archives too, read-only
+  m_DownloadManager.setReadOnlySources(Nolvus::archiveSources(m_Settings.filename()));
   m_DownloadManager.setOutputDirectory(m_Settings.paths().downloads(), false);
 
   NexusInterface::instance().setCacheDirectory(m_Settings.paths().cache());

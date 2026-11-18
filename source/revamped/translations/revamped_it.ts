@@ -6387,6 +6387,73 @@ Continueranno a cercare nella vecchia cartella senza trovare nulla finché non n
       <translation>Queste cartelle sono fuori dalla cartella dell'istanza, quindi la copia usa le stesse dell'originale:
 %1</translation>
     </message>
+    <message>
+      <source>Copy Nolvus&apos; profiles again</source>
+      <translation>Ricopia i profili di Nolvus</translation>
+    </message>
+    <message>
+      <source>Copy Nolvus&apos; profiles again…</source>
+      <translation>Ricopia i profili di Nolvus…</translation>
+    </message>
+    <message>
+      <source>Find Nolvus instances in a folder…</source>
+      <translation>Cerca istanze di Nolvus in una cartella…</translation>
+    </message>
+    <message>
+      <source>Folder the Nolvus Dashboard installed to</source>
+      <translation>Cartella in cui ha installato il Nolvus Dashboard</translation>
+    </message>
+    <message>
+      <source>Found in Nolvus</source>
+      <translation>Trovato in Nolvus</translation>
+    </message>
+    <message>
+      <source>Make an instance for %1 that uses Nolvus&apos; mods and leaves Nolvus&apos; own MO2 as it is</source>
+      <translation>Crea un&apos;istanza per %1 che usa le mod di Nolvus e lascia com&apos;è il MO2 di Nolvus</translation>
+    </message>
+    <message>
+      <source>No Nolvus instance was found in %1. Choose the folder the Nolvus Dashboard installs to: the one with the Instances folder.</source>
+      <translation>Nessuna istanza di Nolvus trovata in %1. Scegli la cartella in cui installa il Nolvus Dashboard: quella con la cartella Instances.</translation>
+    </message>
+    <message>
+      <source>Nolvus</source>
+      <translation>Nolvus</translation>
+    </message>
+    <message>
+      <source>Open %1</source>
+      <translation>Apri %1</translation>
+    </message>
+    <message>
+      <source>Open in MO2 Revamped…</source>
+      <translation>Apri in MO2 Revamped…</translation>
+    </message>
+    <message>
+      <source>The Nolvus instances in %1 already have an instance here.</source>
+      <translation>Le istanze di Nolvus in %1 hanno già un&apos;istanza qui.</translation>
+    </message>
+    <message>
+      <source>The instance couldn&apos;t be made: %1</source>
+      <translation>Non è stato possibile creare l&apos;istanza: %1</translation>
+    </message>
+    <message>
+      <source>The profiles of %1 are replaced with a new copy of Nolvus&apos; profiles (after a Nolvus update, for instance). The current copy is kept beside them, in a profiles-backup folder.</source>
+      <translation>I profili di %1 vengono sostituiti da una nuova copia dei profili di Nolvus (dopo un aggiornamento di Nolvus, per esempio). La copia attuale resta accanto, in una cartella profiles-backup.</translation>
+    </message>
+    <message>
+      <source>The profiles of the instance in use can&apos;t be replaced. Open another instance first, then do this from its Instances window.</source>
+      <translation>I profili dell&apos;istanza in uso non possono essere sostituiti. Apri prima un&apos;altra istanza, poi fallo dalla sua finestra Istanze.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n mods</source>
+      <translation>
+        <numerusform>%n mod</numerusform>
+        <numerusform>%n mod</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>No instances yet. Open the Nolvus list found on the left, or create an instance with New instance.</source>
+      <translation>Ancora nessuna istanza. Apri la lista di Nolvus trovata a sinistra o crea un&apos;istanza con Nuova istanza.</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -9623,6 +9690,121 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>&lt;b&gt;Keep this key private.&lt;/b&gt; Sharing it can put your Nexus account at risk. You can revoke it from your Nexus account.</source>
       <translation>&lt;b&gt;Mantieni privata questa chiave.&lt;/b&gt; Condividerla può mettere a rischio il tuo account Nexus. Puoi revocarla dal tuo account Nexus.</translation>
+    </message>
+  </context>
+  <context>
+    <name>Nolvus</name>
+    <message>
+      <source>%1 (Nolvus archives)</source>
+      <translation>%1 (archivi di Nolvus)</translation>
+    </message>
+    <message>
+      <source>%1 starts the game without SKSE, and most of Nolvus needs it. Nolvus starts the game with its &quot;Nolvus&quot; or &quot;SKSE&quot; program.</source>
+      <translation>%1 avvia il gioco senza SKSE, che serve a quasi tutto Nolvus. Nolvus avvia il gioco con il suo programma &quot;Nolvus&quot; o &quot;SKSE&quot;.</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;&lt;b&gt;What MO2 Revamped uses directly:&lt;/b&gt; the list&apos;s mods and overwrite folder (%1) and Nolvus&apos; stock game (%2). Installing, removing or editing a mod here changes those mods, as it would in Nolvus&apos; MO2.&lt;/p&gt;&lt;p&gt;&lt;b&gt;What it copies:&lt;/b&gt; Nolvus&apos; profiles (mod order, plugins, game INIs, saves), into %3. Saves made from now on stay in that copy.&lt;/p&gt;&lt;p&gt;&lt;b&gt;What it keeps apart:&lt;/b&gt; its own settings, downloads and web cache. The Nolvus archives (%4) show in the Downloads tab, read only; nothing is copied or written there.&lt;/p&gt;&lt;p&gt;&lt;b&gt;What it doesn&apos;t do:&lt;/b&gt; register itself for Nexus links (nxm://) when this instance starts, or update the list. Keep using the Nolvus Dashboard to update or repair Nolvus; after an update, MO2 Revamped tells you when Nolvus&apos; profiles changed, and can copy them again from Instances.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;&lt;b&gt;Cosa usa direttamente MO2 Revamped:&lt;/b&gt; le mod e la cartella overwrite della lista (%1) e il gioco base di Nolvus (%2). Installare, rimuovere o modificare una mod qui cambia quelle mod, come nel MO2 di Nolvus.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Cosa copia:&lt;/b&gt; i profili di Nolvus (ordine delle mod, plugin, INI del gioco, salvataggi) in %3. I nuovi salvataggi restano in quella copia.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Cosa tiene a parte:&lt;/b&gt; le proprie impostazioni, i download e la cache web. Gli archivi di Nolvus (%4) compaiono nella scheda Download, in sola lettura; lì non si copia né si scrive nulla.&lt;/p&gt;&lt;p&gt;&lt;b&gt;Cosa non fa:&lt;/b&gt; registrarsi per i link di Nexus (nxm://) all&apos;avvio di questa istanza, né aggiornare la lista. Continua a usare il Nolvus Dashboard per aggiornare o riparare Nolvus; dopo un aggiornamento, MO2 Revamped avvisa se i profili di Nolvus sono cambiati e può ricopiarli da Istanze.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>Automatic archive invalidation is on; Nolvus turns it off.</source>
+      <translation>L&apos;invalidazione automatica degli archivi è attiva; Nolvus la disattiva.</translation>
+    </message>
+    <message>
+      <source>Can&apos;t copy %1</source>
+      <translation>Impossibile copiare %1</translation>
+    </message>
+    <message>
+      <source>Can&apos;t create %1</source>
+      <translation>Impossibile creare %1</translation>
+    </message>
+    <message>
+      <source>Can&apos;t move %1 aside; is a file in it open?</source>
+      <translation>Impossibile spostare %1; c&apos;è un file aperto al suo interno?</translation>
+    </message>
+    <message>
+      <source>Can&apos;t write %1</source>
+      <translation>Impossibile scrivere %1</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>Don&apos;t show these again</source>
+      <translation>Non mostrare più questi avvisi</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped makes an instance of its own for this Nolvus list. Nolvus&apos; own MO2 folder and profiles are not changed.</source>
+      <translation>MO2 Revamped crea un&apos;istanza propria per questa lista di Nolvus. La cartella MO2 e i profili di Nolvus non vengono modificati.</translation>
+    </message>
+    <message>
+      <source>Make the instance</source>
+      <translation>Crea l&apos;istanza</translation>
+    </message>
+    <message>
+      <source>No free folder name for %1 in %2</source>
+      <translation>Nessun nome di cartella libero per %1 in %2</translation>
+    </message>
+    <message>
+      <source>Nolvus checks</source>
+      <translation>Controlli di Nolvus</translation>
+    </message>
+    <message>
+      <source>Nolvus&apos; profiles changed on %1, after this instance copied them (a Nolvus update?). The mod order here may be older. To copy them again, open another instance, then right-click this one in Instances and choose &quot;Copy Nolvus&apos; profiles again&quot;.</source>
+      <translation>I profili di Nolvus sono cambiati il %1, dopo che questa istanza li ha copiati (un aggiornamento di Nolvus?). L&apos;ordine delle mod qui può essere più vecchio. Per ricopiarli, apri un&apos;altra istanza, poi fai clic destro su questa in Istanze e scegli &quot;Ricopia i profili di Nolvus&quot;.</translation>
+    </message>
+    <message>
+      <source>Nolvus&apos; profiles folder isn&apos;t there: %1</source>
+      <translation>La cartella dei profili di Nolvus non c&apos;è: %1</translation>
+    </message>
+    <message>
+      <source>Open %1 in MO2 Revamped?</source>
+      <translation>Aprire %1 in MO2 Revamped?</translation>
+    </message>
+    <message>
+      <source>Run anyway</source>
+      <translation>Avvia comunque</translation>
+    </message>
+    <message>
+      <source>SKSE isn&apos;t in the stock game (%1). Nolvus needs it; the Nolvus Dashboard can repair the stock game.</source>
+      <translation>SKSE non è nel gioco base (%1). Nolvus ne ha bisogno; il Nolvus Dashboard può riparare il gioco base.</translation>
+    </message>
+    <message>
+      <source>SkyrimSE.exe isn&apos;t in %1.</source>
+      <translation>SkyrimSE.exe non è in %1.</translation>
+    </message>
+    <message>
+      <source>Some things Nolvus needs don&apos;t look right. The program can still run.</source>
+      <translation>Alcune cose che servono a Nolvus non sembrano a posto. Il programma può comunque essere avviato.</translation>
+    </message>
+    <message>
+      <source>The %1 ENB was chosen for this list, but these ENB files aren&apos;t in the stock game: %2.</source>
+      <translation>Per questa lista è stato scelto l&apos;ENB %1, ma questi file dell&apos;ENB non sono nel gioco base: %2.</translation>
+    </message>
+    <message>
+      <source>The base directory is %1, not Nolvus&apos; %2.</source>
+      <translation>La cartella base è %1, non quella di Nolvus (%2).</translation>
+    </message>
+    <message>
+      <source>The game is version %1, but SKSE in the stock game is for %2. Nolvus keeps its stock game downgraded; if Steam or another tool changed it, the Nolvus Dashboard can put it back.</source>
+      <translation>Il gioco è alla versione %1, ma lo SKSE del gioco base è per %2. Nolvus tiene il suo gioco base a una versione precedente; se Steam o un altro strumento l&apos;ha cambiato, il Nolvus Dashboard può ripristinarlo.</translation>
+    </message>
+    <message>
+      <source>The profile doesn&apos;t use its own game INI files; Nolvus turns profile-specific game INIs on, and its INIs are tuned for the list.</source>
+      <translation>Il profilo non usa i propri INI del gioco; Nolvus attiva gli INI per profilo, e i suoi INI sono regolati per la lista.</translation>
+    </message>
+    <message>
+      <source>The profile doesn&apos;t use its own saves; Nolvus turns profile-specific saves on.</source>
+      <translation>Il profilo non usa i propri salvataggi; Nolvus attiva i salvataggi per profilo.</translation>
+    </message>
+    <message>
+      <source>This instance isn&apos;t linked to Nolvus.</source>
+      <translation>Questa istanza non è collegata a Nolvus.</translation>
+    </message>
+    <message>
+      <source>This instance plays the game in %1, not in the stock game Nolvus prepared (%2). Nolvus only works with its stock game.</source>
+      <translation>Questa istanza usa il gioco in %1, non il gioco base preparato da Nolvus (%2). Nolvus funziona solo con il suo gioco base.</translation>
     </message>
   </context>
   <context>
