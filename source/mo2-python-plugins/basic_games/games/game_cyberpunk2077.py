@@ -66,6 +66,39 @@ class CyberpunkModDataChecker(BasicModDataChecker):
         parent = filetree.parent()
         if parent is not None and self.dataLooksValid(parent) is self.FIXABLE:
             return self.FIXABLE
+        status = self._status(filetree)
+        # MO2 Revamped: the mod wrapped in one more folder ("ModName/archive/
+        # pc/mod", readmes or images next to it): fix() takes it out
+        if status is self.INVALID and self._wrapper(filetree) is not None:
+            return self.FIXABLE
+        return status
+
+    # files that may sit next to a wrapper folder
+    _doc_suffixes = (
+        ".txt", ".md", ".pdf", ".url", ".html", ".htm", ".png", ".jpg",
+        ".jpeg", ".webp", ".gif", ".rtf",
+    )  # fmt: skip
+
+    def _wrapper(self, filetree: mobase.IFileTree) -> mobase.IFileTree | None:
+        """The one folder holding the mod's game data, when only documents
+        sit next to it."""
+        folders = []
+        for entry in filetree:
+            if is_directory(entry):
+                folders.append(entry)
+            elif not entry.name().casefold().endswith(self._doc_suffixes):
+                return None
+        if len(folders) != 1:
+            return None
+        inner = folders[0]
+        assert is_directory(inner)
+        if self._status(inner) is self.INVALID:
+            return None
+        return inner
+
+    def _status(
+        self, filetree: mobase.IFileTree
+    ) -> mobase.ModDataChecker.CheckReturn:
         status = mobase.ModDataChecker.INVALID
         # Check extra fixes
         if self._use_root_builder() and any(
@@ -92,6 +125,12 @@ class CyberpunkModDataChecker(BasicModDataChecker):
         )
 
     def fix(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
+        if (
+            self._status(filetree) is self.INVALID
+            and (inner := self._wrapper(filetree)) is not None
+        ):
+            filetree.merge(inner)
+            inner.detach()
         use_root = self._use_root_builder()
         if use_root:
             for source, target in self._extra_files_to_move.items():

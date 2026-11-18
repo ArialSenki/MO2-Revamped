@@ -32,7 +32,11 @@ protected:
         "PBRNifPatcher", "PBRTextureSets",
         "Pandora_Engine",
         // MO2 Revamped: SEQ files (xEdit, Synthesis) and LOD settings
-        "Seq",           "LODSettings"};
+        "Seq",           "LODSettings",
+        // MO2 Revamped: Community Shaders' cache, KiLoader's plugins (ENB
+        // Extender) and SunHelm's settings, as lists like Nolvus install them
+        "ShaderCache",   "KiLoader",
+        "SunHelm"};
     return result;
   }
   virtual const FileNameSet& possibleFileExtensions() const override
