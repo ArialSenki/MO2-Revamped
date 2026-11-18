@@ -6093,6 +6093,30 @@ Sie suchen weiter im alten Ordner und finden nichts, bis ihre Pfade geändert we
   <context>
     <name>MainWindow</name>
     <message>
+      <source>There are no notifications. Open it to see what is checked.</source>
+      <translation>Keine Benachrichtigungen. Öffne es, um zu sehen, was geprüft wird.</translation>
+    </message>
+    <message>
+      <source>Installation in progress</source>
+      <translation>Installation läuft</translation>
+    </message>
+    <message>
+      <source>A mod is being installed. Close Mod Organizer once it has finished.</source>
+      <translation>Eine Mod wird installiert. Schließe Mod Organizer, wenn sie fertig ist.</translation>
+    </message>
+    <message>
+      <source>Running a program</source>
+      <translation>Ein Programm zu starten</translation>
+    </message>
+    <message>
+      <source>Switching profiles</source>
+      <translation>Das Profil zu wechseln</translation>
+    </message>
+    <message>
+      <source>A mod is being installed. Switch profiles once it has finished.</source>
+      <translation>Eine Mod wird installiert. Wechsle das Profil, wenn sie fertig ist.</translation>
+    </message>
+    <message>
       <source>MO2 Revamped %1 is out</source>
       <translation>MO2 Revamped %1 ist erschienen</translation>
     </message>
@@ -9399,6 +9423,42 @@ Um einige Dateien zu behalten, verschiebe sie vorher in eine Mod.</translation>
   <context>
     <name>ProblemsDialog</name>
     <message>
+      <source>A plugin whose masters are missing, an SKSE plugin that didn't load the last time the game ran, or a plugin still saved for the original Skyrim.</source>
+      <translation>Ein Plugin, dem Master fehlen, ein SKSE-Plugin, das beim letzten Spielstart nicht geladen wurde, oder ein Plugin, das noch für das ursprüngliche Skyrim gespeichert ist.</translation>
+    </message>
+    <message>
+      <source>A plugin whose masters are missing, or a script extender plugin (F4SE, NVSE, xOBSE...) that didn't load the last time the game ran.</source>
+      <translation>Ein Plugin, dem Master fehlen, oder ein Script-Extender-Plugin (F4SE, NVSE, xOBSE...), das beim letzten Spielstart nicht geladen wurde.</translation>
+    </message>
+    <message>
+      <source>Steam saves still hidden after an earlier launch, or a profile that has no saves of its own yet.</source>
+      <translation>Steam-Spielstände, die nach einem früheren Start noch verborgen sind, oder ein Profil, das noch keine eigenen Spielstände hat.</translation>
+    </message>
+    <message>
+      <source>An error in the last program run from MO2, or files left in Overwrite by a tool, which belong in a mod of their own.</source>
+      <translation>Ein Fehler im zuletzt aus MO2 gestarteten Programm, oder Dateien, die ein Werkzeug in Overwrite gelassen hat und die in eine eigene Mod gehören.</translation>
+    </message>
+    <message>
+      <source>Checks that run for %1: %2.</source>
+      <translation>Prüfungen für %1: %2.</translation>
+    </message>
+    <message>
+      <source>this instance</source>
+      <translation>diese Instanz</translation>
+    </message>
+    <message>
+      <source>No check runs for this instance: the diagnosis plugins are turned off in Settings, Plugins.</source>
+      <translation>Für diese Instanz läuft keine Prüfung: Die Diagnose-Plugins sind unter Einstellungen, Plugins ausgeschaltet.</translation>
+    </message>
+    <message>
+      <source>For example: %1</source>
+      <translation>Zum Beispiel: %1</translation>
+    </message>
+    <message>
+      <source>When one of them finds something, the bell shows a dot and it is listed here.</source>
+      <translation>Wenn eine davon etwas findet, zeigt die Glocke einen Punkt und es steht hier.</translation>
+    </message>
+    <message>
       <source>Basic diagnosis</source>
       <translation>Basisdiagnose</translation>
     </message>
@@ -9943,6 +10003,10 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Loading files… %1%</source>
+      <translation>Dateien werden geladen… %1%</translation>
+    </message>
     <message>
       <source>Notices: sound only, without the card</source>
       <translation>Hinweise: nur Ton, ohne Karte</translation>
@@ -15961,6 +16025,34 @@ Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3
   </context>
   <context>
     <name>CollectionDialog</name>
+    <message>
+      <source>Installing %1%</source>
+      <translation>Wird installiert: %1%</translation>
+    </message>
+    <message>
+      <source>Installing…</source>
+      <translation>Wird installiert…</translation>
+    </message>
+    <message>
+      <source>installing %1</source>
+      <translation>installiert %1</translation>
+    </message>
+    <message>
+      <source>A collection is installing</source>
+      <translation>Eine Sammlung wird installiert</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; is being installed (%2 of %3 mods). %4 now would use the mods as they were before it started, or put its mods in the wrong profile. Pause the collection first? It continues from the same place when you press Continue in its window.</source>
+      <translation>„%1“ wird installiert (%2 von %3 Mods). %4 würde jetzt die Mods so verwenden, wie sie vor dem Start waren, oder ihre Mods ins falsche Profil legen. Die Sammlung zuerst anhalten? Sie macht an derselben Stelle weiter, wenn du in ihrem Fenster auf Fortsetzen klickst.</translation>
+    </message>
+    <message>
+      <source>Pause and go on</source>
+      <translation>Anhalten und weiter</translation>
+    </message>
+    <message>
+      <source>Keep installing</source>
+      <translation>Weiter installieren</translation>
+    </message>
     <message>
       <source>Download a Nexus collection</source>
       <translation>Nexus-Sammlung herunterladen</translation>

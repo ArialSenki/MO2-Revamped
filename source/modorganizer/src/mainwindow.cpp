@@ -2441,11 +2441,13 @@ void MainWindow::updateProblemsButton()
   if (numProblems > 0) {
     ui->actionNotifications->setToolTip(tr("There are notifications to read"));
   } else {
-    ui->actionNotifications->setToolTip(tr("There are no notifications"));
+    ui->actionNotifications->setToolTip(
+        tr("There are no notifications. Open it to see what is checked."));
   }
 
   const QIcon icon = fluentNotificationIcon(numProblems);
-  ui->actionNotifications->setEnabled(numProblems > 0);
+  // MO2 Revamped: opens with nothing to read too, and says what is checked
+  ui->actionNotifications->setEnabled(true);
   ui->actionNotifications->setIcon(icon);
   if (auto* button = qobject_cast<QAbstractButton*>(
           ui->toolBar->widgetForAction(ui->actionNotifications))) {
@@ -2938,6 +2940,15 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 bool MainWindow::canExit()
 {
+  // MO2 Revamped: a collection's install extracts with no window of its own
+  // in front, so the main window can be closed in the middle of it
+  if (m_OrganizerCore.installationManager()->isRunning()) {
+    QMessageBox::information(this, tr("Installation in progress"),
+                             tr("A mod is being installed. Close Mod Organizer once "
+                                "it has finished."));
+    return false;
+  }
+
   if (m_OrganizerCore.downloadManager()->downloadsInProgressNoPause()) {
     if (QMessageBox::question(
             this, tr("Downloads in progress"),
@@ -3284,6 +3295,11 @@ void MainWindow::startExeAction()
     return;
   }
 
+  // MO2 Revamped: the collection's files aren't in the virtual folder yet
+  if (m_CollectionDialog && !m_CollectionDialog->askToPause(this, tr("Running a program"))) {
+    return;
+  }
+
   action->setEnabled(false);
   Guard g([&] {
     action->setEnabled(true);
@@ -3309,6 +3325,25 @@ void MainWindow::activateSelectedProfile()
 void MainWindow::on_profileBox_currentIndexChanged(int index)
 {
   if (!ui->profileBox->isEnabled()) {
+    return;
+  }
+
+  // MO2 Revamped: a running collection activates its mods in the current
+  // profile; another one would get them
+  if (m_CollectionDialog && m_OldProfileIndex > 0 && index != m_OldProfileIndex &&
+      !m_CollectionDialog->askToPause(this, tr("Switching profiles"))) {
+    QSignalBlocker block(ui->profileBox);
+    ui->profileBox->setCurrentIndex(m_OldProfileIndex);
+    return;
+  }
+  // nor in the middle of one mod's install (paused, the one under way ends)
+  if (m_OldProfileIndex > 0 && index != m_OldProfileIndex &&
+      m_OrganizerCore.installationManager()->isRunning()) {
+    QSignalBlocker block(ui->profileBox);
+    ui->profileBox->setCurrentIndex(m_OldProfileIndex);
+    MessageDialog::showMessage(
+        tr("A mod is being installed. Switch profiles once it has finished."), this,
+        true);
     return;
   }
 
@@ -3937,6 +3972,11 @@ void MainWindow::launchSelectedExecutable()
 {
   const Executable* selectedExecutable = getSelectedExecutable();
   if (!selectedExecutable) {
+    return;
+  }
+
+  // MO2 Revamped: the collection's files aren't in the virtual folder yet
+  if (m_CollectionDialog && !m_CollectionDialog->askToPause(this, tr("Running a program"))) {
     return;
   }
 
@@ -6405,17 +6445,10 @@ void MainWindow::askFirstStartQuestions()
     return;
   }
   if (m_OrganizerCore.settings().firstStart()) {
-    if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
-      // Let the user decline instead of always opening a browser on first start.
-      if (QMessageBox::question(
-              this, tr("Game support wiki"),
-              tr("A game support wiki is available for this game. Open it now? "
-                 "You can also open it later from the \"...\" menu."),
-              QMessageBox::Yes | QMessageBox::No,
-              QMessageBox::Yes) == QMessageBox::Yes) {
-        gameSupportTriggered();
-      }
-    }
+    // MO2 Revamped: no game wiki question here. It came right after creating
+    // an instance, between the theme and category questions, as a plain
+    // message box that looked like one of the notices; the wiki stays one
+    // click away under "..." > "Game support wiki".
 
     // first start: how the categories begin
     enum

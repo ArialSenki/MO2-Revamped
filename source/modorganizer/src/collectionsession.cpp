@@ -262,6 +262,16 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
   connect(&nexus, &NexusInterface::nxmRequestFailed, this,
           &CollectionSession::onApiFailed);
 
+  // the extraction of the mod being installed, shown on its row
+  connect(m_core.installationManager(), &InstallationManager::extractionProgress, this,
+          [this](int percent) {
+            if (m_installRow < 0 || percent == m_installPercent) {
+              return;
+            }
+            m_installPercent = percent;
+            emit entryChanged(m_installRow);
+          });
+
   DownloadManager* dm = m_core.downloadManager();
   connect(dm, &DownloadManager::update, this, &CollectionSession::onDownloadUpdate);
   connect(dm, &DownloadManager::stateChanged, this, &CollectionSession::scheduleScan);
@@ -2758,9 +2768,15 @@ void CollectionSession::pumpInstall()
         if (!self) {
           return;
         }
+        self->m_installRow     = row;
+        self->m_installPercent = -1;
+        emit self->entryChanged(row);
         // whatever happens in the install, the next one can start
-        const auto done = qScopeGuard([self] {
+        const auto done = qScopeGuard([self, row] {
           if (self) {
+            self->m_installRow     = -1;
+            self->m_installPercent = -1;
+            emit self->entryChanged(row);
             self->m_installing = false;
             self->saveState();
             emit self->changed();
@@ -2864,6 +2880,14 @@ bool CollectionSession::installEntry(int row)
     if (m_stage == Stage::Running && !m_finalizing) {
       m_core.setDirectoryRefreshDeferred(true);
     }
+    // MO2 Revamped: the install runs events with no window of its own in
+    // front (its progress is this window's); closing the window waits for it
+    ++m_waiting;
+    const auto waited = qScopeGuard([self] {
+      if (self) {
+        --self->m_waiting;
+      }
+    });
     installed = m_core.installArchive(e.archive, -1, false, nullptr, e.modName);
   } catch (const std::exception& ex) {
     error = QString::fromUtf8(ex.what());

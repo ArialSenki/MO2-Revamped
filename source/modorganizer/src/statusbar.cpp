@@ -81,10 +81,13 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
   addPermanentWidget(m_update);
   addPermanentWidget(m_api);
 
-  m_progress->setTextVisible(true);
+  // MO2 Revamped: a thin Fluent bar while the files load, not a wide block
+  // with a percentage in it; the percentage is in the status text and the
+  // bar's tool tip
+  m_progress->setObjectName(QStringLiteral("statusLoadingBar"));
+  m_progress->setTextVisible(false);
   m_progress->setRange(0, 100);
-  m_progress->setMaximumWidth(300);
-  m_progress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  m_progress->setFixedSize(160, 3);
 
   m_update->set(false);
   m_notifications->set(false);
@@ -106,8 +109,10 @@ void StatusBar::setProgress(int percent)
     clearMessage();
     visible = false;
   } else {
-    showMessage(QObject::tr("Loading..."));
+    const QString text = QObject::tr("Loading files… %1%").arg(percent);
+    showMessage(text);
     m_progress->setValue(percent);
+    m_progress->setToolTip(text);
   }
 
   m_progress->setVisible(visible);

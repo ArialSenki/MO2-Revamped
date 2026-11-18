@@ -176,8 +176,15 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
           &CollectionDialog::onEntryChanged);
   connect(m_session, &CollectionSession::finished, this, [this] {
     onChanged();
-    raise();
-    activateWindow();
+    // MO2 Revamped: never takes the focus from what the user is doing (a game,
+    // another program, another MO2 window): in front only when MO2 is, else
+    // its taskbar button flashes
+    if (QApplication::applicationState() == Qt::ApplicationActive &&
+        QApplication::activeModalWidget() == nullptr) {
+      raise();
+    } else {
+      QApplication::alert(this);
+    }
   });
 
   auto& nexus = NexusInterface::instance();
@@ -301,6 +308,39 @@ void CollectionDialog::setRunLoot(std::function<void()> f)
 bool CollectionDialog::isRunning() const
 {
   return m_session->stage() == Stage::Running;
+}
+
+bool CollectionDialog::askToPause(QWidget* parent, const QString& action)
+{
+  if (!isRunning()) {
+    return true;
+  }
+  int mods = 0, installed = 0;
+  for (const auto& e : m_session->entries()) {
+    if (e.selected && e.status != Status::Skipped) {
+      ++mods;
+      installed += e.status == Status::Installed ? 1 : 0;
+    }
+  }
+  FluentContentDialog dialog(
+      parent, QStringLiteral("CollectionPauseDialog"), tr("A collection is installing"),
+      tr("\"%1\" is being installed (%2 of %3 mods). %4 now would use the mods as "
+         "they were before it started, or put its mods in the wrong profile. Pause "
+         "the collection first? It continues from the same place when you press "
+         "Continue in its window.")
+          .arg(m_session->displayName())
+          .arg(installed)
+          .arg(mods)
+          .arg(action));
+  auto* pause = dialog.addButton(tr("Pause and go on"), true);
+  auto* keep  = dialog.addButton(tr("Keep installing"));
+  connect(pause, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(keep, &QPushButton::clicked, &dialog, &QDialog::reject);
+  if (dialog.exec() != QDialog::Accepted) {
+    return false;
+  }
+  m_session->pause();
+  return true;
 }
 
 std::optional<CollectionLink> CollectionDialog::askLink(QWidget* parent)
@@ -1161,6 +1201,9 @@ void CollectionDialog::updateSteps()
   }
 
   int downloads = 0, downloaded = 0, mods = 0, installed = 0, failed = 0;
+  // MO2 Revamped: the files' sizes move the download bar while they arrive,
+  // not only when one is complete (a list of hundreds sat still for minutes)
+  qint64 totalBytes = 0, doneBytes = 0;
   for (const auto& e : entries) {
     if (!e.selected || e.status == Status::Skipped) {
       continue;
@@ -1174,8 +1217,12 @@ void CollectionDialog::updateSteps()
     }
     if (mod.type != SourceType::Bundle) {
       ++downloads;
+      totalBytes += qMax<qint64>(0, e.size);
       if (e.status == Status::Downloaded || e.status == Status::Installed) {
         ++downloaded;
+        doneBytes += qMax<qint64>(0, e.size);
+      } else if (e.status == Status::Downloading && e.progress > 0) {
+        doneBytes += qMax<qint64>(0, e.size) * qMin(e.progress, 100) / 100;
       }
     }
   }
@@ -1199,13 +1246,25 @@ void CollectionDialog::updateSteps()
   if (running && downloaded < downloads) {
     text += QStringLiteral(" · ") + tr("in progress");
   }
-  show(0, downloaded, downloads, text);
+  if (totalBytes > 0 && downloaded < downloads) {
+    show(0, static_cast<int>(doneBytes * 1000 / totalBytes), 1000, text);
+  } else {
+    show(0, downloaded, downloads, text);
+  }
 
   text = tr("%1 of %2 mods").arg(installed).arg(mods);
   if (failed > 0) {
     text += QStringLiteral(" · ") + tr("%n failed", "", failed);
   }
-  show(1, installed, mods, text);
+  // MO2 Revamped: the mod being installed moves the bar too (a large one
+  // takes minutes), in hundredths of a mod
+  const int row = m_session->installingRow();
+  if (row >= 0 && row < static_cast<int>(entries.size())) {
+    text += QStringLiteral(" · ") +
+            tr("installing %1").arg(m_session->modOf(entries[row]).name);
+  }
+  const int part = row >= 0 ? qBound(0, m_session->installPercent(), 99) : 0;
+  show(1, installed * 100 + part, mods * 100, text);
 
   // the last step has no count: busy while it runs, full when done
   if (stage == Stage::Done) {
@@ -1278,11 +1337,19 @@ void CollectionDialog::updateRow(QTreeWidgetItem* item, int row)
     item->setData(ColName, Qt::CheckStateRole, e.selected ? Qt::Checked : Qt::Unchecked);
   }
 
-  item->setText(ColStatus, statusText(e));
+  // the one being installed: its own status, with how far its files are
+  const bool installing = row == m_session->installingRow();
+  if (installing) {
+    const int percent = m_session->installPercent();
+    item->setText(ColStatus, percent >= 0 ? tr("Installing %1%").arg(percent)
+                                          : tr("Installing…"));
+  } else {
+    item->setText(ColStatus, statusText(e));
+  }
   item->setToolTip(ColStatus, plainTip(e.reason));
 
   QColor color;
-  switch (e.status) {
+  switch (installing ? Status::Downloading : e.status) {
   case Status::Installed:
     color = RevampedTheme::successText();
     break;

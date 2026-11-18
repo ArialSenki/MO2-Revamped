@@ -184,6 +184,10 @@ public:
   // other folder that exists is asked about as usual
   void setApprovedReplacements(const QStringList& folders);
 
+  // MO2 Revamped: stops the extraction under way (the collection window's
+  // cancel, which has no progress window of its own to press)
+  void cancelExtraction();
+
   /**
    * @brief retrieve a string describing the specified error code
    *
@@ -364,6 +368,12 @@ signals:
    * @brief An existing mod has been replaced with a newly installed one.
    */
   void modReplaced(const QString fileName);
+
+  /**
+   * MO2 Revamped: where an extraction without its own window is (a
+   * collection's installs show it in the collection's window): percent, 0-100
+   */
+  void extractionProgress(int percent);
 
 private:
   struct CaseInsensitive

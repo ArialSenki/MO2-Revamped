@@ -40,6 +40,8 @@ private:
   void urlClicked(const QUrl& url);
   void startFix();
   void copyText();
+  // the checks that run for this game, and an example of what they report
+  QString checksText(const QStringList& sources) const;
 
   const PluginContainer& m_PluginContainer;
   bool m_hasProblems;
@@ -47,6 +49,8 @@ private:
 
   QListWidget* m_list;
   QLabel* m_count;
+  // the empty state: what this instance's checks look for
+  QLabel* m_checks;
   QStackedWidget* m_details;
   QLabel* m_title;
   QLabel* m_caption;
