@@ -53,6 +53,10 @@ private slots:
   void receiveMessage();
 
 private:
+  // reads the message once it is there and answers the sender
+  void readMessage(class QLocalSocket* socket);
+
+private:
   bool m_Ephemeral;
   bool m_OwnsSM;
   QSharedMemory m_SharedMem;
