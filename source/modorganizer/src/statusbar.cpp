@@ -1,6 +1,7 @@
 #include "fluenticons.h"
 #include "fluentpanels.h"
 #include "statusbar.h"
+#include <QHBoxLayout>
 #include <QMouseEvent>
 #include "instancemanager.h"
 #include "nexusinterface.h"
@@ -46,8 +47,8 @@ QAccessibleInterface* statusBarActionAccessible(const QString& className, QObjec
 
 StatusBar::StatusBar(QWidget* parent)
     : QStatusBar(parent), ui(nullptr), m_normal(new FluentPanels::ElidedLabel),
-      m_progress(new QProgressBar), m_progressSpacer1(new QWidget),
-      m_progressSpacer2(new QWidget), m_notifications(nullptr), m_update(nullptr),
+      m_progress(new QProgressBar), m_loading(new QWidget), m_loadingText(new QLabel),
+      m_notifications(nullptr), m_update(nullptr),
       m_api(new QLabel)
 {}
 
@@ -70,12 +71,17 @@ void StatusBar::setup(Ui::MainWindow* mainWindowUI, const Settings& settings)
   m_normal->setElideMode(Qt::ElideRight);
   addWidget(m_normal, 1);
 
-  m_progressSpacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  addPermanentWidget(m_progressSpacer1, 0);
-  addPermanentWidget(m_progress);
-
-  m_progressSpacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  addPermanentWidget(m_progressSpacer2, 0);
+  // MO2 Revamped: while the files load, the text and the thin bar take the
+  // normal text's place: the bar starts after the text, centred on its line,
+  // instead of floating between the two sides of the status bar
+  auto* loadingLayout = new QHBoxLayout(m_loading);
+  loadingLayout->setContentsMargins(m_normal->contentsMargins());
+  loadingLayout->setSpacing(10);
+  m_loadingText->setObjectName(QStringLiteral("statusLoadingText"));
+  loadingLayout->addWidget(m_loadingText, 0, Qt::AlignVCenter);
+  loadingLayout->addWidget(m_progress, 0, Qt::AlignVCenter);
+  loadingLayout->addStretch(1);
+  addWidget(m_loading, 1);
 
   addPermanentWidget(m_notifications);
   addPermanentWidget(m_update);
@@ -106,18 +112,16 @@ void StatusBar::setProgress(int percent)
   bool visible = true;
 
   if (percent < 0 || percent >= 100) {
-    clearMessage();
     visible = false;
   } else {
     const QString text = QObject::tr("Loading files… %1%").arg(percent);
-    showMessage(text);
+    m_loadingText->setText(text);
     m_progress->setValue(percent);
     m_progress->setToolTip(text);
   }
 
-  m_progress->setVisible(visible);
-  m_progressSpacer1->setVisible(visible);
-  m_progressSpacer2->setVisible(visible);
+  m_loading->setVisible(visible);
+  m_normal->setVisible(!visible);
 }
 
 void StatusBar::setNotifications(bool hasNotifications)

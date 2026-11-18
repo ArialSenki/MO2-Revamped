@@ -70,8 +70,10 @@ private:
   Ui::MainWindow* ui;
   FluentPanels::ElidedLabel* m_normal;
   QProgressBar* m_progress;
-  QWidget* m_progressSpacer1;
-  QWidget* m_progressSpacer2;
+  // MO2 Revamped: "Loading files… 42%" and the thin bar right after it, in
+  // place of the normal text while the files load
+  QWidget* m_loading;
+  QLabel* m_loadingText;
   StatusBarAction* m_notifications;
   StatusBarAction* m_update;
   QLabel* m_api;
