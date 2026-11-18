@@ -7543,6 +7543,18 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
       <source>Open the folder</source>
       <translation>Ordner öffnen</translation>
     </message>
+    <message>
+      <source>Endorse</source>
+      <translation>Empfehlen</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods</source>
+      <translation>MO2 Revamped auf Nexus Mods empfehlen</translation>
+    </message>
+    <message>
+      <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
+      <translation>Eine Empfehlung zeigt Nexus Mods, dass sich MO2 Revamped lohnt. Wähle unter Mehr „Nicht empfehlen“, um diese Schaltfläche ohne Empfehlung auszublenden.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

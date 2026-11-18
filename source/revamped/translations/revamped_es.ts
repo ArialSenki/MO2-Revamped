@@ -7583,6 +7583,18 @@ Si vuelve a pasar, adjunta este archivo (y el mo_interface.log de la carpeta log
       <source>Open the folder</source>
       <translation>Abrir la carpeta</translation>
     </message>
+    <message>
+      <source>Endorse</source>
+      <translation>Respaldar</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods</source>
+      <translation>Respaldar MO2 Revamped en Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
+      <translation>Respaldarlo le dice a Nexus Mods que merece la pena probar MO2 Revamped. Elige "No respaldar" en Más para ocultar este botón sin respaldarlo.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

@@ -7731,6 +7731,18 @@ Si cela se reproduit, joignez ce fichier (et le mo_interface.log du dossier logs
       <source>Open the folder</source>
       <translation>Ouvrir le dossier</translation>
     </message>
+    <message>
+      <source>Endorse</source>
+      <translation>Recommander</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods</source>
+      <translation>Recommander MO2 Revamped sur Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
+      <translation>Recommander indique à Nexus Mods que MO2 Revamped vaut le détour. Choisissez « Ne pas recommander » dans Plus pour masquer ce bouton sans recommander.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

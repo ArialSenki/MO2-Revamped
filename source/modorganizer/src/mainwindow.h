@@ -235,6 +235,8 @@ private:
   QToolButton* m_moreActionsButton = nullptr;
   FluentDashboard* m_fluentDashboard = nullptr;
   QAction* m_fluentOverflowAction     = nullptr;
+  // the command bar's Endorse button, shown until the user decides
+  QAction* m_endorseBarAction         = nullptr;
   RunState m_runState              = RunState::Idle;
   // the core outlives the window: the run state callback goes with it
   boost::signals2::scoped_connection m_aboutToRunConnection;

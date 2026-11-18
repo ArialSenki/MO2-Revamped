@@ -7891,6 +7891,18 @@ Se succede di nuovo, allega questo file (e il mo_interface.log della cartella lo
       <source>Open the folder</source>
       <translation>Apri la cartella</translation>
     </message>
+    <message>
+      <source>Endorse</source>
+      <translation>Approva</translation>
+    </message>
+    <message>
+      <source>Endorse MO2 Revamped on Nexus Mods</source>
+      <translation>Approva MO2 Revamped su Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
+      <translation>Approvarlo dice a Nexus Mods che MO2 Revamped vale la pena. Scegli "Non approvare" in Altro per nascondere questo pulsante senza approvarlo.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

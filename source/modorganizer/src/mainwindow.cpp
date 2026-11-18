@@ -5796,6 +5796,13 @@ void MainWindow::toggleRevampedEndorseState()
 {
   const auto& s = m_OrganizerCore.settings();
 
+  // the command bar's button: only while there is a decision to make
+  if (m_endorseBarAction != nullptr) {
+    m_endorseBarAction->setVisible(s.nexus().endorsementIntegration() &&
+                                   s.nexus().endorsementState() ==
+                                       EndorsementState::NoDecision);
+  }
+
   if (!s.nexus().endorsementIntegration()) {
     ui->actionEndorseMO->setVisible(false);
     return;
