@@ -16151,6 +16151,26 @@ Estrarre i loro file nella mod? I file sciolti seguono l'ordine dell'elenco dell
   <context>
     <name>DiagnoseBasic</name>
     <message>
+      <source>There are files in &lt;b&gt;Overwrite&lt;/b&gt;. In Cyberpunk 2077 they are usually logs, settings and caches that Cyber Engine Tweaks, RED4ext, redscript and the mods that use them write while the game runs. Files in &lt;b&gt;Overwrite&lt;/b&gt; win over every mod in your profile.&lt;br&gt;&lt;br&gt;Most of them can stay there: logs and caches are written again on each run, and mod settings keep working from &lt;b&gt;Overwrite&lt;/b&gt;. Move a mod's settings to a mod of their own only if you want different settings in each profile, because &lt;b&gt;Overwrite&lt;/b&gt; is shared by all of them.</source>
+      <translation>Ci sono file in &lt;b&gt;Overwrite&lt;/b&gt;. In Cyberpunk 2077 di solito sono log, impostazioni e cache che Cyber Engine Tweaks, RED4ext, redscript e le mod che li usano scrivono mentre il gioco è in esecuzione. I file in &lt;b&gt;Overwrite&lt;/b&gt; prevalgono su tutte le mod del tuo profilo.&lt;br&gt;&lt;br&gt;La maggior parte può restare lì: log e cache vengono riscritti a ogni avvio, e le impostazioni delle mod funzionano anche da &lt;b&gt;Overwrite&lt;/b&gt;. Sposta le impostazioni di una mod in una mod a parte solo se vuoi impostazioni diverse per ogni profilo, perché &lt;b&gt;Overwrite&lt;/b&gt; è condiviso da tutti.</translation>
+    </message>
+    <message>
+      <source>There are files in &lt;b&gt;Overwrite&lt;/b&gt;. In Baldur's Gate 3 they usually come from the Script Extender (its logs and settings) and from the mod settings (&lt;i&gt;modsettings.lsx&lt;/i&gt;) that the game or a tool saves. Files in &lt;b&gt;Overwrite&lt;/b&gt; win over every mod in your profile.&lt;br&gt;&lt;br&gt;Script Extender logs can stay there. &lt;b&gt;Overwrite&lt;/b&gt; is shared by all your profiles, so if you use more than one, check that the mod settings in it match the profile you play with, or move them to a mod.</source>
+      <translation>Ci sono file in &lt;b&gt;Overwrite&lt;/b&gt;. In Baldur's Gate 3 di solito vengono dallo Script Extender (i suoi log e impostazioni) e dalle impostazioni delle mod (&lt;i&gt;modsettings.lsx&lt;/i&gt;) salvate dal gioco o da uno strumento. I file in &lt;b&gt;Overwrite&lt;/b&gt; prevalgono su tutte le mod del tuo profilo.&lt;br&gt;&lt;br&gt;I log dello Script Extender possono restare lì. &lt;b&gt;Overwrite&lt;/b&gt; è condiviso da tutti i tuoi profili: se ne usi più di uno, controlla che le impostazioni delle mod che contiene corrispondano al profilo con cui giochi, oppure spostale in una mod.</translation>
+    </message>
+    <message>
+      <source>There are files in &lt;b&gt;Overwrite&lt;/b&gt;. They are usually files that the game, a tool or a mod created while running, such as logs, settings or caches. Files in &lt;b&gt;Overwrite&lt;/b&gt; win over every mod in your profile, and &lt;b&gt;Overwrite&lt;/b&gt; is shared by all your profiles.&lt;br&gt;&lt;br&gt;Logs and caches can usually stay there. Move files to a mod if they belong to one setup or you want more control over them.</source>
+      <translation>Ci sono file in &lt;b&gt;Overwrite&lt;/b&gt;. Di solito sono file che il gioco, uno strumento o una mod hanno creato durante l'esecuzione, come log, impostazioni o cache. I file in &lt;b&gt;Overwrite&lt;/b&gt; prevalgono su tutte le mod del tuo profilo, e &lt;b&gt;Overwrite&lt;/b&gt; è condiviso da tutti i tuoi profili.&lt;br&gt;&lt;br&gt;Log e cache di solito possono restare lì. Sposta i file in una mod se appartengono a una configurazione precisa o se vuoi più controllo su di essi.</translation>
+    </message>
+    <message>
+      <source>To move files, double-click &lt;b&gt;Overwrite&lt;/b&gt; and drag them onto a mod in the mod list, or right-click &lt;b&gt;Overwrite&lt;/b&gt; to make a new mod from all of them.</source>
+      <translation>Per spostare i file, fai doppio clic su &lt;b&gt;Overwrite&lt;/b&gt; e trascinali su una mod dell'elenco, oppure fai clic destro su &lt;b&gt;Overwrite&lt;/b&gt; per creare una nuova mod con tutti.</translation>
+    </message>
+    <message>
+      <source>To ignore .log files or stop this warning, open Settings, Plugins, "Diagnose Basic".</source>
+      <translation>Per ignorare i file .log o non vedere più questo avviso, apri Impostazioni, Plugin, "Diagnose Basic".</translation>
+    </message>
+    <message>
       <source>File attributes</source>
       <translation>Attributi dei file</translation>
     </message>

@@ -64,6 +64,9 @@ private:
 
   bool errorReported() const;
   bool overwriteFiles() const;
+  QString overwriteDescription() const;
+  QString bethesdaOverwriteDescription() const;
+  QString fullDescriptionMore(unsigned int key) const;
   bool invalidFontConfig() const;
   bool nitpickInstalled() const;
   bool assetOrder() const;
