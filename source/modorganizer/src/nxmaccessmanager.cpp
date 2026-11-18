@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmurl.h"
 #include "persistentcookiejar.h"
 #include "report.h"
+#include "revampedversion.h"
 #include "selfupdater.h"
 #include "settings.h"
 #include "utility.h"
@@ -44,8 +45,10 @@ using namespace std::chrono_literals;
 
 const QString NexusBaseUrl("https://api.nexusmods.com/v1");
 const QString NexusSSO("wss://sso.nexusmods.com");
-const QString
-    NexusSSOPage("https://www.nexusmods.com/sso?id=%1&application=modorganizer2");
+// MO2 Revamped: the application Nexus registered (see revampedversion.h); while
+// there is none, Settings doesn't offer this sign-in
+const QString NexusSSOPage("https://www.nexusmods.com/sso?id=%1&application=" +
+                           QStringLiteral(MO2R_NEXUS_SSO_SLUG));
 
 // MO2 Revamped: an SSL error on Nexus' own servers almost always means
 // something in between answered instead of them

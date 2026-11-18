@@ -7,6 +7,7 @@
 #include <QFormLayout>
 #include <QMessageBox>
 #include "nexusinterface.h"
+#include "revampedversion.h"
 #include "serverinfo.h"
 #include "shared/util.h"
 #include "ui_nexusmanualkey.h"
@@ -191,6 +192,14 @@ NexusConnectionUI::NexusConnectionUI(QWidget* parent, Settings* s,
     : m_parent(parent), m_settings(s), m_connect(connectButton),
       m_disconnect(disconnectButton), m_manual(manualButton), m_log(logList)
 {
+  // MO2 Revamped: Nexus' sign-in page asks for access in the name of the
+  // registered application; until Nexus registers MO2 Revamped's, it would be
+  // the original Mod Organizer 2's, so only the personal API key is offered
+  if (m_connect && QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
+    m_connect->hide();
+    m_connect = nullptr;
+  }
+
   if (m_connect) {
     QObject::connect(m_connect, &QPushButton::clicked, [&] {
       connect();
@@ -587,6 +596,11 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   m_connectionUI.reset(new NexusConnectionUI(&dialog(), &settings(), ui->nexusConnect,
                                              ui->nexusDisconnect, ui->nexusManualKey,
                                              ui->nexusLog));
+  if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
+    ui->nexusConnectionDescription->setText(
+        QObject::tr("Connect with the personal API key from your Nexus account page. "
+                    "Connection messages appear beside these actions."));
+  }
 
   QObject::connect(
       m_connectionUI.get(), &NexusConnectionUI::stateChanged, &d,

@@ -11738,6 +11738,10 @@ Exemple :
       <source>Message</source>
       <translation>Message</translation>
     </message>
+    <message>
+      <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Connectez-vous avec la clé d'API personnelle de la page de votre compte Nexus. Les messages de connexion s'affichent à côté de ces actions.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

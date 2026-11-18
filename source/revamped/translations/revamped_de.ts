@@ -11405,6 +11405,10 @@ Firefox.exe</translation>
       <source>Message</source>
       <translation>Meldung</translation>
     </message>
+    <message>
+      <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Verbinde dich mit dem persönlichen API-Schlüssel von deiner Nexus-Kontoseite. Verbindungsmeldungen erscheinen neben diesen Aktionen.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

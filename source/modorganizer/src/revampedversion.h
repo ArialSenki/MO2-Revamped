@@ -15,6 +15,12 @@
 #define MO2R_NEXUS_OLD_DOMAIN "eldenring"
 #define MO2R_NEXUS_OLD_MOD_ID 11314
 
+// the application name Nexus registered for MO2 Revamped's sign-in (SSO). Empty
+// until Nexus registers it: signing in through Nexus would ask for access in
+// the original Mod Organizer 2's name, so Settings offers the personal API key
+// instead. Set it to the slug Nexus gives to bring "Connect to Nexus" back
+#define MO2R_NEXUS_SSO_SLUG ""
+
 // the page in Nexus' Modding Tools section, where moderators asked multi-game
 // tools to live: the update notice links to it
 #define MO2R_NEXUS_PAGE_URL "https://www.nexusmods.com/site/mods/2612"
