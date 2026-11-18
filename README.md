@@ -12,17 +12,18 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.13](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.13)**
-— `MO2-Revamped-Setup-1.1.0-beta.13.exe` with its `SHA256SUMS.txt`. It is a beta,
+**Latest: [v1.1.0-beta.14](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.14)**
+— `MO2-Revamped-Setup-1.1.0-beta.14.exe` with its `SHA256SUMS.txt`. It is a beta,
 and the newest version.
 
+- **Wabbajack lists:** install natively, with Wabbajack's gallery (new in beta 14).
 - **Nolvus support.**
 - **Very large lists:** with Nolvus (3,597 mods) it starts twice as fast as the
   original MO2 2.5.2.
 - **Nexus collections** are included.
 - **Elden Ring and Nightreign:** the tools are included.
 
-Its changes are in the [beta's changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.13/CHANGELOG.md).
+Its changes are in the [beta's changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.14/CHANGELOG.md).
 The betas are developed on the
 [design/fluent-v4](https://github.com/ArialSenki/MO2-Revamped/tree/design/fluent-v4)
 branch, whose README describes them in full.
@@ -35,7 +36,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.13.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.14.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
