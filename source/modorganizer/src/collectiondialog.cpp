@@ -142,6 +142,9 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
   setProperty("mo2rOwnPosition", true);
   setupUi();
   m_fitter = new ScreenFitter(this, QSize(900, 640));
+  // the wheel over the install choices scrolls the page rather than
+  // changing them (see MOApplication::dispatch)
+  setProperty("fluentWheelScrollsPage", true);
   placeWindow();
 
   // MO2 may still be starting (a collection link on its command line): the main

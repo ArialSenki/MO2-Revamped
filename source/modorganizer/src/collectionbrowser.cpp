@@ -239,6 +239,10 @@ CollectionBrowser::CollectionBrowser(const QString& gameDomain, const QString& g
     fitter->place(screen, overWindow ? anchor->frameGeometry().center()
                                      : screen->availableGeometry().center());
   }
+  // the wheel over the sort box scrolls rather than re-sorting (see
+  // MOApplication::dispatch)
+  setProperty("fluentWheelScrollsPage", true);
+
   // MO2 Revamped: maximized unless the user left it otherwise, so the table
   // and the details fit; the size above is the one it restores to
   if (ScreenFitter::opensMaximized(QStringLiteral("collection_browser"))) {

@@ -28,6 +28,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QPointer>
 #include <QStyleOptionButton>
 #include <QTabBar>
+#include <QWheelEvent>
+#include <QComboBox>
 #include "revampedtheme.h"
 #include "fluentchoices.h"
 #include "fluentdialogs.h"
@@ -1693,6 +1695,32 @@ void reportOnUiThread(const QString& message)
 
 bool MOApplication::dispatch(QObject* receiver, QEvent* event)
 {
+  // MO2 Revamped: the wheel scrolls; it doesn't switch tabs when the pointer
+  // crosses a tab bar while scrolling a page, nor change a choice in a combo
+  // box the user isn't using (in windows that ask for it). The parent gets
+  // the wheel instead, so the page under it keeps scrolling
+  if (event->type() == QEvent::Wheel) {
+    if (auto* widget = qobject_cast<QWidget*>(receiver); widget != nullptr) {
+      auto* combo = qobject_cast<QComboBox*>(widget);
+      const bool tabs = qobject_cast<QTabBar*>(widget) != nullptr;
+      const bool idleChoice = combo != nullptr && !combo->hasFocus() &&
+                              !combo->view()->isVisible() &&
+                              widget->window()->property("fluentWheelScrollsPage").toBool();
+      if ((tabs || idleChoice) && widget->parentWidget() != nullptr &&
+          !widget->isWindow()) {
+        auto* wheel  = static_cast<QWheelEvent*>(event);
+        QWidget* to  = widget->parentWidget();
+        QWheelEvent passed(to->mapFromGlobal(wheel->globalPosition()),
+                           wheel->globalPosition(), wheel->pixelDelta(),
+                           wheel->angleDelta(), wheel->buttons(), wheel->modifiers(),
+                           wheel->phase(), wheel->inverted(),
+                           Qt::MouseEventNotSynthesized, wheel->pointingDevice());
+        QCoreApplication::sendEvent(to, &passed);
+        return true;
+      }
+    }
+  }
+
   if (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut) {
     KeyboardFocusRing::follow(receiver, event);
   } else if (event->type() == QEvent::KeyPress) {
