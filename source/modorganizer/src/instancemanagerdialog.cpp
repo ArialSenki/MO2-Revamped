@@ -36,6 +36,7 @@
 #include <QTimer>
 #include <QDir>
 #include <QDirIterator>
+#include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -586,6 +587,11 @@ QWidget* InstanceManagerDialog::createListCard()
     addChoices(tr("Sort by"), m_sortBy, "InstanceManager/sortBy",
                {{QStringLiteral("name"), tr("Name")},
                 {QStringLiteral("used"), tr("Last used")}});
+    if (!InstanceManager::singleton().isEldenRingOnlyPortableMode()) {
+      viewMenu->addSeparator();
+      viewMenu->addAction(tr("Find Nolvus instances in a folder…"), this,
+                          &InstanceManagerDialog::findNolvusElsewhere);
+    }
     FluentIcons::apply(viewMenu);
   });
 
@@ -610,6 +616,21 @@ QWidget* InstanceManagerDialog::createListCard()
   layout->addWidget(m_list, 1);
   connect(m_list, &QListView::customContextMenuRequested, this,
           &InstanceManagerDialog::showListMenu);
+
+  // MO2 Revamped: the Nolvus instances found that aren't linked yet
+  m_nolvusCard = new QFrame(card);
+  m_nolvusCard->setObjectName(QStringLiteral("nolvusCard"));
+  auto* nolvusLayout = new QVBoxLayout(m_nolvusCard);
+  nolvusLayout->setContentsMargins(6, 4, 6, 4);
+  nolvusLayout->setSpacing(4);
+  auto* nolvusTitle = new QLabel(tr("Found in Nolvus"), m_nolvusCard);
+  nolvusTitle->setObjectName(QStringLiteral("fluentStatCaption"));
+  nolvusLayout->addWidget(nolvusTitle);
+  m_nolvusRows = new QVBoxLayout;
+  m_nolvusRows->setSpacing(4);
+  nolvusLayout->addLayout(m_nolvusRows);
+  m_nolvusCard->hide();
+  layout->addWidget(m_nolvusCard);
 
   m_new = new QPushButton(FluentIcons::glyph(AddGlyph), tr("New instance"), card);
   m_new->setObjectName(QStringLiteral("createNew"));
@@ -807,6 +828,10 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
   add(PinGlyph, m_shortcut->text(), m_shortcut, &InstanceManagerDialog::toggleShortcut);
   add(TagGlyph, tr("Move to group\u2026"), nullptr, &InstanceManagerDialog::changeGroup);
   add(NoteGlyph, tr("Edit notes\u2026"), nullptr, &InstanceManagerDialog::editNotes);
+  if (m_nolvusLabels.contains(i->directory())) {
+    add(CopyGlyph, tr("Copy Nolvus' profiles again…"), nullptr,
+        &InstanceManagerDialog::copyNolvusProfilesAgain);
+  }
   menu.addSeparator();
 
   // every folder of the instance, as the main window's Open folder lists them
@@ -918,8 +943,169 @@ void InstanceManagerDialog::updateInstances()
   });
 
   // read all inis, ignore errors
+  m_nolvusLabels.clear();
   for (auto&& i : m_instances) {
     i->readFromIni();
+    if (i->isPortable()) {
+      if (const auto link = Nolvus::readLink(i->iniPath()); link.valid) {
+        m_nolvusLabels.insert(i->directory(), Nolvus::label(link.version, link.variant));
+      }
+    }
+  }
+
+  updateNolvus();
+}
+
+void InstanceManagerDialog::updateNolvus()
+{
+  if (!m_nolvusRows || InstanceManager::singleton().isEldenRingOnlyPortableMode()) {
+    return;
+  }
+
+  while (auto* item = m_nolvusRows->takeAt(0)) {
+    if (auto* w = item->widget()) {
+      w->deleteLater();
+    }
+    delete item;
+  }
+
+  QElapsedTimer timer;
+  timer.start();
+  m_nolvus.clear();
+  for (auto& info : Nolvus::findInstances()) {
+    if (info.linkedInstance.isEmpty()) {
+      m_nolvus.push_back(std::move(info));
+    }
+  }
+  log::debug("Nolvus: {} instances to link found in {} ms", m_nolvus.size(),
+             timer.elapsed());
+
+  for (std::size_t k = 0; k < m_nolvus.size(); ++k) {
+    const auto& info = m_nolvus[k];
+    QStringList parts{Nolvus::label(info.version, info.variant)};
+    if (info.modCount > 0) {
+      parts << tr("%n mods", nullptr, info.modCount);
+    }
+
+    auto* caption = new QLabel(QStringLiteral("<b>%1</b><br>%2")
+                                   .arg(info.name.toHtmlEscaped(),
+                                        parts.join(QStringLiteral(" · ")).toHtmlEscaped()),
+                               m_nolvusCard);
+    caption->setWordWrap(true);
+    caption->setToolTip(QDir::toNativeSeparators(info.installPath));
+    m_nolvusRows->addWidget(caption);
+
+    auto* open = new QPushButton(tr("Open in MO2 Revamped…"), m_nolvusCard);
+    open->setObjectName(QStringLiteral("openNolvus"));
+    open->setAutoDefault(false);
+    open->setToolTip(tr("Make an instance for %1 that uses Nolvus' mods and leaves "
+                        "Nolvus' own MO2 as it is")
+                         .arg(info.name));
+    connect(open, &QPushButton::clicked, this, [this, k] {
+      openNolvus(k);
+    });
+    m_nolvusRows->addWidget(open);
+  }
+
+  m_nolvusCard->setVisible(!m_nolvus.empty());
+}
+
+void InstanceManagerDialog::openNolvus(std::size_t index)
+{
+  if (index >= m_nolvus.size()) {
+    return;
+  }
+  const Nolvus::InstanceInfo info = m_nolvus[index];
+
+  if (!Nolvus::confirmLink(this, info)) {
+    return;
+  }
+
+  QString error;
+  const QString dir = Nolvus::createLinkedInstance(info, &error);
+  if (dir.isEmpty()) {
+    QMessageBox::warning(this, tr("Open %1").arg(info.name),
+                         tr("The instance couldn't be made: %1").arg(error));
+    return;
+  }
+
+  updateInstances();
+  updateList();
+  for (std::size_t i = 0; i < m_instances.size(); ++i) {
+    if (QDir::cleanPath(m_instances[i]->directory())
+            .compare(QDir::cleanPath(dir), Qt::CaseInsensitive) == 0) {
+      select(i);
+      m_list->scrollTo(m_model->index(rowOf(i), 0));
+      openSelectedInstance();
+      return;
+    }
+  }
+}
+
+void InstanceManagerDialog::findNolvusElsewhere()
+{
+  QString dir = QFileDialog::getExistingDirectory(
+      this, tr("Folder the Nolvus Dashboard installed to"), Nolvus::defaultRoot());
+  if (dir.isEmpty()) {
+    return;
+  }
+
+  // the Instances folder or an instance's own folder lead to the same place
+  QDir d(dir);
+  if (QFileInfo(d.filePath(QStringLiteral("MO2/ModOrganizer.ini"))).isFile()) {
+    d.cdUp();
+  }
+  if (d.dirName().compare(QStringLiteral("Instances"), Qt::CaseInsensitive) == 0) {
+    d.cdUp();
+  }
+
+  if (!Nolvus::looksLikeRoot(d.absolutePath())) {
+    QMessageBox::information(
+        this, tr("Nolvus"),
+        tr("No Nolvus instance was found in %1. Choose the folder the Nolvus "
+           "Dashboard installs to: the one with the Instances folder.")
+            .arg(QDir::toNativeSeparators(dir)));
+    return;
+  }
+
+  Nolvus::addRoot(d.absolutePath());
+  updateNolvus();
+  if (m_nolvus.empty()) {
+    QMessageBox::information(this, tr("Nolvus"),
+                             tr("The Nolvus instances in %1 already have an instance "
+                                "here.")
+                                 .arg(QDir::toNativeSeparators(d.absolutePath())));
+  }
+}
+
+void InstanceManagerDialog::copyNolvusProfilesAgain()
+{
+  const auto* i = singleSelection();
+  if (!i || !Nolvus::isLinked(i->iniPath())) {
+    return;
+  }
+  if (i->isActive()) {
+    QMessageBox::information(this, tr("Copy Nolvus' profiles again"),
+                             tr("The profiles of the instance in use can't be replaced. "
+                                "Open another instance first, then do this from its "
+                                "Instances window."));
+    return;
+  }
+
+  const auto answer = QMessageBox::question(
+      this, tr("Copy Nolvus' profiles again"),
+      tr("The profiles of %1 are replaced with a new copy of Nolvus' profiles (after a "
+         "Nolvus update, for instance). The current copy is kept beside them, in a "
+         "profiles-backup folder.")
+          .arg(i->displayName()),
+      QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel);
+  if (answer != QMessageBox::Ok) {
+    return;
+  }
+
+  QString error;
+  if (!Nolvus::refreshProfiles(i->iniPath(), &error)) {
+    QMessageBox::warning(this, tr("Copy Nolvus' profiles again"), error);
   }
 }
 
@@ -1008,6 +1194,10 @@ void InstanceManagerDialog::updateList()
       const auto& ii = *m_instances[i];
 
       QString caption = ii.isPortable() ? tr("Portable") : tr("Global");
+      if (const auto nolvus = m_nolvusLabels.constFind(ii.directory());
+          nolvus != m_nolvusLabels.constEnd()) {
+        caption += QStringLiteral(" · ") + nolvus.value();
+      }
       if (ii.isActive()) {
         caption += QStringLiteral(" · ") + tr("current");
       } else if (!ii.gameName().isEmpty() && m_groupBy != QLatin1String("game")) {
@@ -1751,6 +1941,10 @@ void InstanceManagerDialog::fillData(const Instance& ii)
     caption << ii.gameName();
   }
   caption << (ii.isPortable() ? tr("Portable") : tr("Global"));
+  if (const auto nolvus = m_nolvusLabels.constFind(ii.directory());
+      nolvus != m_nolvusLabels.constEnd()) {
+    caption << nolvus.value();
+  }
   if (active) {
     caption << tr("Current instance");
   } else if (const QString used = lastUsed(ii); !used.isEmpty()) {
@@ -2075,9 +2269,12 @@ void InstanceManagerDialog::clearData()
   if (m_sizeScan) {
     *m_sizeScan = true;
   }
-  m_emptyText->setText(m_instances.empty()
-                           ? tr("No instances yet. Create one with New instance.")
-                           : tr("Select an instance to see its folders."));
+  m_emptyText->setText(
+      !m_instances.empty() ? tr("Select an instance to see its folders.")
+      : !m_nolvus.empty()
+          ? tr("No instances yet. Open the Nolvus list found on the left, or "
+               "create an instance with New instance.")
+          : tr("No instances yet. Create one with New instance."));
   m_detailsStack->setCurrentIndex(0);
   setButtonsEnabled(false);
 }

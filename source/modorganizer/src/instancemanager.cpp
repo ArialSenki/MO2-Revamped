@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "executableinfo.h"
 #include "filesystemutilities.h"
 #include "instancemanagerdialog.h"
+#include "nolvus.h"
 #include "nexusinterface.h"
 #include "plugincontainer.h"
 #include "selectiondialog.h"
@@ -1040,7 +1041,10 @@ std::unique_ptr<Instance> selectInstance()
     return std::make_unique<Instance>(m.portablePath(), true);
   }
 
-  if (m.hasAnyInstances()) {
+  // MO2 Revamped: Nolvus instances are offered in the instance manager, so it
+  // opens instead of the New instance wizard when only those exist
+  if (m.hasAnyInstances() ||
+      (!m.isEldenRingOnlyPortableMode() && !Nolvus::findInstances().empty())) {
     // there is at least one instance available, show the instance manager
     // dialog
     InstanceManagerDialog dlg(pc);
