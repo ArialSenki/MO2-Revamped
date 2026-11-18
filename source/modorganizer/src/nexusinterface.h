@@ -187,6 +187,13 @@ public:
 
 public:
   static APILimits defaultAPILimits();
+
+  // MO2 Revamped: a refusal code Nexus gives in an answer's "message"
+  // (IS_OWN_MOD, NOT_DOWNLOADED_MOD...) as a sentence for the user; empty
+  // for anything else
+  static QString knownProblem(const QString& code);
+  // the code behind a sentence knownProblem() gave, empty for any other text
+  static QString problemCode(const QString& text);
   // MO2 Revamped: a header that isn't there keeps the value of base
   static APILimits parseLimits(const QNetworkReply* reply,
                                const APILimits& base = defaultAPILimits());

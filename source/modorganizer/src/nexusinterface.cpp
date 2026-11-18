@@ -245,6 +245,51 @@ void NexusBridge::nxmRequestFailed(QString gameName, int modID, int fileID,
 
 QAtomicInt NexusInterface::NXMRequestInfo::s_NextID(0);
 
+namespace
+{
+// the refusal codes Nexus sends in "message": the ones its own client (Vortex)
+// knows for endorsements, and the "already" ones, taken as they are named
+const char* const KnownProblemCodes[] = {
+    "IS_OWN_MOD",       "IS_OWN_CONTENT",    "NOT_DOWNLOADED_MOD", "TOO_SOON_AFTER_DOWNLOAD",
+    "ALREADY_ENDORSED", "ALREADY_ABSTAINED", "UNAUTHORIZED"};
+}  // namespace
+
+QString NexusInterface::knownProblem(const QString& code)
+{
+  if (code == QLatin1String("IS_OWN_MOD") || code == QLatin1String("IS_OWN_CONTENT")) {
+    return tr("Nexus doesn't let you endorse your own mod.");
+  } else if (code == QLatin1String("NOT_DOWNLOADED_MOD")) {
+    return tr("Nexus only takes endorsements for mods you downloaded from it with "
+              "this account. Download it from Nexus first.");
+  } else if (code == QLatin1String("TOO_SOON_AFTER_DOWNLOAD")) {
+    return tr("Nexus takes endorsements 15 minutes after the download. Try again "
+              "later.");
+  } else if (code == QLatin1String("ALREADY_ENDORSED")) {
+    return tr("You've already endorsed this mod on Nexus.");
+  } else if (code == QLatin1String("ALREADY_ABSTAINED")) {
+    return tr("You already chose not to endorse this mod on Nexus.");
+  } else if (code == QLatin1String("UNAUTHORIZED")) {
+    return tr("Sign in to Nexus first, in Settings > Nexus.");
+  }
+  return {};
+}
+
+QString NexusInterface::problemCode(const QString& text)
+{
+  if (text.isEmpty()) {
+    return {};
+  }
+  for (const char* code : KnownProblemCodes) {
+    if (text == knownProblem(QLatin1String(code))) {
+      // both "own" codes give the same sentence
+      return QLatin1String(code) == QLatin1String("IS_OWN_CONTENT")
+                 ? QStringLiteral("IS_OWN_MOD")
+                 : QString::fromLatin1(code);
+    }
+  }
+  return {};
+}
+
 APILimits NexusInterface::defaultAPILimits()
 {
   // https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/
@@ -1362,12 +1407,22 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
     } else {
       QByteArray data = reply->readAll();
       if (!data.isEmpty()) {
+        // MO2 Revamped: what Nexus said, for the log (its answers carry no key)
+        log::warn("Nexus answered {} for {}: {}", statusCode,
+                   withoutQuery(reply->url().toString()),
+                   QString::fromUtf8(data.left(500)).simplified());
         QJsonDocument responseDoc = QJsonDocument::fromJson(data);
         if (!responseDoc.isNull()) {
           auto result = responseDoc.toVariant().toMap();
           auto error  = result.find("error");
           if (error != result.end())
             errorMsg = result.value("error").toString();
+          // MO2 Revamped: refusals such as endorsing one's own mod come as a
+          // code in "message" (NOT_DOWNLOADED_MOD, IS_OWN_MOD...)
+          const QString known = knownProblem(result.value("message").toString());
+          if (!known.isEmpty()) {
+            errorMsg = known;
+          }
         }
       }
     }

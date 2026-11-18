@@ -431,6 +431,9 @@ private slots:
 
   void actionEndorseMO();
   void actionWontEndorseMO();
+  // MO2 Revamped: the checks before an endorsement request, and the request
+  bool revampedEndorsementBlocked(bool endorse);
+  void sendRevampedEndorsement(bool endorse);
 
   void originModified(int originID);
 

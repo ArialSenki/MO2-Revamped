@@ -7832,6 +7832,42 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
       <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
       <translation>Eine Empfehlung zeigt Nexus Mods, dass sich MO2 Revamped lohnt. Wähle unter Mehr „Nicht empfehlen“, um diese Schaltfläche ohne Empfehlung auszublenden.</translation>
     </message>
+    <message>
+      <source>You've already endorsed MO2 Revamped. Thank you!</source>
+      <translation>Du hast MO2 Revamped bereits empfohlen. Danke!</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse MO2 Revamped. You can still endorse it from this menu.</source>
+      <translation>Du hast bereits gewählt, MO2 Revamped nicht zu empfehlen. Du kannst es in diesem Menü trotzdem empfehlen.</translation>
+    </message>
+    <message>
+      <source>Withdraw endorsement</source>
+      <translation>Empfehlung zurückziehen</translation>
+    </message>
+    <message>
+      <source>Withdraw your endorsement</source>
+      <translation>Deine Empfehlung zurückziehen</translation>
+    </message>
+    <message>
+      <source>This will take back your endorsement of MO2 Revamped on Nexus Mods.</source>
+      <translation>Damit ziehst du deine Empfehlung für MO2 Revamped auf Nexus Mods zurück.</translation>
+    </message>
+    <message>
+      <source>Withdraw</source>
+      <translation>Zurückziehen</translation>
+    </message>
+    <message>
+      <source>Take back your endorsement of MO2 Revamped.</source>
+      <translation>Zieht deine Empfehlung für MO2 Revamped zurück.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't accept the endorsement: %1</source>
+      <translation>Nexus hat die Empfehlung nicht angenommen: %1</translation>
+    </message>
+    <message>
+      <source>Your endorsement of MO2 Revamped was withdrawn.</source>
+      <translation>Deine Empfehlung für MO2 Revamped wurde zurückgezogen.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -14112,6 +14148,30 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
     <message>
       <source>Nexus redirected the request to another address.</source>
       <translation>Nexus hat die Anfrage an eine andere Adresse umgeleitet.</translation>
+    </message>
+    <message>
+      <source>Nexus doesn't let you endorse your own mod.</source>
+      <translation>Nexus lässt dich deine eigene Mod nicht empfehlen.</translation>
+    </message>
+    <message>
+      <source>Nexus only takes endorsements for mods you downloaded from it with this account. Download it from Nexus first.</source>
+      <translation>Nexus nimmt Empfehlungen nur für Mods an, die du mit diesem Konto von Nexus heruntergeladen hast. Lade sie zuerst von Nexus herunter.</translation>
+    </message>
+    <message>
+      <source>Nexus takes endorsements 15 minutes after the download. Try again later.</source>
+      <translation>Nexus nimmt Empfehlungen erst 15 Minuten nach dem Download an. Versuche es später erneut.</translation>
+    </message>
+    <message>
+      <source>You've already endorsed this mod on Nexus.</source>
+      <translation>Du hast diese Mod auf Nexus bereits empfohlen.</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse this mod on Nexus.</source>
+      <translation>Du hast bereits gewählt, diese Mod auf Nexus nicht zu empfehlen.</translation>
+    </message>
+    <message>
+      <source>Sign in to Nexus first, in Settings &gt; Nexus.</source>
+      <translation>Melde dich zuerst bei Nexus an, unter Einstellungen &gt; Nexus.</translation>
     </message>
   </context>
   <context>

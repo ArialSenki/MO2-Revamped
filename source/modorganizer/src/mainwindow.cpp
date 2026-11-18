@@ -185,6 +185,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <QSaveFile>
 #include <QDateTime>
+#include <QElapsedTimer>
+#include <QRegularExpression>
 #include <QLocale>
 #include <QToolButton>
 #include <QToolTip>
@@ -271,6 +273,91 @@ bool runLoot(QWidget* parent, OrganizerCore& core, bool didUpdateMasterList);
 namespace {
 
 constexpr int kRevampedNexusModId = MO2R_NEXUS_MOD_ID;
+
+// MO2 Revamped: Nexus doesn't let an author endorse their own mod (it answers
+// 403, IS_OWN_MOD). Whether the signed-in account uploaded the MO2 Revamped
+// page is asked at most once a day per account and kept in the global
+// settings; for its author the endorse button doesn't show
+const QString OwnListingUser    = QStringLiteral("revamped_listing/user");
+const QString OwnListingIsOwn   = QStringLiteral("revamped_listing/own");
+const QString OwnListingChecked = QStringLiteral("revamped_listing/checked");
+int s_ownerCheckRequest         = -1;
+// the endorsement request in flight (-1: none), and when the last press was:
+// the button and menu wait for its answer, and a second press within a moment
+// of the first is ignored
+int s_endorseRequest = -1;
+QElapsedTimer s_lastEndorsePress;
+
+bool ownsRevampedListing()
+{
+  const auto user = NexusInterface::instance().getAPIUserAccount();
+  return user.isValid() && !user.id().isEmpty() &&
+         GlobalSettings::value(OwnListingUser).toString() == user.id() &&
+         GlobalSettings::value(OwnListingIsOwn, false).toBool();
+}
+
+void rememberListingOwner(const QString& userId, bool own)
+{
+  GlobalSettings::setValue(OwnListingUser, userId);
+  GlobalSettings::setValue(OwnListingIsOwn, own);
+  GlobalSettings::setValue(OwnListingChecked, QDateTime::currentDateTimeUtc());
+}
+
+// asks Nexus who uploaded the page unless this account was checked within a
+// day; changed() runs once the answer is kept
+void checkListingOwner(const APIUserAccount& user, QObject* context,
+                       std::function<void()> changed)
+{
+  if (!user.isValid() || user.id().isEmpty() || s_ownerCheckRequest >= 0 ||
+      !Settings::instance().nexus().endorsementIntegration()) {
+    return;
+  }
+  const QDateTime checked = GlobalSettings::value(OwnListingChecked).toDateTime();
+  if (GlobalSettings::value(OwnListingUser).toString() == user.id() &&
+      checked.isValid() && checked.secsTo(QDateTime::currentDateTimeUtc()) < 24 * 3600) {
+    return;
+  }
+
+  auto& nexus = NexusInterface::instance();
+  auto done   = std::make_shared<QMetaObject::Connection>();
+  *done       = QObject::connect(
+      &nexus, &NexusInterface::nxmApiV2Available, context,
+      [done, user, changed](QVariant, QVariant result, int requestID) {
+        if (requestID != s_ownerCheckRequest) {
+          return;
+        }
+        s_ownerCheckRequest = -1;
+        QObject::disconnect(*done);
+        const QVariantMap mod      = result.toMap();
+        const QVariantMap uploader = mod.value(QStringLiteral("user")).toMap();
+        const bool own =
+            uploader.value(QStringLiteral("member_id")).toString() == user.id() ||
+            (!user.name().isEmpty() &&
+             mod.value(QStringLiteral("uploaded_by")).toString().compare(
+                 user.name(), Qt::CaseInsensitive) == 0);
+        rememberListingOwner(user.id(), own);
+        // the same answer says what this account decided about the page
+        // (Endorsed, Abstained or Undecided): pressing Endorse again then
+        // needs no request
+        const QString status = mod.value(QStringLiteral("endorsement"))
+                                   .toMap()
+                                   .value(QStringLiteral("endorse_status"))
+                                   .toString();
+        if (!status.isEmpty()) {
+          Settings::instance().nexus().setEndorsementState(
+              endorsementStateFromString(status));
+        }
+        changed();
+      });
+  s_ownerCheckRequest = nexus.requestApiPath(
+      QStringLiteral("/v1/games/%1/mods/%2.json")
+          .arg(QStringLiteral(MO2R_NEXUS_DOMAIN))
+          .arg(kRevampedNexusModId),
+      QVariant(), QStringLiteral("listing"));
+  if (s_ownerCheckRequest < 0) {
+    QObject::disconnect(*done);
+  }
+}
 
 // the category setup choices (Segoe Fluent Icons)
 constexpr char16_t ImportNexusGlyph      = 0xE896;  // Download
@@ -2095,6 +2182,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   connect(NexusInterface::instance().getAccessManager(),
           &NXMAccessManager::credentialsReceived, this, &MainWindow::updateWindowTitle);
+  connect(NexusInterface::instance().getAccessManager(),
+          &NXMAccessManager::credentialsReceived, this, [this](const APIUserAccount& user) {
+            checkListingOwner(user, this, [this] {
+              toggleRevampedEndorseState();
+            });
+            toggleRevampedEndorseState();
+          });
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
           &StatusBar::setAPI);
   // MO2 Revamped: one calm notice when Nexus' limit pauses the requests (a
@@ -5939,31 +6033,86 @@ void MainWindow::on_actionUpdate_triggered()
   showUpdateNotice(false);
 }
 
+// MO2 Revamped: one endorsement request at a time, and none that Nexus would
+// refuse or that changes nothing
+bool MainWindow::revampedEndorsementBlocked(bool endorse)
+{
+  if (s_endorseRequest >= 0) {
+    return true;  // the answer to the last press is on its way
+  }
+  if (s_lastEndorsePress.isValid() && s_lastEndorsePress.elapsed() < 1500) {
+    return true;  // a double click
+  }
+  s_lastEndorsePress.start();
+
+  if (ownsRevampedListing()) {
+    MessageDialog::showMessage(NexusInterface::knownProblem(QStringLiteral("IS_OWN_MOD")),
+                               this);
+    return true;
+  }
+  if (!NexusInterface::instance().getAccessManager()->validated()) {
+    MessageDialog::showMessage(NexusInterface::knownProblem(QStringLiteral("UNAUTHORIZED")),
+                               this);
+    return true;
+  }
+  if (endorse &&
+      m_OrganizerCore.settings().nexus().endorsementState() == EndorsementState::Accepted) {
+    MessageDialog::showMessage(tr("You've already endorsed MO2 Revamped. Thank you!"), this);
+    return true;
+  }
+  return false;
+}
+
+void MainWindow::sendRevampedEndorsement(bool endorse)
+{
+  // the Modding Tools page has no game plugin
+  s_endorseRequest = NexusInterface::instance().requestToggleEndorsement(
+      QStringLiteral(MO2R_NEXUS_DOMAIN), kRevampedNexusModId,
+      SelfUpdater::revampedVersionString(), endorse, this, QVariant(), QString(), nullptr);
+  toggleRevampedEndorseState();
+}
+
 void MainWindow::actionEndorseMO()
 {
+  if (revampedEndorsementBlocked(true)) {
+    return;
+  }
   if (askNexusEndorsement(
           this, tr("Endorse MO2 Revamped"), tr("Support MO2 Revamped"),
           tr("This will submit your endorsement to the MO2 Revamped listing on Nexus Mods."),
           tr("Endorse"), tr("Cancel"))) {
-    // the Modding Tools page has no game plugin
-    NexusInterface::instance().requestToggleEndorsement(
-        QStringLiteral(MO2R_NEXUS_DOMAIN), kRevampedNexusModId,
-        SelfUpdater::revampedVersionString(), true, this, QVariant(), QString(),
-        nullptr);
+    sendRevampedEndorsement(true);
   }
 }
 
 void MainWindow::actionWontEndorseMO()
 {
-  if (askNexusEndorsement(
-          this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
-          tr("This will record your choice not to endorse the listing on Nexus Mods."),
-          tr("Won't Endorse"), tr("Cancel"))) {
-    // the Modding Tools page has no game plugin
-    NexusInterface::instance().requestToggleEndorsement(
-        QStringLiteral(MO2R_NEXUS_DOMAIN), kRevampedNexusModId,
-        SelfUpdater::revampedVersionString(), false, this, QVariant(), QString(),
-        nullptr);
+  if (revampedEndorsementBlocked(false)) {
+    return;
+  }
+  const auto state = m_OrganizerCore.settings().nexus().endorsementState();
+  if (state == EndorsementState::Refused) {
+    MessageDialog::showMessage(
+        tr("You already chose not to endorse MO2 Revamped. You can still endorse it "
+           "from this menu."),
+        this);
+    return;
+  }
+  // after an endorsement this entry withdraws it (Nexus' "abstain")
+  const bool withdraw = state == EndorsementState::Accepted;
+  const bool confirmed =
+      withdraw ? askNexusEndorsement(
+                     this, tr("Withdraw endorsement"), tr("Withdraw your endorsement"),
+                     tr("This will take back your endorsement of MO2 Revamped on Nexus "
+                        "Mods."),
+                     tr("Withdraw"), tr("Cancel"))
+               : askNexusEndorsement(
+                     this, tr("Endorsement preference"), tr("Don't endorse MO2 Revamped"),
+                     tr("This will record your choice not to endorse the listing on "
+                        "Nexus Mods."),
+                     tr("Won't Endorse"), tr("Cancel"));
+  if (confirmed) {
+    sendRevampedEndorsement(false);
   }
 }
 
@@ -5972,23 +6121,24 @@ void MainWindow::toggleRevampedEndorseState()
   const auto& s = m_OrganizerCore.settings();
 
   // the command bar's button: only while there is a decision to make
+  // (never for the page's own author: Nexus refuses it)
+  const bool own = ownsRevampedListing();
   if (m_endorseBarAction != nullptr) {
-    m_endorseBarAction->setVisible(s.nexus().endorsementIntegration() &&
+    m_endorseBarAction->setVisible(s.nexus().endorsementIntegration() && !own &&
                                    s.nexus().endorsementState() ==
                                        EndorsementState::NoDecision);
   }
 
-  if (!s.nexus().endorsementIntegration()) {
+  if (!s.nexus().endorsementIntegration() || own) {
     ui->actionEndorseMO->setVisible(false);
     return;
   }
 
   ui->actionEndorseMO->setVisible(true);
 
-  bool enabled = false;
   QString text;
-
-  switch (s.nexus().endorsementState()) {
+  const auto state = s.nexus().endorsementState();
+  switch (state) {
   case EndorsementState::Accepted: {
     text = tr("Thank you for endorsing MO2 Revamped! :)");
     break;
@@ -6000,12 +6150,27 @@ void MainWindow::toggleRevampedEndorseState()
   }
 
   case EndorsementState::NoDecision: {
-    enabled = true;
     break;
   }
   }
 
-  ui->actionEndorseMO->menu()->setEnabled(enabled);
+  // MO2 Revamped: the menu stays usable after a decision. Endorse says when it
+  // is done already, and after an endorsement the second entry withdraws it;
+  // both wait while a request is on its way
+  const bool waiting = s_endorseRequest >= 0;
+  if (m_endorseBarAction != nullptr) {
+    m_endorseBarAction->setEnabled(!waiting);
+  }
+  if (auto* menu = ui->actionEndorseMO->menu()) {
+    menu->setEnabled(!waiting);
+    if (auto* second =
+            menu->findChild<QAction*>(QStringLiteral("revampedWontEndorseAction"))) {
+      const bool withdraw = state == EndorsementState::Accepted;
+      second->setText(withdraw ? tr("Withdraw endorsement") : tr("Won't Endorse"));
+      second->setToolTip(withdraw ? tr("Take back your endorsement of MO2 Revamped.")
+                                  : tr("Record that you do not endorse this listing."));
+    }
+  }
   ui->actionEndorseMO->setToolTip(text);
   ui->actionEndorseMO->setStatusTip(text);
 }
@@ -6358,24 +6523,41 @@ void MainWindow::nxmEndorsementToggled(QString gameName, int modID, QVariant,
     return;
   }
 
+  const bool ours    = s_endorseRequest >= 0;
+  s_endorseRequest   = -1;
+  const auto before  = m_OrganizerCore.settings().nexus().endorsementState();
   const QMap results = resultData.toMap();
 
   auto itor = results.find("status");
   if (itor == results.end()) {
     log::error("endorsement response has no status");
+    toggleRevampedEndorseState();
     return;
   }
 
   const auto s = endorsementStateFromString(itor->toString());
+  // an answer that changes nothing ("already endorsed") isn't thanked twice
+  const bool already = results.value(QStringLiteral("message"))
+                           .toString()
+                           .startsWith(QLatin1String("ALREADY"), Qt::CaseInsensitive);
 
   switch (s) {
   case EndorsementState::Accepted: {
-    QMessageBox::information(this, tr("Thank you!"),
-                             tr("Thank you for your endorsement!"));
+    if (already || before == EndorsementState::Accepted) {
+      MessageDialog::showMessage(tr("You've already endorsed MO2 Revamped. Thank you!"),
+                                 this);
+    } else {
+      QMessageBox::information(this, tr("Thank you!"),
+                               tr("Thank you for your endorsement!"));
+    }
     break;
   }
 
   case EndorsementState::Refused: {
+    if (ours && before == EndorsementState::Accepted) {
+      MessageDialog::showMessage(tr("Your endorsement of MO2 Revamped was withdrawn."),
+                                 this);
+    }
     // don't spam message boxes if the user doesn't want to endorse
     log::info(
         "MO2 Revamped will not be endorsed and will no longer ask you to endorse.");
@@ -6384,6 +6566,7 @@ void MainWindow::nxmEndorsementToggled(QString gameName, int modID, QVariant,
 
   case EndorsementState::NoDecision: {
     log::error("bad status '{}' in endorsement response", itor->toString());
+    toggleRevampedEndorseState();
     return;
   }
   }
@@ -6497,9 +6680,55 @@ void MainWindow::nxmGameInfoAvailable(QString gameName, QVariant, QVariant resul
   }
 }
 
-void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, int,
-                                  int errorCode, const QString& errorString)
+void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant,
+                                  int requestID, int errorCode,
+                                  const QString& errorString)
 {
+  // MO2 Revamped: the check of who uploaded the MO2 Revamped page fails quietly
+  if (requestID >= 0 && requestID == s_ownerCheckRequest) {
+    s_ownerCheckRequest = -1;
+    log::debug("couldn't ask Nexus who uploaded the MO2 Revamped page: {}", errorString);
+    return;
+  }
+  // MO2 Revamped's own endorsement: one sentence for each refusal Nexus
+  // explains, its answer for anything else, never the bare error code
+  if (requestID >= 0 && requestID == s_endorseRequest) {
+    s_endorseRequest   = -1;
+    const QString code = errorCode == 401 ? QStringLiteral("UNAUTHORIZED")
+                                          : NexusInterface::problemCode(errorString);
+    QString text;
+    if (code == QLatin1String("IS_OWN_MOD")) {
+      rememberListingOwner(NexusInterface::instance().getAPIUserAccount().id(), true);
+      text = NexusInterface::knownProblem(code);
+    } else if (code == QLatin1String("ALREADY_ENDORSED")) {
+      m_OrganizerCore.settings().nexus().setEndorsementState(EndorsementState::Accepted);
+      text = tr("You've already endorsed MO2 Revamped. Thank you!");
+    } else if (code == QLatin1String("ALREADY_ABSTAINED")) {
+      m_OrganizerCore.settings().nexus().setEndorsementState(EndorsementState::Refused);
+      text = tr("You already chose not to endorse MO2 Revamped. You can still endorse it "
+                "from this menu.");
+    } else if (!code.isEmpty()) {
+      text = NexusInterface::knownProblem(code);
+    } else {
+      // what the server said, not Qt's "Error transferring <address> - server
+      // replied: ..." around it
+      static const QRegularExpression replied(QStringLiteral("server replied: (.+)$"));
+      const auto m = replied.match(errorString);
+      text = tr("Nexus didn't accept the endorsement: %1")
+                 .arg(m.hasMatch() ? m.captured(1).trimmed() : errorString);
+    }
+    log::warn("MO2 Revamped endorsement: {} ({})", text, errorCode);
+    toggleRevampedEndorseState();
+    MessageDialog::showMessage(text, this);
+    return;
+  }
+  // a refusal Nexus explains for any other mod: its sentence, without the
+  // error code and address
+  if (!NexusInterface::problemCode(errorString).isEmpty()) {
+    log::info("{}", errorString);
+    MessageDialog::showMessage(errorString, this);
+    return;
+  }
   if (errorCode == QNetworkReply::ContentAccessDenied ||
       errorCode == QNetworkReply::ContentNotFoundError) {
     log::debug("{}",

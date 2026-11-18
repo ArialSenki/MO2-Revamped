@@ -7872,6 +7872,42 @@ Si vuelve a pasar, adjunta este archivo (y el mo_interface.log de la carpeta log
       <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
       <translation>Respaldarlo le dice a Nexus Mods que merece la pena probar MO2 Revamped. Elige "No respaldar" en Más para ocultar este botón sin respaldarlo.</translation>
     </message>
+    <message>
+      <source>You've already endorsed MO2 Revamped. Thank you!</source>
+      <translation>Ya respaldaste MO2 Revamped. ¡Gracias!</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse MO2 Revamped. You can still endorse it from this menu.</source>
+      <translation>Ya elegiste no respaldar MO2 Revamped. Aún puedes respaldarlo desde este menú.</translation>
+    </message>
+    <message>
+      <source>Withdraw endorsement</source>
+      <translation>Retirar el respaldo</translation>
+    </message>
+    <message>
+      <source>Withdraw your endorsement</source>
+      <translation>Retirar tu respaldo</translation>
+    </message>
+    <message>
+      <source>This will take back your endorsement of MO2 Revamped on Nexus Mods.</source>
+      <translation>Esto retirará tu respaldo a MO2 Revamped en Nexus Mods.</translation>
+    </message>
+    <message>
+      <source>Withdraw</source>
+      <translation>Retirar</translation>
+    </message>
+    <message>
+      <source>Take back your endorsement of MO2 Revamped.</source>
+      <translation>Retira tu respaldo a MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't accept the endorsement: %1</source>
+      <translation>Nexus no aceptó el respaldo: %1</translation>
+    </message>
+    <message>
+      <source>Your endorsement of MO2 Revamped was withdrawn.</source>
+      <translation>Se retiró tu respaldo a MO2 Revamped.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -14491,6 +14527,30 @@ Revisa las opciones del juego antes de jugar.</translation>
     <message>
       <source>Nexus redirected the request to another address.</source>
       <translation>Nexus redirigió la petición a otra dirección.</translation>
+    </message>
+    <message>
+      <source>Nexus doesn't let you endorse your own mod.</source>
+      <translation>Nexus no permite respaldar un mod propio.</translation>
+    </message>
+    <message>
+      <source>Nexus only takes endorsements for mods you downloaded from it with this account. Download it from Nexus first.</source>
+      <translation>Nexus solo acepta respaldos de mods que descargaste de Nexus con esta cuenta. Descárgalo antes desde Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus takes endorsements 15 minutes after the download. Try again later.</source>
+      <translation>Nexus acepta respaldos 15 minutos después de la descarga. Inténtalo más tarde.</translation>
+    </message>
+    <message>
+      <source>You've already endorsed this mod on Nexus.</source>
+      <translation>Ya respaldaste este mod en Nexus.</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse this mod on Nexus.</source>
+      <translation>Ya elegiste no respaldar este mod en Nexus.</translation>
+    </message>
+    <message>
+      <source>Sign in to Nexus first, in Settings &gt; Nexus.</source>
+      <translation>Inicia sesión en Nexus primero, en Ajustes &gt; Nexus.</translation>
     </message>
   </context>
   <context>

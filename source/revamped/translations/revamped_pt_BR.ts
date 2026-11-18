@@ -7824,6 +7824,42 @@ Se acontecer de novo, anexe este arquivo (e o mo_interface.log da pasta logs) ao
       <source>Endorsing tells Nexus Mods that MO2 Revamped is worth trying. Choose "Won't Endorse" under More to hide this button without endorsing.</source>
       <translation>Endossar mostra ao Nexus Mods que o MO2 Revamped vale a pena. Escolha "Não endossar" em Mais para ocultar este botão sem endossar.</translation>
     </message>
+    <message>
+      <source>You've already endorsed MO2 Revamped. Thank you!</source>
+      <translation>Você já endossou o MO2 Revamped. Obrigado!</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse MO2 Revamped. You can still endorse it from this menu.</source>
+      <translation>Você já escolheu não endossar o MO2 Revamped. Ainda pode endossá-lo por este menu.</translation>
+    </message>
+    <message>
+      <source>Withdraw endorsement</source>
+      <translation>Retirar o endosso</translation>
+    </message>
+    <message>
+      <source>Withdraw your endorsement</source>
+      <translation>Retirar o seu endosso</translation>
+    </message>
+    <message>
+      <source>This will take back your endorsement of MO2 Revamped on Nexus Mods.</source>
+      <translation>Isto retirará o seu endosso do MO2 Revamped no Nexus Mods.</translation>
+    </message>
+    <message>
+      <source>Withdraw</source>
+      <translation>Retirar</translation>
+    </message>
+    <message>
+      <source>Take back your endorsement of MO2 Revamped.</source>
+      <translation>Retira o seu endosso do MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't accept the endorsement: %1</source>
+      <translation>O Nexus não aceitou o endosso: %1</translation>
+    </message>
+    <message>
+      <source>Your endorsement of MO2 Revamped was withdrawn.</source>
+      <translation>O seu endosso do MO2 Revamped foi retirado.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -14088,6 +14124,30 @@ Confira as opções do jogo antes de jogar.</translation>
     <message>
       <source>Nexus redirected the request to another address.</source>
       <translation>O Nexus redirecionou a solicitação para outro endereço.</translation>
+    </message>
+    <message>
+      <source>Nexus doesn't let you endorse your own mod.</source>
+      <translation>O Nexus não permite endossar o seu próprio mod.</translation>
+    </message>
+    <message>
+      <source>Nexus only takes endorsements for mods you downloaded from it with this account. Download it from Nexus first.</source>
+      <translation>O Nexus só aceita endossos de mods baixados dele com esta conta. Baixe-o primeiro pelo Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus takes endorsements 15 minutes after the download. Try again later.</source>
+      <translation>O Nexus aceita endossos 15 minutos depois do download. Tente novamente mais tarde.</translation>
+    </message>
+    <message>
+      <source>You've already endorsed this mod on Nexus.</source>
+      <translation>Você já endossou este mod no Nexus.</translation>
+    </message>
+    <message>
+      <source>You already chose not to endorse this mod on Nexus.</source>
+      <translation>Você já escolheu não endossar este mod no Nexus.</translation>
+    </message>
+    <message>
+      <source>Sign in to Nexus first, in Settings &gt; Nexus.</source>
+      <translation>Entre no Nexus primeiro, em Configurações &gt; Nexus.</translation>
     </message>
   </context>
   <context>
