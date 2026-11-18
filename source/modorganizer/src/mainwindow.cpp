@@ -8019,47 +8019,37 @@ void MainWindow::on_managedArchiveLabel_linkHovered(const QString&)
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
-  // Accept copy or move drags to the download window. Link drags are not
-  // meaningful (Well, they are - we could drop a link in the download folder,
-  // but you need privileges to do that).
-  if (ui->downloadTab->isVisible() &&
-      (event->proposedAction() == Qt::CopyAction ||
-       event->proposedAction() == Qt::MoveAction) &&
-      event->answerRect().intersects(ui->downloadTab->rect())) {
+  // Accept copy or move drags. Link drags are not meaningful (Well, they are -
+  // we could drop a link in the download folder, but you need privileges to do
+  // that).
+  // MO2 Revamped: archives dropped anywhere in the window install (the mod
+  // list's own drop says where); on the downloads they are only copied there
+  if (event->proposedAction() != Qt::CopyAction &&
+      event->proposedAction() != Qt::MoveAction) {
+    return;
+  }
 
-    // If I read the documentation right, this won't work under a motif windows
-    // manager and the check needs to be done at the drop. However, that means
-    // the user might be allowed to drop things which we can't sanely process
-    QMimeData const* data = event->mimeData();
+  QMimeData const* data = event->mimeData();
+  if (data == nullptr || !data->hasUrls()) {
+    return;
+  }
 
-    if (data->hasUrls()) {
-      QStringList extensions =
-          m_OrganizerCore.installationManager()->getSupportedExtensions();
-
-      // This is probably OK - scan to see if these are moderately sane archive
-      // types
-      QList<QUrl> urls = data->urls();
-      bool ok          = true;
-      for (const QUrl& url : urls) {
-        if (url.isLocalFile()) {
-          QString local = url.toLocalFile();
-          bool fok      = false;
-          for (auto ext : extensions) {
-            if (local.endsWith(ext, Qt::CaseInsensitive)) {
-              fok = true;
-              break;
-            }
-          }
-          if (!fok) {
-            ok = false;
-            break;
-          }
-        }
-      }
-      if (ok) {
-        event->accept();
-      }
+  const QStringList extensions =
+      m_OrganizerCore.installationManager()->getSupportedExtensions();
+  bool anyLocal = false;
+  for (const QUrl& url : data->urls()) {
+    if (!url.isLocalFile()) {
+      continue;
     }
+    anyLocal = true;
+    const QFileInfo info(url.toLocalFile());
+    if (!info.isFile() || !extensions.contains(info.suffix(), Qt::CaseInsensitive)) {
+      return;
+    }
+  }
+  // a web link only means something to the downloads (it starts a download)
+  if (anyLocal || ui->downloadView->isVisible()) {
+    event->accept();
   }
 }
 
@@ -8106,18 +8096,85 @@ void MainWindow::dropLocalFile(const QUrl& url, const QString& outputDir, bool m
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
-  Qt::DropAction action = event->proposedAction();
-  QString outputDir     = m_OrganizerCore.downloadManager()->getOutputDirectory();
-  if (action == Qt::MoveAction) {
-    // Tell windows I'm taking control and will delete the source of a move.
-    event->setDropAction(Qt::TargetMoveAction);
+  const QList<QUrl> urls = event->mimeData()->urls();
+
+  // MO2 Revamped: onto the downloads, they are copied (or moved) into the
+  // downloads folder; anywhere else, the archives install one after another
+  QWidget* at = childAt(event->position().toPoint());
+  const bool onDownloads =
+      ui->downloadView->isVisible() && at != nullptr &&
+      (at == ui->downloadView || ui->downloadView->isAncestorOf(at));
+
+  // the mod list's own drops (archives, downloads, a folder) are its own
+  if (at != nullptr && (at == ui->modList || ui->modList->isAncestorOf(at))) {
+    event->ignore();
+    return;
   }
-  for (const QUrl& url : event->mimeData()->urls()) {
-    if (url.isLocalFile()) {
-      dropLocalFile(url, outputDir, action == Qt::MoveAction);
-    } else {
-      m_OrganizerCore.downloadManager()->startDownloadURLs(QStringList() << url.url());
+
+  if (!onDownloads) {
+    QStringList archives;
+    for (const QUrl& url : urls) {
+      if (url.isLocalFile()) {
+        archives << url.toLocalFile();
+      }
     }
+    if (archives.isEmpty()) {
+      event->ignore();
+      return;
+    }
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+    log::debug("{} archive(s) dropped on the window", archives.size());
+    // after the drop has ended: Explorer waits for it, and the installers open
+    // their own windows
+    QTimer::singleShot(0, this, [this, archives] {
+      activateWindow();
+      m_OrganizerCore.installArchives(archives);
+    });
+    return;
+  }
+
+  const QString outputDir = m_OrganizerCore.downloadManager()->getOutputDirectory();
+  bool anyLocal           = false;
+  for (const QUrl& url : urls) {
+    anyLocal = anyLocal || url.isLocalFile();
+  }
+
+  if (anyLocal) {
+    // asked after the drop, so Explorer isn't held while the question is open
+    // (a move is told to Explorer as a copy: the shell move removes them)
+    event->setDropAction(Qt::CopyAction);
+    event->accept();
+    QTimer::singleShot(0, this, [this, urls, outputDir] {
+      const auto answer =
+          MOBase::TaskDialog(this, tr("Add to downloads"))
+              .main(tr("Copy or move the dropped files into the downloads folder?"))
+              .content(tr("They aren't installed: install them from the downloads "
+                          "when you want. To install them now, drop them on the mod "
+                          "list instead."))
+              .icon(QMessageBox::Question)
+              .button({tr("Copy"), QMessageBox::Yes})
+              .button({tr("Move"), QMessageBox::No})
+              .button({tr("Cancel"), QMessageBox::Cancel})
+              .exec();
+      if (answer == QMessageBox::Cancel) {
+        return;
+      }
+      const bool moveFiles = answer == QMessageBox::No;
+      for (const QUrl& url : urls) {
+        if (url.isLocalFile()) {
+          dropLocalFile(url, outputDir, moveFiles);
+        } else {
+          m_OrganizerCore.downloadManager()->startDownloadURLs(QStringList()
+                                                               << url.url());
+        }
+      }
+    });
+    return;
+  }
+
+  for (const QUrl& url : urls) {
+    m_OrganizerCore.downloadManager()->startDownloadURLs(QStringList() << url.url());
   }
   event->accept();
 }

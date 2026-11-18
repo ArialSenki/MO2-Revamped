@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "downloadmanager.h"
 #include <QHeaderView>
 #include <QItemDelegate>
+#include <QItemSelection>
 #include <QLabel>
 #include <QProgressBar>
 #include <QStyledItemDelegate>
@@ -99,6 +100,8 @@ public:
 
 signals:
   void installDownload(int index);
+  // MO2 Revamped: several selected downloads, installed one after another
+  void installDownloads(const QStringList& names);
   void queryInfoMd5(int index);
   void removeDownload(int index, bool deleteFile);
   void restoreDownload(int index);
@@ -181,7 +184,14 @@ private:
   // the downloads a drag from this list carries, by file name; empty for any
   // other drag
   static QStringList draggedFiles(const QMimeData* mime);
+  // the selected downloads, top to bottom
   QStringList selectedFileNames() const;
+  // the finished downloads among those names
+  QStringList readyNames(const QStringList& names) const;
+  // the selection when the button was last pressed: the press of a
+  // double-click on a selected row leaves only that row selected
+  QStringList m_PressSelection;
+  QItemSelection m_PressRanges;
   void addGroupActions(QMenu& menu, const QModelIndex& index);
   void newCategory(const QStringList& moveHere);
 };

@@ -44,6 +44,12 @@ public:
                                  QSize dialogSize = QSize(),
                                  bool preferRecentDirectory = false);
 
+  // MO2 Revamped: the same, for one or more files (empty when cancelled)
+  static QStringList getOpenFileNames(const QString& dirID, QWidget* parent,
+                                      const QString& caption, const QString& dir,
+                                      const QString& filter, QSize dialogSize,
+                                      bool preferRecentDirectory);
+
   static QString
   getExistingDirectory(const QString& dirID, QWidget* parent = 0,
                        const QString& caption       = QString(),

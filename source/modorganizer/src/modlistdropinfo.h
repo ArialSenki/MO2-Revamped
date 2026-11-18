@@ -65,6 +65,12 @@ public:
   const auto& download() const { return m_download; }
   const auto& localUrls() const { return m_localUrls; }
   const auto& externalUrl() const { return m_url; }
+  // MO2 Revamped: the downloads dragged from the download list (rows of the
+  // download list), and the archives dropped from outside, one or more
+  const auto& downloads() const { return m_downloads; }
+  // their file names, when the drag carries them (the rows can change)
+  const auto& downloadNames() const { return m_downloadNames; }
+  QStringList externalArchives() const;
 
 private:
   friend class ModList;
@@ -78,6 +84,10 @@ private:
   // rows for drag&drop between views
   std::vector<int> m_rows;
   int m_download;  // -1 if invalid
+  std::vector<int> m_downloads;
+  QStringList m_downloadNames;
+  // MO2 Revamped: several archives dropped at once (one is m_url)
+  std::vector<QUrl> m_archives;
 
   // local URLs from the data (relative path + origin name)
   std::vector<RelativeUrl> m_localUrls;

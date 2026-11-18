@@ -1221,6 +1221,19 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
         m_core->installArchive(url.toLocalFile(), priority, false, nullptr);
       },
       Qt::QueuedConnection);
+  connect(
+      m_core->modList(), &ModList::downloadArchivesDropped, this,
+      [=](const QStringList& names, int priority) {
+        m_core->installDownloads(names, priority);
+      },
+      Qt::QueuedConnection);
+  connect(
+      m_core->modList(), &ModList::externalArchivesDropped, this,
+      [=](const QStringList& paths, int priority) {
+        setWindowState(Qt::WindowActive);
+        m_core->installArchives(paths, priority);
+      },
+      Qt::QueuedConnection);
   connect(m_core->modList(), &ModList::externalFolderDropped, this,
           &ModListView::onExternalFolderDropped);
 

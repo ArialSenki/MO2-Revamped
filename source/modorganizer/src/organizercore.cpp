@@ -1033,6 +1033,8 @@ std::pair<unsigned int, ModInfo::Ptr>
 OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modName,
                          ModInfo::Ptr currentMod, int priority, bool reinstallation)
 {
+  m_LastInstallResult = MOBase::IPluginInstaller::RESULT_FAILED;
+  m_LastInstallNote.clear();
   if (m_CurrentProfile == nullptr) {
     return {-1, nullptr};
   }
@@ -1050,6 +1052,8 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
   m_InstallationManager.notifyInstallationStart(archivePath, reinstallation,
                                                 currentMod);
   auto result = m_InstallationManager.install(archivePath, modName, hasIniTweaks);
+  m_LastInstallResult = result.result();
+  m_LastInstallNote.clear();
 
   if (result && ModInfo::isReservedModName(modName)) {
     // MO2 Revamped: the installers' name fields allow "data", a secondary data
@@ -1127,8 +1131,8 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
     } else {
       m_InstallationManager.notifyInstallationEnd(result, nullptr);
       if (m_InstallationManager.wasCancelled()) {
-        QMessageBox::information(
-            qApp->activeWindow(), tr("Extraction cancelled"),
+        m_LastInstallResult = MOBase::IPluginInstaller::RESULT_CANCELED;
+        const QString note =
             m_InstallationManager.replacedModRestored()
                 ? tr("The installation was cancelled while extracting files. The "
                      "installed mod is back as it was.")
@@ -1138,8 +1142,14 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
                      "If this was prior to a FOMOD setup, this warning may be ignored. "
                      "However, if this was during installation, the mod will likely be "
                      "missing "
-                     "files."),
-            QMessageBox::Ok);
+                     "files.");
+        // MO2 Revamped: in a queue, the question whether to go on says it
+        if (m_InstallQueueRunning) {
+          m_LastInstallNote = note;
+        } else {
+          QMessageBox::information(qApp->activeWindow(), tr("Extraction cancelled"),
+                                   note, QMessageBox::Ok);
+        }
         refresh();
       } else if (m_InstallationManager.replacedModRestored() ||
                  m_InstallationManager.newModRemoved()) {
@@ -1274,6 +1284,168 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
     m_DownloadManager.markInstalled(archivePath);
   }
   return modInfo;
+}
+
+void OrganizerCore::installDownloads(const QStringList& downloadNames, int priority)
+{
+  QStringList names;
+  for (const QString& name : downloadNames) {
+    if (!name.isEmpty() && !names.contains(name, Qt::CaseInsensitive)) {
+      names << name;
+    }
+  }
+  runInstallQueue(names, true, priority);
+}
+
+void OrganizerCore::installArchives(const QStringList& archivePaths, int priority)
+{
+  QStringList paths;
+  for (const QString& path : archivePaths) {
+    const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(path));
+    if (!clean.isEmpty() && !paths.contains(clean, Qt::CaseInsensitive)) {
+      paths << clean;
+    }
+  }
+  runInstallQueue(paths, false, priority);
+}
+
+void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
+                                    int priority)
+{
+  if (files.isEmpty() || m_CurrentProfile == nullptr) {
+    return;
+  }
+
+  const auto installOne = [&](const QString& file, int at) -> ModInfo::Ptr {
+    // what the last one left must not count for one that never gets that far
+    m_LastInstallResult = MOBase::IPluginInstaller::RESULT_FAILED;
+    m_LastInstallNote.clear();
+    if (downloads) {
+      // the list changes as installs go (installed downloads can be hidden)
+      const int index = m_DownloadManager.indexByName(file);
+      if (index < 0) {
+        log::warn("install queue: download '{}' is gone", file);
+        return nullptr;
+      }
+      // a download still under way (dragged onto the mod list) isn't one yet
+      if (m_DownloadManager.getState(index) < DownloadManager::STATE_READY) {
+        log::warn("install queue: download '{}' isn't finished", file);
+        return nullptr;
+      }
+      return installDownload(index, at);
+    }
+    try {
+      return installArchive(file, at, false, nullptr);
+    } catch (const std::exception& e) {
+      reportError(QString::fromUtf8(e.what()));
+      return nullptr;
+    }
+  };
+
+  // one: as before, with its own "Installation successful"
+  if (files.size() == 1) {
+    installOne(files.first(), priority);
+    return;
+  }
+
+  // (a collection running installs between its own dialogs: the two would
+  // take turns)
+  if (m_InstallQueueRunning || m_InstallationManager.isRunning() ||
+      qApp->property("mo2r.collectionQuiet").toBool()) {
+    QMessageBox::information(qApp->activeWindow(), tr("Installation cancelled"),
+                             tr("Another installation is currently in progress."),
+                             QMessageBox::Ok);
+    return;
+  }
+
+  const int total = static_cast<int>(files.size());
+  log::info("install queue: {} mods", total);
+  m_InstallQueueRunning = true;
+  MessageDialog::showStatus(
+      tr("Installing %n mods, one after another. Each one's installer opens in turn.",
+         "", total));
+
+  // each mod's "Installation successful" stays in the log: one notice at the
+  // end says what came of all of them (a collection's install does the same)
+  const QVariant quietBefore = qApp->property("mo2r.collectionQuiet");
+  qApp->setProperty("mo2r.collectionQuiet", true);
+  qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+  // each mod is read on its own and the virtual file structure is rebuilt
+  // once, at the end (as for a collection)
+  const bool deferredBefore = m_DeferDirectoryRefresh;
+  setDirectoryRefreshDeferred(true);
+
+  int installed = 0, skipped = 0, failed = 0;
+  int at = priority;
+  for (int i = 0; i < total; ++i) {
+    const QString& file = files[i];
+    log::info("install queue: {} of {}, '{}'", i + 1, total, file);
+    const ModInfo::Ptr mod = installOne(file, at);
+    if (mod != nullptr) {
+      ++installed;
+      // the next one goes right after it, so they keep their order (not when
+      // it went into a mod that was there, which kept its place)
+      if (at != -1) {
+        const unsigned int index = ModInfo::getIndex(mod->name());
+        if (index != UINT_MAX && m_CurrentProfile != nullptr &&
+            m_CurrentProfile->getModPriority(index) == at) {
+          ++at;
+        }
+      }
+      continue;
+    }
+
+    if (m_LastInstallResult != MOBase::IPluginInstaller::RESULT_CANCELED) {
+      ++failed;
+      continue;
+    }
+
+    ++skipped;
+    const int remaining = total - i - 1;
+    if (remaining == 0) {
+      break;
+    }
+    QString content = m_LastInstallNote;
+    if (!content.isEmpty()) {
+      content += QStringLiteral("\n\n");
+    }
+    content += tr("Mods still waiting to be installed: %n.", "", remaining);
+    const auto answer =
+        MOBase::TaskDialog(qApp->activeWindow(), tr("Installation cancelled"))
+            .main(tr("\"%1\" wasn't installed.").arg(QFileInfo(file).fileName()))
+            .content(content)
+            .icon(QMessageBox::Question)
+            .button({tr("Install the next one"), QMessageBox::Yes})
+            .button({tr("Cancel remaining"), QMessageBox::Cancel})
+            .exec();
+    if (answer != QMessageBox::Yes) {
+      log::info("install queue: the remaining {} were cancelled", remaining);
+      skipped += remaining;
+      break;
+    }
+  }
+
+  const int hidden = qApp->property("mo2r.collectionQuietHidden").toInt();
+  qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+  qApp->setProperty("mo2r.collectionQuiet", quietBefore);
+  m_InstallQueueRunning = false;
+  log::info("install queue done: {} installed, {} skipped, {} failed ({} notices "
+            "not shown)",
+            installed, skipped, failed, hidden);
+
+  // the mod list read again while still deferred, then one rebuild of the
+  // virtual file structure as deferring ends
+  if (installed > 0) {
+    refresh();
+  }
+  setDirectoryRefreshDeferred(deferredBefore);
+
+  MessageDialog::showStatus(
+      tr("Installation of %1 mods finished: %2 installed, %3 skipped, %4 failed.")
+          .arg(total)
+          .arg(installed)
+          .arg(skipped)
+          .arg(failed));
 }
 
 QString OrganizerCore::resolvePath(const QString& fileName) const

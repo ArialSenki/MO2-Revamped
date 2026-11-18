@@ -607,6 +607,12 @@ bool ModListSortProxy::canDropMimeData(const QMimeData* data, Qt::DropAction act
 {
   ModListDropInfo dropInfo(data, *m_Organizer);
 
+  // MO2 Revamped: archives from Explorer install whatever the list is sorted
+  // by (as the last mods when it isn't by priority)
+  if (dropInfo.isExternalArchiveDrop() && sortColumn() != ModList::COL_PRIORITY) {
+    return action != Qt::IgnoreAction;
+  }
+
   if (!dropInfo.isLocalFileDrop() && sortColumn() != ModList::COL_PRIORITY) {
     return false;
   }
@@ -634,6 +640,10 @@ bool ModListSortProxy::dropMimeData(const QMimeData* data, Qt::DropAction action
                                     int row, int column, const QModelIndex& parent)
 {
   ModListDropInfo dropInfo(data, *m_Organizer);
+
+  if (dropInfo.isExternalArchiveDrop() && sortColumn() != ModList::COL_PRIORITY) {
+    return m_Organizer->modList()->dropMimeData(data, action, -1, -1, QModelIndex());
+  }
 
   if (!dropInfo.isLocalFileDrop() && sortColumn() != ModList::COL_PRIORITY) {
     // a drop from another program can arrive while no MO2 window is active

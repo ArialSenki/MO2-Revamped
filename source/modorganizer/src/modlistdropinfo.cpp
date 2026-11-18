@@ -1,6 +1,7 @@
 #include "modlistdropinfo.h"
 
 #include "organizercore.h"
+#include "downloadlist.h"
 
 ModListDropInfo::ModListDropInfo(const QMimeData* mimeData, OrganizerCore& core)
     : m_rows{}, m_download{-1}, m_localUrls{}, m_url{}
@@ -19,6 +20,23 @@ ModListDropInfo::ModListDropInfo(const QMimeData* mimeData, OrganizerCore& core)
         if (p) {
           m_localUrls.push_back(*p);
         }
+      }
+
+      // MO2 Revamped: several archives at once, from Explorer
+      if (m_localUrls.empty() && mimeData->urls().size() > 1) {
+        const QStringList extensions =
+            core.installationManager()->getSupportedExtensions();
+        std::vector<QUrl> archives;
+        for (const auto& url : mimeData->urls()) {
+          const QFileInfo info(url.toLocalFile());
+          if (!url.isLocalFile() || !info.isFile() ||
+              !extensions.contains(info.suffix(), Qt::CaseInsensitive)) {
+            archives.clear();
+            break;
+          }
+          archives.push_back(url);
+        }
+        m_archives = std::move(archives);
       }
 
       // external drop
@@ -52,12 +70,23 @@ ModListDropInfo::ModListDropInfo(const QMimeData* mimeData, OrganizerCore& core)
         if (mimeData->text() == ModListDropInfo::DownloadText && m_rows.size() == 1) {
           m_download = m_rows[0];
         }
+        // MO2 Revamped: several downloads dragged at once
+        if (mimeData->text() == ModListDropInfo::DownloadText && !m_rows.empty()) {
+          m_downloads = m_rows;
+          m_download  = m_rows[0];
+          m_downloadNames =
+              QString::fromUtf8(mimeData->data(DownloadList::namesMimeType()))
+                  .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        }
         m_rows = {};
       }
     }
   } catch (std::exception const&) {
     m_rows     = {};
     m_download = -1;
+    m_downloads.clear();
+    m_downloadNames.clear();
+    m_archives.clear();
     m_localUrls.clear();
     m_url = {};
   }
@@ -95,7 +124,8 @@ ModListDropInfo::relativeUrl(const QUrl& url) const
 
 bool ModListDropInfo::isValid() const
 {
-  return isLocalFileDrop() || isModDrop() || isDownloadDrop() || m_url.isLocalFile();
+  return isLocalFileDrop() || isModDrop() || isDownloadDrop() || m_url.isLocalFile() ||
+         !m_archives.empty();
 }
 
 bool ModListDropInfo::isLocalFileDrop() const
@@ -115,7 +145,21 @@ bool ModListDropInfo::isDownloadDrop() const
 
 bool ModListDropInfo::isExternalArchiveDrop() const
 {
-  return m_url.isLocalFile() && QFileInfo(m_url.toLocalFile()).isFile();
+  return !m_archives.empty() ||
+         (m_url.isLocalFile() && QFileInfo(m_url.toLocalFile()).isFile());
+}
+
+QStringList ModListDropInfo::externalArchives() const
+{
+  QStringList paths;
+  if (!m_archives.empty()) {
+    for (const auto& url : m_archives) {
+      paths << url.toLocalFile();
+    }
+  } else if (isExternalArchiveDrop()) {
+    paths << m_url.toLocalFile();
+  }
+  return paths;
 }
 
 bool ModListDropInfo::isExternalFolderDrop() const

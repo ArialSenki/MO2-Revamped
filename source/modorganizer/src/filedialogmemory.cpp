@@ -85,6 +85,43 @@ QString FileDialogMemory::getOpenFileName(const QString& dirID, QWidget* parent,
   return result;
 }
 
+QStringList FileDialogMemory::getOpenFileNames(const QString& dirID, QWidget* parent,
+                                              const QString& caption,
+                                              const QString& dir,
+                                              const QString& filter, QSize dialogSize,
+                                              bool preferRecentDirectory)
+{
+  QString currentDir = dir;
+  if (currentDir.isEmpty() || preferRecentDirectory) {
+    auto itor = g_Cache.find(dirID);
+    if (itor != g_Cache.end()) {
+      currentDir = itor->second;
+    }
+  }
+
+  QFileDialog dialog(parent);
+  dialog.setWindowTitle(caption);
+  dialog.setDirectory(currentDir);
+  if (!filter.isEmpty()) {
+    dialog.setNameFilter(filter);
+  }
+  dialog.setFileMode(QFileDialog::ExistingFiles);
+  dialog.setAcceptMode(QFileDialog::AcceptOpen);
+  if (dialogSize.isValid()) {
+    dialog.setMinimumSize(dialogSize);
+    dialog.resize(dialogSize);
+  }
+
+  QStringList result;
+  if (dialog.exec() == QDialog::Accepted) {
+    result = dialog.selectedFiles();
+  }
+  if (!result.isEmpty()) {
+    g_Cache[dirID] = QFileInfo(result.first()).path();
+  }
+  return result;
+}
+
 QString FileDialogMemory::getExistingDirectory(const QString& dirID, QWidget* parent,
                                                const QString& caption,
                                                const QString& dir,

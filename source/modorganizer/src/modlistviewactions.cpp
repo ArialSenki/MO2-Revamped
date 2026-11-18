@@ -279,25 +279,31 @@ void ModListViewActions::installMod(const QString& archivePath,
                                     const QModelIndex& index) const
 {
   try {
-    QString path = archivePath;
-    if (path.isEmpty()) {
-      QStringList extensions = m_core.installationManager()->getSupportedExtensions();
-      for (auto iter = extensions.begin(); iter != extensions.end(); ++iter) {
-        *iter = "*." + *iter;
-      }
-
-      path = FileDialogMemory::getOpenFileName(
-          "installMod", m_parent, tr("Choose Mod"),
-          QStandardPaths::writableLocation(QStandardPaths::DownloadLocation),
-          tr("Mod Archive").append(QString(" (%1)").arg(extensions.join(" "))),
-          nullptr, QFileDialog::Options(), QSize(), true);
-    }
-
-    if (path.isEmpty()) {
+    if (!archivePath.isEmpty()) {
+      m_core.installMod(archivePath, findInstallPriority(index), false, nullptr,
+                        QString());
       return;
-    } else {
-      m_core.installMod(path, findInstallPriority(index), false, nullptr, QString());
     }
+
+    QStringList extensions = m_core.installationManager()->getSupportedExtensions();
+    for (auto iter = extensions.begin(); iter != extensions.end(); ++iter) {
+      *iter = "*." + *iter;
+    }
+
+    // MO2 Revamped: several archives can be chosen; they install one after
+    // another, in the order shown
+    QStringList paths = FileDialogMemory::getOpenFileNames(
+        "installMod", m_parent, tr("Choose Mod"),
+        QStandardPaths::writableLocation(QStandardPaths::DownloadLocation),
+        tr("Mod Archive").append(QString(" (%1)").arg(extensions.join(" "))), QSize(),
+        true);
+    if (paths.isEmpty()) {
+      return;
+    }
+    // the dialog gives them in the order they were clicked; by name reads
+    // as the folder showed them
+    paths.sort(Qt::CaseInsensitive);
+    m_core.installArchives(paths, findInstallPriority(index));
   } catch (const std::exception& e) {
     reportError(e.what());
   }

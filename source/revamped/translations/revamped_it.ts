@@ -1205,6 +1205,13 @@ Vuoi davvero continuare?</translation>
       <source>Remove</source>
       <translation>Rimuovi</translation>
     </message>
+    <message numerus="yes">
+      <source>Install %n selected</source>
+      <translation>
+        <numerusform>Installa %n selezionata</numerusform>
+        <numerusform>Installa le %n selezionate</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>DownloadManager</name>
@@ -8264,6 +8271,26 @@ Se succede di nuovo, allega questo file (e il mo_interface.log della cartella lo
       <source>Copies the files the list leaves for the game's folder, backing up what they replace, and runs its patchers when you ask.</source>
       <translation>Copia i file che la lista lascia per la cartella del gioco, con un backup di ciò che sostituiscono, ed esegue i suoi patcher quando lo chiedi.</translation>
     </message>
+    <message>
+      <source>Add to downloads</source>
+      <translation>Aggiungi ai download</translation>
+    </message>
+    <message>
+      <source>Copy or move the dropped files into the downloads folder?</source>
+      <translation>Copiare o spostare i file rilasciati nella cartella dei download?</translation>
+    </message>
+    <message>
+      <source>They aren&apos;t installed: install them from the downloads when you want. To install them now, drop them on the mod list instead.</source>
+      <translation>Non vengono installati: installali dai download quando vuoi. Per installarli subito, rilasciali invece sull&apos;elenco delle mod.</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <translation>Copia</translation>
+    </message>
+    <message>
+      <source>Move</source>
+      <translation>Sposta</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -10277,6 +10304,40 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
     <message>
       <source>Error</source>
       <translation>Errore</translation>
+    </message>
+    <message numerus="yes">
+      <source>Installing %n mods, one after another. Each one&apos;s installer opens in turn.</source>
+      <translation>
+        <numerusform>Installazione di %n mod, una dopo l&apos;altra. Il programma di installazione di ciascuna si apre a turno.</numerusform>
+        <numerusform>Installazione di %n mod, una dopo l&apos;altra. Il programma di installazione di ciascuna si apre a turno.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>Mods still waiting to be installed: %n.</source>
+      <translation>
+        <numerusform>Mod ancora in attesa di installazione: %n.</numerusform>
+        <numerusform>Mod ancora in attesa di installazione: %n.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Installation cancelled</source>
+      <translation>Installazione annullata</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; wasn&apos;t installed.</source>
+      <translation>&quot;%1&quot; non è stato installato.</translation>
+    </message>
+    <message>
+      <source>Install the next one</source>
+      <translation>Installa la successiva</translation>
+    </message>
+    <message>
+      <source>Cancel remaining</source>
+      <translation>Annulla le restanti</translation>
+    </message>
+    <message>
+      <source>Installation of %1 mods finished: %2 installed, %3 skipped, %4 failed.</source>
+      <translation>Installazione di %1 mod terminata: %2 installate, %3 saltate, %4 non riuscite.</translation>
     </message>
   </context>
   <context>
