@@ -12,18 +12,25 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.12](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.12)**
-— `MO2-Revamped-Setup-1.1.0-beta.12.exe` with its `SHA256SUMS.txt`. It is a beta:
-the newest version. It downloads and installs Nexus collections (modlists), into
-a new instance or profile, with their FOMOD choices, order, categories, patches
-and file overrides. A mod's `Root` folder (the layout many Wabbajack lists use)
-reaches the game folder without the Root Builder plugin. Skyrim SE, Fallout 4,
-New Vegas, Fallout 3 and Baldur's Gate 3 get a round of fixes, and Settings has
-an interface size and grey text for OLED screens. Cyberpunk 2077 (Cyber Engine Tweaks, RED4ext and its plugins)
-and Baldur's Gate 3 (Script Extender, .pak mods) now work with mods, the setup
-removes everything on uninstall, and Elden Ring and Nightreign get fixes for
-closing and starting the game and for saves. Script extenders and the borderless
-window were tested with Skyrim Special Edition, Fallout 4, Fallout 3 and New Vegas.
+**Latest: [v1.1.0-beta.13](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.13)**
+— `MO2-Revamped-Setup-1.1.0-beta.13.exe` with its `SHA256SUMS.txt`. It is a beta,
+and the newest version.
+
+It comes from a full audit of every window and option, plus two rounds of
+hands-on fixes:
+
+- **Nolvus:** opens Nolvus lists in MO2 Revamped, either as a linked instance
+  or transferred to a normal one.
+- **Very large lists:** much faster. With Nolvus (3,597 mods) it starts twice as
+  fast as the original MO2 2.5.2, and turns a mod on or off five times faster.
+- **Nexus:** waits out Nexus' request limit instead of failing downloads.
+- **Notices:** quieter, and they never take the focus.
+- **Downloads:** grouped by origin or into your own categories.
+- **Baldur's Gate 3:** the tools are fixed.
+
+Nexus collections, Root folders without Root Builder and the Elden Ring and
+Nightreign tools from earlier betas are all included. Tested with this
+version: Skyrim SE, Nolvus, Cyberpunk 2077 and Baldur's Gate 3.
 
 On Nexus Mods: [MO2 Revamped in Modding Tools](https://www.nexusmods.com/site/mods/2612),
 with the beta and the experimental build.
@@ -34,7 +41,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.12.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.13.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
