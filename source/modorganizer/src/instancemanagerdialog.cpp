@@ -9,6 +9,7 @@
 #include "fluentmotion.h"
 #include "gameiconutils.h"
 #include "instancemanager.h"
+#include "nolvustransfer.h"
 #include "plugincontainer.h"
 #include "settings.h"
 #include "shared/appconfig.h"
@@ -828,9 +829,15 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
   add(PinGlyph, m_shortcut->text(), m_shortcut, &InstanceManagerDialog::toggleShortcut);
   add(TagGlyph, tr("Move to group\u2026"), nullptr, &InstanceManagerDialog::changeGroup);
   add(NoteGlyph, tr("Edit notes\u2026"), nullptr, &InstanceManagerDialog::editNotes);
-  if (m_nolvusLabels.contains(i->directory())) {
+  if (Nolvus::isLinked(i->iniPath())) {
     add(CopyGlyph, tr("Copy Nolvus' profiles again…"), nullptr,
         &InstanceManagerDialog::copyNolvusProfilesAgain);
+    add(CopyGlyph, tr("Transfer to MO2 Revamped…"), nullptr,
+        &InstanceManagerDialog::transferSelectedNolvus);
+  }
+  if (Nolvus::canUndoTransfer(i->directory())) {
+    add(CopyGlyph, tr("Undo the Nolvus transfer…"), nullptr,
+        &InstanceManagerDialog::undoNolvusTransfer);
   }
   menu.addSeparator();
 
@@ -1005,9 +1012,49 @@ void InstanceManagerDialog::updateNolvus()
       openNolvus(k);
     });
     m_nolvusRows->addWidget(open);
+
+    auto* transfer = new QPushButton(tr("Transfer to MO2 Revamped…"), m_nolvusCard);
+    transfer->setObjectName(QStringLiteral("transferNolvus"));
+    transfer->setAutoDefault(false);
+    transfer->setToolTip(tr("Make %1 a normal instance that owns its mods, profiles and "
+                            "stock game: moved, copied or kept in place")
+                             .arg(info.name));
+    connect(transfer, &QPushButton::clicked, this, [this, k] {
+      transferNolvus(k);
+    });
+    m_nolvusRows->addWidget(transfer);
   }
 
-  m_nolvusCard->setVisible(!m_nolvus.empty());
+  // a transfer that was cut off (MO2 closed or crashed during it)
+  const auto interrupted = Nolvus::interruptedTransfers();
+  for (const QString& dir : interrupted) {
+    auto* caption = new QLabel(tr("A Nolvus transfer into %1 didn't finish.")
+                                   .arg(QDir::toNativeSeparators(dir)),
+                               m_nolvusCard);
+    caption->setWordWrap(true);
+    m_nolvusRows->addWidget(caption);
+    auto* back = new QPushButton(tr("Put everything back…"), m_nolvusCard);
+    back->setAutoDefault(false);
+    connect(back, &QPushButton::clicked, this, [this, dir] {
+      if (QMessageBox::question(
+              this, tr("Put everything back"),
+              tr("What the transfer into %1 moved goes back to Nolvus, and what it "
+                 "copied is deleted.")
+                  .arg(QDir::toNativeSeparators(dir)),
+              QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Ok) {
+        return;
+      }
+      QString error;
+      if (!Nolvus::undoTransfer(dir, &error)) {
+        QMessageBox::warning(this, tr("Put everything back"), error);
+      }
+      updateInstances();
+      updateList();
+    });
+    m_nolvusRows->addWidget(back);
+  }
+
+  m_nolvusCard->setVisible(!m_nolvus.empty() || !interrupted.empty());
 }
 
 void InstanceManagerDialog::openNolvus(std::size_t index)
@@ -1040,6 +1087,99 @@ void InstanceManagerDialog::openNolvus(std::size_t index)
       return;
     }
   }
+}
+
+void InstanceManagerDialog::transferNolvus(std::size_t index)
+{
+  if (index >= m_nolvus.size()) {
+    return;
+  }
+  Nolvus::TransferSource source;
+  source.info = m_nolvus[index];
+
+  const QString dir = Nolvus::runTransferWizard(this, source);
+  if (dir.isEmpty()) {
+    updateNolvus();
+    return;
+  }
+
+  updateInstances();
+  updateList();
+  for (std::size_t i = 0; i < m_instances.size(); ++i) {
+    if (QDir::cleanPath(m_instances[i]->directory())
+            .compare(QDir::cleanPath(dir), Qt::CaseInsensitive) == 0) {
+      select(i);
+      m_list->scrollTo(m_model->index(rowOf(i), 0));
+      openSelectedInstance();
+      return;
+    }
+  }
+}
+
+void InstanceManagerDialog::transferSelectedNolvus()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+  if (i->isActive()) {
+    QMessageBox::information(this, tr("Transfer to MO2 Revamped"),
+                             tr("The instance in use can't be transferred. Open another "
+                                "instance first, then do this from its Instances window."));
+    return;
+  }
+
+  const auto link = Nolvus::readLink(i->iniPath());
+  if (!link.valid) {
+    return;
+  }
+  Nolvus::TransferSource source;
+  source.linkedInstance   = i->directory();
+  source.info.root        = link.root;
+  source.info.name        = link.name;
+  source.info.version     = link.version;
+  source.info.variant     = link.variant;
+  source.info.enb         = link.enb;
+  source.info.installPath = link.installPath;
+  source.info.archivePath = link.archivePath;
+  source.info.stockGame   = link.stockGame;
+  source.info.mo2Path     = link.mo2Path;
+  source.info.modsPath    = link.modsPath;
+
+  if (!Nolvus::runTransferWizard(this, source).isEmpty()) {
+    updateInstances();
+    updateList();
+  }
+}
+
+void InstanceManagerDialog::undoNolvusTransfer()
+{
+  const auto* i = singleSelection();
+  if (!i) {
+    return;
+  }
+  if (i->isActive()) {
+    QMessageBox::information(this, tr("Undo the Nolvus transfer"),
+                             tr("The instance in use can't be changed. Open another "
+                                "instance first, then do this from its Instances window."));
+    return;
+  }
+  if (QMessageBox::question(
+          this, tr("Undo the Nolvus transfer"),
+          tr("The folders the transfer moved (mods, overwrite, profiles, stock game, tools, "
+             "archives) go back to Nolvus, with any changes made since. %1 stops being an "
+             "instance, unless it was linked to Nolvus before: then it is linked again.")
+              .arg(i->displayName()),
+          QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Ok) {
+    return;
+  }
+  QString error;
+  if (!Nolvus::undoTransfer(i->directory(), &error)) {
+    QMessageBox::warning(this, tr("Undo the Nolvus transfer"),
+                         tr("Some things couldn't be put back:\n%1").arg(error));
+  }
+  updateInstances();
+  updateList();
 }
 
 void InstanceManagerDialog::findNolvusElsewhere()
