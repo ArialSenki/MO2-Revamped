@@ -116,6 +116,7 @@ protected:
 
   void keyPressEvent(QKeyEvent* event) override;
   void mousePressEvent(QMouseEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
   void mouseDoubleClickEvent(QMouseEvent* event) override;
 
   // downloads dragged onto a category move into it
@@ -164,6 +165,8 @@ private:
   DownloadList* m_Groups = nullptr;
   bool m_Restoring       = false;
   bool m_Searching       = false;
+  // the first move after a press is logged while drags are being looked at
+  bool m_MoveLogged = true;
   // the group a drag is over
   QPersistentModelIndex m_DropGroup;
 
