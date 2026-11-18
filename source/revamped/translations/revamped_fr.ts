@@ -6192,6 +6192,10 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>There are no notifications. Open it to see what is checked.</source>
+      <translation>Aucune notification. Ouvrez-le pour voir ce qui est vérifié.</translation>
+    </message>
+    <message>
       <source>Installation in progress</source>
       <translation>Installation en cours</translation>
     </message>
@@ -9582,6 +9586,42 @@ Pour garder certains fichiers, déplacez-les d&apos;abord dans un mod.</translat
   </context>
   <context>
     <name>ProblemsDialog</name>
+    <message>
+      <source>A plugin whose masters are missing, an SKSE plugin that didn't load the last time the game ran, or a plugin still saved for the original Skyrim.</source>
+      <translation>Un plugin dont des maîtres manquent, un plugin SKSE qui ne s’est pas chargé au dernier lancement du jeu, ou un plugin encore enregistré pour le Skyrim d’origine.</translation>
+    </message>
+    <message>
+      <source>A plugin whose masters are missing, or a script extender plugin (F4SE, NVSE, xOBSE...) that didn't load the last time the game ran.</source>
+      <translation>Un plugin dont des maîtres manquent, ou un plugin du script extender (F4SE, NVSE, xOBSE...) qui ne s’est pas chargé au dernier lancement du jeu.</translation>
+    </message>
+    <message>
+      <source>Steam saves still hidden after an earlier launch, or a profile that has no saves of its own yet.</source>
+      <translation>Des sauvegardes Steam encore cachées après un lancement précédent, ou un profil qui n’a pas encore ses propres sauvegardes.</translation>
+    </message>
+    <message>
+      <source>An error in the last program run from MO2, or files left in Overwrite by a tool, which belong in a mod of their own.</source>
+      <translation>Une erreur dans le dernier programme lancé depuis MO2, ou des fichiers laissés dans Overwrite par un outil, qui ont leur place dans un mod à part.</translation>
+    </message>
+    <message>
+      <source>Checks that run for %1: %2.</source>
+      <translation>Vérifications actives pour %1 : %2.</translation>
+    </message>
+    <message>
+      <source>this instance</source>
+      <translation>cette instance</translation>
+    </message>
+    <message>
+      <source>No check runs for this instance: the diagnosis plugins are turned off in Settings, Plugins.</source>
+      <translation>Aucune vérification pour cette instance : les plugins de diagnostic sont désactivés dans Paramètres, Plugins.</translation>
+    </message>
+    <message>
+      <source>For example: %1</source>
+      <translation>Par exemple : %1</translation>
+    </message>
+    <message>
+      <source>When one of them finds something, the bell shows a dot and it is listed here.</source>
+      <translation>Quand l’une d’elles trouve quelque chose, la cloche affiche un point et c’est listé ici.</translation>
+    </message>
     <message>
       <source>Basic diagnosis</source>
       <translation>Diagnostic de base</translation>

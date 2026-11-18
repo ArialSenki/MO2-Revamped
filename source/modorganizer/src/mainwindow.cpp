@@ -2440,11 +2440,13 @@ void MainWindow::updateProblemsButton()
   if (numProblems > 0) {
     ui->actionNotifications->setToolTip(tr("There are notifications to read"));
   } else {
-    ui->actionNotifications->setToolTip(tr("There are no notifications"));
+    ui->actionNotifications->setToolTip(
+        tr("There are no notifications. Open it to see what is checked."));
   }
 
   const QIcon icon = fluentNotificationIcon(numProblems);
-  ui->actionNotifications->setEnabled(numProblems > 0);
+  // MO2 Revamped: opens with nothing to read too, and says what is checked
+  ui->actionNotifications->setEnabled(true);
   ui->actionNotifications->setIcon(icon);
   if (auto* button = qobject_cast<QAbstractButton*>(
           ui->toolBar->widgetForAction(ui->actionNotifications))) {

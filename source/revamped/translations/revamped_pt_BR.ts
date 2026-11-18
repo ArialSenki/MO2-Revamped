@@ -6057,6 +6057,10 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
   <context>
     <name>MainWindow</name>
     <message>
+      <source>There are no notifications. Open it to see what is checked.</source>
+      <translation>Não há notificações. Abra para ver o que é verificado.</translation>
+    </message>
+    <message>
       <source>Installation in progress</source>
       <translation>Instalação em andamento</translation>
     </message>
@@ -9300,6 +9304,42 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
   </context>
   <context>
     <name>ProblemsDialog</name>
+    <message>
+      <source>A plugin whose masters are missing, an SKSE plugin that didn't load the last time the game ran, or a plugin still saved for the original Skyrim.</source>
+      <translation>Um plugin com masters faltando, um plugin do SKSE que não carregou na última vez que o jogo rodou, ou um plugin ainda salvo para o Skyrim original.</translation>
+    </message>
+    <message>
+      <source>A plugin whose masters are missing, or a script extender plugin (F4SE, NVSE, xOBSE...) that didn't load the last time the game ran.</source>
+      <translation>Um plugin com masters faltando, ou um plugin do script extender (F4SE, NVSE, xOBSE...) que não carregou na última vez que o jogo rodou.</translation>
+    </message>
+    <message>
+      <source>Steam saves still hidden after an earlier launch, or a profile that has no saves of its own yet.</source>
+      <translation>Saves da Steam ainda ocultos depois de uma inicialização anterior, ou um perfil que ainda não tem saves próprios.</translation>
+    </message>
+    <message>
+      <source>An error in the last program run from MO2, or files left in Overwrite by a tool, which belong in a mod of their own.</source>
+      <translation>Um erro no último programa executado pelo MO2, ou arquivos deixados em Overwrite por uma ferramenta, que pertencem a um mod próprio.</translation>
+    </message>
+    <message>
+      <source>Checks that run for %1: %2.</source>
+      <translation>Verificações ativas para %1: %2.</translation>
+    </message>
+    <message>
+      <source>this instance</source>
+      <translation>esta instância</translation>
+    </message>
+    <message>
+      <source>No check runs for this instance: the diagnosis plugins are turned off in Settings, Plugins.</source>
+      <translation>Nenhuma verificação para esta instância: os plugins de diagnóstico estão desativados em Configurações, Plugins.</translation>
+    </message>
+    <message>
+      <source>For example: %1</source>
+      <translation>Por exemplo: %1</translation>
+    </message>
+    <message>
+      <source>When one of them finds something, the bell shows a dot and it is listed here.</source>
+      <translation>Quando uma delas encontra algo, o sino mostra um ponto e aparece aqui.</translation>
+    </message>
     <message>
       <source>Basic diagnosis</source>
       <translation>Diagnóstico básico</translation>

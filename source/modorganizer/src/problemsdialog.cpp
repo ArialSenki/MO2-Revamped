@@ -16,6 +16,7 @@
 #include <Shellapi.h>
 #include <iplugin.h>
 #include <iplugindiagnose.h>
+#include <iplugingame.h>
 #include <utility.h>
 
 #include "eldenringsavesettings.h"
@@ -157,10 +158,20 @@ QWidget* ProblemsDialog::createDetails()
   caughtUpText->setObjectName(QStringLiteral("instanceDetailCaption"));
   caughtUpText->setAlignment(Qt::AlignCenter);
   caughtUpText->setWordWrap(true);
+  // MO2 Revamped: what is checked for this instance's game, so the window
+  // says something useful when there is nothing to review
+  m_checks = new QLabel(empty);
+  m_checks->setObjectName(QStringLiteral("fluentSettingDescription"));
+  m_checks->setAlignment(Qt::AlignCenter);
+  m_checks->setWordWrap(true);
+  m_checks->setTextFormat(Qt::RichText);
+  m_checks->setContentsMargins(36, 0, 36, 0);
   emptyLayout->addWidget(check);
   emptyLayout->addSpacing(8);
   emptyLayout->addWidget(caughtUp);
   emptyLayout->addWidget(caughtUpText);
+  emptyLayout->addSpacing(18);
+  emptyLayout->addWidget(m_checks);
   emptyLayout->addStretch(1);
   m_details->addWidget(empty);
 
@@ -258,6 +269,7 @@ void ProblemsDialog::runDiagnosis()
   m_hasProblems  = false;
   m_problemCount = 0;
   m_list->clear();
+  QStringList sources;
 
   for (IPluginDiagnose* diagnose : m_PluginContainer.plugins<IPluginDiagnose>()) {
     if (!m_PluginContainer.isEnabled(diagnose)) {
@@ -271,6 +283,9 @@ void ProblemsDialog::runDiagnosis()
     const QString source = plugin == nullptr ? QStringLiteral("Mod Organizer")
                            : basic           ? tr("Basic diagnosis")
                                              : plugin->localizedName();
+    if (!sources.contains(source)) {
+      sources.append(source);
+    }
 
     std::vector<unsigned int> activeProblems = diagnose->activeProblems();
     for (unsigned int key : activeProblems) {
@@ -301,11 +316,62 @@ void ProblemsDialog::runDiagnosis()
     }
   }
 
+  m_checks->setText(checksText(sources));
   m_count->setText(QString::number(m_problemCount));
   if (m_hasProblems) {
     m_list->setCurrentRow(0);
   }
   selectionChanged();
+}
+
+QString ProblemsDialog::checksText(const QStringList& sources) const
+{
+  const IPluginGame* game = m_PluginContainer.managedGame();
+  const QString name      = game != nullptr ? game->gameName() : QString();
+  const QString shortName = game != nullptr ? game->gameShortName() : QString();
+  const auto is = [&](std::initializer_list<const char*> names) {
+    for (const char* n : names) {
+      if (shortName.contains(QLatin1String(n), Qt::CaseInsensitive) ||
+          name.contains(QLatin1String(n), Qt::CaseInsensitive)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // one example of a notice this game's instance can show, from the checks
+  // that exist for it (no game-specific check for the others: the basic ones)
+  QString example;
+  if (is({"skyrim", "enderal"})) {
+    example = tr("A plugin whose masters are missing, an SKSE plugin that didn't "
+                 "load the last time the game ran, or a plugin still saved for the "
+                 "original Skyrim.");
+  } else if (is({"fallout", "fo3", "fo4", "fnv", "ttw", "starfield", "oblivion",
+                 "morrowind", "nehrim"})) {
+    example = tr("A plugin whose masters are missing, or a script extender plugin "
+                 "(F4SE, NVSE, xOBSE...) that didn't load the last time the game "
+                 "ran.");
+  } else if (is({"elden"})) {
+    example = tr("Steam saves still hidden after an earlier launch, or a profile "
+                 "that has no saves of its own yet.");
+  } else {
+    example = tr("An error in the last program run from MO2, or files left in "
+                 "Overwrite by a tool, which belong in a mod of their own.");
+  }
+
+  QString text;
+  if (!sources.isEmpty()) {
+    text = tr("Checks that run for %1: %2.")
+               .arg(name.isEmpty() ? tr("this instance") : name.toHtmlEscaped(),
+                    sources.join(QStringLiteral(", ")).toHtmlEscaped());
+  } else {
+    text = tr("No check runs for this instance: the diagnosis plugins are turned "
+              "off in Settings, Plugins.");
+  }
+  return text + QStringLiteral("<br><br>") + tr("For example: %1").arg(example) +
+         QStringLiteral("<br><br>") +
+         tr("When one of them finds something, the bell shows a dot and it is "
+            "listed here.");
 }
 
 void ProblemsDialog::selectionChanged()
