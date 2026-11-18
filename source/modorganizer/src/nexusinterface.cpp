@@ -1178,6 +1178,10 @@ void NexusInterface::nextRequest()
   request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
                        QNetworkRequest::AlwaysNetwork);
   request.setRawHeader("APIKEY", m_User.apiKey().toUtf8());
+  // MO2 Revamped: Qt follows redirects by itself and keeps the headers; the
+  // key never goes to an address other than the API's
+  request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                       QNetworkRequest::SameOriginRedirectPolicy);
   request.setHeader(QNetworkRequest::KnownHeaders::UserAgentHeader,
                     m_AccessManager->userAgent(info.m_SubModule));
   request.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,
@@ -1362,8 +1366,19 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (statusCode == 301) {
       // redirect request, return request to queue
-      iter->m_URL =
-          reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
+      const QUrl target = reply->url().resolved(
+          reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl());
+      // MO2 Revamped: the request carries the API key, so it only follows a
+      // redirect within the API's own address
+      if (target.scheme() != reply->url().scheme() ||
+          target.host().compare(reply->url().host(), Qt::CaseInsensitive) != 0) {
+        log::warn("Nexus redirected a request to another address; it wasn't followed");
+        emit nxmRequestFailed(iter->m_GameName, iter->m_ModID, iter->m_FileID,
+                              iter->m_UserData, iter->m_ID, statusCode,
+                              tr("Nexus redirected the request to another address."));
+        return;
+      }
+      iter->m_URL = target.toString();
       iter->m_Reroute = true;
       m_RequestQueue.enqueue(*iter);
       // nextRequest();

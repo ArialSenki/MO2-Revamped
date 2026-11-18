@@ -399,6 +399,9 @@ bool ValidationAttempt::sendRequest(NXMAccessManager& m, const QString& key)
   QNetworkRequest request(requestUrl);
 
   request.setRawHeader("APIKEY", key.toUtf8());
+  // MO2 Revamped: a redirect elsewhere would take the key along
+  request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                       QNetworkRequest::SameOriginRedirectPolicy);
   request.setHeader(QNetworkRequest::KnownHeaders::UserAgentHeader,
                     m.userAgent().toUtf8());
   request.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,

@@ -14037,6 +14037,10 @@ Controlla le opzioni del gioco prima di giocare.</translation>
       <source>This link was made for another Nexus account, or it needs Premium. Sign in with the account that clicked it.</source>
       <translation>Questo link è stato creato per un altro account Nexus, oppure richiede Premium. Accedi con l'account che l'ha cliccato.</translation>
     </message>
+    <message>
+      <source>Nexus redirected the request to another address.</source>
+      <translation>Nexus ha reindirizzato la richiesta a un altro indirizzo.</translation>
+    </message>
   </context>
   <context>
     <name>UpdateNoticeDialog</name>
