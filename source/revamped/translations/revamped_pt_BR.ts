@@ -6167,6 +6167,60 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
       <source>No instances yet. Open the Nolvus list found on the left, or create an instance with New instance.</source>
       <translation>Ainda não há instâncias. Abra a lista do Nolvus encontrada à esquerda ou crie uma instância com Nova instância.</translation>
     </message>
+    <message>
+      <source>A Nolvus transfer into %1 didn&apos;t finish.</source>
+      <translation>Uma transferência do Nolvus para %1 não terminou.</translation>
+    </message>
+    <message>
+      <source>Make %1 a normal instance that owns its mods, profiles and stock game: moved, copied or kept in place</source>
+      <translation>Torna %1 uma instância normal dona dos mods, perfis e jogo base: movida, copiada ou deixada no lugar</translation>
+    </message>
+    <message>
+      <source>Put everything back</source>
+      <translation>Devolver tudo</translation>
+    </message>
+    <message>
+      <source>Put everything back…</source>
+      <translation>Devolver tudo…</translation>
+    </message>
+    <message>
+      <source>Some things couldn&apos;t be put back:
+%1</source>
+      <translation>Algumas coisas não puderam ser devolvidas:
+%1</translation>
+    </message>
+    <message>
+      <source>The folders the transfer moved (mods, overwrite, profiles, stock game, tools, archives) go back to Nolvus, with any changes made since. %1 stops being an instance, unless it was linked to Nolvus before: then it is linked again.</source>
+      <translation>As pastas movidas (mods, overwrite, perfis, jogo base, ferramentas, arquivos) voltam para o Nolvus, com as mudanças feitas desde então. %1 deixa de ser uma instância, a menos que antes estivesse vinculada ao Nolvus: então volta a estar.</translation>
+    </message>
+    <message>
+      <source>The instance in use can&apos;t be changed. Open another instance first, then do this from its Instances window.</source>
+      <translation>A instância em uso não pode ser alterada. Abra outra instância primeiro e faça isso pela janela Instâncias dela.</translation>
+    </message>
+    <message>
+      <source>The instance in use can&apos;t be transferred. Open another instance first, then do this from its Instances window.</source>
+      <translation>A instância em uso não pode ser transferida. Abra outra instância primeiro e faça isso pela janela Instâncias dela.</translation>
+    </message>
+    <message>
+      <source>Transfer to MO2 Revamped</source>
+      <translation>Transferir para o MO2 Revamped</translation>
+    </message>
+    <message>
+      <source>Transfer to MO2 Revamped…</source>
+      <translation>Transferir para o MO2 Revamped…</translation>
+    </message>
+    <message>
+      <source>Undo the Nolvus transfer</source>
+      <translation>Desfazer a transferência do Nolvus</translation>
+    </message>
+    <message>
+      <source>Undo the Nolvus transfer…</source>
+      <translation>Desfazer a transferência do Nolvus…</translation>
+    </message>
+    <message>
+      <source>What the transfer into %1 moved goes back to Nolvus, and what it copied is deleted.</source>
+      <translation>O que a transferência para %1 moveu volta para o Nolvus, e o que copiou é apagado.</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -9437,6 +9491,261 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
     <message>
       <source>This instance plays the game in %1, not in the stock game Nolvus prepared (%2). Nolvus only works with its stock game.</source>
       <translation>Esta instância usa o jogo em %1, não o jogo base que o Nolvus preparou (%2). O Nolvus só funciona com seu jogo base.</translation>
+    </message>
+    <message>
+      <source>%1 already exists.</source>
+      <translation>%1 já existe.</translation>
+    </message>
+    <message>
+      <source>%1 already has a &quot;%2&quot; folder: choose an empty folder.</source>
+      <translation>%1 já tem uma pasta &quot;%2&quot;: escolha uma pasta vazia.</translation>
+    </message>
+    <message>
+      <source>%1 and %2 are on different drives: moving would copy everything. Choose a folder on the same drive, or copy.</source>
+      <translation>%1 e %2 estão em unidades diferentes: mover copiaria tudo. Escolha uma pasta na mesma unidade ou copie.</translation>
+    </message>
+    <message>
+      <source>%1 exists again; %2 stays where it is</source>
+      <translation>%1 existe de novo; %2 fica onde está</translation>
+    </message>
+    <message>
+      <source>%1 is a link to another folder; it can&apos;t be moved, only copied.</source>
+      <translation>%1 é um link para outra pasta; não pode ser movido, só copiado.</translation>
+    </message>
+    <message>
+      <source>%1 is now a normal instance in %2, done in %3.</source>
+      <translation>%1 agora é uma instância normal em %2, feito em %3.</translation>
+    </message>
+    <message>
+      <source>%1 is still in %2: %3</source>
+      <translation>%1 ainda está em %2: %3</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;%1 isn&apos;t on the same drive as Nolvus&lt;/b&gt;: a move must stay on one drive. Use a folder on Nolvus&apos; drive, or copy.</source>
+      <translation>&lt;b&gt;%1 não está na mesma unidade que o Nolvus&lt;/b&gt;: mover precisa ficar numa unidade. Use uma pasta na unidade do Nolvus ou copie.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;After a copy, both exist:&lt;/b&gt; Nolvus updates only reach Nolvus&apos; own copy, not this instance.</source>
+      <translation>&lt;b&gt;Depois de copiar, existem as duas:&lt;/b&gt; as atualizações do Nolvus só chegam à cópia do Nolvus, não a esta instância.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;After a move, the Nolvus Dashboard can no longer update or repair this install.&lt;/b&gt; Instances can undo the move.</source>
+      <translation>&lt;b&gt;Depois de mover, o Nolvus Dashboard não pode mais atualizar nem reparar esta instalação.&lt;/b&gt; Instâncias pode desfazer a mudança.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Nolvus&apos; MO2 and Dashboard use the same folders:&lt;/b&gt; what you change here, they see, and a Nolvus update changes this instance.</source>
+      <translation>&lt;b&gt;O MO2 e o Dashboard do Nolvus usam as mesmas pastas:&lt;/b&gt; o que você mudar aqui eles veem, e uma atualização do Nolvus muda esta instância.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Not enough free space.&lt;/b&gt;</source>
+      <translation>&lt;b&gt;Espaço livre insuficiente.&lt;/b&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;The archives are on another drive&lt;/b&gt; than %1: copy them, or leave them where they are.</source>
+      <translation>&lt;b&gt;Os arquivos estão em outra unidade&lt;/b&gt; que %1: copie-os ou deixe-os onde estão.</translation>
+    </message>
+    <message>
+      <source>Bring the profiles&apos; saves</source>
+      <translation>Trazer os saves dos perfis</translation>
+    </message>
+    <message>
+      <source>Browse…</source>
+      <translation>Procurar…</translation>
+    </message>
+    <message>
+      <source>%1 of %2</source>
+      <translation>%1 de %2</translation>
+    </message>
+    <message>
+      <source>Can&apos;t copy %1: %2</source>
+      <translation>Não foi possível copiar %1: %2</translation>
+    </message>
+    <message>
+      <source>Can&apos;t move %1 to %2: %3</source>
+      <translation>Não foi possível mover %1 para %2: %3</translation>
+    </message>
+    <message>
+      <source>Cancelled.</source>
+      <translation>Cancelado.</translation>
+    </message>
+    <message>
+      <source>Cancelling: putting back what was done</source>
+      <translation>Cancelando: desfazendo o que foi feito</translation>
+    </message>
+    <message>
+      <source>Copy them into the instance&apos;s downloads</source>
+      <translation>Copiá-los para os downloads da instância</translation>
+    </message>
+    <message>
+      <source>Couldn&apos;t remove %1</source>
+      <translation>Não foi possível remover %1</translation>
+    </message>
+    <message>
+      <source>Couldn&apos;t restore %1</source>
+      <translation>Não foi possível restaurar %1</translation>
+    </message>
+    <message>
+      <source>Data folder</source>
+      <translation>Pasta de dados</translation>
+    </message>
+    <message>
+      <source>Keep in place</source>
+      <translation>Deixar no lugar</translation>
+    </message>
+    <message>
+      <source>Leave them where they are (listed read-only)</source>
+      <translation>Deixá-los onde estão (listados somente leitura)</translation>
+    </message>
+    <message>
+      <source>Let this instance handle Nexus links (nxm://)</source>
+      <translation>Deixar esta instância abrir os links do Nexus (nxm://)</translation>
+    </message>
+    <message>
+      <source>Listing the Nolvus archives</source>
+      <translation>Listando os arquivos do Nolvus</translation>
+    </message>
+    <message>
+      <source>Listing the files to copy</source>
+      <translation>Listando os arquivos a copiar</translation>
+    </message>
+    <message>
+      <source>Makes a normal MO2 Revamped instance of %1 that owns its mods, profiles and stock game. Choose how:</source>
+      <translation>Cria uma instância normal do MO2 Revamped com %1, dona dos seus mods, perfis e jogo base. Escolha como:</translation>
+    </message>
+    <message>
+      <source>Measuring how much space the copy needs…</source>
+      <translation>Medindo quanto espaço a cópia precisa…</translation>
+    </message>
+    <message>
+      <source>Measuring the folders…</source>
+      <translation>Medindo as pastas…</translation>
+    </message>
+    <message>
+      <source>Mods %1 · overwrite %2 · stock game %3 · tools %4 · profiles %5 (saves %6) · archives %7</source>
+      <translation>Mods %1 · overwrite %2 · jogo base %3 · ferramentas %4 · perfis %5 (saves %6) · arquivos %7</translation>
+    </message>
+    <message>
+      <source>Move</source>
+      <translation>Mover</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <translation>Copiar</translation>
+    </message>
+    <message>
+      <source>Move them into the instance&apos;s downloads</source>
+      <translation>Movê-los para os downloads da instância</translation>
+    </message>
+    <message>
+      <source>Moving %1</source>
+      <translation>Movendo %1</translation>
+    </message>
+    <message>
+      <source>Needs %1; %2 free on that drive.</source>
+      <translation>Precisa de %1; %2 livres nessa unidade.</translation>
+    </message>
+    <message>
+      <source>No free folder name for the instance.</source>
+      <translation>Nenhum nome de pasta livre para a instância.</translation>
+    </message>
+    <message>
+      <source>Nolvus archives</source>
+      <translation>Arquivos do Nolvus</translation>
+    </message>
+    <message>
+      <source>Not enough free space in %1: %2 needed, %3 free.</source>
+      <translation>Espaço insuficiente em %1: precisa de %2, há %3 livres.</translation>
+    </message>
+    <message>
+      <source>Preparing</source>
+      <translation>Preparando</translation>
+    </message>
+    <message>
+      <source>Putting everything back</source>
+      <translation>Devolvendo tudo ao lugar</translation>
+    </message>
+    <message>
+      <source>Same drive: the folders are renamed, which takes seconds.</source>
+      <translation>Mesma unidade: as pastas são renomeadas, em segundos.</translation>
+    </message>
+    <message>
+      <source>Some things couldn&apos;t be put back; the list is in %1. Instances offers to try again.</source>
+      <translation>Algumas coisas não puderam ser devolvidas; a lista está em %1. Instâncias oferece tentar de novo.</translation>
+    </message>
+    <message>
+      <source>The Nolvus archives are on another drive than %1: copy them, or leave them where they are.</source>
+      <translation>Os arquivos do Nolvus estão em outra unidade que %1: copie-os ou deixe-os onde estão.</translation>
+    </message>
+    <message>
+      <source>The folders are copied: Nolvus stays as it is and its updates only reach its own copy. Needs the free space shown below.</source>
+      <translation>As pastas são copiadas: o Nolvus fica como está e as atualizações dele só chegam à cópia dele. Precisa do espaço livre mostrado abaixo.</translation>
+    </message>
+    <message>
+      <source>The folders are moved into the instance&apos;s data folder: seconds on the same drive. The Nolvus Dashboard can&apos;t update this install any more.</source>
+      <translation>As pastas são movidas para a pasta de dados da instância: segundos na mesma unidade. O Nolvus Dashboard não poderá mais atualizar esta instalação.</translation>
+    </message>
+    <message>
+      <source>The instance uses the folders where they are and owns them: its profiles are Nolvus&apos; own, so Nolvus&apos; MO2 and Dashboard see what you change.</source>
+      <translation>A instância usa as pastas onde estão e é dona delas: os perfis são os do Nolvus, então o MO2 e o Dashboard do Nolvus veem o que você muda.</translation>
+    </message>
+    <message>
+      <source>The transfer didn&apos;t finish:
+%1</source>
+      <translation>A transferência não terminou:
+%1</translation>
+    </message>
+    <message>
+      <source>There is no transfer to undo in %1.</source>
+      <translation>Não há transferência para desfazer em %1.</translation>
+    </message>
+    <message>
+      <source>Transfer</source>
+      <translation>Transferir</translation>
+    </message>
+    <message>
+      <source>Transfer %1 to MO2 Revamped</source>
+      <translation>Transferir %1 para o MO2 Revamped</translation>
+    </message>
+    <message>
+      <source>Transfer to MO2 Revamped</source>
+      <translation>Transferir para o MO2 Revamped</translation>
+    </message>
+    <message>
+      <source>Updating the mods&apos; records</source>
+      <translation>Atualizando os dados dos mods</translation>
+    </message>
+    <message>
+      <source>Use a folder on Nolvus&apos; drive</source>
+      <translation>Usar uma pasta na unidade do Nolvus</translation>
+    </message>
+    <message>
+      <source>Writing the instance&apos;s settings</source>
+      <translation>Gravando as configurações da instância</translation>
+    </message>
+    <message>
+      <source>about %1 left</source>
+      <translation>faltam cerca de %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>Copying %n archives</source>
+      <translation>
+        <numerusform>Copiando %n arquivo</numerusform>
+        <numerusform>Copiando %n arquivos</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>Copying %n files</source>
+      <translation>
+        <numerusform>Copiando %n arquivo</numerusform>
+        <numerusform>Copiando %n arquivos</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>Moving %n archives</source>
+      <translation>
+        <numerusform>Movendo %n arquivo</numerusform>
+        <numerusform>Movendo %n arquivos</numerusform>
+      </translation>
     </message>
   </context>
   <context>
