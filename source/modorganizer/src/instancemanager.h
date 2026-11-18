@@ -3,6 +3,7 @@
 
 #include <QSettings>
 #include <QString>
+#include <optional>
 
 namespace MOBase
 {
@@ -213,6 +214,9 @@ private:
   MOBase::IPluginGame* m_plugin;
   QString m_profile;
   bool m_profileSelectionMissing = false;
+  // MO2 Revamped: made from a Nolvus list (its ini has a [Nolvus] section);
+  // read once, by displayName()
+  mutable std::optional<bool> m_fromNolvus;
 
   // figures out the game plugin for this instance
   //

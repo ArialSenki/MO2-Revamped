@@ -113,6 +113,15 @@ QString Instance::displayName() const
     return QObject::tr("Portable");
   }
 
+  // MO2 Revamped: a Nolvus instance is named after its list; its caption
+  // says it is portable
+  if (!m_fromNolvus) {
+    m_fromNolvus = Nolvus::readLink(iniPath()).valid;
+  }
+  if (*m_fromNolvus) {
+    return QDir(m_dir).dirName();
+  }
+
   return QObject::tr("Portable - %1").arg(QDir(m_dir).dirName());
 }
 
