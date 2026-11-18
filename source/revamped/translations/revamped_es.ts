@@ -17889,6 +17889,14 @@ Los tamaños son estimados. Si el espacio se acaba a mitad, las descargas y las 
       <source>Adult content (NSFW).</source>
       <translation>Contenido adulto (NSFW).</translation>
     </message>
+    <message>
+      <source>Adult content</source>
+      <translation>Contenido adulto</translation>
+    </message>
+    <message>
+      <source>Also lists collections Nexus marks as adult (NSFW).</source>
+      <translation>Muestra también las colecciones que Nexus marca como adultas (NSFW).</translation>
+    </message>
   </context>
 <context>
     <name>ThemeEditorDialog</name>

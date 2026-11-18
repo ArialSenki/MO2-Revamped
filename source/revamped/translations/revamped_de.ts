@@ -17628,6 +17628,14 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       <source>Adult content (NSFW).</source>
       <translation>Inhalte für Erwachsene (NSFW).</translation>
     </message>
+    <message>
+      <source>Adult content</source>
+      <translation>Inhalte für Erwachsene</translation>
+    </message>
+    <message>
+      <source>Also lists collections Nexus marks as adult (NSFW).</source>
+      <translation>Zeigt auch Sammlungen, die Nexus als nur für Erwachsene (NSFW) markiert.</translation>
+    </message>
   </context>
 <context>
     <name>ThemeEditorDialog</name>

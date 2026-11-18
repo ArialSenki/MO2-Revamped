@@ -15,6 +15,7 @@
 #include <QVariant>
 #include <functional>
 
+class QCheckBox;
 class QComboBox;
 class QLabel;
 class QLineEdit;
@@ -62,6 +63,7 @@ private:
   std::function<void(const QString&)> m_open;
   QLineEdit* m_search;
   QComboBox* m_sort;
+  QCheckBox* m_adult;
   QTreeWidget* m_list;
   QLabel* m_details;
   QPushButton* m_page;
