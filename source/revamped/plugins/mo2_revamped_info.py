@@ -835,11 +835,29 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             mod_list = self._organizer.modList()
             names = list(mod_list.allModsByProfilePriority())
             active_flag = mobase.ModState.ACTIVE
-            active = [n for n in names if mod_list.state(n) & active_flag]
-            separators = [n for n in names if n.endswith("_separator")]
+
+            def kind(name: str) -> str:
+                # the game's own DLC and Creation Club files show as mods too
+                try:
+                    mod = mod_list.getMod(name)
+                    if mod.isOverwrite():
+                        return "overwrite"
+                    if mod.isForeign():
+                        return "game"
+                    if mod.isSeparator():
+                        return "separator"
+                except Exception:
+                    if name.endswith("_separator"):
+                        return "separator"
+                return "mod"
+
+            kinds = {n: kind(n) for n in names}
+            mods = [n for n in names if kinds[n] == "mod"]
+            active = [n for n in mods if mod_list.state(n) & active_flag]
             lines.append(
-                f"Mods: {len(active)} enabled of {len(names) - len(separators)} "
-                f"({len(separators)} separators)"
+                f"Mods: {len(active)} enabled of {len(mods)} "
+                f"({sum(k == 'separator' for k in kinds.values())} separators, "
+                f"{sum(k == 'game' for k in kinds.values())} game files listed as mods)"
             )
             mods_dir = Path(self._organizer.modsPath())
             with_root = sum(1 for n in active if (mods_dir / n / "Root").is_dir())
@@ -1013,7 +1031,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 continue
             version = ""
             if entry.is_file() and name.casefold().endswith(".dll"):
-                version = self._file_version(entry)
+                # MO2's own plugin DLLs carry no version: their date tells
+                # which build they came with
+                version = self._file_version(entry) or "built " + datetime.fromtimestamp(
+                    entry.stat().st_mtime, timezone.utc
+                ).strftime("%Y-%m-%d")
             elif entry.is_file() and name.casefold().endswith(".py"):
                 version = python_version(entry)
             elif entry.is_dir() and (entry / "__init__.py").is_file():
@@ -1457,6 +1479,11 @@ class _ReportPreview(QDialog):
         body.addWidget(self._text, 1)
         layout.addLayout(body, 1)
         self._list.currentRowChanged.connect(self._show_file)
+        # screen readers select a file without moving the current row
+        self._list.itemSelectionChanged.connect(
+            lambda: self._show_file(self._list.row(self._list.selectedItems()[0]))
+            if self._list.selectedItems() else None
+        )
         self._list.setCurrentRow(0)
 
         buttons = QDialogButtonBox(self)
