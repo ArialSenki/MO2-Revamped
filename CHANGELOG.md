@@ -1,5 +1,109 @@
 # Changelog
 
+## 1.1.0-beta.13 (pre-release) — November 18, 2026
+
+A full audit of every window and option, two rounds of fixes from hands-on
+testing, Nolvus support and much faster handling of very large lists.
+
+### Nolvus
+
+- Nolvus installs are found in Instances (default `C:\Nolvus`, or a folder you
+  pick), with their version, variant and mod count.
+- **Open in MO2 Revamped** makes a linked instance: it uses Nolvus' mods and
+  STOCK GAME but keeps its own copy of the profiles, so Nolvus' MO2 folder and
+  profiles stay untouched and the Nolvus Dashboard still updates the list.
+  *Copy the Nolvus profiles again* refreshes the copy after an update.
+- **Transfer to MO2 Revamped** turns a Nolvus install into a normal instance:
+  move (seconds on the same drive), copy (shows sizes and free space first) or
+  keep in place. Every step is logged and can be undone; a failure rolls back.
+- Before a program runs, plain warnings for Nolvus requirements (STOCK GAME,
+  the downgraded game and SKSE, the chosen ENB's files, profile settings). They
+  never block.
+- The Nolvus archives show in Downloads as their own read-only group, without
+  copying anything.
+- No first-start questions in a Nolvus instance; the plugins a profile names
+  but no mod has are one log line, not hundreds.
+
+### Very large lists (tested with Nolvus: 3,597 mods, ~3,480 plugins, 546,000 files)
+
+- Turning all mods back on: 24.6 s → 4.2 s; 100 selected mods on: 0.94 → 0.43 s.
+- Run: the virtual folder is built off the interface thread, so the window
+  stays responsive (frozen 14.5 s → about 1 s) and Cancel works.
+- Data tab: the first search letter 7.0 → 1.0 s, and ~250 MB less memory.
+- Mod information of a 64,000-file mod: 0.85 → 0.29 s. Refresh, profile
+  switches and sorting long lists are faster too.
+- Plugin headers are read in parallel and cached; installing many small mods
+  is about five times faster.
+
+### Nexus
+
+- **Request limit (429):** MO2 pauses its Nexus requests and goes on by itself
+  when Nexus allows, with one calm notice; no mod is marked as failed.
+  Collections no longer check each installed mod for updates, so they make
+  fewer requests.
+- MO2 Revamped now names itself to Nexus as MO2 Revamped (based on Mod
+  Organizer 2.5.2), as Nexus' API policy asks.
+- **Connect to Nexus** (website sign-in) is hidden until Nexus registers MO2
+  Revamped's own sign-in; it used Mod Organizer 2's. Enter your personal API key
+  in Settings > Nexus. A key you already saved keeps working.
+- The API key never follows a redirect to another address.
+- The collection browser hides adult collections unless Adult content is ticked.
+- **Endorse** endorses the MO2 Revamped page in Modding Tools, is hidden for the
+  mod's author, says thanks once if you've already endorsed, never sends twice,
+  and explains each refusal in one sentence. Withdrawing is in the menu.
+
+### Collections
+
+- A Wabbajack-style collection window and browser, opened maximized.
+- One notice when a collection starts or goes on and one when it ends, none per
+  mod; errors go to the collection's list.
+- The window stays open with live progress; Run or a profile switch asks first
+  whether to pause it.
+- Checks free space before starting and offers to resume an unfinished install.
+
+### Notices
+
+- Notices never take the focus or cover a dialog's buttons, and clicks pass
+  outside the card.
+- The Notifications window (the bell) explains its checks with an example for
+  the instance's game; the "files in Overwrite" text is right for Cyberpunk 2077,
+  Baldur's Gate 3 and other games.
+- No question about the wiki when creating an instance.
+
+### Downloads
+
+- Grouped by origin (each collection or list, Nexus, other sites) or into your
+  own categories, with Move to category in the menu. Large folders open in
+  2.8 s instead of 11 s.
+- The columns no longer shift when the scrollbar appears.
+- False "Unknown error (0)" fixed; a stalled download is retried after 60 s;
+  nxm links that arrive while MO2 starts are no longer lost.
+
+### Game support
+
+- **Baldur's Gate 3:** LSLib updates in place; Convert JSON to YAML works without
+  PyYAML and no longer stops at 98%; Reparse Pak Metadata 10.3 → 1.3 s.
+- **Skyrim SE:** ShaderCache, KiLoader (ENB Extender) and SunHelm mods no longer
+  show "No valid game data".
+- **Cyberpunk 2077:** mods wrapped in one extra folder are fixed on install.
+
+### Windows and interface
+
+- The log panel floats and docks cleanly, with column titles over its list.
+- A window restored partly off screen is moved back inside it.
+- The plugin counter shows the real total (it was cut to its last digits), and
+  the plugin Name column keeps its room in a narrow window.
+- The mouse wheel no longer switches tabs or changes an unfocused choice.
+- A thin loading bar on the status bar's line; Profiles no longer reloads on
+  close without changes; About windows updated; the Endorse button is visible.
+- A help guide for MO2 Revamped's own parts, and a bug report that removes your
+  user name, PC name, emails and keys and shows what it will share first.
+
+### Fixes
+
+- Crashes fixed: closing with the floating log still resizing, the Data tab
+  while it builds, and Finish in "Where is the game now?".
+
 ## 1.1.0-beta.12 (pre-release) — November 16, 2026
 
 ### Nexus collections, complete
