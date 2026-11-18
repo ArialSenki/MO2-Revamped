@@ -586,6 +586,8 @@ MOApplication::MOApplication(int& argc, char** argv) : QApplication(argc, argv)
   // the MO2 Revamped release, for the plugins (About, diagnostic report): the
   // file version they could read is the MO2 base's, 2.5.2
   setProperty("revampedVersion", SelfUpdater::revampedVersionString());
+  // the commit it was built from, for the bug report
+  setProperty("revampedBuild", QString::fromLatin1(GITID));
 
   // every window gets the icon with its drawn small sizes; scaling the large
   // logo down would shrink its "M2" into a smudge at 16 px

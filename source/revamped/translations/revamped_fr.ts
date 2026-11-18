@@ -7711,6 +7711,10 @@ Si cela se reproduit, joignez ce fichier (et le mo_interface.log du dossier logs
       <source>Open the folder</source>
       <translation>Ouvrir le dossier</translation>
     </message>
+    <message>
+      <source>Preview a report with the logs and versions, without your private data, then save or copy it.</source>
+      <translation>Affiche un rapport avec les journaux et les versions, sans tes données privées, puis enregistre-le ou copie-le.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -8119,6 +8123,72 @@ OpenSSL · {openssl}</translation>
       <message>
       <source>You are now a developer. Open Settings again to see Settings &gt; Developer.</source>
       <translation>Vous êtes maintenant développeur. Rouvrez les Paramètres pour voir Paramètres &gt; Développeur.</translation>
+    </message>
+    <message>
+      <source>The end of the MO2 log, recent USVFS logs and the Elden Ring bridge logs, with the versions of MO2, Windows, the GPU, the game and the plugins, and the instance and mod counts.</source>
+      <translation>La fin du journal de MO2, les journaux USVFS récents et ceux du pont d'Elden Ring, avec les versions de MO2, de Windows, du GPU, du jeu et des plugins, l'instance et le nombre de mods.</translation>
+    </message>
+    <message>
+      <source>The end of the MO2 log and recent USVFS logs, with the versions of MO2, Windows, the GPU, the game and the plugins, and the instance and mod counts.</source>
+      <translation>La fin du journal de MO2 et les journaux USVFS récents, avec les versions de MO2, de Windows, du GPU, du jeu et des plugins, l'instance et le nombre de mods.</translation>
+    </message>
+    <message>
+      <source>Your Windows user name, the PC name, e-mail addresses, Nexus keys, tokens and cookies are replaced. Mods, downloads, saves and crash dumps are not included. A preview shows every file before you save or copy it.</source>
+      <translation>Ton nom d'utilisateur Windows, le nom du PC, les adresses e-mail, les clés Nexus, les jetons et les cookies sont remplacés. Les mods, téléchargements, sauvegardes et vidages de plantage ne sont pas inclus. Un aperçu montre chaque fichier avant de l'enregistrer ou de le copier.</translation>
+    </message>
+    <message>
+      <source>Location:
+{path}
+
+It holds exactly what the preview showed.</source>
+      <translation>Emplacement :
+{path}
+
+Il contient exactement ce que montrait l'aperçu.</translation>
+    </message>
+    <message>
+      <source>This is exactly what the report will share</source>
+      <translation>Voici exactement ce que le rapport partagera</translation>
+    </message>
+    <message>
+      <source>Your Windows user name, the PC name, e-mail addresses, Nexus keys, tokens and cookies were replaced. Mods, downloads, saves and crash dumps are not included. Read the files before you share them.</source>
+      <translation>Ton nom d'utilisateur Windows, le nom du PC, les adresses e-mail, les clés Nexus, les jetons et les cookies ont été remplacés. Les mods, téléchargements, sauvegardes et vidages de plantage ne sont pas inclus. Lis les fichiers avant de les partager.</translation>
+    </message>
+    <message>
+      <source>Files in the report</source>
+      <translation>Fichiers du rapport</translation>
+    </message>
+    <message>
+      <source>{lines} lines</source>
+      <translation>{lines} lignes</translation>
+    </message>
+    <message>
+      <source>Contents of the selected file</source>
+      <translation>Contenu du fichier sélectionné</translation>
+    </message>
+    <message>
+      <source>Save ZIP…</source>
+      <translation>Enregistrer le ZIP…</translation>
+    </message>
+    <message>
+      <source>Save every file of the list in a ZIP to attach to your report.</source>
+      <translation>Enregistre tous les fichiers de la liste dans un ZIP à joindre à ton rapport.</translation>
+    </message>
+    <message>
+      <source>Copy summary</source>
+      <translation>Copier le résumé</translation>
+    </message>
+    <message>
+      <source>Copy report.txt, to paste it in an issue or a post.</source>
+      <translation>Copie report.txt pour le coller dans un ticket ou un message.</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fermer</translation>
+    </message>
+    <message>
+      <source>Copied</source>
+      <translation>Copié</translation>
     </message>
 </context>
   <context>

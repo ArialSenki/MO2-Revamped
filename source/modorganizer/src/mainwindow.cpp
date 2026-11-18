@@ -2661,7 +2661,9 @@ void MainWindow::createHelpMenu()
   QAction* reportAction = new QAction(tr("Create bug report"), menu);
   reportAction->setObjectName(QStringLiteral("revampedBugReportAction"));
   reportAction->setIcon(FluentIcons::glyph(0xEBE8));
-  reportAction->setToolTip(tr("Save a ZIP with the logs, to attach it to your report."));
+  reportAction->setToolTip(
+      tr("Preview a report with the logs and versions, without your private data, "
+         "then save or copy it."));
   const auto diagnosticsAction = [this] {
     return findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"));
   };
