@@ -33,6 +33,13 @@ public:
   // where it fits
   void setUserSized(bool sized) { m_userSized = sized; }
 
+  // MO2 Revamped: large browsers open maximized, so everything fits, until
+  // the user leaves one not maximized; key names the window in the
+  // instance's settings
+  static bool opensMaximized(const QString& key);
+  // what the window was when it closed, for opensMaximized()
+  static void rememberMaximized(const QString& key, const QWidget* window);
+
 protected:
   bool eventFilter(QObject* watched, QEvent* e) override;
 

@@ -138,6 +138,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QHBoxLayout>
 #include <QIODevice>
 #include <QIcon>
+#include <QHeaderView>
+#include <QImage>
 #include <QInputDialog>
 #include <QItemSelection>
 #include <QItemSelectionModel>
@@ -178,6 +180,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTemporaryDir>
 #include <QTime>
 #include <QScreen>
+#include <QScrollBar>
 #include <QTimer>
 #include <QSaveFile>
 #include <QDateTime>
@@ -479,6 +482,24 @@ public:
     layout->addWidget(m_Title, 0);
     layout->addWidget(m_Summary, 1);
     layout->addWidget(m_FloatButton, 0, Qt::AlignVCenter);
+
+    // floating, the window's title bar says "Log" and the list is open: the
+    // row names the list's columns instead, over the columns themselves
+    for (QLabel** heading : {&m_TimeHeading, &m_MessageHeading}) {
+      *heading = new QLabel(this);
+      (*heading)->setObjectName(QStringLiteral("logDockColumnLabel"));
+      (*heading)->setAttribute(Qt::WA_TransparentForMouseEvents, true);
+      (*heading)->hide();
+    }
+    if (auto* list = logList()) {
+      m_List     = list;
+      m_Viewport = list->viewport();
+      connect(list->header(), &QHeaderView::sectionResized, this,
+              [this] { placeHeadings(); });
+      connect(list->horizontalScrollBar(), &QScrollBar::valueChanged, this,
+              [this] { placeHeadings(); });
+      m_Viewport->installEventFilter(this);
+    }
     m_Chevron->setVisible(m_Foldable);
     m_Summary->setVisible(m_Foldable);
 
@@ -729,10 +750,17 @@ protected:
   {
     QWidget::resizeEvent(e);
     updateSummary();
+    placeHeadings();
   }
 
   bool eventFilter(QObject* watched, QEvent* e) override
   {
+    // by the pointer only: when the window closes the list goes before this
+    // row, and asking it (or the dock) for anything then would crash
+    if ((e->type() == QEvent::Resize || e->type() == QEvent::Move) &&
+        watched == m_Viewport.data()) {
+      placeHeadings();
+    }
     // where the user puts the floating log, for the next time it floats
     if (watched == m_Dock && !m_Arranging && m_Dock->isFloating() &&
         m_Dock->isVisible() && !m_Dock->isMaximized() &&
@@ -802,10 +830,66 @@ private:
     if (!m_Dock->isFloating() || !m_Dock->testAttribute(Qt::WA_WState_Created)) {
       return;
     }
-    const BOOL dark = MOBase::RevampedTheme::isDark() ? TRUE : FALSE;
+    const HWND handle = reinterpret_cast<HWND>(m_Dock->winId());
+    const BOOL dark   = MOBase::RevampedTheme::isDark() ? TRUE : FALSE;
     // DWMWA_USE_IMMERSIVE_DARK_MODE
-    DwmSetWindowAttribute(reinterpret_cast<HWND>(m_Dock->winId()), 20, &dark, sizeof(dark));
+    DwmSetWindowAttribute(handle, 20, &dark, sizeof(dark));
+
+    // the caption in the color of the row under it, so the two read as one
+    // Fluent title area; the theme sets that color in its style sheet only,
+    // so it is read from the row as drawn (between the headings and the
+    // button, where nothing else is)
+    if (width() > 80 && height() > 4) {
+      const QImage row = grab(QRect(m_FloatButton->x() - 8, 0, 4, height() / 2)).toImage();
+      if (!row.isNull()) {
+        const QColor back = row.pixelColor(row.width() / 2, row.height() - 1);
+        const QColor text = back.lightness() < 128 ? QColor(0xF0, 0xF0, 0xF0)
+                                                    : QColor(0x1A, 0x1A, 0x1A);
+        const auto ref = [](const QColor& c) {
+          return static_cast<COLORREF>(c.red() | (c.green() << 8) | (c.blue() << 16));
+        };
+        const COLORREF caption = ref(back);
+        const COLORREF ink     = ref(text);
+        // DWMWA_CAPTION_COLOR and DWMWA_TEXT_COLOR (Windows 11)
+        DwmSetWindowAttribute(handle, 35, &caption, sizeof(caption));
+        DwmSetWindowAttribute(handle, 36, &ink, sizeof(ink));
+      }
+    }
 #endif
+  }
+
+  QTreeView* logList() const
+  {
+    return m_Dock->widget() != nullptr
+               ? m_Dock->widget()->findChild<QTreeView*>(QStringLiteral("logList"))
+               : nullptr;
+  }
+
+  // the headings start where the time and the message start in the rows
+  void placeHeadings()
+  {
+    QTreeView* list = m_List.data();
+    if (m_TimeHeading == nullptr || list == nullptr || m_Viewport.isNull() ||
+        !m_TimeHeading->isVisible()) {
+      return;
+    }
+    // where the text of a cell starts: the theme pads each cell by 8 px,
+    // plus the view's own frame and margin
+    constexpr int CellPadding = 11;
+    // the list is in the dock's contents, not under this row: through the
+    // screen
+    const auto columnX = [&](int column) {
+      return mapFromGlobal(m_Viewport->mapToGlobal(
+                               QPoint(list->header()->sectionViewportPosition(column), 0)))
+          .x();
+    };
+    const auto place = [&](QLabel* heading, int column, int right) {
+      const int x = columnX(column) + CellPadding;
+      heading->setGeometry(x, 0, qMax(0, right - x), height());
+    };
+    const int timeEnd = columnX(1);
+    place(m_TimeHeading, 0, timeEnd);
+    place(m_MessageHeading, 2, m_FloatButton->x() - 8);
   }
 
   // the first time, a window at the main window's lower right, wide enough
@@ -951,7 +1035,8 @@ private:
   void updateSummary()
   {
     const auto& entries = LogModel::instance().entries();
-    if (entries.empty()) {
+    // floating, the list under the row shows the last line already
+    if (entries.empty() || m_Dock->isFloating()) {
       m_Summary->clear();
       m_Summary->setToolTip({});
       return;
@@ -978,6 +1063,10 @@ private:
 
   void retranslate()
   {
+    if (m_TimeHeading != nullptr) {
+      m_TimeHeading->setText(QObject::tr("Time"));
+      m_MessageHeading->setText(QObject::tr("Message"));
+    }
     m_CloseButton->setToolTip(QObject::tr("Close log panel"));
     m_CloseButton->setAccessibleName(QObject::tr("Close log panel"));
     updateFloatControl(m_Dock->isFloating());
@@ -997,6 +1086,17 @@ private:
     if (m_CloseButton != nullptr) {
       m_CloseButton->setVisible(!floating);
     }
+    // floating: no second "Log" and no last line (the list shows it), the
+    // columns' names instead
+    m_Title->setVisible(!floating);
+    // the summary stays as the row's stretch (it keeps the button at the
+    // right), empty while floating
+    updateSummary();
+    if (m_TimeHeading != nullptr) {
+      m_TimeHeading->setVisible(floating);
+      m_MessageHeading->setVisible(floating);
+      placeHeadings();
+    }
     setCursor(m_Foldable && !floating ? Qt::PointingHandCursor : Qt::ArrowCursor);
     const QString action = floating ? QObject::tr("Dock log panel")
                                     : QObject::tr("Float log panel");
@@ -1010,6 +1110,10 @@ private:
   QLabel* m_Summary;
   QToolButton* m_Chevron;
   LogDockControlButton* m_FloatButton;
+  QLabel* m_TimeHeading    = nullptr;
+  QPointer<QTreeView> m_List;
+  QPointer<QWidget> m_Viewport;
+  QLabel* m_MessageHeading = nullptr;
   QVariantAnimation* m_Animation;
   bool m_Foldable;
   bool m_SkipRelease    = false;
