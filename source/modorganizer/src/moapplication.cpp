@@ -97,6 +97,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <iplugingame.h>
 #include <log.h>
 #include <report.h>
+#include "wabbajacklist.h"
 #include <scopeguard.h>
 #include <utility.h>
 
@@ -1048,6 +1049,9 @@ void MOApplication::externalMessage(const QString& message)
     // MO2 Revamped: "Download started" comes from the download manager once the
     // link is accepted (see DownloadManager::addNXMDownload())
     m_core->downloadRequestedNXM(message);
+  } else if (Wabbajack::isListFile(message)) {
+    // MO2 Revamped: a .wabbajack opened while MO2 runs
+    m_core->requestWabbajackList(message);
   } else {
     cl::CommandLine cl;
 

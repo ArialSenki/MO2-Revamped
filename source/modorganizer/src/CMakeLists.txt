@@ -7,7 +7,7 @@ mo2_configure_executable(organizer
 	EXTRA_TRANSLATIONS ${MO2_SUPER_PATH}/game_gamebryo/src ${MO2_UIBASE_PATH}/src
 	PRIVATE_DEPENDS
 		uibase githubpp bsatk esptk archive usvfs lootcli boost::program_options
-		DirectXTex libbsarch Qt::WebEngineWidgets Qt::WebSockets)
+		DirectXTex libbsarch zlib Qt::WebEngineWidgets Qt::WebSockets)
 
 # Keep user-specific source paths out of Release binaries. MSVC 19.30+ requires
 # deterministic compilation for /pathmap to affect __FILE__ strings.
@@ -134,6 +134,12 @@ mo2_add_filter(NAME src/collections GROUPS
 	collectionmanifest
 	collectionsession
 	screenfitter
+	wabbajackbrowser
+	wabbajackdialog
+	wabbajackdownloads
+	wabbajackinstaller
+	wabbajackinstance
+	wabbajacklist
 )
 
 mo2_add_filter(NAME src/core GROUPS

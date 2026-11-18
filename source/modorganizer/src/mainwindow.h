@@ -100,6 +100,11 @@ class QTranslator;
 class QTreeWidgetItem;
 class QUrl;
 class CollectionDialog;
+class WabbajackDialog;
+namespace Wabbajack
+{
+class ListBrowser;
+}
 class QWidget;
 
 #ifndef Q_MOC_RUN
@@ -259,6 +264,11 @@ private:
   // the collection's window, one at a time
   void openCollection(const QString& link, bool autoStart = false, int updateFrom = -1);
   void askForCollection();
+  void askForWabbajackList();
+  void browseWabbajackLists();
+  void openWabbajackList(const QString& path);
+  // opens m_WabbajackPending once no question of the list's window is up
+  void openPendingWabbajackList();
   void browseCollections();
   // the collection a new instance was made for, once its first start is done
   void openPendingCollection(int idleChecks = 0);
@@ -344,6 +354,11 @@ private:
   // the update notice while it is open, see showUpdateNotice()
   QPointer<QDialog> m_UpdateNotice;
   QPointer<CollectionDialog> m_CollectionDialog;
+  QPointer<WabbajackDialog> m_WabbajackDialog;
+  // the list to open once the open list's window has no question up, see
+  // openWabbajackList()
+  QString m_WabbajackPending;
+  QPointer<Wabbajack::ListBrowser> m_WabbajackBrowser;
   // a notice waits for its turn, see showUpdateNotice()
   bool m_UpdateNoticeWaiting = false;
   // the Update command as it is without an update, to put back

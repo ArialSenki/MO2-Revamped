@@ -103,6 +103,210 @@ testing, Nolvus support and much faster handling of very large lists.
 
 - Crashes fixed: closing with the floating log still resizing, the Data tab
   while it builds, and Finish in "Where is the game now?".
+## 1.1.0-dev.3 (experimental) — November 16, 2026
+
+**Experimental.** This build is 1.1.0 beta 12 plus **native installation of
+Wabbajack modlists**, which is still being tested. Beta 12 is the recommended
+version; use this build only to try Wabbajack lists. Since dev.2 it has the
+beta 12 changes and these fixes and features for Wabbajack lists.
+
+### Wabbajack lists
+
+- **Browse Wabbajack's gallery:** Tools > Wabbajack lists > Browse Wabbajack
+  lists… shows every list from Wabbajack's own gallery, as Browse collections
+  does for Nexus. It has search, the managed game first, and unofficial and
+  adult lists behind their own boxes, as in Wabbajack. Sizes and dates can be
+  sorted, and each list has its readme and links. **Open the list** downloads
+  the `.wabbajack` file from Wabbajack's servers, checks it and opens it; a
+  file already downloaded is checked and used again. Lists down for
+  maintenance or with failing archives are marked.
+- **The author's mod list as the author sees it:** the list's categories, the
+  Notes column (where authors write "Optional" and similar) and the mods'
+  colours now show in the new instance.
+- **Baldur's Gate 3 lists start with their mods in the load order.** Baldur's
+  Gate 3 Enhanced Edition started with only the base game: the list author's
+  cache entries and some `meta.ini` files weren't read. A `&` in a mod's name
+  no longer breaks `modsettings.lsx`.
+- **The list's programs work on this PC:**
+  - programs that point at a folder (Larian Launcher), or at a path on the
+    author's machine (the author's own xEdit), are left out, and the summary
+    names them;
+  - the list's "Explore Virtual Folder" used an Explorer++ that is never
+    installed, so MO2 Revamped's own is used;
+  - a working folder on the author's machine is dropped, and `<game>\Data` is
+    changed to the game's real data folder only when that folder doesn't
+    exist (Baldur's Gate 3 keeps it);
+  - a program the guide has you copy later, inside the install or the game
+    folder, is kept.
+- **Stock Game:** the list's own copy of the game becomes the instance's game
+  folder only when it really holds the game. Otherwise the real game folder is
+  used, and the summary says what to do once the guide has it filled.
+- **The right profile:** when the list names none of its profiles, the instance
+  starts with the list's first profile instead of an empty "Default".
+- **Root folders:** mods with a `Root` folder no longer show as having no valid
+  game data. MO2 Revamped puts their programs and DLLs in the game folder when
+  the game starts (see beta 12), and the summary says so.
+- **Windows that fit the screen:** the list window and the gallery open at a
+  size that fits the screen they are on, and refit when moved to another
+  screen. The very large size earlier versions saved is shrunk once.
+- **Paused lists:** the list to reopen is kept per instance, so a paused list
+  no longer opens in another instance. A list paused in dev.2 has to be opened
+  again by hand once.
+- **The install folder follows the instance name** until you pick a folder by
+  hand. Install paths follow the same rules as collections: no names Windows
+  refuses.
+- **Downloads:**
+  - a file another program keeps open stops as failed, with that reason,
+    instead of being checked again forever;
+  - a server that ignores where a paused download stopped starts it over, unless
+    what it sends clearly isn't the file;
+  - files from the browser are checked where they are, before being copied;
+  - downloads that redirect to an address on this PC or its local network, or
+    from https to http, are refused;
+  - the space part-downloads already use counts in the free-space check.
+- **Install checks:**
+  - whole files are checked by their hash while they are copied;
+  - a list that gives a file a broken hash fails that file instead of skipping
+    the check;
+  - parts of a list MO2 Revamped can't install yet are named in the summary;
+  - the summary lists every failure (the log keeps the first 200).
+- **Faster with big lists:** the window refreshes only the rows that changed,
+  and the free-space and game checks aren't repeated on every change.
+- **A list opened while the window has a question up** waits for the answer
+  instead of closing the window under it.
+- **Lists tested with this build** (installed in full with no failed files,
+  then the new instance opened in MO2 Revamped; none was played in game):
+  - Baldur's Gate 3 Enhanced Edition: 732 files, with its load order and
+    programs;
+  - Mini Wildlander (Skyrim SE): 216 files, with its rebuilt BSA and Stock Game;
+  - The Midnight Ride (Fallout 4): a 2.26 GB download paused and continued,
+    identical to the original;
+  - Viva New Vegas: opened and closed cleanly.
+
+## 1.1.0-dev.2 (experimental) — November 15, 2026
+
+Fixes found by testing more Wabbajack lists after 1.1.0-dev.1. Everything in
+dev.1 is still here, and beta 11 is still the recommended version.
+
+- **Update notice:** 1.1.0-dev.1 showed "MO2 Revamped 1.1.0-beta.11 is
+  available", because a "dev" version counts as older than a beta. Following it
+  would go back to the beta and lose Wabbajack lists. An experimental build now
+  offers a beta or a release only when it came out after the experimental build.
+  Note that dev.1 itself still shows that notice; ignore it and update to dev.2.
+- **Files from the browser with Internet Download Manager:** IDM and similar
+  download managers save files into folders such as `Downloads\Compressed`.
+  MO2 Revamped now watches the folders right inside your Downloads folder too,
+  so those files are picked up.
+- **The game's edition, without asking:** the edition is also read from the
+  game folder's name. For example, "Fallout 3 goty" is Game Of The Year, so the
+  new instance no longer asks for it on its first start.
+- **Download errors in your language:** network errors such as "the server
+  stopped answering" or "the file isn't on the server any more" are no longer
+  shown in English. Qt's original text goes to the log.
+- **Tested with two more lists:**
+  - The Midnight Ride (Fallout 4): 86 archives, 5.8 GB, 5,444 files installed
+    in 46 seconds, no failures.
+  - Waters of Life (Fallout 3): 148 archives, 4.5 GB, including one from Google
+    Drive taken from the Downloads folder; 10,345 files installed in 91 seconds,
+    no failures.
+
+  Both opened with the author's profile, mods and plugins.
+
+## 1.1.0-dev.1 (experimental) — November 15, 2026
+
+An **experimental** build, published apart from the beta. It has everything in
+1.1.0-beta.12 (below; not released on its own), the collection fixes made since,
+and a new feature still being tested: **installing Wabbajack modlists natively**.
+Keep using beta 11 if you want the safer version. The update notice offers this
+build only to people who choose the Development channel in Settings.
+
+### Wabbajack modlists (new, experimental)
+
+MO2 Revamped can read a `.wabbajack` file, download what it needs and install
+it into an instance of its own, without Wabbajack or the original Mod Organizer
+the list brings.
+
+- **Open a list:** Tools > Wabbajack lists > Open a Wabbajack list…, or open a
+  `.wabbajack` file with MO2 Revamped. Nexus collections and Wabbajack lists
+  now have their own submenus in Tools.
+- **Before downloading:** the window shows the list's image, author, version,
+  game and links. It also shows the download and install sizes, where each
+  archive comes from, the game files it takes from your game folder, and the
+  free space on the drive.
+- **Downloads:**
+  - **Nexus:** Premium accounts download everything by themselves. Free
+    accounts open each file's page and press "Slow download"; the list takes
+    the link.
+  - **Direct links and Wabbajack's own servers:** downloaded in parts, and each
+    part is checked.
+  - **Pause and continue:** a download picks up where it stopped. Files already
+    in the downloads folder are recognised by their hash, and the game's own
+    files are taken from the game folder.
+- **Files only a browser can get** (Google Drive, Mega, MediaFire, ModDB,
+  LoversLab and similar):
+  - Double-click one to open its page.
+  - MO2 Revamped watches your browser's Downloads folder and takes each file
+    when it arrives, by its hash.
+  - A file saved elsewhere goes in with a right click.
+- **Install:** pick a name and a folder. The install:
+  - extracts the archives, including BSA/BA2 and archives inside archives;
+  - applies the list's patches and writes the list's own files;
+  - rebuilds its BSA/BA2 archives and transforms textures (size, mipmaps,
+    compression);
+  - fixes the paths the list points at and sets your screen size in the game's
+    INI files.
+
+  Every file is checked by its hash.
+- **The new instance keeps the author's setup:** the author's profiles, mod
+  order, separators with their colours, INI files, programs and Stock Game
+  folder. You are offered a restart into it.
+- **What is left out:** the list's own Mod Organizer files aren't installed,
+  because MO2 Revamped takes their place. MO2 plugins the list adds are set
+  aside and named in the summary.
+- **Summary:** `.mo2r-install\summary.txt` in the install folder lists what was
+  done and names the folders the author leaves for you to copy by hand.
+- **It stays out of your way while you play:**
+  - MO2's notices go to the log while a list runs.
+  - One sound plays when the downloads end.
+  - Hashing runs at background priority, the install at a lower priority, and
+    texture compression uses at most half of the processor.
+- **Sounds the author kept uncompressed** in BSA/BA2 archives stay
+  uncompressed. The games don't play them compressed.
+- **Not done yet:**
+  - MergedPatch (zEdit merges).
+  - Installing the MO2 plugins a list brings.
+  - Very large lists haven't been tried yet.
+- **Tested with:**
+  - Baldur's Gate 3 Enhanced Edition (282 archives, 1.7 GB) and Viva New Vegas
+    (146 archives, 3 GB) installed with no failures, then opened with the
+    author's profile, separators and colours.
+  - A small Skyrim Special Edition sample that rebuilds a BSA.
+  - Viva New Vegas still needs its guide's manual steps, as with Wabbajack.
+
+### Downloads
+
+- **Downloads that ended empty or short now continue.** Some downloads used to
+  end with "Unknown error (0)", or ended early with the file taken as done.
+  They now continue from where they stopped. Automatic retries use a connection
+  of their own (HTTP/1.1), and the log records the details.
+- **A download waiting for its retry** shows "Retrying…" in amber instead of a
+  red "Error".
+
+### Nexus collections (since beta 12)
+
+- **Separators:** collection and category separators are made for every
+  install path and reused when you continue or update. Empty old ones go to the
+  Recycle Bin.
+- **Quiet downloads:** no sound for each file, and one sound at the end.
+- **Retries:**
+  - Failed downloads are retried 3 times (after 5, 20 and 60 seconds), with a
+    fresh link for Premium and the file's page again for free accounts.
+  - Retry failed tries the rest.
+- **Order:** category grouping keeps the author's order. Mods whose rules cross
+  categories go to "Patches and overrides" at the end.
+- **Large collections are much faster:** grouping 3,000 mods by category takes
+  56 ms instead of 8.6 s. The window and the downloads list update without
+  freezing.
 
 ## 1.1.0-beta.12 (pre-release) — November 16, 2026
 

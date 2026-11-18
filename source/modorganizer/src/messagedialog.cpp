@@ -450,6 +450,11 @@ void MessageDialog::showNotice(const QString& text, QWidget* reference, bool bri
                       qApp->property("mo2r.collectionQuietHidden").toInt() + 1);
     return;
   }
+  // the same while a Wabbajack list downloads or installs
+  if (qApp->property("mo2r.wabbajackQuiet").toBool()) {
+    log::info("notice not shown while a Wabbajack list runs: {}", text);
+    return;
+  }
 
   // MO2 Revamped: the notices as a sound only, if the user prefers it (one
   // sound for a burst of them); the dialog in front's own, such as Settings'

@@ -979,6 +979,10 @@ As alterações são salvas quando você escolhe OK.</translation>
       <source>Download failed: %1</source>
       <translation>O download falhou: %1</translation>
     </message>
+    <message>
+      <source>Retrying…</source>
+      <translation>Tentando de novo…</translation>
+    </message>
   </context>
   <context>
     <name>DownloadListView</name>
@@ -7860,6 +7864,46 @@ Se acontecer de novo, anexe este arquivo (e o mo_interface.log da pasta logs) ao
       <source>Your endorsement of MO2 Revamped was withdrawn.</source>
       <translation>O seu endosso do MO2 Revamped foi retirado.</translation>
     </message>
+    <message>
+      <source>Wabbajack lists</source>
+      <translation>Listas do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Open a Wabbajack list…</source>
+      <translation>Abrir uma lista do Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Shows what a .wabbajack file needs and which of its archives are already downloaded.</source>
+      <translation>Mostra o que um arquivo .wabbajack precisa e quais dos seus arquivos já foram baixados.</translation>
+    </message>
+    <message>
+      <source>Wabbajack list</source>
+      <translation>Lista do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Another list is downloading or checking its files. Pause it and close its window first.</source>
+      <translation>Outra lista está baixando ou verificando seus arquivos. Pause-a e feche a janela dela primeiro.</translation>
+    </message>
+    <message>
+      <source>A Wabbajack list is being installed. Stop it and quit? Installing it again into the same folder starts over.</source>
+      <translation>Uma lista do Wabbajack está sendo instalada. Pará-la e sair? Instalá-la de novo na mesma pasta recomeça do início.</translation>
+    </message>
+    <message>
+      <source>Browse Wabbajack lists…</source>
+      <translation>Explorar listas do Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery of lists: choose one and it downloads and opens, without the .wabbajack file at hand.</source>
+      <translation>A galeria de listas do Wabbajack: escolha uma e ela é baixada e aberta, sem precisar ter o arquivo .wabbajack.</translation>
+    </message>
+    <message>
+      <source>Manual steps of this list…</source>
+      <translation>Passos manuais desta lista…</translation>
+    </message>
+    <message>
+      <source>Copies the files the list leaves for the game's folder, backing up what they replace, and runs its patchers when you ask.</source>
+      <translation>Copia os arquivos que a lista deixa para a pasta do jogo, com backup do que eles substituem, e executa os patchers dela quando você pedir.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -14070,6 +14114,10 @@ Confira as opções do jogo antes de jogar.</translation>
       <source>the server sent no data</source>
       <translation>o servidor não enviou dados</translation>
     </message>
+    <message>
+      <source>the connection ended before the whole file came</source>
+      <translation>a conexão caiu antes de o arquivo chegar inteiro</translation>
+    </message>
   </context>
   <context>
     <name>TextEditor</name>
@@ -18568,6 +18616,1467 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     <message>
       <source>MO2's log. Errors and warnings here help to find a problem; Create bug report in the … menu saves them without your private data.</source>
       <translation>O log do MO2. Os erros e avisos dele ajudam a encontrar um problema; Criar relatório de erro, no menu …, os salva sem seus dados privados.</translation>
+    </message>
+</context>
+<context>
+    <name>WabbajackDialog</name>
+    <message>
+      <source>Open a Wabbajack list</source>
+      <translation>Abrir uma lista do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Wabbajack lists (*.wabbajack);;All files (*)</source>
+      <translation>Listas do Wabbajack (*.wabbajack);;Todos os arquivos (*)</translation>
+    </message>
+    <message>
+      <source>Wabbajack list</source>
+      <translation>Lista do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Install</source>
+      <translation>Instalar</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Reading the list…</source>
+      <translation>Lendo a lista…</translation>
+    </message>
+    <message>
+      <source>What it needs</source>
+      <translation>O que ela precisa</translation>
+    </message>
+    <message>
+      <source>Archives</source>
+      <translation>Arquivos</translation>
+    </message>
+    <message>
+      <source>Downloads folder</source>
+      <translation>Pasta de downloads</translation>
+    </message>
+    <message>
+      <source>Where the list's archives are looked for. A folder used by Wabbajack or by another list can be used again: archives are recognised by their hash.</source>
+      <translation>Onde os arquivos da lista são procurados. Uma pasta usada pelo Wabbajack ou por outra lista pode ser reutilizada: os arquivos são reconhecidos pelo hash.</translation>
+    </message>
+    <message>
+      <source>Choose…</source>
+      <translation>Escolher…</translation>
+    </message>
+    <message>
+      <source>Check by hash</source>
+      <translation>Verificar por hash</translation>
+    </message>
+    <message>
+      <source>Reads the archives found in the folder and the game files the list takes from the game, and compares their hashes with the list's. Nothing is changed. Large lists take a while.</source>
+      <translation>Lê os arquivos encontrados na pasta e os arquivos que a lista pega do jogo, e compara os hashes com os da lista. Nada é alterado. Listas grandes demoram um pouco.</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Source</source>
+      <translation>Origem</translation>
+    </message>
+    <message>
+      <source>Size</source>
+      <translation>Tamanho</translation>
+    </message>
+    <message>
+      <source>Status</source>
+      <translation>Estado</translation>
+    </message>
+    <message>
+      <source>Downloads folder for Wabbajack lists</source>
+      <translation>Pasta de downloads para listas do Wabbajack</translation>
+    </message>
+    <message>
+      <source>This list can't be read: %1</source>
+      <translation>Não é possível ler esta lista: %1</translation>
+    </message>
+    <message>
+      <source>Wabbajack list: %1</source>
+      <translation>Lista do Wabbajack: %1</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>por %1</translation>
+    </message>
+    <message>
+      <source>version %1</source>
+      <translation>versão %1</translation>
+    </message>
+    <message>
+      <source>adult content (NSFW)</source>
+      <translation>conteúdo adulto (NSFW)</translation>
+    </message>
+    <message>
+      <source>made with Wabbajack %1</source>
+      <translation>feita com Wabbajack %1</translation>
+    </message>
+    <message>
+      <source>Website</source>
+      <translation>Site</translation>
+    </message>
+    <message>
+      <source>Readme</source>
+      <translation>Leia-me</translation>
+    </message>
+    <message>
+      <source>Community</source>
+      <translation>Comunidade</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;%1&lt;/b&gt; to download, about &lt;b&gt;%2&lt;/b&gt; installed</source>
+      <translation>&lt;b&gt;%1&lt;/b&gt; para baixar, cerca de &lt;b&gt;%2&lt;/b&gt; instalados</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from Nexus Mods (%1)</source>
+      <translation>
+        <numerusform>%n arquivo do Nexus Mods (%1)</numerusform>
+        <numerusform>%n arquivos do Nexus Mods (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from Wabbajack's servers (%1)</source>
+      <translation>
+        <numerusform>%n arquivo dos servidores do Wabbajack (%1)</numerusform>
+        <numerusform>%n arquivos dos servidores do Wabbajack (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n direct downloads (%1)</source>
+      <translation>
+        <numerusform>%n download direto (%1)</numerusform>
+        <numerusform>%n downloads diretos (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files to download in the browser (%1)</source>
+      <translation>
+        <numerusform>%n arquivo para baixar no navegador (%1)</numerusform>
+        <numerusform>%n arquivos para baixar no navegador (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files taken from the game's own folder (%1)</source>
+      <translation>
+        <numerusform>%n arquivo tirado da pasta do jogo (%1)</numerusform>
+        <numerusform>%n arquivos tirados da pasta do jogo (%1)</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files from sources MO2 Revamped doesn't know</source>
+      <translation>
+        <numerusform>%n arquivo de uma fonte que o MO2 Revamped não conhece</numerusform>
+        <numerusform>%n arquivos de fontes que o MO2 Revamped não conhece</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files copied from archives</source>
+      <translation>
+        <numerusform>%n arquivo copiado dos pacotes</numerusform>
+        <numerusform>%n arquivos copiados dos pacotes</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n patched</source>
+      <translation>
+        <numerusform>%n com patch</numerusform>
+        <numerusform>%n com patch</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n carried by the list</source>
+      <translation>
+        <numerusform>%n incluído na lista</numerusform>
+        <numerusform>%n incluídos na lista</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n BSA archives built</source>
+      <translation>
+        <numerusform>%n BSA montado</numerusform>
+        <numerusform>%n BSAs montados</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n textures resized</source>
+      <translation>
+        <numerusform>%n textura redimensionada</numerusform>
+        <numerusform>%n texturas redimensionadas</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n zEdit merges</source>
+      <translation>
+        <numerusform>%n mesclagem do zEdit</numerusform>
+        <numerusform>%n mesclagens do zEdit</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>To install: %1.</source>
+      <translation>Para instalar: %1.</translation>
+    </message>
+    <message>
+      <source>Profiles: %1</source>
+      <translation>Perfis: %1</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for %1.</source>
+      <translation>O MO2 Revamped não tem plugin de jogo para %1.</translation>
+    </message>
+    <message>
+      <source>%1 isn't installed on this PC, or MO2 Revamped didn't find it.</source>
+      <translation>%1 não está instalado neste PC, ou o MO2 Revamped não o encontrou.</translation>
+    </message>
+    <message>
+      <source>%1 found in %2.</source>
+      <translation>%1 encontrado em %2.</translation>
+    </message>
+    <message>
+      <source>The list was made with version %1; you have %2.</source>
+      <translation>A lista foi feita com a versão %1; você tem a %2.</translation>
+    </message>
+    <message numerus="yes">
+      <source>The list brings its own Mod Organizer (%n files): MO2 Revamped takes its place, so those files are not installed.</source>
+      <translation>
+        <numerusform>A lista traz seu próprio Mod Organizer (%n arquivo): o MO2 Revamped toma o lugar dele, então esse arquivo não é instalado.</numerusform>
+        <numerusform>A lista traz seu próprio Mod Organizer (%n arquivos): o MO2 Revamped toma o lugar dele, então esses arquivos não são instalados.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>It adds Mod Organizer plugins: %1. They will be offered at the end, not installed by themselves.</source>
+      <translation>Ela adiciona plugins do Mod Organizer: %1. Eles serão oferecidos no final, não instalados sozinhos.</translation>
+    </message>
+    <message>
+      <source>Parts MO2 Revamped doesn't know yet: %1.</source>
+      <translation>Partes que o MO2 Revamped ainda não conhece: %1.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives</source>
+      <translation>
+        <numerusform>%n arquivo</numerusform>
+        <numerusform>%n arquivos</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Mod Organizer (not used)</source>
+      <translation>Mod Organizer (não usado)</translation>
+    </message>
+    <message>
+      <source>Nexus Mods</source>
+      <translation>Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Game folder</source>
+      <translation>Pasta do jogo</translation>
+    </message>
+    <message>
+      <source>Direct download</source>
+      <translation>Download direto</translation>
+    </message>
+    <message>
+      <source>Wabbajack servers</source>
+      <translation>Servidores do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Google Drive</source>
+      <translation>Google Drive</translation>
+    </message>
+    <message>
+      <source>MEGA</source>
+      <translation>MEGA</translation>
+    </message>
+    <message>
+      <source>MediaFire</source>
+      <translation>MediaFire</translation>
+    </message>
+    <message>
+      <source>ModDB</source>
+      <translation>ModDB</translation>
+    </message>
+    <message>
+      <source>Forum site</source>
+      <translation>Fórum</translation>
+    </message>
+    <message>
+      <source>By hand</source>
+      <translation>Manual</translation>
+    </message>
+    <message>
+      <source>Bethesda.net</source>
+      <translation>Bethesda.net</translation>
+    </message>
+    <message>
+      <source>Unknown</source>
+      <translation>Desconhecido</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Parar</translation>
+    </message>
+    <message>
+      <source>Retry failed</source>
+      <translation>Tentar de novo os que falharam</translation>
+    </message>
+    <message>
+      <source>Tries every file that failed again.</source>
+      <translation>Tenta de novo cada arquivo que falhou.</translation>
+    </message>
+    <message>
+      <source>Open next on Nexus</source>
+      <translation>Abrir o próximo no Nexus</translation>
+    </message>
+    <message>
+      <source>Opens the next file's page on Nexus. Press "Slow download" there and the file comes to MO2 Revamped; the next page opens by itself.</source>
+      <translation>Abre a página do próximo arquivo no Nexus. Clique em "Slow download" lá e o arquivo chega ao MO2 Revamped; a próxima página abre sozinha.</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Baixar</translation>
+    </message>
+    <message>
+      <source>Downloads the archives from Nexus Mods, Wabbajack's servers and direct links into the downloads folder, checking each one's hash. Without Nexus Premium, each Nexus file is one click on its page.</source>
+      <translation>Baixa os arquivos do Nexus Mods, dos servidores do Wabbajack e de links diretos para a pasta de downloads, verificando o hash de cada um. Sem Nexus Premium, cada arquivo do Nexus é um clique na página dele.</translation>
+    </message>
+    <message>
+      <source>Installing Wabbajack lists comes in a coming version. For now this window downloads what a list needs.</source>
+      <translation>A instalação de listas do Wabbajack chega em uma próxima versão. Por enquanto esta janela baixa o que uma lista precisa.</translation>
+    </message>
+    <message>
+      <source>No Nexus file waits for a click.</source>
+      <translation>Nenhum arquivo do Nexus espera um clique.</translation>
+    </message>
+    <message>
+      <source>%1 of %2 downloaded</source>
+      <translation>%1 de %2 baixados</translation>
+    </message>
+    <message>
+      <source>%1 left</source>
+      <translation>faltam %1</translation>
+    </message>
+    <message>
+      <source>Free space in the downloads folder's drive: %1.</source>
+      <translation>Espaço livre na unidade da pasta de downloads: %1.</translation>
+    </message>
+    <message>
+      <source>Not enough for the %1 still to download.</source>
+      <translation>Não é suficiente para os %1 que ainda faltam baixar.</translation>
+    </message>
+    <message>
+      <source>Pause</source>
+      <translation>Pausar</translation>
+    </message>
+    <message>
+      <source>Stopping the install…</source>
+      <translation>Parando a instalação…</translation>
+    </message>
+    <message>
+      <source>Stop installing</source>
+      <translation>Parar a instalação</translation>
+    </message>
+    <message>
+      <source>Installs the list into a new instance of its own.</source>
+      <translation>Instala a lista em uma nova instância própria.</translation>
+    </message>
+    <message>
+      <source>The list isn't read yet.</source>
+      <translation>A lista ainda não foi lida.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for this list's game.</source>
+      <translation>O MO2 Revamped não tem plugin para o jogo desta lista.</translation>
+    </message>
+    <message>
+      <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
+      <translation>O jogo da lista não está instalado, ou o MO2 Revamped não o encontrou.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives the list uses aren't downloaded and verified yet.</source>
+      <translation>
+        <numerusform>%n arquivo que a lista usa ainda não foi baixado e verificado.</numerusform>
+        <numerusform>%n arquivos que a lista usa ainda não foram baixados e verificados.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Install the list</source>
+      <translation>Instalar a lista</translation>
+    </message>
+    <message>
+      <source>The list is installed into a new instance of its own, as Wabbajack does. Its folder must be empty or new; the downloads stay where they are.</source>
+      <translation>A lista é instalada em uma nova instância própria, como faz o Wabbajack. A pasta deve estar vazia ou ser nova; os downloads ficam onde estão.</translation>
+    </message>
+    <message>
+      <source>Instance name</source>
+      <translation>Nome da instância</translation>
+    </message>
+    <message>
+      <source>Install folder</source>
+      <translation>Pasta de instalação</translation>
+    </message>
+    <message>
+      <source>Enter a name for the instance.</source>
+      <translation>Digite um nome para a instância.</translation>
+    </message>
+    <message>
+      <source>Windows doesn't allow this name for a folder.</source>
+      <translation>O Windows não permite este nome para uma pasta.</translation>
+    </message>
+    <message>
+      <source>An instance with this name already exists.</source>
+      <translation>Já existe uma instância com este nome.</translation>
+    </message>
+    <message>
+      <source>Choose the folder to install into.</source>
+      <translation>Escolha a pasta onde instalar.</translation>
+    </message>
+    <message>
+      <source>A drive's root can't be the install folder.</source>
+      <translation>A raiz de uma unidade não pode ser a pasta de instalação.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be the game's folder, inside it or around it.</source>
+      <translation>A pasta de instalação não pode ser a do jogo, nem estar dentro dela nem contê-la.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be the downloads folder, inside it or around it.</source>
+      <translation>A pasta de instalação não pode ser a de downloads, nem estar dentro dela nem contê-la.</translation>
+    </message>
+    <message>
+      <source>The install folder isn't empty.</source>
+      <translation>A pasta de instalação não está vazia.</translation>
+    </message>
+    <message>
+      <source>Not enough free space there: the list takes about %1 and the drive has %2.</source>
+      <translation>Espaço insuficiente: a lista ocupa cerca de %1 e a unidade tem %2.</translation>
+    </message>
+    <message>
+      <source>About %1 will be written there.</source>
+      <translation>Serão gravados lá cerca de %1.</translation>
+    </message>
+    <message>
+      <source>The install folder can't be made: %1</source>
+      <translation>Não é possível criar a pasta de instalação: %1</translation>
+    </message>
+    <message>
+      <source>Installing… %1% · %2</source>
+      <translation>Instalando… %1% · %2</translation>
+    </message>
+    <message>
+      <source>New instance</source>
+      <translation>Nova instância</translation>
+    </message>
+    <message>
+      <source>The instance couldn't be created.</source>
+      <translation>Não foi possível criar a instância.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files installed and verified.</source>
+      <translation>
+        <numerusform>%n arquivo instalado e verificado.</numerusform>
+        <numerusform>%n arquivos instalados e verificados.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files of the list's own Mod Organizer left out.</source>
+      <translation>
+        <numerusform>%n arquivo do Mod Organizer da lista deixado de fora.</numerusform>
+        <numerusform>%n arquivos do Mod Organizer da lista deixados de fora.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Not done yet by MO2 Revamped: %1.</source>
+      <translation>O MO2 Revamped ainda não faz: %1.</translation>
+    </message>
+    <message>
+      <source>MO2 plugins the list adds, set aside in %1: %2.</source>
+      <translation>Plugins do MO2 que a lista adiciona, separados em %1: %2.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files failed:</source>
+      <translation>
+        <numerusform>%n arquivo falhou:</numerusform>
+        <numerusform>%n arquivos falharam:</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Install stopped. Installing again into the same folder starts it over.</source>
+      <translation>Instalação interrompida. Instalar de novo na mesma pasta a recomeça do início.</translation>
+    </message>
+    <message>
+      <source>The install failed: %1</source>
+      <translation>A instalação falhou: %1</translation>
+    </message>
+    <message>
+      <source>Installed, but the instance couldn't be made.</source>
+      <translation>Instalada, mas não foi possível criar a instância.</translation>
+    </message>
+    <message>
+      <source>Installed into %1.</source>
+      <translation>Instalada em %1.</translation>
+    </message>
+    <message>
+      <source>"%1" is installed in the instance "%2".</source>
+      <translation>"%1" está instalada na instância "%2".</translation>
+    </message>
+    <message>
+      <source>Restart in the new instance</source>
+      <translation>Reiniciar na nova instância</translation>
+    </message>
+    <message>
+      <source>Later</source>
+      <translation>Mais tarde</translation>
+    </message>
+    <message>
+      <source>Open its page</source>
+      <translation>Abrir a página</translation>
+    </message>
+    <message>
+      <source>Choose the downloaded file…</source>
+      <translation>Escolher o arquivo baixado…</translation>
+    </message>
+    <message>
+      <source>The downloaded file of %1</source>
+      <translation>O arquivo baixado de %1</translation>
+    </message>
+    <message>
+      <source>Checking %1…</source>
+      <translation>Verificando %1…</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files have to be downloaded in the browser: double-click one to open its page. MO2 Revamped watches %1 and takes them by their hash as they arrive; a file saved elsewhere goes in with a right click.</source>
+      <translation>
+        <numerusform>%n arquivo precisa ser baixado no navegador: clique duas vezes para abrir a página. O MO2 Revamped observa %1 e o pega pelo hash quando chega; um arquivo salvo em outro lugar entra com o botão direito.</numerusform>
+        <numerusform>%n arquivos precisam ser baixados no navegador: clique duas vezes em um para abrir a página. O MO2 Revamped observa %1 e os pega pelo hash quando chegam; um arquivo salvo em outro lugar entra com o botão direito.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files have to be downloaded in the browser: double-click one to open its page, then choose the downloaded file with a right click.</source>
+      <translation>
+        <numerusform>%n arquivo precisa ser baixado no navegador: clique duas vezes para abrir a página e depois escolha o arquivo baixado com o botão direito.</numerusform>
+        <numerusform>%n arquivos precisam ser baixados no navegador: clique duas vezes em um para abrir a página e depois escolha o arquivo baixado com o botão direito.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The list runs the game from its own copy, %1, but the game isn't there yet: the instance uses your game folder. Once you have copied the game there as the list's guide says, set gamePath in the instance's ModOrganizer.ini to that folder.</source>
+      <translation>A lista executa o jogo a partir da própria cópia, %1, mas o jogo ainda não está lá: a instância usa a sua pasta do jogo. Depois de copiar o jogo para lá como diz o guia da lista, coloque essa pasta em gamePath no ModOrganizer.ini da instância.</translation>
+    </message>
+    <message>
+      <source>Programs that were on the list author's computer, left out: %1. Add your own copy in Edit programs if you need it.</source>
+      <translation>Programas que estavam no computador do autor da lista, deixados de fora: %1. Adicione sua própria cópia em Editar programas se precisar dela.</translation>
+    </message>
+    <message>
+      <source>Programs of the list that run from elsewhere on this PC: %1.</source>
+      <translation>Programas da lista que rodam de outro lugar deste PC: %1.</translation>
+    </message>
+    <message>
+      <source>Warning: the list's own copy of the game, %1, should hold %2 after the install, and it doesn't: the install didn't finish as it should. Install the list again into the same folder. Until then the instance uses your game folder.</source>
+      <translation>Aviso: a cópia do jogo da própria lista, %1, deveria conter %2 após a instalação, e não contém: a instalação não terminou como deveria. Instale a lista de novo na mesma pasta. Até lá a instância usa a sua pasta do jogo.</translation>
+    </message>
+</context>
+<context>
+    <name>Wabbajack</name>
+    <message>
+      <source>the archive library couldn't be loaded</source>
+      <translation>não foi possível carregar a biblioteca de arquivos compactados</translation>
+    </message>
+    <message>
+      <source>it couldn't be opened as a zip file</source>
+      <translation>não foi possível abri-lo como arquivo zip</translation>
+    </message>
+    <message>
+      <source>it has no modlist inside: it isn't a Wabbajack list</source>
+      <translation>não tem uma modlist dentro: não é uma lista do Wabbajack</translation>
+    </message>
+    <message>
+      <source>its modlist couldn't be extracted</source>
+      <translation>não foi possível extrair a modlist</translation>
+    </message>
+    <message>
+      <source>no temporary folder could be made</source>
+      <translation>não foi possível criar uma pasta temporária</translation>
+    </message>
+    <message>
+      <source>its modlist couldn't be read</source>
+      <translation>não foi possível ler a modlist</translation>
+    </message>
+    <message>
+      <source>its modlist is not valid JSON (%1)</source>
+      <translation>a modlist não é um JSON válido (%1)</translation>
+    </message>
+</context>
+<context>
+    <name>Wabbajack::DownloadQueue</name>
+    <message>
+      <source>%1/s</source>
+      <translation>%1/s</translation>
+    </message>
+    <message>
+      <source>Nothing to check: no archive of the list is in the folder.</source>
+      <translation>Nada para verificar: nenhum arquivo da lista está na pasta.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Checking %n files…</source>
+      <translation>
+        <numerusform>Verificando %n arquivo…</numerusform>
+        <numerusform>Verificando %n arquivos…</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Check stopped.</source>
+      <translation>Verificação interrompida.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files verified.</source>
+      <translation>
+        <numerusform>%n arquivo verificado.</numerusform>
+        <numerusform>%n arquivos verificados.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n don't match the list.</source>
+      <translation>
+        <numerusform>%n não corresponde à lista.</numerusform>
+        <numerusform>%n não correspondem à lista.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Checking… %1%</source>
+      <translation>Verificando… %1%</translation>
+    </message>
+    <message>
+      <source>Choose a downloads folder first.</source>
+      <translation>Escolha primeiro uma pasta de downloads.</translation>
+    </message>
+    <message>
+      <source>The downloads folder can't be made: %1</source>
+      <translation>Não é possível criar a pasta de downloads: %1</translation>
+    </message>
+    <message>
+      <source>Not enough free space: the downloads need %1 and the drive has %2.</source>
+      <translation>Espaço livre insuficiente: os downloads precisam de %1 e a unidade tem %2.</translation>
+    </message>
+    <message>
+      <source>Every archive MO2 Revamped can download is here.</source>
+      <translation>Todos os arquivos que o MO2 Revamped pode baixar já estão aqui.</translation>
+    </message>
+    <message>
+      <source>Paused. The downloads go on from where they were.</source>
+      <translation>Pausado. Os downloads continuam de onde estavam.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Downloads finished; %n failed.</source>
+      <translation>
+        <numerusform>Downloads concluídos; %n falhou.</numerusform>
+        <numerusform>Downloads concluídos; %n falharam.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Nexus's request limit was reached. Continue later; nothing is lost.</source>
+      <translation>O limite de requisições do Nexus foi atingido. Continue mais tarde; nada se perde.</translation>
+    </message>
+    <message>
+      <source>Nexus gave no link to download it.</source>
+      <translation>O Nexus não deu um link para baixá-lo.</translation>
+    </message>
+    <message>
+      <source>The list gives this archive a name that can't be a file.</source>
+      <translation>A lista dá a este arquivo um nome que não pode ser um arquivo.</translation>
+    </message>
+    <message>
+      <source>%1 can't be written.</source>
+      <translation>Não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>The disk is full, or %1 can't be written.</source>
+      <translation>O disco está cheio, ou não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>The site sent a web page instead of the file: download it in the browser.</source>
+      <translation>O site enviou uma página em vez do arquivo: baixe-o no navegador.</translation>
+    </message>
+    <message>
+      <source>The download has another size than the list's (%1 instead of %2).</source>
+      <translation>O download tem outro tamanho que o da lista (%1 em vez de %2).</translation>
+    </message>
+    <message>
+      <source>The list gives this archive an address that isn't Wabbajack's.</source>
+      <translation>A lista dá a este arquivo um endereço que não é do Wabbajack.</translation>
+    </message>
+    <message>
+      <source>Wabbajack's servers describe another file than the list's.</source>
+      <translation>Os servidores do Wabbajack descrevem outro arquivo que o da lista.</translation>
+    </message>
+    <message>
+      <source>A part of the file kept arriving damaged.</source>
+      <translation>Uma parte do arquivo continuou chegando danificada.</translation>
+    </message>
+    <message>
+      <source>The downloaded file isn't the list's (its hash differs).</source>
+      <translation>O arquivo baixado não é o da lista (o hash é diferente).</translation>
+    </message>
+    <message>
+      <source>The downloaded file can't be read.</source>
+      <translation>Não é possível ler o arquivo baixado.</translation>
+    </message>
+    <message>
+      <source>%1 is in the way and can't be moved aside.</source>
+      <translation>%1 está no caminho e não pode ser movido.</translation>
+    </message>
+    <message>
+      <source>%1 can't be renamed.</source>
+      <translation>Não é possível renomear %1.</translation>
+    </message>
+    <message>
+      <source>Downloading %1%</source>
+      <translation>Baixando %1%</translation>
+    </message>
+    <message>
+      <source>Not downloaded (%1 already)</source>
+      <translation>Não baixado (%1 já baixados)</translation>
+    </message>
+    <message>
+      <source>Not downloaded</source>
+      <translation>Não baixado</translation>
+    </message>
+    <message>
+      <source>In the folder</source>
+      <translation>Na pasta</translation>
+    </message>
+    <message>
+      <source>In the folder, verified</source>
+      <translation>Na pasta, verificado</translation>
+    </message>
+    <message>
+      <source>In the folder, but a different file</source>
+      <translation>Na pasta, mas é outro arquivo</translation>
+    </message>
+    <message>
+      <source>In the game, verified</source>
+      <translation>No jogo, verificado</translation>
+    </message>
+    <message>
+      <source>In the game, but another version</source>
+      <translation>No jogo, mas outra versão</translation>
+    </message>
+    <message>
+      <source>Not in the game folder</source>
+      <translation>Não está na pasta do jogo</translation>
+    </message>
+    <message>
+      <source>Waiting to try again (%1)</source>
+      <translation>Esperando para tentar de novo (%1)</translation>
+    </message>
+    <message>
+      <source>Waiting</source>
+      <translation>Esperando</translation>
+    </message>
+    <message>
+      <source>Press Slow download on Nexus</source>
+      <translation>Clique em Slow download no Nexus</translation>
+    </message>
+    <message>
+      <source>Asking for the file…</source>
+      <translation>Pedindo o arquivo…</translation>
+    </message>
+    <message>
+      <source>Checking its hash…</source>
+      <translation>Verificando o hash…</translation>
+    </message>
+    <message>
+      <source>Failed: %1</source>
+      <translation>Falhou: %1</translation>
+    </message>
+    <message>
+      <source>Not needed</source>
+      <translation>Não é necessário</translation>
+    </message>
+    <message>
+      <source>Unknown source</source>
+      <translation>Origem desconhecida</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped doesn't download from this address.</source>
+      <translation>O MO2 Revamped não baixa deste endereço.</translation>
+    </message>
+    <message>
+      <source>Another archive of the list has the same name.</source>
+      <translation>Outro arquivo da lista tem o mesmo nome.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't answer.</source>
+      <translation>O Nexus não respondeu.</translation>
+    </message>
+    <message>
+      <source>%1 was taken from %2.</source>
+      <translation>%1 foi pego de %2.</translation>
+    </message>
+    <message>
+      <source>%1 isn't the list's %2 (its hash differs).</source>
+      <translation>%1 não é o %2 da lista (o hash é diferente).</translation>
+    </message>
+    <message>
+      <source>Download it in the browser (double-click)</source>
+      <translation>Baixe-o no navegador (clique duplo)</translation>
+    </message>
+    <message>
+      <source>That is MO2 Revamped's own unfinished download of %1.</source>
+      <translation>Esse é o download inacabado de %1 feito pelo MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>%1 can't be read.</source>
+      <translation>Não é possível ler %1.</translation>
+    </message>
+    <message>
+      <source>The server sent another part of the file than the one asked for.</source>
+      <translation>O servidor enviou outra parte do arquivo, diferente da pedida.</translation>
+    </message>
+    <message>
+      <source>The connection ended before the whole file came.</source>
+      <translation>A conexão caiu antes de o arquivo chegar inteiro.</translation>
+    </message>
+    <message>
+      <source>The server refused the download (HTTP %1).</source>
+      <translation>O servidor recusou o download (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The file isn't on the server any more (HTTP %1).</source>
+      <translation>O arquivo não está mais no servidor (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The server asks to wait: too many requests.</source>
+      <translation>O servidor pede para esperar: pedidos demais.</translation>
+    </message>
+    <message>
+      <source>The server had a problem (HTTP %1).</source>
+      <translation>O servidor teve um problema (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>The server stopped answering.</source>
+      <translation>O servidor parou de responder.</translation>
+    </message>
+    <message>
+      <source>The connection failed: no network, or the server can't be reached.</source>
+      <translation>A conexão falhou: sem rede, ou o servidor não pode ser alcançado.</translation>
+    </message>
+    <message>
+      <source>The secure connection failed (a certificate problem).</source>
+      <translation>A conexão segura falhou (um problema de certificado).</translation>
+    </message>
+    <message>
+      <source>The server answered with an error (HTTP %1).</source>
+      <translation>O servidor respondeu com um erro (HTTP %1).</translation>
+    </message>
+    <message>
+      <source>Network error: %1</source>
+      <translation>Erro de rede: %1</translation>
+    </message>
+    <message>
+      <source>The file is there but can't be read: another program may have it open.</source>
+      <translation>O arquivo está lá, mas não pode ser lido: talvez outro programa o tenha aberto.</translation>
+    </message>
+    <message>
+      <source>The server didn't go on from where the download stopped.</source>
+      <translation>O servidor não continuou de onde o download parou.</translation>
+    </message>
+    <message>
+      <source>The downloaded file isn't the list's; it downloads again from the start.</source>
+      <translation>O arquivo baixado não é o da lista; ele é baixado de novo desde o início.</translation>
+    </message>
+    <message>
+      <source>The download was sent on to an address on this computer or its local network; MO2 Revamped doesn't follow it.</source>
+      <translation>O download foi redirecionado para um endereço deste computador ou da rede local; o MO2 Revamped não o segue.</translation>
+    </message>
+    <message>
+      <source>The download was sent on to an address that isn't secure (http instead of https).</source>
+      <translation>O download foi redirecionado para um endereço não seguro (http em vez de https).</translation>
+    </message>
+</context>
+<context>
+    <name>Wabbajack::Installer</name>
+    <message>
+      <source>it wasn't written</source>
+      <translation>não foi gravado</translation>
+    </message>
+    <message>
+      <source>its hash isn't the list's</source>
+      <translation>o hash não é o da lista</translation>
+    </message>
+    <message>
+      <source>Taking the list's own files out of it…</source>
+      <translation>Extraindo os arquivos que a lista traz…</translation>
+    </message>
+    <message>
+      <source>The list's file can't be opened.</source>
+      <translation>Não é possível abrir o arquivo da lista.</translation>
+    </message>
+    <message>
+      <source>The list's own files can't be taken out of it.</source>
+      <translation>Não é possível extrair os arquivos que a lista traz.</translation>
+    </message>
+    <message>
+      <source>its path leads out of the install folder</source>
+      <translation>o caminho sai da pasta de instalação</translation>
+    </message>
+    <message>
+      <source>its archive %1 isn't there</source>
+      <translation>o arquivo %1 não está lá</translation>
+    </message>
+    <message>
+      <source>Installing from %1…</source>
+      <translation>Instalando a partir de %1…</translation>
+    </message>
+    <message>
+      <source>its archive is inside too many others</source>
+      <translation>o arquivo está dentro de muitos outros</translation>
+    </message>
+    <message>
+      <source>it can't be copied</source>
+      <translation>não pode ser copiado</translation>
+    </message>
+    <message>
+      <source>its archive can't be read: %1</source>
+      <translation>não é possível ler o arquivo: %1</translation>
+    </message>
+    <message>
+      <source>its archive can't be opened</source>
+      <translation>não é possível abrir o arquivo</translation>
+    </message>
+    <message>
+      <source>%1 isn't in its archive</source>
+      <translation>%1 não está no arquivo</translation>
+    </message>
+    <message>
+      <source>Writing the list's own files…</source>
+      <translation>Gravando os arquivos que a lista traz…</translation>
+    </message>
+    <message>
+      <source>the list doesn't carry it</source>
+      <translation>a lista não o traz</translation>
+    </message>
+    <message>
+      <source>it can't be written</source>
+      <translation>não pode ser gravado</translation>
+    </message>
+    <message>
+      <source>Building %1…</source>
+      <translation>Montando %1…</translation>
+    </message>
+    <message>
+      <source>the archive's kind (%1) isn't known</source>
+      <translation>o tipo de arquivo (%1) não é conhecido</translation>
+    </message>
+    <message>
+      <source>a file that goes into it wasn't installed</source>
+      <translation>um arquivo que vai dentro dele não foi instalado</translation>
+    </message>
+    <message>
+      <source>it can't be built: %1</source>
+      <translation>não pode ser montado: %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n BSA archives built.</source>
+      <translation>
+        <numerusform>%n BSA montado.</numerusform>
+        <numerusform>%n BSAs montados.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The install folder can't be written.</source>
+      <translation>Não é possível gravar na pasta de instalação.</translation>
+    </message>
+    <message>
+      <source>Reading the list…</source>
+      <translation>Lendo a lista…</translation>
+    </message>
+    <message>
+      <source>The list can't be read: %1</source>
+      <translation>Não é possível ler a lista: %1</translation>
+    </message>
+    <message>
+      <source>Done.</source>
+      <translation>Concluído.</translation>
+    </message>
+    <message>
+      <source>the file to patch can't be read</source>
+      <translation>não é possível ler o arquivo a corrigir</translation>
+    </message>
+    <message>
+      <source>the patch is damaged</source>
+      <translation>o patch está danificado</translation>
+    </message>
+    <message>
+      <source>the patched file can't be written</source>
+      <translation>não é possível gravar o arquivo corrigido</translation>
+    </message>
+    <message>
+      <source>the patch doesn't fit the file it patches</source>
+      <translation>o patch não combina com o arquivo que corrige</translation>
+    </message>
+    <message>
+      <source>the list's patch isn't in it</source>
+      <translation>o patch não está na lista</translation>
+    </message>
+    <message>
+      <source>the patch has a format MO2 Revamped doesn't know</source>
+      <translation>o patch tem um formato que o MO2 Revamped não conhece</translation>
+    </message>
+    <message>
+      <source>%1 can't be taken out of its archive: %2</source>
+      <translation>Não é possível extrair %1 do arquivo: %2</translation>
+    </message>
+    <message>
+      <source>Not enough memory.</source>
+      <translation>Memória insuficiente.</translation>
+    </message>
+    <message>
+      <source>the texture's format isn't known</source>
+      <translation>o formato da textura não é conhecido</translation>
+    </message>
+    <message>
+      <source>the texture can't be read</source>
+      <translation>não é possível ler a textura</translation>
+    </message>
+    <message>
+      <source>the texture's shape isn't supported</source>
+      <translation>o formato da textura não é suportado</translation>
+    </message>
+    <message>
+      <source>the texture can't be resized</source>
+      <translation>não é possível redimensionar a textura</translation>
+    </message>
+    <message>
+      <source>the texture's mipmaps can't be made</source>
+      <translation>não é possível criar os mipmaps da textura</translation>
+    </message>
+    <message>
+      <source>the texture can't be compressed</source>
+      <translation>não é possível comprimir a textura</translation>
+    </message>
+    <message>
+      <source>the texture can't be written</source>
+      <translation>não é possível gravar a textura</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n textures resized.</source>
+      <translation>
+        <numerusform>%n textura redimensionada.</numerusform>
+        <numerusform>%n texturas redimensionadas.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>the texture's size isn't possible</source>
+      <translation>o tamanho da textura não é possível</translation>
+    </message>
+    <message>
+      <source>The list leaves files for you to copy by hand, as its guide says: %1.</source>
+      <translation>A lista deixa arquivos para você copiar à mão, como diz o guia dela: %1.</translation>
+    </message>
+    <message>
+      <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. MO2 Revamped puts them in place each time the game starts and takes them out when it closes; nothing has to be copied by hand.</source>
+      <translation>Estes mods têm programas ou DLLs para a própria pasta do jogo (na pasta Root deles): %1. O MO2 Revamped os coloca no lugar toda vez que o jogo inicia e os retira quando ele fecha; não é preciso copiar nada à mão.</translation>
+    </message>
+    <message>
+      <source>the list gives it a hash that isn't one</source>
+      <translation>a lista lhe dá um hash que não é válido</translation>
+    </message>
+    <message>
+      <source>the list gives its archive %1 a hash that isn't one</source>
+      <translation>a lista dá ao arquivo %1 um hash que não é válido</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be taken out of its archive</source>
+      <translation>não foi possível extrair %1 do arquivo</translation>
+    </message>
+    <message>
+      <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. They have to be put in the game's folder, with Root Builder or by hand.</source>
+      <translation>Estes mods têm programas ou DLLs para a pasta do próprio jogo (na pasta Root): %1. Eles precisam ir para a pasta do jogo, com o Root Builder ou à mão.</translation>
+    </message>
+</context>
+<context>
+    <name>Wabbajack::ListBrowser</name>
+    <message>
+      <source>Wabbajack lists</source>
+      <translation>Listas do Wabbajack</translation>
+    </message>
+    <message>
+      <source>Search lists, authors and tags</source>
+      <translation>Pesquisar listas, autores e tags</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Jogo</translation>
+    </message>
+    <message>
+      <source>Unofficial lists</source>
+      <translation>Listas não oficiais</translation>
+    </message>
+    <message>
+      <source>Lists Wabbajack doesn't feature. Wabbajack hides them unless asked, too.</source>
+      <translation>Listas que o Wabbajack não destaca. O Wabbajack também as oculta, a menos que se peça.</translation>
+    </message>
+    <message>
+      <source>Adult lists</source>
+      <translation>Listas adultas</translation>
+    </message>
+    <message>
+      <source>Lists</source>
+      <translation>Listas</translation>
+    </message>
+    <message>
+      <source>Name</source>
+      <translation>Nome</translation>
+    </message>
+    <message>
+      <source>Author</source>
+      <translation>Autor</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Versão</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Download</translation>
+    </message>
+    <message>
+      <source>Installed</source>
+      <translation>Instalada</translation>
+    </message>
+    <message>
+      <source>Updated</source>
+      <translation>Atualizada</translation>
+    </message>
+    <message>
+      <source>Readme</source>
+      <translation>Leia-me</translation>
+    </message>
+    <message>
+      <source>Website</source>
+      <translation>Site</translation>
+    </message>
+    <message>
+      <source>Community</source>
+      <translation>Comunidade</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Atualizar</translation>
+    </message>
+    <message>
+      <source>Open the list</source>
+      <translation>Abrir a lista</translation>
+    </message>
+    <message>
+      <source>Downloads the list's file from Wabbajack's servers and opens it: there its archives download and it installs.</source>
+      <translation>Baixa o arquivo da lista dos servidores do Wabbajack e o abre: ali seus arquivos são baixados e ela é instalada.</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
+    </message>
+    <message>
+      <source>Reading Wabbajack's gallery…</source>
+      <translation>Lendo a galeria do Wabbajack…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery can't be read: %1</source>
+      <translation>Não é possível ler a galeria do Wabbajack: %1</translation>
+    </message>
+    <message>
+      <source>Wabbajack's gallery can't be read right now. Try Refresh in a while.</source>
+      <translation>Não é possível ler a galeria do Wabbajack agora. Tente Atualizar daqui a pouco.</translation>
+    </message>
+    <message>
+      <source>All games</source>
+      <translation>Todos os jogos</translation>
+    </message>
+    <message>
+      <source>Down for maintenance</source>
+      <translation>Em manutenção</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n lists. Tick "Unofficial lists" to see the others too.</source>
+      <translation>
+        <numerusform>%n lista. Marque "Listas não oficiais" para ver as outras também.</numerusform>
+        <numerusform>%n listas. Marque "Listas não oficiais" para ver as outras também.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>%n lists.</source>
+      <translation>
+        <numerusform>%n lista.</numerusform>
+        <numerusform>%n listas.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Choose a list.</source>
+      <translation>Escolha uma lista.</translation>
+    </message>
+    <message>
+      <source>by %1</source>
+      <translation>por %1</translation>
+    </message>
+    <message>
+      <source>version %1</source>
+      <translation>versão %1</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n archives</source>
+      <translation>
+        <numerusform>%n arquivo</numerusform>
+        <numerusform>%n arquivos</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>%1 to download</source>
+      <translation>%1 para baixar</translation>
+    </message>
+    <message>
+      <source>%1 installed</source>
+      <translation>%1 instalados</translation>
+    </message>
+    <message>
+      <source>Its author took it down for maintenance: it can't be installed now.</source>
+      <translation>O autor a retirou para manutenção: não pode ser instalada agora.</translation>
+    </message>
+    <message>
+      <source>Wabbajack's checks find archives of it that don't download any more; it may not install whole.</source>
+      <translation>As verificações do Wabbajack encontram arquivos dela que não baixam mais; talvez não seja instalada inteira.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped has no game plugin for its game.</source>
+      <translation>O MO2 Revamped não tem plugin para o jogo dela.</translation>
+    </message>
+    <message>
+      <source>Downloading the list…</source>
+      <translation>Baixando a lista…</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <translation>Parar</translation>
+    </message>
+    <message>
+      <source>This list's file isn't on Wabbajack's servers: open its .wabbajack with Tools &gt; Wabbajack lists &gt; Open a Wabbajack list.</source>
+      <translation>O arquivo desta lista não está nos servidores do Wabbajack: abra o .wabbajack em Ferramentas &gt; Listas do Wabbajack &gt; Abrir uma lista do Wabbajack.</translation>
+    </message>
+    <message>
+      <source>%1 can't be made.</source>
+      <translation>Não é possível criar %1.</translation>
+    </message>
+    <message>
+      <source>Checking the list's file that is already here…</source>
+      <translation>Verificando o arquivo da lista que já está aqui…</translation>
+    </message>
+    <message>
+      <source>Opening %1…</source>
+      <translation>Abrindo %1…</translation>
+    </message>
+    <message>
+      <source>Downloading %1's file…</source>
+      <translation>Baixando o arquivo de %1…</translation>
+    </message>
+    <message>
+      <source>Wabbajack's server describes the file in a way MO2 Revamped doesn't understand.</source>
+      <translation>O servidor do Wabbajack descreve o arquivo de um jeito que o MO2 Revamped não entende.</translation>
+    </message>
+    <message>
+      <source>%1 can't be written.</source>
+      <translation>Não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>A part of the list's file kept arriving damaged.</source>
+      <translation>Uma parte do arquivo da lista chegava danificada repetidas vezes.</translation>
+    </message>
+    <message>
+      <source>The disk is full, or %1 can't be written.</source>
+      <translation>O disco está cheio, ou não é possível gravar %1.</translation>
+    </message>
+    <message>
+      <source>The list's file couldn't be downloaded: %1</source>
+      <translation>Não foi possível baixar o arquivo da lista: %1</translation>
+    </message>
+    <message>
+      <source>Stopped.</source>
+      <translation>Parado.</translation>
+    </message>
+    <message>
+      <source>%1 can't be replaced (another program has it open); the downloaded file is kept as %2.</source>
+      <translation>Não é possível substituir %1 (outro programa o mantém aberto); o arquivo baixado fica guardado como %2.</translation>
+    </message>
+    <message>
+      <source>The list's file on Wabbajack's server isn't the version the gallery shows; try Refresh.</source>
+      <translation>O arquivo da lista no servidor do Wabbajack não é a versão que a galeria mostra; tente Atualizar.</translation>
+    </message>
+    <message>
+      <source>The list's file arrived damaged (its hash differs).</source>
+      <translation>O arquivo da lista chegou danificado (o hash não confere).</translation>
+    </message>
+</context>
+<context>
+    <name>WabbajackInstance</name>
+    <message>
+      <source>The list leaves files for you to install by hand, as its guide says (usually into the game's folder): %1. The game may not start, or the list may not work, until they are in place.</source>
+      <translation>A lista deixa arquivos para você instalar à mão, como o guia dela diz (geralmente na pasta do jogo): %1. O jogo pode não iniciar, ou a lista pode não funcionar, até que eles estejam no lugar.</translation>
+    </message>
+    <message>
+      <source>The list was made for version %1 of the game, the version you have.</source>
+      <translation>A lista foi feita para a versão %1 do jogo, a que você tem.</translation>
+    </message>
+    <message>
+      <source>The list was made for version &lt;b&gt;%1&lt;/b&gt; of the game, and you have &lt;b&gt;%2&lt;/b&gt;. Its script extender and some mods may refuse to start until the game is that version; the list's guide says how to get it.</source>
+      <translation>A lista foi feita para a versão &lt;b&gt;%1&lt;/b&gt; do jogo, e você tem a &lt;b&gt;%2&lt;/b&gt;. O script extender dela e alguns mods podem se recusar a iniciar até o jogo estar nessa versão; o guia da lista diz como obtê-la.</translation>
+    </message>
+    <message>
+      <source>The guide: &lt;a href=&quot;%1&quot;&gt;%2&lt;/a&gt;.</source>
+      <translation>O guia: &lt;a href=&quot;%1&quot;&gt;%2&lt;/a&gt;.</translation>
+    </message>
+    <message>
+      <source>The list</source>
+      <translation>A lista</translation>
+    </message>
+    <message>
+      <source>Before you start %1</source>
+      <translation>Antes de iniciar %1</translation>
+    </message>
+    <message>
+      <source>What the list's guide still asks of you:</source>
+      <translation>O que o guia da lista ainda pede a você:</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>The game isn't the version %1 was made for</source>
+      <translation>O jogo não é a versão para a qual %1 foi feito</translation>
+    </message>
+    <message>
+      <source>%1 was made for version %2 of the game, and the game is now %3 (a game update changes it). Its script extender and some of its mods may refuse to start, or the game may close at once. The list's guide says how to get version %2.</source>
+      <translation>%1 foi feito para a versão %2 do jogo, e o jogo agora é a %3 (uma atualização do jogo a muda). O script extender e alguns mods dela podem se recusar a iniciar, ou o jogo pode fechar na hora. O guia da lista diz como obter a versão %2.</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar mesmo assim</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Manual steps…</source>
+      <translation>Passos manuais…</translation>
+    </message>
+    <message>
+      <source>Windows doesn't let MO2 write in the game folder (%1). Start MO2 as administrator, or copy the files yourself.</source>
+      <translation>O Windows não deixa o MO2 escrever na pasta do jogo (%1). Inicie o MO2 como administrador, ou copie os arquivos você mesmo.</translation>
+    </message>
+    <message>
+      <source>%1 is in use and can't be replaced: close the game and try again.</source>
+      <translation>%1 está em uso e não pode ser substituído: feche o jogo e tente de novo.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be backed up, so nothing was copied.</source>
+      <translation>Não foi possível fazer backup de %1, então nada foi copiado.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the game folder; the files already copied were put back.</source>
+      <translation>Não foi possível copiar %1 para a pasta do jogo; os arquivos já copiados voltaram ao que eram.</translation>
+    </message>
+    <message>
+      <source>Run %1?</source>
+      <translation>Executar %1?</translation>
+    </message>
+    <message>
+      <source>%1 comes with the list, and its guide has you run it. It starts in %2, outside MO2's virtual folder, and changes the game's own files as the guide says (it may ask for administrator rights). MO2 Revamped doesn't check what it does: follow the list's guide, and keep a backup of the game folder if the guide doesn't make one.</source>
+      <translation>%1 vem com a lista, e o guia dela pede que você o execute. Ele inicia em %2, fora da pasta virtual do MO2, e altera os arquivos do próprio jogo como o guia diz (pode pedir permissões de administrador). O MO2 Revamped não verifica o que ele faz: siga o guia da lista, e mantenha um backup da pasta do jogo se o guia não fizer um.</translation>
+    </message>
+    <message>
+      <source>Run</source>
+      <translation>Executar</translation>
+    </message>
+    <message numerus="yes">
+      <source>and %n more</source>
+      <translation>
+        <numerusform>e mais %n</numerusform>
+        <numerusform>e mais %n</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Manual steps of %1</source>
+      <translation>Passos manuais de %1</translation>
+    </message>
+    <message>
+      <source>The list leaves these folders in %1 for you, as Wabbajack does. Follow its guide for each one; MO2 Revamped can copy the files that go into the game's folder (%2) and start the programs the guide has you run.</source>
+      <translation>A lista deixa estas pastas em %1 para você, como o Wabbajack faz. Siga o guia dela para cada uma; o MO2 Revamped pode copiar os arquivos que vão para a pasta do jogo (%2) e iniciar os programas que o guia pede que você execute.</translation>
+    </message>
+    <message>
+      <source>Nothing is left to do by hand.</source>
+      <translation>Não resta nada a fazer à mão.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Files for the game's folder (%n files): %1.</source>
+      <translation>
+        <numerusform>Arquivos para a pasta do jogo (%n arquivos): %1.</numerusform>
+        <numerusform>Arquivos para a pasta do jogo (%n arquivos): %1.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The guide has you run %1 in the game's folder once they are there.</source>
+      <translation>O guia pede que você execute %1 na pasta do jogo quando eles estiverem lá.</translation>
+    </message>
+    <message numerus="yes">
+      <source>Tools or choices the guide talks about (%n files). MO2 Revamped doesn't copy them: only the guide says which one you need.</source>
+      <translation>
+        <numerusform>Ferramentas ou opções de que o guia fala (%n arquivos). O MO2 Revamped não as copia: só o guia diz qual você precisa.</numerusform>
+        <numerusform>Ferramentas ou opções de que o guia fala (%n arquivos). O MO2 Revamped não as copia: só o guia diz qual você precisa.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Copy into the game folder</source>
+      <translation>Copiar para a pasta do jogo</translation>
+    </message>
+    <message>
+      <source>Already in the game folder.</source>
+      <translation>Já estão na pasta do jogo.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n files copied into the game folder.</source>
+      <translation>
+        <numerusform>%n arquivos copiados para a pasta do jogo.</numerusform>
+        <numerusform>%n arquivos copiados para a pasta do jogo.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>The files they replaced are in %1.</source>
+      <translation>Os arquivos que eles substituíram estão em %1.</translation>
+    </message>
+    <message>
+      <source>Run %1…</source>
+      <translation>Executar %1…</translation>
+    </message>
+    <message>
+      <source>Copy the files into the game folder first: %1 runs from there.</source>
+      <translation>Copie primeiro os arquivos para a pasta do jogo: %1 roda de lá.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be started.</source>
+      <translation>Não foi possível iniciar %1.</translation>
+    </message>
+    <message>
+      <source>Open %1</source>
+      <translation>Abrir %1</translation>
+    </message>
+    <message>
+      <source>Open the folder</source>
+      <translation>Abrir a pasta</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Fechar</translation>
     </message>
 </context>
 </TS>

@@ -59,6 +59,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "collectionbrowser.h"
 #include "collectiondialog.h"
+#include "wabbajackbrowser.h"
+#include "wabbajackinstance.h"
+#include "wabbajackdialog.h"
 #include "organizercore.h"
 #include "overwriteinfodialog.h"
 #include "pluginlist.h"
@@ -2171,6 +2174,23 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
       openCollection(url);
     });
   });
+  // MO2 Revamped: a .wabbajack from the command line opens its window
+  m_OrganizerCore.setWabbajackHandler([this](const QString& path) {
+    QTimer::singleShot(0, this, [this, path] {
+      openWabbajackList(path);
+    });
+  });
+  // the Nexus files a Wabbajack list waits for (free accounts click them)
+  m_OrganizerCore.setWabbajackClaims([this](const QString& url) {
+    return m_WabbajackDialog && m_WabbajackDialog->claimNxm(url);
+  });
+  // a list whose downloads ran when MO2 closed opens again
+  QTimer::singleShot(0, this, [this] {
+    const QString resume = WabbajackDialog::resumeList();
+    if (!resume.isEmpty() && !m_WabbajackDialog) {
+      openWabbajackList(resume);
+    }
+  });
   // the file links a collection waits for start without a notice each
   m_OrganizerCore.setCollectionClaims([this](const QString& url) {
     return m_CollectionDialog && m_CollectionDialog->claims(url);
@@ -2397,6 +2417,13 @@ MainWindow::~MainWindow()
     m_OrganizerCore.setCollectionClaims({});
     // a window of its own, not a child of this one
     delete m_CollectionDialog.data();
+    m_OrganizerCore.setWabbajackHandler({});
+    m_OrganizerCore.setWabbajackClaims({});
+    // closed first: a list still downloading is remembered for the next start
+    if (m_WabbajackDialog) {
+      m_WabbajackDialog->close();
+    }
+    delete m_WabbajackDialog.data();
     cleanup();
 
     m_OrganizerCore.setUserInterface(nullptr);
@@ -3198,6 +3225,11 @@ void MainWindow::showEvent(QShowEvent* event)
     QTimer::singleShot(0, this, [this] {
       offerScriptExtenderLaunch();
     });
+    // an instance made from a Wabbajack list: what its guide still asks of
+    // you, once, before the first Run
+    QTimer::singleShot(0, this, [this] {
+      Wabbajack::showListNotice(this, m_OrganizerCore);
+    });
 
     m_OrganizerCore.settings().widgets().restoreIndex(ui->groupCombo);
 
@@ -3351,6 +3383,17 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 bool MainWindow::canExit()
 {
+  // MO2 Revamped: a Wabbajack list being installed stops, when the user says
+  if (m_WabbajackDialog && m_WabbajackDialog->isInstalling()) {
+    if (QMessageBox::question(this, tr("Wabbajack list"),
+                              tr("A Wabbajack list is being installed. Stop it and quit? "
+                                 "Installing it again into the same folder starts over."),
+                              QMessageBox::Yes | QMessageBox::Cancel) != QMessageBox::Yes) {
+      return false;
+    }
+    m_WabbajackDialog->stopInstallAndWait();
+  }
+
   // MO2 Revamped: a collection's install extracts with no window of its own
   // in front, so the main window can be closed in the middle of it
   if (m_OrganizerCore.installationManager()->isRunning()) {
@@ -3536,16 +3579,50 @@ void MainWindow::updateToolMenu()
     none->setEnabled(false);
   }
   toolMenu->addSeparator();
-  QAction* collection = new QAction(FluentIcons::glyph(0xE896),
-                                    tr("Download a Nexus collection…"), toolMenu);
+  // MO2 Revamped: lists of mods to install whole, each kind under its own
+  // heading: Nexus collections and Wabbajack lists
+  QMenu* collections = toolMenu->addMenu(FluentIcons::glyph(0xE896), tr("Nexus collections"));
+  QAction* collection =
+      new QAction(FluentIcons::glyph(0xE896), tr("Download a Nexus collection…"), collections);
   connect(collection, &QAction::triggered, this, &MainWindow::askForCollection,
           Qt::QueuedConnection);
-  toolMenu->addAction(collection);
+  collections->addAction(collection);
   QAction* browse = new QAction(FluentIcons::glyph(0xE721), tr("Browse collections…"),
-                                toolMenu);
+                                collections);
   connect(browse, &QAction::triggered, this, &MainWindow::browseCollections,
           Qt::QueuedConnection);
-  toolMenu->addAction(browse);
+  collections->addAction(browse);
+
+  QMenu* wabbajack = toolMenu->addMenu(FluentIcons::glyph(0xE8F1), tr("Wabbajack lists"));
+  QAction* openList =
+      new QAction(FluentIcons::glyph(0xE8E5), tr("Open a Wabbajack list…"), wabbajack);
+  openList->setToolTip(tr("Shows what a .wabbajack file needs and which of its archives "
+                          "are already downloaded."));
+  connect(openList, &QAction::triggered, this, &MainWindow::askForWabbajackList,
+          Qt::QueuedConnection);
+  QAction* browseLists = new QAction(FluentIcons::glyph(0xE721), tr("Browse Wabbajack lists…"),
+                                     wabbajack);
+  browseLists->setToolTip(tr("Wabbajack's gallery of lists: choose one and it downloads and "
+                             "opens, without the .wabbajack file at hand."));
+  connect(browseLists, &QAction::triggered, this, &MainWindow::browseWabbajackLists,
+          Qt::QueuedConnection);
+  wabbajack->addAction(browseLists);
+  wabbajack->addAction(openList);
+  // an instance installed from a list: the folders its guide has you install
+  // by hand ("__Files Requiring Manual Install")
+  if (Wabbajack::hasManualSteps(m_OrganizerCore)) {
+    QAction* steps = new QAction(FluentIcons::glyph(0xE9D5), tr("Manual steps of this list…"),
+                                 wabbajack);
+    steps->setToolTip(tr("Copies the files the list leaves for the game's folder, backing up "
+                         "what they replace, and runs its patchers when you ask."));
+    connect(
+        steps, &QAction::triggered, this,
+        [this] {
+          Wabbajack::showManualSteps(this, m_OrganizerCore);
+        },
+        Qt::QueuedConnection);
+    wabbajack->addAction(steps);
+  }
 
   m_ToolMenuDirty = false;
 }
@@ -5691,6 +5768,101 @@ void MainWindow::browseCollections()
       },
       this);
   browser->show();
+}
+
+void MainWindow::browseWabbajackLists()
+{
+  // the lists' files go next to the lists' downloads
+  QString downloads = GlobalSettings::value(QStringLiteral("Wabbajack/downloadsFolder")).toString();
+  if (downloads.isEmpty() && m_OrganizerCore.downloadManager() != nullptr) {
+    downloads = m_OrganizerCore.downloadManager()->getOutputDirectory();
+  }
+  // one gallery: two would download the same list file into one part file
+  if (m_WabbajackBrowser) {
+    m_WabbajackBrowser->showNormal();
+    m_WabbajackBrowser->raise();
+    m_WabbajackBrowser->activateWindow();
+    return;
+  }
+  auto* browser = new Wabbajack::ListBrowser(
+      m_PluginContainer.plugins<IPluginGame>(), m_OrganizerCore.managedGame(), downloads,
+      [this](const QString& path) {
+        openWabbajackList(path);
+      },
+      [this](const QString& path) {
+        // the list an open window or a paused install of this instance reads
+        const QFileInfo file(path);
+        if (m_WabbajackDialog && QFileInfo(m_WabbajackDialog->path()) == file) {
+          return true;
+        }
+        // it reads the instance's ini: once
+        const QString resume = WabbajackDialog::resumeList();
+        return !resume.isEmpty() && QFileInfo(resume) == file;
+      },
+      this);
+  m_WabbajackBrowser = browser;
+  browser->show();
+}
+
+void MainWindow::askForWabbajackList()
+{
+  const QString file = WabbajackDialog::askFile(this);
+  if (!file.isEmpty()) {
+    openWabbajackList(file);
+  }
+}
+
+void MainWindow::openWabbajackList(const QString& path)
+{
+  if (m_WabbajackDialog) {
+    if (QFileInfo(m_WabbajackDialog->path()) == QFileInfo(path)) {
+      m_WabbajackDialog->showNormal();
+      m_WabbajackDialog->raise();
+      m_WabbajackDialog->activateWindow();
+      return;
+    }
+    if (m_WabbajackDialog->isRunning()) {
+      QMessageBox::information(this, tr("Wabbajack list"),
+                               tr("Another list is downloading or checking its files. Pause "
+                                  "it and close its window first."));
+      m_WabbajackDialog->showNormal();
+      m_WabbajackDialog->raise();
+      m_WabbajackDialog->activateWindow();
+      return;
+    }
+    if (m_WabbajackDialog->hasModalOpen() || QApplication::activeModalWidget() != nullptr) {
+      // closing it now would delete it under its own question or menu: the
+      // new list waits, and opens once that is answered
+      const bool waiting = !m_WabbajackPending.isEmpty();
+      m_WabbajackPending = path;
+      m_WabbajackDialog->raise();
+      if (!waiting) {
+        openPendingWabbajackList();
+      }
+      return;
+    }
+    m_WabbajackDialog->close();
+  }
+  m_WabbajackDialog = new WabbajackDialog(m_OrganizerCore, path, this);
+  m_WabbajackDialog->show();
+  m_WabbajackDialog->raise();
+  m_WabbajackDialog->activateWindow();
+}
+
+void MainWindow::openPendingWabbajackList()
+{
+  QTimer::singleShot(300, this, [this] {
+    if (m_WabbajackPending.isEmpty()) {
+      return;
+    }
+    if (m_WabbajackDialog &&
+        (m_WabbajackDialog->hasModalOpen() || QApplication::activeModalWidget() != nullptr)) {
+      openPendingWabbajackList();
+      return;
+    }
+    // as if asked now: the open window may have started an install meanwhile
+    openWabbajackList(std::exchange(m_WabbajackPending, QString()));
+  });
 }
 
 void MainWindow::askForCollection()

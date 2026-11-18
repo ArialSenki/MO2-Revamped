@@ -1304,6 +1304,16 @@ void ModListView::restoreState(const Settings& s)
     h->resizeSection(ModList::COL_VERSION, 140);
     h->setSectionResizeMode(ModList::COL_NAME, QHeaderView::Stretch);
 
+    // an instance made from a Wabbajack list: the author's notes ("Optional"),
+    // the mods' colours and the list's categories show, as in the author's MO2
+    if (layout.value("Settings/mo2r_list_columns", false).toBool()) {
+      for (int column : {ModList::COL_CATEGORY, ModList::COL_NOTES}) {
+        h->setSectionHidden(column, false);
+      }
+      h->resizeSection(ModList::COL_CATEGORY, 150);
+      h->resizeSection(ModList::COL_NOTES, 160);
+    }
+
     layout.setValue(columnsAppliedKey, true);
     layout.sync();
   }
