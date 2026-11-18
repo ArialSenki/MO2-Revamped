@@ -75,6 +75,26 @@
       <source>usvfs %1</source>
       <translation>usvfs %1</translation>
     </message>
+    <message>
+      <source>About Qt</source>
+      <translation>Über Qt</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <translation>Schließen</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped is built with Qt %1, the cross-platform application framework.</source>
+      <translation>MO2 Revamped ist mit Qt %1 gebaut, dem plattformübergreifenden Anwendungs-Framework.</translation>
+    </message>
+    <message>
+      <source>Qt is used under the GNU Lesser General Public License version 3. Its license text is in the licenses folder next to MO2.</source>
+      <translation>Qt wird unter der GNU Lesser General Public License Version 3 verwendet. Der Lizenztext liegt im Ordner „licenses“ neben MO2.</translation>
+    </message>
+    <message>
+      <source>Qt is a trademark of The Qt Company Ltd. More at %1.</source>
+      <translation>Qt ist eine Marke von The Qt Company Ltd. Mehr unter %1.</translation>
+    </message>
   </context>
   <context>
     <name>ActivateModsDialog</name>

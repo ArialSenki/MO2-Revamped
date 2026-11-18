@@ -2867,7 +2867,9 @@ void MainWindow::createHelpMenu()
   revampedAboutAction->setToolTip(
       tr("Show MO2 Revamped information, components, and credits."));
 
-  QAction* aboutQtAction = menu->addAction(tr("About Qt"), qApp, &QApplication::aboutQt);
+  QAction* aboutQtAction = menu->addAction(tr("About Qt"), this, [this] {
+    AboutDialog::showAboutQt(this);
+  });
   aboutQtAction->setObjectName(QStringLiteral("aboutQtAction"));
     aboutQtAction->setIcon(FluentIcons::glyph(0xE946));
 

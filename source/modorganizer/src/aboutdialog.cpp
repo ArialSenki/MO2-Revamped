@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "aboutdialog.h"
+#include "fluentdialogs.h"
 #include "fluenticons.h"
 #include "fluentnavigation.h"
 #include "fluentpanels.h"
@@ -222,6 +223,39 @@ void AboutDialog::buildFluentLayout(const QString& applicationName, const QStrin
 AboutDialog::~AboutDialog()
 {
   delete ui;
+}
+
+void AboutDialog::showAboutQt(QWidget* parent)
+{
+  FluentContentDialog dialog(
+      parent, QStringLiteral("revampedAboutQtDialog"), tr("About Qt"),
+      tr("MO2 Revamped is built with Qt %1, the cross-platform application "
+         "framework.")
+          .arg(QString::fromLatin1(qVersion())));
+
+  auto* details = new QLabel(&dialog);
+  details->setObjectName(QStringLiteral("fluentDialogText"));
+  details->setWordWrap(true);
+  details->setTextFormat(Qt::RichText);
+  details->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  details->setText(
+      QStringLiteral("<p>%1</p><p>%2</p>")
+          .arg(tr("Qt is used under the GNU Lesser General Public License version 3. "
+                  "Its license text is in the licenses folder next to MO2."),
+               tr("Qt is a trademark of The Qt Company Ltd. More at %1.")
+                   .arg(QStringLiteral(
+                       "<a href=\"https://www.qt.io/licensing/\">qt.io/licensing</a>"))));
+  connect(details, &QLabel::linkActivated, &dialog, [](const QString& link) {
+    MOBase::shell::Open(QUrl(link));
+  });
+  dialog.body()->addWidget(details);
+
+  QPushButton* close = dialog.addButton(tr("Close"), true);
+  connect(close, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+  // laid out once, before it reaches the screen
+  dialog.adjustSize();
+  dialog.exec();
 }
 
 void AboutDialog::addLicense(const QString& name, Licenses license)

@@ -41,6 +41,11 @@ public:
                        bool eldenRingEdition = false);
   ~AboutDialog();
 
+  // MO2 Revamped: Qt's version and license as a Fluent content dialog; Qt's
+  // own About box is laid out again by the Fluent polish once it is shown,
+  // which made it jump in size as it opened
+  static void showAboutQt(QWidget* parent);
+
 private:
   enum Licenses
   {
