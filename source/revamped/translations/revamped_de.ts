@@ -6201,6 +6201,10 @@ Sie suchen weiter im alten Ordner und finden nichts, bis ihre Pfade geändert we
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Nexus request limit reached: downloads continue by themselves at %1.</source>
+      <translation>Nexus-Anfragelimit erreicht: Die Downloads gehen um %1 von selbst weiter.</translation>
+    </message>
+    <message>
       <source>There are no notifications. Open it to see what is checked.</source>
       <translation>Keine Benachrichtigungen. Öffne es, um zu sehen, was geprüft wird.</translation>
     </message>
@@ -16173,6 +16177,10 @@ Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3
   </context>
   <context>
     <name>CollectionDialog</name>
+    <message>
+      <source>Nexus request limit reached: continuing by itself at %1. Nothing has failed.</source>
+      <translation>Nexus-Anfragelimit erreicht: Es geht um %1 von selbst weiter. Nichts ist fehlgeschlagen.</translation>
+    </message>
     <message>
       <source>Installing %1%</source>
       <translation>Wird installiert: %1%</translation>

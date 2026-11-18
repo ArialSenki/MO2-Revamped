@@ -461,6 +461,19 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
       (reference == nullptr || qobject_cast<QMainWindow*>(reference->window()) != nullptr)) {
     reference = modal->window();
   }
+  // MO2 Revamped: over the window of MO2 the user is in (the collection's,
+  // a mod's information), not the main window behind it: shown over the main
+  // window, its card brought that window's group in front of the other one
+  if (!modalShown &&
+      (reference == nullptr || qobject_cast<QMainWindow*>(reference->window()) != nullptr)) {
+    QWidget* active = QApplication::activeWindow();
+    if (active != nullptr && active->isVisible() && !active->isMinimized() &&
+        qobject_cast<MessageDialog*>(active) == nullptr &&
+        !active->testAttribute(Qt::WA_DontShowOnScreen) &&
+        (active->windowFlags() & Qt::Popup) != Qt::Popup) {
+      reference = active;
+    }
+  }
   if (reference == nullptr) {
     for (QWidget* w : qApp->topLevelWidgets()) {
       if (qobject_cast<QMainWindow*>(w) != nullptr && w->isVisible()) {
@@ -504,9 +517,8 @@ void MessageDialog::showMessage(const QString& text, QWidget* reference,
   QAccessibleEvent alert(notice, QAccessible::Alert);
   QAccessible::updateAccessibility(&alert);
 
-  // never over a game or another program the user is in
-  if (bringToFront && reference != nullptr &&
-      QApplication::applicationState() == Qt::ApplicationActive) {
-    reference->activateWindow();
-  }
+  // MO2 Revamped: a notice never activates a window, not even one the user
+  // must see (bringToFront only lets it through the quiet modes): from a
+  // download or a collection it took the focus from whatever the user was
+  // doing, and brought the main window over the collection's
 }

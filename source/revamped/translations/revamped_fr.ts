@@ -6328,6 +6328,10 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Nexus request limit reached: downloads continue by themselves at %1.</source>
+      <translation>Limite de requêtes Nexus atteinte : les téléchargements reprennent d’eux-mêmes à %1.</translation>
+    </message>
+    <message>
       <source>There are no notifications. Open it to see what is checked.</source>
       <translation>Aucune notification. Ouvrez-le pour voir ce qui est vérifié.</translation>
     </message>
@@ -16337,6 +16341,10 @@ Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG
   </context>
   <context>
     <name>CollectionDialog</name>
+    <message>
+      <source>Nexus request limit reached: continuing by itself at %1. Nothing has failed.</source>
+      <translation>Limite de requêtes Nexus atteinte : reprise automatique à %1. Rien n’a échoué.</translation>
+    </message>
     <message>
       <source>Installing %1%</source>
       <translation>Installation %1%</translation>

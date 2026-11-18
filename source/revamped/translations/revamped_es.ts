@@ -6237,6 +6237,10 @@ Seguirán buscando en la carpeta antigua y no encontrarán nada hasta que cambie
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Nexus request limit reached: downloads continue by themselves at %1.</source>
+      <translation>Se alcanzó el límite de peticiones de Nexus: las descargas siguen solas a las %1.</translation>
+    </message>
+    <message>
       <source>There are no notifications. Open it to see what is checked.</source>
       <translation>No hay notificaciones. Ábrelo para ver qué se comprueba.</translation>
     </message>
@@ -16434,6 +16438,10 @@ Instala .NET Desktop Runtime {1} para Windows x64 desde {0} y vuelve a abrir BG3
   </context>
   <context>
     <name>CollectionDialog</name>
+    <message>
+      <source>Nexus request limit reached: continuing by itself at %1. Nothing has failed.</source>
+      <translation>Se alcanzó el límite de peticiones de Nexus: sigue sola a las %1. No ha fallado nada.</translation>
+    </message>
     <message>
       <source>Installing %1%</source>
       <translation>Instalando %1%</translation>

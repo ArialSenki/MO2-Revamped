@@ -2087,6 +2087,20 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
           &NXMAccessManager::credentialsReceived, this, &MainWindow::updateWindowTitle);
   connect(&NexusInterface::instance(), &NexusInterface::requestsChanged, ui->statusBar,
           &StatusBar::setAPI);
+  // MO2 Revamped: one calm notice when Nexus' limit pauses the requests (a
+  // running collection says it in its own window instead)
+  connect(&NexusInterface::instance(), &NexusInterface::requestsPaused, this,
+          [this](const QDateTime& until) {
+            MessageDialog::showMessage(
+                tr("Nexus request limit reached: downloads continue by themselves at "
+                   "%1.")
+                    .arg((QDateTime::currentDateTimeUtc().secsTo(until) < 120
+                         ? QLocale().toString(until.toLocalTime().time(),
+                                              QStringLiteral("HH:mm:ss"))
+                         : QLocale().toString(until.toLocalTime().time(),
+                                              QLocale::ShortFormat))),
+                this);
+          });
 
   connect(ui->toolBar, SIGNAL(customContextMenuRequested(QPoint)), this,
           SLOT(toolBar_customContextMenuRequested(QPoint)));
@@ -4800,6 +4814,13 @@ void MainWindow::modInstalled(const QString& modName)
   if (!m_OrganizerCore.settings().interface().checkUpdateAfterInstallation()) {
     return;
   }
+  // MO2 Revamped: not for a collection's mods: the collection names the exact
+  // file, and one update check per mod (a list of all its files) is what ran
+  // into Nexus' request limit with hundreds of mods
+  if (qApp->property("mo2r.collectionInstall").toBool() ||
+      qApp->property("mo2r.collectionQuiet").toBool()) {
+    return;
+  }
 
   unsigned int index = ModInfo::getIndex(modName);
 
@@ -6494,6 +6515,12 @@ void MainWindow::nxmRequestFailed(QString gameName, int modID, int, QVariant, in
       mod->setLastNexusUpdate(QDateTime::currentDateTimeUtc());
       mod->setLastNexusQuery(QDateTime::currentDateTimeUtc());
     }
+  } else if (errorCode == 429) {
+    // MO2 Revamped: the limit was hit again after waiting several times; the
+    // pause already had its one notice
+    log::warn("{}", tr("Error %1: Request to Nexus failed: %2")
+                        .arg(errorCode)
+                        .arg(errorString));
   } else {
     MessageDialog::showMessage(
         tr("Error %1: Request to Nexus failed: %2").arg(errorCode).arg(errorString),

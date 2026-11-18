@@ -30,6 +30,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QJsonObject>
 #include <QNetworkDiskCache>
 #include <QNetworkReply>
+#include <QDateTime>
 #include <QQueue>
 #include <QTimer>
 #include <QVariant>
@@ -613,6 +614,9 @@ signals:
   void nxmRequestDropped(QString gameName, int modID, int fileID, QVariant userData,
                          int requestID, int errorCode, const QString& errorString);
   void requestsChanged(const APIStats& stats, const APIUserAccount& user);
+  // MO2 Revamped: Nexus answered 429 (too many requests); the queue waits
+  // until `until` and goes on by itself. Emitted once per pause
+  void requestsPaused(const QDateTime& until);
 
 public slots:
 
@@ -667,6 +671,8 @@ private:
     QString m_Path;
     QMap<QNetworkReply::NetworkError, QList<int>> m_AllowedErrors;
     bool m_IgnoreGenericErrorHandler;
+    // MO2 Revamped: how many times Nexus answered 429 to this request
+    int m_RateLimited = 0;
 
     NXMRequestInfo(int modID, Type type, QVariant userData, const QString& subModule,
                    MOBase::IPluginGame const* game);
@@ -688,7 +694,23 @@ private:
 
   static const int MAX_ACTIVE_DOWNLOADS = 6;
 
+public:
+  // MO2 Revamped: when the queue goes on after a 429; invalid when it isn't
+  // waiting
+  QDateTime pausedUntil() const;
+
+  // when the queue may go on after a 429, from Retry-After or the X-RL reset
+  // headers, else from a growing wait (`attempt` from 1); public for the test
+  static QDateTime resumeTimeAfter429(const QList<QNetworkReply::RawHeaderPair>& headers,
+                                      bool exhausted, int attempt,
+                                      const QDateTime& now);
+
 private:
+  // waits until `until` before sending anything more
+  void pauseRequests(const QDateTime& until);
+  QDateTime m_PausedUntil;
+  QTimer* m_ResumeTimer = nullptr;
+
   void nextRequest();
   void requestFinished(std::list<NXMRequestInfo>::iterator iter);
   // the plugin of gameName, or the managed game when no plugin has that name

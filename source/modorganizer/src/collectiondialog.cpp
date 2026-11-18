@@ -191,6 +191,15 @@ CollectionDialog::CollectionDialog(OrganizerCore& core, const CollectionLink& li
   });
 
   auto& nexus = NexusInterface::instance();
+  // the status line says when the requests go on, and goes back after it
+  connect(&nexus, &NexusInterface::requestsPaused, this, [this](const QDateTime& until) {
+    onChanged();
+    const qint64 ms = QDateTime::currentDateTimeUtc().msecsTo(until) + 1500;
+    QTimer::singleShot(static_cast<int>(std::clamp<qint64>(ms, 1000, qint64(3) * 3600 * 1000)), this,
+                       [this] {
+                         onChanged();
+                       });
+  });
   connect(&nexus, &NexusInterface::nxmApiV2Available, this, &CollectionDialog::onInfo);
   connect(&nexus, &NexusInterface::nxmRequestFailed, this, &CollectionDialog::onInfoFailed);
 
@@ -1564,7 +1573,18 @@ void CollectionDialog::updateButtons()
 
   if (stage != Stage::Error) {
     m_status->setPalette(QPalette());
-    if (stage == Stage::Running) {
+    const QDateTime nexusWait = NexusInterface::instance().pausedUntil();
+    if (stage == Stage::Running && nexusWait.isValid()) {
+      // MO2 Revamped: one calm line, not an error for each mod
+      m_status->setText(
+          tr("Nexus request limit reached: continuing by itself at %1. Nothing has "
+             "failed.")
+              .arg((QDateTime::currentDateTimeUtc().secsTo(nexusWait) < 120
+                         ? QLocale().toString(nexusWait.toLocalTime().time(),
+                                              QStringLiteral("HH:mm:ss"))
+                         : QLocale().toString(nexusWait.toLocalTime().time(),
+                                              QLocale::ShortFormat))));
+    } else if (stage == Stage::Running) {
       m_status->setText(
           automatic ? tr("Premium: up to three files download at a time.")
                   : tr("Free account: press \"Open next on Nexus\", then \"Slow download\" "
