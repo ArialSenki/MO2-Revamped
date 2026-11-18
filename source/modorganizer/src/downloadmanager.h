@@ -129,9 +129,25 @@ private:
 
     static DownloadInfo* createNew(const MOBase::ModRepositoryFileInfo* fileInfo,
                                    const QStringList& URLs);
+    // MO2 Revamped: what an archive's .meta holds and when the archive was
+    // made, read without touching anything shared, so a long list reads its
+    // .meta files on several threads at once
+    struct MetaData
+    {
+      bool removed = false, paused = false, uninstalled = false, installed = false;
+      QString url, gameName, name, modName, description, version, newestVersion,
+          repository, sourceList;
+      int modID = 0, fileID = 0, category = 0, fileCategory = 0;
+      QVariantMap userData;
+      QDateTime created;
+    };
+    static MetaData readMeta(const QString& filePath);
+
+    // meta: what readMeta() read for this file already, if it did
     static DownloadInfo* createFromMeta(const QString& filePath, bool showHidden,
                                         const QString outputDirectory,
-                                        std::optional<uint64_t> fileSize = {});
+                                        std::optional<uint64_t> fileSize = {},
+                                        const MetaData* meta = nullptr);
 
     /**
      * @brief rename the file
