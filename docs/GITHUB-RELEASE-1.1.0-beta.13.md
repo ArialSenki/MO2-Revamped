@@ -59,6 +59,18 @@ Measured with Nolvus Awakening (3,597 mods, ~3,480 plugins, 546,000 files):
 - **Data tab, first search letter:** 7.0 s → 1.0 s, with ~250 MB less memory.
 - **Mod information for a mod of 64,000 files:** 0.85 s → 0.29 s.
 
+Compared with the original Mod Organizer 2.5.2 that Nolvus installs, on the same
+list (medians of three alternating runs each, warm disk):
+
+- **Start until the list shows:** 6.1 s → 2.9 s.
+- **Turning one mod on or off:** 1.2–2.1 s → 0.23–0.35 s.
+- **Turning all mods back on:** 29.6 s → 8.7 s.
+- **Refresh (F5):** the window is blocked for 2.6 s → 1.0 s.
+- **Switching profiles:** the window is blocked for 3.6 s → 1.3 s.
+- **Run:** the window is blocked for 9.1 s → 0.8 s. The whole start takes
+  about 2 s longer (14 s instead of 12 s).
+- **Memory after using everything:** 2.0 GB → 1.7 GB.
+
 ## Nexus
 
 - **Request limit:** when Nexus answers "too many requests" (429), MO2 pauses
