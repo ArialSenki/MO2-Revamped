@@ -6192,6 +6192,26 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
   <context>
     <name>MainWindow</name>
     <message>
+      <source>Installation in progress</source>
+      <translation>Installation en cours</translation>
+    </message>
+    <message>
+      <source>A mod is being installed. Close Mod Organizer once it has finished.</source>
+      <translation>Un mod est en cours d’installation. Fermez Mod Organizer une fois terminé.</translation>
+    </message>
+    <message>
+      <source>Running a program</source>
+      <translation>Lancer un programme</translation>
+    </message>
+    <message>
+      <source>Switching profiles</source>
+      <translation>Changer de profil</translation>
+    </message>
+    <message>
+      <source>A mod is being installed. Switch profiles once it has finished.</source>
+      <translation>Un mod est en cours d’installation. Changez de profil une fois terminé.</translation>
+    </message>
+    <message>
       <source>MO2 Revamped %1 is out</source>
       <translation>MO2 Revamped %1 est sorti</translation>
     </message>
@@ -10107,6 +10127,10 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>Loading files… %1%</source>
+      <translation>Chargement des fichiers… %1%</translation>
+    </message>
     <message>
       <source>Notices: sound only, without the card</source>
       <translation>Notifications : son uniquement, sans la carte</translation>
@@ -16019,6 +16043,34 @@ Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG
   </context>
   <context>
     <name>CollectionDialog</name>
+    <message>
+      <source>Installing %1%</source>
+      <translation>Installation %1%</translation>
+    </message>
+    <message>
+      <source>Installing…</source>
+      <translation>Installation…</translation>
+    </message>
+    <message>
+      <source>installing %1</source>
+      <translation>installation de %1</translation>
+    </message>
+    <message>
+      <source>A collection is installing</source>
+      <translation>Une collection est en cours d’installation</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; is being installed (%2 of %3 mods). %4 now would use the mods as they were before it started, or put its mods in the wrong profile. Pause the collection first? It continues from the same place when you press Continue in its window.</source>
+      <translation>« %1 » est en cours d’installation (%2 sur %3 mods). %4 maintenant utiliserait les mods tels qu’ils étaient avant le début, ou mettrait ses mods dans le mauvais profil. Mettre d’abord la collection en pause ? Elle reprend au même endroit quand vous cliquez sur Continuer dans sa fenêtre.</translation>
+    </message>
+    <message>
+      <source>Pause and go on</source>
+      <translation>Mettre en pause et continuer</translation>
+    </message>
+    <message>
+      <source>Keep installing</source>
+      <translation>Continuer l’installation</translation>
+    </message>
     <message>
       <source>Download a Nexus collection</source>
       <translation>Télécharger une collection Nexus</translation>
