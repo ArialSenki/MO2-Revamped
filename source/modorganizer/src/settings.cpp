@@ -38,6 +38,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QLocale>
 #include <QStandardPaths>
 #include <QUrl>
+#include <QGuiApplication>
+#include <QScreen>
+#include <algorithm>
 
 using namespace MOBase;
 using namespace MOShared;
@@ -768,7 +771,37 @@ void GeometrySettings::ensureWindowOnScreen(QWidget* w) const
       centerOnMonitor(w, -1);
 
       log::warn("window '{}' now at {}", w->objectName(), w->geometry());
+      return;
     }
+
+    // MO2 Revamped: partly off its screen (a size saved on a larger screen or
+    // at another scale, or opened from an instance switch): moved, and made
+    // smaller if needed, to fit the screen's work area
+    if (w->isMaximized() || w->isFullScreen() || w->isMinimized()) {
+      return;
+    }
+    QScreen* screen = QGuiApplication::screenAt(w->frameGeometry().center());
+    if (screen == nullptr) {
+      screen = w->screen();
+    }
+    if (screen == nullptr) {
+      return;
+    }
+    const QRect area  = screen->availableGeometry();
+    const QRect frame = w->frameGeometry();
+    if (area.contains(frame)) {
+      return;
+    }
+    const QSize frameRoom = frame.size() - w->geometry().size();
+    const QSize size      = frame.size().boundedTo(area.size());
+    const QPoint topLeft(std::clamp(frame.left(), area.left(), area.right() - size.width() + 1),
+                         std::clamp(frame.top(), area.top(), area.bottom() - size.height() + 1));
+    if (size != frame.size()) {
+      w->resize(size - frameRoom);
+    }
+    w->move(topLeft);
+    log::debug("window '{}' was partly off its screen, now at {}", w->objectName(),
+               w->frameGeometry());
   });
 }
 
