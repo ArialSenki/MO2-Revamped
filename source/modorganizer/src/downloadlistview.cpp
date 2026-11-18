@@ -1278,15 +1278,19 @@ void DownloadListView::startDrag(Qt::DropActions supportedActions)
                       .pixmap(QSize(32, 32), devicePixelRatioF()));
   drag->setHotSpot(QPoint(-8, -8));
 
-  log::debug("downloads: dragging {} download(s)", count);
+  // Windows ends a drag at once when it doesn't see the button held
+  log::info("downloads: dragging {} download(s), left button held for Windows: {}",
+             count, (GetAsyncKeyState(GetSystemMetrics(SM_SWAPBUTTON) ? VK_RBUTTON
+                                                                      : VK_LBUTTON) &
+                     0x8000) != 0);
   const Qt::DropAction action =
       drag->exec(supportedActions | Qt::CopyAction, Qt::CopyAction);
-  log::debug("downloads: drag ended ({})", static_cast<int>(action));
+  log::info("downloads: drag ended ({})", static_cast<int>(action));
 }
 
 void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
 {
-  log::debug("downloads: drag entered, {} download(s)",
+  log::info("downloads: drag entered, {} download(s)",
              draggedFiles(event->mimeData()).size());
   // a drag of this list's downloads (the names say so; the source is only
   // known while a real drag runs)
@@ -1338,7 +1342,7 @@ void DownloadListView::dropEvent(QDropEvent* event)
   m_DropGroup = QPersistentModelIndex();
   viewport()->update();
   const QStringList files = draggedFiles(event->mimeData());
-  log::debug("downloads: drop of {} download(s)", files.size());
+  log::info("downloads: drop of {} download(s)", files.size());
   if (files.isEmpty()) {
     QTreeView::dropEvent(event);
     return;

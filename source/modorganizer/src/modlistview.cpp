@@ -2026,6 +2026,12 @@ void ModListView::dragEnterEvent(QDragEnterEvent* event)
   // there is no drop event for invalid data since canDropMimeData
   // returns false, so we notify user on drag enter
   ModListDropInfo dropInfo(event->mimeData(), *m_core);
+  // MO2 Revamped: where a drag got, for drops that don't happen
+  log::info("mod list: drag entered (valid {}, archives {}, downloads {}, mods {}, "
+            "files {}), accepted {}",
+            dropInfo.isValid(), dropInfo.externalArchives().size(),
+            dropInfo.downloads().size(), dropInfo.rows().size(),
+            dropInfo.localUrls().size(), event->isAccepted());
 
   if (dropInfo.isValid() && !dropInfo.isLocalFileDrop() &&
       sortColumn() != ModList::COL_PRIORITY) {

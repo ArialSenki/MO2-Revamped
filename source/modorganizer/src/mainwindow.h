@@ -326,6 +326,9 @@ private:
   QMenu* openFolderMenu();
 
   void dropLocalFile(const QUrl& url, const QString& outputDir, bool move);
+  // MO2 Revamped: whether Windows drag and drop can work in this thread (OLE
+  // in a single-threaded apartment, same integrity as Explorer), in the log
+  void logDragDropState();
 
   void toggleRevampedEndorseState();
 

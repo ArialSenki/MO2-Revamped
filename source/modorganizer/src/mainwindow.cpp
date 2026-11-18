@@ -3152,6 +3152,8 @@ void MainWindow::showEvent(QShowEvent* event)
     // no control looks focused on opening; Tab still reaches the first one
     setFocus(Qt::OtherFocusReason);
 
+    logDragDropState();
+
     ui->modList->refreshFilters();
     readSettings();
     // readSettings() restores the mod-list header state. Install its
@@ -8024,6 +8026,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
   // that).
   // MO2 Revamped: archives dropped anywhere in the window install (the mod
   // list's own drop says where); on the downloads they are only copied there
+  log::info("window: drag entered, action {}, {} url(s)",
+            static_cast<int>(event->proposedAction()),
+            event->mimeData() != nullptr ? event->mimeData()->urls().size() : 0);
   if (event->proposedAction() != Qt::CopyAction &&
       event->proposedAction() != Qt::MoveAction) {
     return;
@@ -8091,6 +8096,46 @@ void MainWindow::dropLocalFile(const QUrl& url, const QString& outputDir, bool m
   if (!success) {
     const auto e = GetLastError();
     log::error("file operation failed: {}", formatSystemMessage(e));
+  }
+}
+
+void MainWindow::logDragDropState()
+{
+  // OLE needs a single-threaded apartment: in a multithreaded one Qt can't
+  // register the windows as drop targets and every drag ends at once
+  APTTYPE type          = APTTYPE_CURRENT;
+  APTTYPEQUALIFIER qual = APTTYPEQUALIFIER_NONE;
+  const HRESULT apt     = CoGetApartmentType(&type, &qual);
+  // S_FALSE: already initialized here (as Qt does); RPC_E_CHANGED_MODE: the
+  // thread is multithreaded
+  const HRESULT ole = OleInitialize(nullptr);
+  if (SUCCEEDED(ole)) {
+    OleUninitialize();
+  }
+
+  // drops from Explorer are refused by a process running elevated
+  bool elevated = false;
+  HANDLE token  = nullptr;
+  if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+    TOKEN_ELEVATION elevation{};
+    DWORD size = 0;
+    if (GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation),
+                            &size)) {
+      elevated = elevation.TokenIsElevated != 0;
+    }
+    CloseHandle(token);
+  }
+
+  const bool sta = SUCCEEDED(apt) &&
+                   (type == APTTYPE_STA || type == APTTYPE_MAINSTA);
+  if (!sta || ole == RPC_E_CHANGED_MODE || elevated) {
+    log::warn("drag and drop may not work: apartment {} (hr 0x{:x}), "
+              "OleInitialize 0x{:x}, elevated {}",
+              static_cast<int>(type), static_cast<unsigned>(apt),
+              static_cast<unsigned>(ole), elevated);
+  } else {
+    log::info("drag and drop: apartment {}, OleInitialize 0x{:x}, elevated {}",
+              static_cast<int>(type), static_cast<unsigned>(ole), elevated);
   }
 }
 
