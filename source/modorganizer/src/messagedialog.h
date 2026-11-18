@@ -80,6 +80,9 @@ protected:
   void leaveEvent(QEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   bool eventFilter(QObject* watched, QEvent* event) override;
+  // MO2 Revamped: clicks outside the card (its shadow) go to what is under it
+  bool nativeEvent(const QByteArray& eventType, void* message,
+                   qintptr* result) override;
 
 private:
   QString m_text;
