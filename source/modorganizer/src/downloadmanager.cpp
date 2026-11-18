@@ -1991,6 +1991,11 @@ bool DownloadManager::isInfoIncomplete(int index) const
   }
 
   DownloadInfo* info = m_ActiveDownloads.at(index);
+  // MO2 Revamped: a read-only source's archive can't be queried (its .meta
+  // would be written beside it); what its name says is all there is
+  if (info->m_ReadOnly) {
+    return false;
+  }
   if (info->m_FileInfo->repository != "Nexus") {
     // other repositories currently don't support re-querying info anyway
     return false;
