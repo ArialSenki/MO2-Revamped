@@ -172,7 +172,10 @@ private:
   void applyGroupState(int first = 0, int last = -1);
   void rememberGroupState(const QModelIndex& index, bool expanded);
   // the group a drop at that point goes to, if downloads can move there
-  QModelIndex dropGroupAt(const QPoint& pos) const;
+  QModelIndex dropGroupAt(const QPoint& pos, const QStringList& files) const;
+  // the downloads a drag from this list carries, by file name; empty for any
+  // other drag
+  static QStringList draggedFiles(const QMimeData* mime);
   QStringList selectedFileNames() const;
   void addGroupActions(QMenu& menu, const QModelIndex& index);
   void newCategory(const QStringList& moveHere);

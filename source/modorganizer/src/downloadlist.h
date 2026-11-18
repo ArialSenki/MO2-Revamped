@@ -89,6 +89,10 @@ public:
   // the downloads' grouping changed (categories, a move, grouping on or off)
   void regroup();
 
+  // the key of the group a download goes to when it is in no category
+  // ("list:<name>", "nexus" or "other"); listName gets the list's name
+  QString originKey(int row, QString* listName = nullptr) const;
+
   /**
    * @brief retrieve the number of rows to display. Invoked by Qt
    *
@@ -102,6 +106,8 @@ public:
   QModelIndex parent(const QModelIndex& child) const;
   Qt::ItemFlags flags(const QModelIndex& idx) const override;
   QMimeData* mimeData(const QModelIndexList& indexes) const override;
+  // the file names of downloads dragged inside the list, one per line
+  static QString namesMimeType();
   QStringList mimeTypes() const override;
 
   virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
