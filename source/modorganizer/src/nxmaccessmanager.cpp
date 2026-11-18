@@ -404,8 +404,9 @@ bool ValidationAttempt::sendRequest(NXMAccessManager& m, const QString& key)
   request.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,
                     "application/json");
   request.setRawHeader("Protocol-Version", "1.0.0");
-  request.setRawHeader("Application-Name", "MO2");
-  request.setRawHeader("Application-Version", m.MOVersion().toUtf8());
+  request.setRawHeader("Application-Name", "MO2 Revamped");
+  request.setRawHeader("Application-Version",
+                       SelfUpdater::revampedVersionString().toUtf8());
 
   m_reply = m.get(request);
 
@@ -988,8 +989,11 @@ QString NXMAccessManager::userAgent(const QString& subModule) const
   }
   comments << ((QSysInfo::buildCpuArchitecture() == "x86_64") ? "x64" : "x86");
 
-  return QString("Mod Organizer/%1 (%2) Qt/%3")
-      .arg(m_MOVersion, comments.join("; "), qVersion());
+  // Nexus asks every app to name itself accurately: say MO2 Revamped and
+  // which Mod Organizer it is based on, not the original MO2
+  comments.prepend("based on Mod Organizer " + m_MOVersion);
+  return QString("MO2-Revamped/%1 (%2) Qt/%3")
+      .arg(SelfUpdater::revampedVersionString(), comments.join("; "), qVersion());
 }
 
 void NXMAccessManager::clearApiKey()

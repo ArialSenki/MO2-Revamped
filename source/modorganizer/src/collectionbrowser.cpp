@@ -3,6 +3,7 @@
 #include "fluenticons.h"
 #include "nexusinterface.h"
 #include "screenfitter.h"
+#include "selfupdater.h"
 
 #include <utility.h>
 
@@ -89,7 +90,7 @@ void fetch(QNetworkAccessManager& network, const QString& url, QObject* context,
   }
   QNetworkRequest r(u);
   r.setHeader(QNetworkRequest::UserAgentHeader,
-              QStringLiteral("MO2-Revamped/%1").arg(QApplication::applicationVersion()));
+              QStringLiteral("MO2-Revamped/%1").arg(SelfUpdater::revampedVersionString()));
   r.setTransferTimeout(30000);
   QNetworkReply* reply = network.get(r);
   // stopped as soon as it is too large, not read whole first

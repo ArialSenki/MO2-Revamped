@@ -23,6 +23,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "iplugingame.h"
 #include "nxmaccessmanager.h"
 #include "selectiondialog.h"
+#include "selfupdater.h"
 #include "settings.h"
 #include "shared/util.h"
 #include <log.h>
@@ -1182,9 +1183,9 @@ void NexusInterface::nextRequest()
   request.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,
                     "application/json");
   request.setRawHeader("Protocol-Version", "1.0.0");
-  request.setRawHeader("Application-Name", "MO2");
+  request.setRawHeader("Application-Name", "MO2 Revamped");
   request.setRawHeader("Application-Version",
-                       QApplication::applicationVersion().toUtf8());
+                       SelfUpdater::revampedVersionString().toUtf8());
 
   if (info.m_Type == NXMRequestInfo::TYPE_GRAPHQL) {
     info.m_Reply = m_AccessManager->post(request, info.m_Body);
