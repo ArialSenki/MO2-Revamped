@@ -5,8 +5,12 @@
 #include <QPainter>
 #include <QStyle>
 #include <QStyledItemDelegate>
+#include <QHeaderView>
+#include <QResizeEvent>
+#include <QTimer>
 #include <QUrl>
 
+#include <algorithm>
 #include <memory>
 
 #include <report.h>
@@ -131,6 +135,7 @@ void PluginListView::updatePluginCount()
   int totalCount = masterCount + mediumMasterCount + lightMasterCount + regularCount;
 
   ui.counter->display(activeVisibleCount);
+  ui.counter->updateGeometry();
   ui.counter->setToolTip(
       tr("<table cellspacing=\"6\">"
          "<tr><th>Type</th><th>Active      </th><th>Total</th></tr>"
@@ -160,9 +165,64 @@ void PluginListView::updatePluginCount()
 void PluginListView::showEvent(QShowEvent* event)
 {
   QTreeView::showEvent(event);
+  queueFit();
   // updateFilter() does nothing unless the text or the options changed
   if (m_sortProxy != nullptr && ui.filter != nullptr) {
     m_sortProxy->updateFilter(ui.filter->text());
+  }
+}
+
+void PluginListView::resizeEvent(QResizeEvent* event)
+{
+  QTreeView::resizeEvent(event);
+  queueFit();
+}
+
+void PluginListView::queueFit()
+{
+  // after the header has laid itself out (a new width, a restored layout)
+  if (!m_fitQueued) {
+    m_fitQueued = true;
+    QTimer::singleShot(0, this, [this] {
+      m_fitQueued = false;
+      fitColumnsToWidth();
+    });
+  }
+}
+
+void PluginListView::fitColumnsToWidth()
+{
+  QHeaderView* h = header();
+  if (h == nullptr || h->count() < 2 || h->sectionResizeMode(0) != QHeaderView::Stretch) {
+    return;
+  }
+
+  const int available = viewport()->width();
+  // the names need room for most plugin names, not the whole list
+  const int nameWanted = std::max(160, available * 45 / 100);
+  int others           = 0;
+  for (int i = 1; i < h->count(); ++i) {
+    if (!h->isSectionHidden(i)) {
+      others += h->sectionSize(i);
+    }
+  }
+  int missing = nameWanted - (available - others);
+  if (missing <= 0) {
+    return;
+  }
+
+  // each column gives back what it has beyond its title and its contents
+  for (int i = 1; i < h->count() && missing > 0; ++i) {
+    if (h->isSectionHidden(i)) {
+      continue;
+    }
+    const int least = std::max(h->sectionSizeHint(i), sizeHintForColumn(i)) + 8;
+    const int spare = h->sectionSize(i) - least;
+    if (spare > 0) {
+      const int give = std::min(spare, missing);
+      h->resizeSection(i, h->sectionSize(i) - give);
+      missing -= give;
+    }
   }
 }
 
@@ -263,6 +323,8 @@ void PluginListView::setup(OrganizerCore& core, MainWindow* mw, Ui::MainWindow* 
 
   sortByColumn(PluginList::COL_PRIORITY, Qt::AscendingOrder);
   setItemDelegate(new PluginRowDelegate(this));
+  // a restored layout or a column the user widened: the name keeps its room
+  connect(header(), &QHeaderView::sectionResized, this, [this] { queueFit(); });
   setItemDelegateForColumn(PluginList::COL_FLAGS, new GenericIconDelegate(this));
 
   // counter

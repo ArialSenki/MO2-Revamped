@@ -125,5 +125,14 @@ void LCDNumber::paintEvent(QPaintEvent*)
   f.setWeight(QFont::DemiBold);
   p.setFont(f);
   p.setPen(palette().color(foregroundRole()));
-  p.drawText(rect(), Qt::AlignCenter, shownText());
+  const QString text = shownText();
+  p.drawText(rect(), Qt::AlignCenter, text);
+
+  // MO2 Revamped: display() changes the number without asking for a new
+  // size; the box stayed as wide as the first text and cut a longer one to
+  // its middle (3480 plugins read "48")
+  if (text.size() != m_sizedLength) {
+    m_sizedLength = text.size();
+    updateGeometry();
+  }
 }
