@@ -5544,6 +5544,18 @@ QLabel[wizardCompare="cell"] {
 QWidget#wizardProgressTrack, QWidget#wizardFieldBox {
     background-color: transparent;
 }
+/* the status bar's loading bar: thin, no text */
+QProgressBar#statusLoadingBar {
+    background-color: #353535;
+    border: none;
+    border-radius: 1px;
+    min-height: 3px;
+    max-height: 3px;
+}
+QProgressBar#statusLoadingBar::chunk {
+    background-color: #4CC2FF;
+    border-radius: 1px;
+}
 QProgressBar#wizardProgress {
     background-color: #353535;
     border: none;
