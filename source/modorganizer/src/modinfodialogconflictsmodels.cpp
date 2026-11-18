@@ -1,5 +1,6 @@
 #include "modinfodialogconflictsmodels.h"
 #include "modinfodialog.h"
+#include "naturalsortkey.h"
 #include <QDir>
 #include <utility.h>
 
@@ -284,20 +285,17 @@ void ConflictListModel::doSort()
 
   const auto& col = m_columns[c];
 
-  // avoids branching on sort order while sorting
-  auto sortAsc = [&](const auto& a, const auto& b) {
-    return (naturalCompare((a.*col.getText)(), (b.*col.getText)()) < 0);
-  };
-
-  auto sortDesc = [&](const auto& a, const auto& b) {
-    return (naturalCompare((a.*col.getText)(), (b.*col.getText)()) > 0);
-  };
-
-  if (m_sortOrder == Qt::AscendingOrder) {
-    std::sort(m_items.begin(), m_items.end(), sortAsc);
-  } else {
-    std::sort(m_items.begin(), m_items.end(), sortDesc);
+  // MO2 Revamped: one sort key per item instead of naturalCompare() on every
+  // comparison; a mod with 64k files took about a second to sort here
+  std::vector<QCollatorSortKey> keys;
+  keys.reserve(m_items.size());
+  for (const auto& item : m_items) {
+    keys.push_back(naturalSortKey((item.*col.getText)()));
   }
+
+  applyOrder(m_items, naturalSortOrder(keys, m_sortOrder, [](std::size_t, std::size_t) {
+               return 0;
+             }));
 }
 
 OverwriteConflictListModel::OverwriteConflictListModel(QTreeView* tree)

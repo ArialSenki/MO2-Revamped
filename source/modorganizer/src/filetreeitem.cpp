@@ -2,6 +2,7 @@
 #include "filetreemodel.h"
 #include "modinfo.h"
 #include "modinfodialogfwd.h"
+#include "naturalsortkey.h"
 #include "shared/util.h"
 #include <log.h>
 #include <utility.h>
@@ -249,6 +250,34 @@ void FileTreeItem::sort(int column, Qt::SortOrder order, bool force)
   if (m_sortingStale || force) {
     // log::debug("sorting is stale for {}, sorting now", debugName());
     m_sortingStale = false;
+
+    // MO2 Revamped: the text columns sort by one key per item instead of
+    // naturalCompare() on every comparison; opening a folder with tens of
+    // thousands of files spent most of its time comparing names
+    if (column == FileTreeModel::FileName || column == FileTreeModel::ModName ||
+        column == FileTreeModel::FileType) {
+      std::vector<QCollatorSortKey> keys;
+      keys.reserve(m_children.size());
+      for (const auto& child : m_children) {
+        keys.push_back(naturalSortKey(
+            column == FileTreeModel::FileName  ? child->m_file
+            : column == FileTreeModel::ModName ? child->m_mod
+                                               : child->fileType().value_or(QString())));
+      }
+
+      // folders first, whatever the order
+      applyOrder(m_children,
+                 naturalSortOrder(keys, order, [&](std::size_t a, std::size_t b) {
+                   const bool da = m_children[a]->isDirectory();
+                   const bool db = m_children[b]->isDirectory();
+                   return da == db ? 0 : (da ? -1 : 1);
+                 }));
+
+      for (auto& child : m_children) {
+        child->sort(column, order, force);
+      }
+      return;
+    }
 
     std::sort(m_children.begin(), m_children.end(), [&](auto&& a, auto&& b) {
       int r = 0;
