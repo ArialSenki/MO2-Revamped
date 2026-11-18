@@ -74,6 +74,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentchoices.h"
 #include "fluentdashboard.h"
 #include "fluentdialogs.h"
+#include "revampedguide.h"
 #include "scriptextendersetup.h"
 #include "borderlesswindow.h"
 #include <scriptextender.h>
@@ -2579,6 +2580,18 @@ void MainWindow::createHelpMenu()
   const auto* game = m_OrganizerCore.managedGame();
   const bool isEldenRing = EldenRingSaveSettings::supports(game);
 
+  // the guide to every part of MO2 Revamped, for every game
+  QAction* revampedGuideAction = new QAction(tr("MO2 Revamped guide"), menu);
+  revampedGuideAction->setObjectName(QStringLiteral("revampedGuideAction"));
+  revampedGuideAction->setIcon(FluentIcons::glyph(0xE897));
+  revampedGuideAction->setToolTip(
+      tr("Short help on the dashboard, profiles, downloads, collections, themes, "
+         "notices and settings."));
+  connect(revampedGuideAction, &QAction::triggered, this, [this] {
+    RevampedGuide::show(this);
+  });
+  menu->addAction(revampedGuideAction);
+
   if (isEldenRing) {
     QAction* guideAction = new QAction(gameGuideTitle(game), menu);
     guideAction->setObjectName(QStringLiteral("eldenRingGuideAction"));
@@ -2590,9 +2603,7 @@ void MainWindow::createHelpMenu()
     menu->addAction(guideAction);
   }
 
-  if (isEldenRing) {
-    addMenuSection(menu, tr("Resources"));
-  }
+  addMenuSection(menu, tr("Resources"));
 
   // the original MO2 documentation still covers everything Revamped keeps
   QAction* documentationAction = new QAction(tr("Mod Organizer 2 documentation"), menu);
@@ -3996,6 +4007,9 @@ void MainWindow::on_executablesListBox_currentIndexChanged(int index)
 
 void MainWindow::configureEldenRingHelp()
 {
+  // every game's What's This texts first; the Elden Ring ones replace some
+  RevampedGuide::applyWhatsThis(ui);
+
   const auto* game = m_OrganizerCore.managedGame();
   if (!EldenRingSaveSettings::supports(game)) {
     return;
