@@ -6389,17 +6389,10 @@ void MainWindow::askFirstStartQuestions()
     return;
   }
   if (m_OrganizerCore.settings().firstStart()) {
-    if (!m_OrganizerCore.managedGame()->getSupportURL().isEmpty()) {
-      // Let the user decline instead of always opening a browser on first start.
-      if (QMessageBox::question(
-              this, tr("Game support wiki"),
-              tr("A game support wiki is available for this game. Open it now? "
-                 "You can also open it later from the \"...\" menu."),
-              QMessageBox::Yes | QMessageBox::No,
-              QMessageBox::Yes) == QMessageBox::Yes) {
-        gameSupportTriggered();
-      }
-    }
+    // MO2 Revamped: no game wiki question here. It came right after creating
+    // an instance, between the theme and category questions, as a plain
+    // message box that looked like one of the notices; the wiki stays one
+    // click away under "..." > "Game support wiki".
 
     // first start: how the categories begin
     enum
