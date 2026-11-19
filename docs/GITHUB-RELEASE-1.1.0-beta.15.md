@@ -1,7 +1,7 @@
 MO2 Revamped 1.1.0 beta 15 is the **newest version**, still a beta. It is
 beta 14 plus installing **several mods at once**, archives **dropped from
 Explorer**, a **Nexus Collections gallery** laid out like the Wabbajack one,
-smoother corners and a new **OLED Black** theme.
+smoother corners, a new **OLED Black** theme and security fixes.
 
 ## Beta status: what works and in which games
 
@@ -113,6 +113,26 @@ Settings > Theme > **OLED Black**, applied live:
 - Mica is off in this theme because it greys the black.
 
 It is built on top of Dark, so fixes to Dark reach it too.
+
+## Security
+
+A security review before this beta found nothing critical. Fixed:
+
+- Names and descriptions from Wabbajack lists, collections and mods show as
+  plain text, and mod notes no longer load images or files. A list or mod can
+  no longer make Windows connect to another server and send your sign-in hash.
+- A list's guide link, a mod's web page and links in Nexus descriptions open
+  only http and https pages.
+- Only your own Windows account can send commands or nxm links to your MO2,
+  and MO2 sends links only to an MO2 of your account. nxm links with quotes
+  are refused.
+- Collection folder names such as `..` or `CON` are made safe, and an
+  oversized collection.json is refused.
+- Bug reports also hide your SteamID and other forms of your user name.
+- The installer limits a new install folder to you, Administrators and SYSTEM
+  (a folder in C:\ could be changed by every account of the PC), loads its
+  DLLs only from System32 and runs its administrator part from a protected
+  copy.
 
 ## Fixes
 
