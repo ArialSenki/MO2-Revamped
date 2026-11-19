@@ -1005,10 +1005,18 @@ QStringList DownloadListView::selectedFileNames() const
     return names;
   }
   // top to bottom, as the user sees them (the selection keeps the order of
-  // the clicks)
+  // the clicks): in the view's model order, group by group. Not by
+  // visualRect: rows in a folded group have none, and went first
+  const auto path = [](QModelIndex index) {
+    std::vector<int> rows;
+    for (; index.isValid(); index = index.parent()) {
+      rows.insert(rows.begin(), index.row());
+    }
+    return rows;
+  };
   QModelIndexList rows = selectionModel()->selectedRows();
-  std::sort(rows.begin(), rows.end(), [this](const QModelIndex& a, const QModelIndex& b) {
-    return visualRect(a).top() < visualRect(b).top();
+  std::sort(rows.begin(), rows.end(), [&path](const QModelIndex& a, const QModelIndex& b) {
+    return path(a) < path(b);
   });
   for (const QModelIndex& index : rows) {
     const int row = downloadRow(index);
