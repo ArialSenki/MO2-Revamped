@@ -8,7 +8,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -536,6 +538,131 @@ namespace Mo2RevampedSetup
             catch (Exception ex) { SetupDiagnostics.Error("Could not remove the folder the failed installation created at '" + target + "'.", ex); }
         }
 
+        // A folder made in C:\ (the default C:\MO2 Revamped) or on most other
+        // drives inherits "Authenticated Users: Modify": any other account of
+        // the PC could change ModOrganizer.exe, a plugin, a portable instance's
+        // mods or unins000.exe, which Windows runs as administrator. Such a
+        // folder gets its own permissions instead: full control for the user
+        // signed in to this session (the one who runs MO2), Administrators and
+        // SYSTEM, and nobody else; Administrators own it, so an account that
+        // made the folder beforehand can't hand the rights back to itself.
+        // Windows applies them to what is already inside too (an update over
+        // an existing installation, its portable instances). A folder that
+        // already grants nobody else write access is left as it is. Never
+        // fatal: a drive with no permissions (FAT, exFAT), a network share or
+        // an unknown user only goes to the log.
+        internal static void RestrictInstallFolder(string target)
+        {
+            try
+            {
+                string full = Path.GetFullPath(target);
+                if (full.StartsWith(@"\\", StringComparison.Ordinal))
+                {
+                    SetupDiagnostics.Info("Install folder permissions left as they are: '" + full + "' is a network path.");
+                    return;
+                }
+                DriveInfo drive = new DriveInfo(Path.GetPathRoot(full));
+                if (drive.DriveType == DriveType.Network ||
+                    !(String.Equals(drive.DriveFormat, "NTFS", StringComparison.OrdinalIgnoreCase) ||
+                      String.Equals(drive.DriveFormat, "ReFS", StringComparison.OrdinalIgnoreCase)))
+                {
+                    SetupDiagnostics.Info("Install folder permissions left as they are: drive " + drive.Name + " is " + drive.DriveType + " / " + drive.DriveFormat + ".");
+                    return;
+                }
+                SecurityIdentifier user = InstallFolderUser();
+                if (user == null)
+                {
+                    SetupDiagnostics.Info("Install folder permissions left as they are: the signed-in user of this session is unknown.");
+                    return;
+                }
+                SecurityIdentifier administrators = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+                SecurityIdentifier system = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+                if (!InstallFolderOpenToOthers(full, user, administrators, system))
+                {
+                    SetupDiagnostics.Info("Install folder permissions already limited to this user: '" + full + "'.");
+                    return;
+                }
+                DirectorySecurity security = new DirectorySecurity();
+                security.SetAccessRuleProtection(true, false);
+                foreach (SecurityIdentifier account in new SecurityIdentifier[] { user, administrators, system })
+                {
+                    security.AddAccessRule(new FileSystemAccessRule(account, FileSystemRights.FullControl,
+                        InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                }
+                // Windows passes the new rules on to every file and folder below
+                Directory.SetAccessControl(full, security);
+                SetupDiagnostics.Info("Install folder permissions limited to " + user.Value + ", Administrators and SYSTEM: '" + full + "'.");
+                try
+                {
+                    DirectorySecurity owner = new DirectorySecurity();
+                    owner.SetOwner(administrators);
+                    Directory.SetAccessControl(full, owner);
+                }
+                catch (Exception ex) { SetupDiagnostics.Error("Could not make Administrators the owner of '" + full + "'.", ex); }
+            }
+            catch (Exception ex)
+            {
+                SetupDiagnostics.Error("Could not limit the permissions of the install folder '" + target + "'.", ex);
+            }
+        }
+
+        // the account signed in to this session, which runs MO2 (not the
+        // administrator whose credentials the elevation prompt took); null
+        // when unknown, or a service account (a deployment tool's silent run)
+        private static SecurityIdentifier InstallFolderUser()
+        {
+            SecurityIdentifier user = null;
+            const int WtsDomainName = 7;
+            string name = SessionUserName();
+            if (!String.IsNullOrEmpty(name))
+            {
+                string domain = null;
+                try { domain = SessionText(WtsDomainName); }
+                catch { }
+                try
+                {
+                    NTAccount account = String.IsNullOrEmpty(domain) ? new NTAccount(name) : new NTAccount(domain, name);
+                    user = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+                }
+                catch (Exception ex)
+                {
+                    SetupDiagnostics.Error("Could not find the account of the signed-in user '" + name + "'.", ex);
+                    return null;
+                }
+            }
+            else
+            {
+                user = WindowsIdentity.GetCurrent().User;
+            }
+            if (user == null) return null;
+            foreach (WellKnownSidType service in new WellKnownSidType[] { WellKnownSidType.LocalSystemSid, WellKnownSidType.LocalServiceSid, WellKnownSidType.NetworkServiceSid })
+                if (user.IsWellKnown(service)) return null;
+            return user;
+        }
+
+        // true when an account other than these can write to the folder or
+        // what it will hold, or owns it (an owner can always rewrite the rules)
+        private static bool InstallFolderOpenToOthers(string folder, SecurityIdentifier user, SecurityIdentifier administrators, SecurityIdentifier system)
+        {
+            const FileSystemRights writeRights = FileSystemRights.WriteData | FileSystemRights.AppendData |
+                FileSystemRights.WriteExtendedAttributes | FileSystemRights.WriteAttributes | FileSystemRights.Delete |
+                FileSystemRights.DeleteSubdirectoriesAndFiles | FileSystemRights.ChangePermissions | FileSystemRights.TakeOwnership;
+            SecurityIdentifier creatorOwner = new SecurityIdentifier(WellKnownSidType.CreatorOwnerSid, null);
+            // NT SERVICE\TrustedInstaller
+            SecurityIdentifier trustedInstaller = new SecurityIdentifier("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464");
+            DirectorySecurity current = Directory.GetAccessControl(folder);
+            SecurityIdentifier owner = current.GetOwner(typeof(SecurityIdentifier)) as SecurityIdentifier;
+            if (owner != null && owner != user && owner != administrators && owner != system && owner != trustedInstaller) return true;
+            foreach (FileSystemAccessRule rule in current.GetAccessRules(true, true, typeof(SecurityIdentifier)))
+            {
+                if (rule.AccessControlType != AccessControlType.Allow || (rule.FileSystemRights & writeRights) == 0) continue;
+                SecurityIdentifier who = rule.IdentityReference as SecurityIdentifier;
+                if (who == user || who == administrators || who == system || who == creatorOwner || who == trustedInstaller) continue;
+                return true;
+            }
+            return false;
+        }
+
         private static OperationResult InstallInto(SetupRequest request, BackgroundWorker worker, string target, bool eldenRingOnly, PayloadManifest manifest,
             string createdRoot, bool targetWasEmpty)
         {
@@ -742,6 +869,10 @@ namespace Mo2RevampedSetup
                 }
             }
 
+            // the folder only this user, Administrators and SYSTEM can change,
+            // before anything is written to it (see RestrictInstallFolder)
+            Report(worker, 9, InstallerText.T("Protegiendo la carpeta de la instalación…"));
+            RestrictInstallFolder(target);
             SaveState(state);
             try
             {

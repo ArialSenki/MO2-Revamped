@@ -239,6 +239,7 @@ namespace Mo2RevampedSetup
             add("Registro detallado: ", "Detailed log: ", "Journal détaillé : ", "Ausführliches Protokoll: ", "Registro dettagliato: ", "Log detalhado: ");
             add("No se pudo abrir MO2: ", "Could not open MO2: ", "Impossible d'ouvrir MO2 : ", "MO2 konnte nicht geöffnet werden: ", "Impossibile aprire MO2: ", "Não foi possível abrir o MO2: ");
             add("Comprobando los componentes del paquete…", "Checking package components…", "Vérification des composants du paquet…", "Paketkomponenten werden geprüft…", "Verifica dei componenti del pacchetto…", "Verificando os componentes do pacote…");
+            add("Protegiendo la carpeta de la instalación…", "Protecting the installation folder…", "Protection du dossier d'installation…", "Installationsordner wird geschützt…", "Protezione della cartella di installazione…", "Protegendo a pasta de instalação…");
             add("Guardando copia previa", "Creating backup", "Création de la sauvegarde", "Backup wird erstellt", "Creazione del backup", "Criando backup");
             add("Instalando componentes", "Installing components", "Installation des composants", "Komponenten werden installiert", "Installazione dei componenti", "Instalando componentes");
             add("Copiando datos seleccionados", "Copying selected data", "Copie des données sélectionnées", "Ausgewählte Daten werden kopiert", "Copia dei dati selezionati", "Copiando dados selecionados");
