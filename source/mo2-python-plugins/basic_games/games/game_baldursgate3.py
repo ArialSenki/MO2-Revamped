@@ -213,9 +213,21 @@ class BG3Game(BasicGame, bg3_file_mapper.BG3FileMapper):
             and self.utils.modsettings_backup.exists()
             and self.utils.modsettings_path.exists()
         ):
+            # MO2 Revamped: read as the UTF-8 it's written in (a mod name with
+            # "Á" stopped the clean-up below on cp1252), files closed after
+            try:
+                before = self.utils.modsettings_backup.read_text(
+                    encoding="utf-8", errors="replace"
+                ).splitlines()
+                after = self.utils.modsettings_path.read_text(
+                    encoding="utf-8", errors="replace"
+                ).splitlines()
+            except OSError as e:
+                qDebug(f"modsettings diff skipped: {e}")
+                before = after = []
             for x in difflib.unified_diff(
-                self.utils.modsettings_backup.open().readlines(),
-                self.utils.modsettings_path.open().readlines(),
+                before,
+                after,
                 fromfile=str(self.utils.modsettings_backup),
                 tofile=str(self.utils.modsettings_path),
                 lineterm="",
