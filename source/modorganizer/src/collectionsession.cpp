@@ -76,6 +76,39 @@ constexpr qint64 QueueTimeoutMs = 120000;
 // a collection's archive holds collection.json and its bundled mods
 constexpr qint64 MaxArchiveSize = qint64(2) << 30;
 
+// collection.json is read whole; real ones are well under a megabyte
+constexpr qint64 MaxManifestSize = qint64(64) << 20;
+
+// a folder name from the collection (a mod, profile or instance name): what
+// fixDirectoryName leaves can still be "..", a device name or the original
+// text when it gave up, and ".." as a mod name is the instance folder
+bool makeFolderName(QString& name)
+{
+  QString fixed = name;
+  if (!fixDirectoryName(fixed)) {
+    name.clear();
+    return false;
+  }
+  // fixDirectoryName trims dots before it drops characters: "J.R.R.?" ends in one
+  while (fixed.endsWith(u'.') || fixed.endsWith(u' ')) {
+    fixed.chop(1);
+  }
+  if (fixed.isEmpty() || fixed.contains(u'/') || fixed.contains(u'\\')) {
+    name.clear();
+    return false;
+  }
+  // what's left that isn't a safe folder starts with a device name ("Aux. Armors")
+  if (!isSafeRelativePath(fixed)) {
+    fixed.prepend(u'_');
+    if (!isSafeRelativePath(fixed)) {
+      name.clear();
+      return false;
+    }
+  }
+  name = fixed;
+  return true;
+}
+
 const char* TargetSetting       = "Collections/installTarget";
 const char* AutoDownloadSetting = "Collections/autoDownload";
 const char* CategorySeparatorsSetting = "Collections/categorySeparators";
@@ -1149,6 +1182,8 @@ void CollectionSession::readManifest()
         QFile f(QDir(temp.path()).filePath("collection.json"));
         if (!f.open(QIODevice::ReadOnly)) {
           problem = tr("collection.json couldn't be read");
+        } else if (f.size() > MaxManifestSize) {
+          problem = tr("collection.json is too large");
         } else {
           QString error;
           auto m = CollectionManifest::parse(f.readAll(), &error);
@@ -1221,8 +1256,7 @@ QString CollectionSession::uniqueModName(int row, const QSet<QString>& taken) co
       base = file->second.modName.trimmed();
     }
   }
-  fixDirectoryName(base);
-  if (base.isEmpty()) {
+  if (!makeFolderName(base)) {
     base = QStringLiteral("Mod %1").arg(row + 1);
   }
 
@@ -1318,15 +1352,21 @@ void CollectionSession::buildEntries()
 
   if (m_profileName.isEmpty()) {
     m_profileName = displayName();
-    fixDirectoryName(m_profileName);
+    if (!makeFolderName(m_profileName)) {
+      m_profileName = tr("Collection");
+    }
   }
   if (m_instanceName.isEmpty()) {
     m_instanceName = displayName();
-    fixDirectoryName(m_instanceName);
+    if (!makeFolderName(m_instanceName)) {
+      m_instanceName = tr("Collection");
+    }
   }
   if (m_separatorName.isEmpty()) {
     m_separatorName = displayName();
-    fixDirectoryName(m_separatorName);
+    if (!makeFolderName(m_separatorName)) {
+      m_separatorName = tr("Collection");
+    }
   }
 
   m_loadingText.clear();

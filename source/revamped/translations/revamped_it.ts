@@ -17775,6 +17775,10 @@ Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni
       <translation>collection.json non è valido: %1</translation>
     </message>
     <message>
+      <source>collection.json is too large</source>
+      <translation>collection.json è troppo grande</translation>
+    </message>
+    <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>Impossibile leggere la collezione: %1.</translation>
     </message>

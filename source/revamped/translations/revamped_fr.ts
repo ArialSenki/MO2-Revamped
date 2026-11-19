@@ -17717,6 +17717,10 @@ Les tailles sont estimées. Si l&apos;espace manque en cours de route, les tél�
       <translation>collection.json n'est pas valide : %1</translation>
     </message>
     <message>
+      <source>collection.json is too large</source>
+      <translation>collection.json est trop volumineux</translation>
+    </message>
+    <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>La collection n'a pas pu être lue : %1.</translation>
     </message>

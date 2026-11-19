@@ -17553,6 +17553,10 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       <translation>collection.json ist ungültig: %1</translation>
     </message>
     <message>
+      <source>collection.json is too large</source>
+      <translation>collection.json ist zu groß</translation>
+    </message>
+    <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>Die Sammlung konnte nicht gelesen werden: %1.</translation>
     </message>

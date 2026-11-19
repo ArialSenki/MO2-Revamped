@@ -17814,6 +17814,10 @@ Los tamaños son estimados. Si el espacio se acaba a mitad, las descargas y las 
       <translation>collection.json no es válido: %1</translation>
     </message>
     <message>
+      <source>collection.json is too large</source>
+      <translation>collection.json es demasiado grande</translation>
+    </message>
+    <message>
       <source>The collection couldn't be read: %1.</source>
       <translation>No se pudo leer la colección: %1.</translation>
     </message>
