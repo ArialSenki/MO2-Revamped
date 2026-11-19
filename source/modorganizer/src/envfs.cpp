@@ -205,6 +205,26 @@ void setHandleCloserThreadCount(std::size_t n)
   g_handleClosers.setMax(n);
 }
 
+thread_local WalkControl* g_walkControl = nullptr;
+
+void setWalkControl(WalkControl* control)
+{
+  g_walkControl = control;
+}
+
+static bool walkCancelled()
+{
+  return g_walkControl != nullptr && g_walkControl->cancel != nullptr &&
+         g_walkControl->cancel->load();
+}
+
+static void walkError()
+{
+  if (g_walkControl != nullptr) {
+    ++g_walkControl->errors;
+  }
+}
+
 void forEachEntryImpl(void* cx, HandleCloserThread& hc,
                       std::vector<std::unique_ptr<unsigned char[]>>& buffers,
                       POBJECT_ATTRIBUTES poa, std::size_t depth, DirStartF* dirStartF,
@@ -213,10 +233,14 @@ void forEachEntryImpl(void* cx, HandleCloserThread& hc,
   // a junction to a parent folder would otherwise be followed until the stack
   // runs out, with 1 MB of buffer for each level
   const std::size_t MaxDepth = 64;
+  if (walkCancelled()) {
+    return;
+  }
   if (depth > MaxDepth) {
     log::error("not reading '{}': more than {} folders deep, or a link to a parent "
                "folder",
                toString(poa), MaxDepth);
+    walkError();
     return;
   }
 
@@ -232,6 +256,7 @@ void forEachEntryImpl(void* cx, HandleCloserThread& hc,
   if (status < 0) {
     log::error("failed to open directory '{}': {}", toString(poa),
                formatNtMessage(status));
+    walkError();
 
     return;
   }
@@ -263,6 +288,7 @@ void forEachEntryImpl(void* cx, HandleCloserThread& hc,
     } else if (status < 0) {
       log::error("failed to read directory '{}': {}", toString(poa),
                  formatNtMessage(status));
+      walkError();
 
       break;
     }
@@ -307,7 +333,9 @@ void forEachEntryImpl(void* cx, HandleCloserThread& hc,
           ft.dwLowDateTime  = DirInfo->LastWriteTime.LowPart;
           ft.dwHighDateTime = DirInfo->LastWriteTime.HighPart;
 
-          fileF(cx, toStringView(&oa), ft, DirInfo->AllocationSize.QuadPart);
+          // the file's size, not what it takes on disk: a compressed file
+          // needs its whole size once copied
+          fileF(cx, toStringView(&oa), ft, DirInfo->EndOfFile.QuadPart);
         }
       }
 
