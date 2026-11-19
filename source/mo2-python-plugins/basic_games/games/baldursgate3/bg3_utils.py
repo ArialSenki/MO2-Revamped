@@ -236,12 +236,12 @@ class BG3Utils:
         ):
             return True
         active_mods = self.active_mods()
-        progress = self.create_progress_window(
-            "Generating modsettings.xml", len(active_mods)
-        )
         threadpool = QThreadPool.globalInstance()
         if threadpool is None:
             return False
+        progress = self.create_progress_window(
+            "Generating modsettings.xml", len(active_mods)
+        )
         # MO2 Revamped: the paks found now are the file mapper's for this start
         keep_pak_scans(True)
         metadata: dict[str, str] = {}
@@ -291,6 +291,7 @@ class BG3Utils:
                 qWarning("processing canceled by user")
                 keep_pak_scans(False)
                 forget_pak_scans()
+                progress.close()
                 return False
             try:
                 files, config = parser.prepare(mod)
@@ -330,6 +331,15 @@ class BG3Utils:
         # the scans are the mapper's from here on; nothing else adds to them
         keep_pak_scans(False)
         canceled = progress.wasCanceled()
+        if canceled:
+            # MO2 Revamped: a cancel while the paks were still being read wrote
+            # a load order with only the mods done so far and started the game
+            # with the others left out; now nothing is written and nothing
+            # starts, as with a cancel in the first part
+            qWarning("processing canceled by user")
+            forget_pak_scans()
+            progress.close()
+            return False
         progress.setValue(num_active_mods)
         QApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 100)
         progress.close()
@@ -340,7 +350,7 @@ class BG3Utils:
         left_out = sorted(
             set(failed_now) | ({mod.name() for mod in active_mods} - set(finished))
         )
-        if left_out and not canceled:
+        if left_out:
             QMessageBox.warning(
                 self.main_window,
                 QApplication.translate("BG3Utils", "Some mods aren't in the load order"),
