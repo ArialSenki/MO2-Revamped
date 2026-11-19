@@ -505,6 +505,8 @@ public slots:
   // rest. One notice when the queue starts and one with what came of it, and
   // the full refresh runs once at the end. A single one installs as before
   // (downloads by file name: the list's rows change as installs go)
+  // each an archive's path (DownloadManager::getArchivePath()), which finds
+  // that very download, or a download's name
   void installDownloads(const QStringList& downloadNames, int priority = -1);
   void installArchives(const QStringList& archivePaths, int priority = -1);
   ModInfo::Ptr installArchive(const QString& archivePath, int priority = -1,
@@ -686,7 +688,8 @@ private:
   // MO2 Revamped: asks for another name for a mod just installed under a name
   // isReservedModName() refuses, and renames its folder
   // the queue behind installDownloads() and installArchives(): files are the
-  // downloads' names (found again by name, as the list changes) or paths
+  // downloads (their archives' paths, see DownloadManager::getArchivePath(),
+  // or their names), found again as the list changes, or the archives' paths
   void runInstallQueue(const QStringList& files, bool downloads, int priority);
 
   void renameReservedInstall(MOBase::GuessedValue<QString>& modName);

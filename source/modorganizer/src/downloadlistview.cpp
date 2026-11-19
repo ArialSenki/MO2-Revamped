@@ -328,9 +328,9 @@ void DownloadListView::onDoubleClick(const QModelIndex& index)
     // all; its first press left only this row selected, so they are selected
     // again as they were
     const QStringList before = std::exchange(m_PressSelection, {});
-    const QString name       = m_Manager->getFileName(row);
-    if (before.size() > 1 && before.contains(name)) {
-      const QStringList ready = readyNames(before);
+    const QString archive    = m_Manager->getArchivePath(row);
+    if (before.size() > 1 && before.contains(archive, Qt::CaseInsensitive)) {
+      const QStringList ready = readyArchives(before);
       if (ready.size() > 1) {
         if (selectionModel() != nullptr) {
           selectionModel()->select(m_PressRanges, QItemSelectionModel::ClearAndSelect);
@@ -450,9 +450,10 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       // be installed and looked at; nothing is written or deleted beside it
       const bool readOnly = m_Manager->isReadOnly(row);
       // MO2 Revamped: on one of several selected, Install takes them all
-      const QStringList selected = selectedFileNames();
-      const int many =
-          selected.contains(fileName) ? static_cast<int>(readyNames(selected).size()) : 0;
+      const QStringList selected = selectedArchives();
+      const int many = selected.contains(archive, Qt::CaseInsensitive)
+                           ? static_cast<int>(readyArchives(selected).size())
+                           : 0;
       const QString installText =
           many > 1 ? tr("Install %n selected", "", many) : tr("Install");
       if (state >= DownloadManager::STATE_READY && readOnly) {
@@ -621,10 +622,10 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
 void DownloadListView::issueInstall(int index)
 {
   // MO2 Revamped: the row is one of several selected: all of them, in turn
-  const QStringList selected = selectedFileNames();
+  const QStringList selected = selectedArchives();
   if (index >= 0 && index < m_Manager->numTotalDownloads() &&
-      selected.contains(m_Manager->getFileName(index))) {
-    const QStringList ready = readyNames(selected);
+      selected.contains(m_Manager->getArchivePath(index), Qt::CaseInsensitive)) {
+    const QStringList ready = readyArchives(selected);
     if (ready.size() > 1) {
       emit installDownloads(ready);
       return;
@@ -633,16 +634,26 @@ void DownloadListView::issueInstall(int index)
   emit installDownload(index);
 }
 
-QStringList DownloadListView::readyNames(const QStringList& names) const
+QStringList DownloadListView::readyArchives(const QStringList& archives) const
 {
   QStringList ready;
-  for (const QString& name : names) {
-    const int row = m_Manager->indexByName(name);
+  for (const QString& archive : archives) {
+    const int row = m_Manager->indexByArchive(archive);
     if (row >= 0 && m_Manager->getState(row) >= DownloadManager::STATE_READY) {
-      ready << name;
+      ready << archive;
     }
   }
   return ready;
+}
+
+QStringList DownloadListView::selectedArchives() const
+{
+  // the same rows, in the same order, as selectedFileNames()
+  QStringList archives;
+  for (const int row : selectedDownloadRows()) {
+    archives << m_Manager->getArchivePath(row);
+  }
+  return archives;
 }
 
 void DownloadListView::issueQueryInfoMd5(int index)
@@ -1032,11 +1043,10 @@ void DownloadListView::rememberGroupState(const QModelIndex& index, bool expande
   }
 }
 
-QStringList DownloadListView::selectedFileNames() const
+std::vector<int> DownloadListView::selectedDownloadRows() const
 {
-  QStringList names;
   if (selectionModel() == nullptr) {
-    return names;
+    return {};
   }
   // top to bottom, as the user sees them (the selection keeps the order of
   // the clicks): in the view's model order, group by group. Not by
@@ -1052,11 +1062,21 @@ QStringList DownloadListView::selectedFileNames() const
   std::sort(rows.begin(), rows.end(), [&path](const QModelIndex& a, const QModelIndex& b) {
     return path(a) < path(b);
   });
+  std::vector<int> downloads;
   for (const QModelIndex& index : rows) {
     const int row = downloadRow(index);
     if (row >= 0 && row < m_Manager->numTotalDownloads()) {
-      names << m_Manager->getFileName(row);
+      downloads.push_back(row);
     }
+  }
+  return downloads;
+}
+
+QStringList DownloadListView::selectedFileNames() const
+{
+  QStringList names;
+  for (const int row : selectedDownloadRows()) {
+    names << m_Manager->getFileName(row);
   }
   return names;
 }
@@ -1209,7 +1229,7 @@ void DownloadListView::mousePressEvent(QMouseEvent* event)
     m_MoveLogged = false;
   }
   // what was selected before this press (see onDoubleClick())
-  m_PressSelection = selectedFileNames();
+  m_PressSelection = selectedArchives();
   m_PressRanges    = selectionModel() != nullptr ? selectionModel()->selection()
                                                  : QItemSelection();
   // one click on a group's header opens or closes it

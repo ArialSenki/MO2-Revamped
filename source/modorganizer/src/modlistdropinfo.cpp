@@ -74,9 +74,13 @@ ModListDropInfo::ModListDropInfo(const QMimeData* mimeData, OrganizerCore& core)
         if (mimeData->text() == ModListDropInfo::DownloadText && !m_rows.empty()) {
           m_downloads = m_rows;
           m_download  = m_rows[0];
-          m_downloadNames =
-              QString::fromUtf8(mimeData->data(DownloadList::namesMimeType()))
-                  .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+          // MO2 Revamped: their archives when the drag has them, which find
+          // that very download (two can share a name); else their names
+          const QString list = mimeData->hasFormat(DownloadList::archivesMimeType())
+                                   ? DownloadList::archivesMimeType()
+                                   : DownloadList::namesMimeType();
+          m_downloadNames = QString::fromUtf8(mimeData->data(list))
+                                .split(QLatin1Char('\n'), Qt::SkipEmptyParts);
         }
         m_rows = {};
       }

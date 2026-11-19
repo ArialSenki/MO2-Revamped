@@ -1321,8 +1321,14 @@ void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
     m_LastInstallResult = MOBase::IPluginInstaller::RESULT_FAILED;
     m_LastInstallNote.clear();
     if (downloads) {
-      // the list changes as installs go (installed downloads can be hidden)
-      const int index = m_DownloadManager.indexByName(file);
+      // the list changes as installs go (installed downloads can be hidden).
+      // MO2 Revamped: by the archive's own file when the caller gave it, as
+      // two downloads can share a name (foo.7z beside a paused
+      // foo.7z.unfinished, a read-only source's copy); a name is the first
+      // download of that name, as before
+      const int index = QDir::isAbsolutePath(file)
+                            ? m_DownloadManager.indexByArchive(file)
+                            : m_DownloadManager.indexByName(file);
       if (index < 0) {
         log::warn("install queue: download '{}' is gone", file);
         return nullptr;

@@ -324,7 +324,7 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
   // not their places inside a group
   QByteArray encoded;
   QDataStream stream(&encoded, QIODevice::WriteOnly);
-  QStringList names;
+  QStringList names, archives;
   for (const QModelIndex& index : indexes) {
     const int row = downloadRow(index);
     if (row < 0) {
@@ -337,6 +337,7 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
     // change while dragging
     if (index.column() == 0 && row < m_manager.numTotalDownloads()) {
       names << m_manager.getFileName(row);
+      archives << m_manager.getArchivePath(row);
     }
   }
 
@@ -345,6 +346,7 @@ QMimeData* DownloadList::mimeData(const QModelIndexList& indexes) const
   result->setData("application/x-qabstractitemmodeldatalist", encoded);
   if (!names.isEmpty()) {
     result->setData(namesMimeType(), names.join(QLatin1Char('\n')).toUtf8());
+    result->setData(archivesMimeType(), archives.join(QLatin1Char('\n')).toUtf8());
   }
   result->setData("text/plain", ModListDropInfo::DownloadText);
   return result;
@@ -354,6 +356,11 @@ QStringList DownloadList::mimeTypes() const
 {
   return {QStringLiteral("application/x-qabstractitemmodeldatalist"),
           QStringLiteral("text/plain"), namesMimeType()};
+}
+
+QString DownloadList::archivesMimeType()
+{
+  return QStringLiteral("application/x-mo2revamped-download-archives");
 }
 
 QString DownloadList::namesMimeType()

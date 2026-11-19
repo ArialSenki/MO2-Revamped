@@ -189,8 +189,12 @@ private:
   static QStringList draggedFiles(const QMimeData* mime);
   // the selected downloads, top to bottom
   QStringList selectedFileNames() const;
-  // the finished downloads among those names
-  QStringList readyNames(const QStringList& names) const;
+  // the selected downloads' rows in the manager, top to bottom
+  std::vector<int> selectedDownloadRows() const;
+  // the selected downloads' archives, top to bottom (getArchivePath())
+  QStringList selectedArchives() const;
+  // those of the archives that are finished downloads
+  QStringList readyArchives(const QStringList& archives) const;
   // the selection when the button was last pressed: the press of a
   // double-click on a selected row leaves only that row selected
   QStringList m_PressSelection;

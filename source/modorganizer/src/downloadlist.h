@@ -108,6 +108,9 @@ public:
   QMimeData* mimeData(const QModelIndexList& indexes) const override;
   // the file names of downloads dragged inside the list, one per line
   static QString namesMimeType();
+  // their archives' paths, one per line, in the same order (DownloadManager::
+  // getArchivePath()): what the mod list installs when they are dropped there
+  static QString archivesMimeType();
   QStringList mimeTypes() const override;
 
   virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
