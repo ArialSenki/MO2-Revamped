@@ -52,10 +52,16 @@ void handleLink(const QString &executable, const QString &arguments, const QStri
     quotedExecutable = '"' + quotedExecutable + '"';
   }
 
-  QString quotedLink(link);
-  if (!quotedLink.contains(QRegularExpression("^\".*\"$"))) {
-    quotedLink = '"' + quotedLink + '"';
+  // MO2 Revamped: a link is one argument. A quote or a control character in it
+  // would close the quotes below and hand Mod Organizer arguments of its own
+  // (run <program>, for one); browsers encode them, other programs may not
+  for (const QChar c : link) {
+    if (c == u'"' || c.unicode() < 0x20 || c.unicode() == 0x7f) {
+      qWarning("link refused: it holds a quote or a control character");
+      return;
+    }
   }
+  const QString quotedLink = '"' + link + '"';
 
   ::ShellExecute(nullptr, TEXT("open"), ToWString(quotedExecutable).c_str(),
                  ToWString(arguments + " " + quotedLink).c_str(),

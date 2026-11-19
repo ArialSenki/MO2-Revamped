@@ -43,7 +43,11 @@ MOMultiProcess::MOMultiProcess(bool allowMultiple, QObject* parent)
     connect(&m_Server, SIGNAL(newConnection()), this, SLOT(receiveMessage()),
             Qt::QueuedConnection);
     // has to be called before listen
-    m_Server.setSocketOptions(QLocalServer::WorldAccessOption);
+    // MO2 Revamped: only this Windows user, not every account on the PC. The
+    // pipe takes whole command lines (run <program>, reload-plugin <dll>), so
+    // world access let another account run programs as this user. The user's
+    // own SID still lets a link reach an MO2 running as administrator
+    m_Server.setSocketOptions(QLocalServer::UserAccessOption);
     m_Server.listen(s_Key);
   }
 }
