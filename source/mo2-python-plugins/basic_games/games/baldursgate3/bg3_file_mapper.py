@@ -154,8 +154,20 @@ class BG3FileMapper(mobase.IPluginFileMapper):
                         # there, the plugin's own reader otherwise
                         with open(file, "r", encoding="utf-8") as yaml_file:
                             data = mini_yaml.load_text(yaml_file.read())
-                        with open(converted_path, "w", encoding="utf-8") as json_file:
-                            json.dump(data, json_file, indent=2)
+                        # MO2 Revamped: the whole JSON first (no NaN, PyYAML's
+                        # dates as text), then swapped in: a failure halfway
+                        # left a cut JSON newer than the YAML, mapped as it was
+                        # and never made again
+                        text = json.dumps(
+                            data, indent=2, allow_nan=False, default=str
+                        )
+                        part = converted_path.with_name(converted_path.name + ".part")
+                        try:
+                            with open(part, "w", encoding="utf-8") as json_file:
+                                json_file.write(text)
+                            os.replace(part, converted_path)
+                        finally:
+                            part.unlink(missing_ok=True)
                         qDebug(f"Converted {file} to JSON")
                     found_jsons.add(converted_path)
                 except OSError as e:

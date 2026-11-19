@@ -1,5 +1,7 @@
+import hashlib
 import json
 import os
+import re
 import shutil
 import traceback
 import urllib.request
@@ -68,119 +70,195 @@ class LSLibRetriever:
         )
         msg_box.exec()
 
+    _api_url = "https://api.github.com/repos/Norbyte/lslib/releases/latest"
+    _asset_re = re.compile(r"ExportTool-v[0-9][0-9.]*\.zip", re.IGNORECASE)
+    _timeout = 20
+
+    def _error(self, text: str) -> None:
+        err = QMessageBox(self._utils.main_window)
+        err.setIcon(QMessageBox.Icon.Critical)
+        err.setWindowTitle(self._utils.tr("Baldur's Gate 3 Plugin"))
+        err.setText(text)
+        err.exec()
+
+    def _ask(self, text: str) -> bool:
+        msg_box = QMessageBox(self._utils.main_window)
+        msg_box.setWindowTitle(
+            self._utils.tr("Baldur's Gate 3 Plugin - Missing dependencies")
+        )
+        msg_box.setIcon(QMessageBox.Icon.Warning)
+        msg_box.setText(text)
+        download = msg_box.addButton(
+            self._utils.tr("Download"), QMessageBox.ButtonRole.AcceptRole
+        )
+        msg_box.addButton(self._utils.tr("Exit"), QMessageBox.ButtonRole.RejectRole)
+        msg_box.exec()
+        return msg_box.clickedButton() is download
+
+    def _local_archives(self) -> list[Path]:
+        return sorted(
+            p
+            for p in self._utils.tools_dir.glob("*.zip")
+            if self._asset_re.fullmatch(p.name)
+        )
+
+    def _has_all_tools(self) -> bool:
+        return all(x.is_file() for x in self._needed_lslib_files)
+
     def download_lslib_if_missing(self, force: bool = False) -> bool:
         if not self._has_dotnet_8():
             self._warn_missing_dotnet()
             return False
-        if not force and all(x.exists() for x in self._needed_lslib_files):
+        if not force and self._has_all_tools():
             return True
+        self._utils.tools_dir.mkdir(exist_ok=True, parents=True)
+        local = self._local_archives()
+        # MO2 Revamped: files missing but the archive is here: unpacked again
+        # without asking GitHub anything
+        if not force and local:
+            try:
+                if self._install_tools(local[-1], True) and self._has_all_tools():
+                    return True
+            except Exception:  # noqa: BLE001
+                qWarning(
+                    f"LSLib archive {local[-1].name} unusable: {traceback.format_exc()}"
+                )
+        # MO2 Revamped: nothing is sent to GitHub before the user agrees (a
+        # check the user started is that agreement)
+        if not force and not self._ask(
+            self._utils.tr(
+                "LSLib tools are missing.\nThese are necessary for the plugin to "
+                "create the load order file for BG3.\n\nDownload them from "
+                "GitHub (github.com/Norbyte/lslib)?"
+            )
+        ):
+            self._error(
+                self._utils.tr(
+                    "LSLib tools are required for the proper generation of the "
+                    "modsettings.xml file, file will not be generated"
+                )
+            )
+            return False
         try:
-            self._utils.tools_dir.mkdir(exist_ok=True, parents=True)
-            downloaded = False
+            asset = self._latest_asset()
+        except Exception as e:  # noqa: BLE001
+            qDebug(f"LSLib release lookup failed: {e}")
+            self._error(
+                self._utils.tr("Couldn't look up the latest LSLib release:\n{0}").format(e)
+            )
+            return False
+        zip_path = self._utils.tools_dir / asset["name"]
+        downloaded = False
+        if zip_path.exists():
+            if force:
+                info = QMessageBox(self._utils.main_window)
+                info.setIcon(QMessageBox.Icon.Information)
+                info.setText(self._utils.tr("Latest version of LSLib already downloaded!"))
+                info.exec()
+        else:
+            # an update the user checked for: asked once more; a first
+            # download was agreed to above
+            if force and (local or self._has_all_tools()):
+                if not self._ask(self._utils.tr("LSLib update available.")):
+                    return self._has_all_tools()
+            try:
+                if not self._download(asset, zip_path):
+                    return False
+            except Exception as e:  # noqa: BLE001
+                qDebug(f"Download failed: {e}")
+                self._error(
+                    self._utils.tr("Failed to download LSLib tools:\n{0}").format(e)
+                )
+                return False
+            downloaded = True
+        try:
+            if not self._install_tools(zip_path, not downloaded):
+                return False
+        except Exception:  # noqa: BLE001
+            qDebug(f"Extraction failed: {traceback.format_exc()}")
+            self._error(
+                self._utils.tr("Failed to extract LSLib tools:\n{0}").format(
+                    traceback.format_exc()
+                )
+            )
+            return False
+        if not self._has_all_tools():
+            # MO2 Revamped: success only with Divine and its files in place
+            missing = sorted(
+                x.name for x in self._needed_lslib_files if not x.is_file()
+            )
+            self._error(
+                self._utils.tr(
+                    "{0} doesn't hold the LSLib tools this plugin needs "
+                    "(missing: {1})."
+                ).format(zip_path.name, ", ".join(missing))
+            )
+            return False
+        if downloaded:
+            for archive in self._local_archives():
+                if archive != zip_path:
+                    archive.unlink(missing_ok=True)
+        return True
 
-            def reporthook(block_num: int, block_size: int, total_size: int) -> None:
-                if total_size > 0:
-                    progress.setValue(
-                        min(int(block_num * block_size * 100 / total_size), 100)
-                    )
-                    QApplication.processEvents()
+    def _latest_asset(self) -> dict:
+        """MO2 Revamped: the release's ExportTool zip, found by name (the first
+        asset isn't always it), with a timeout: a network that accepts and
+        never answers froze MO2 before the game started."""
+        request = urllib.request.Request(
+            self._api_url, headers={"Accept": "application/vnd.github+json"}
+        )
+        with urllib.request.urlopen(request, timeout=self._timeout) as response:
+            release = json.loads(response.read().decode("utf-8"))
+        for asset in release.get("assets") or []:
+            name = str(asset.get("name", ""))
+            if (
+                self._asset_re.fullmatch(name)
+                and Path(name).name == name
+                and asset.get("browser_download_url")
+            ):
+                return asset
+        raise ValueError(f"no ExportTool zip in release {release.get('tag_name', '?')}")
 
+    def _download(self, asset: dict, zip_path: Path) -> bool:
+        """MO2 Revamped: in chunks, under another name first, with a cancel
+        button and a timeout per read; the SHA-256 GitHub gives for the asset
+        is checked when there is one."""
+        part_path = zip_path.with_name(zip_path.name + ".part")
+        progress = self._utils.create_progress_window(
+            "Downloading LSLib", 100, cancelable=True
+        )
+        digest = str(asset.get("digest") or "")
+        sha = hashlib.sha256()
+        try:
             with urllib.request.urlopen(
-                "https://api.github.com/repos/Norbyte/lslib/releases/latest"
-            ) as response:
-                assets = json.loads(response.read().decode("utf-8"))["assets"][0]
-                zip_path = self._utils.tools_dir / assets["name"]
-                if not zip_path.exists():
-                    old_archives = list(self._utils.tools_dir.glob("*.zip"))
-                    msg_box = QMessageBox(self._utils.main_window)
-                    msg_box.setWindowTitle(
-                        self._utils.tr("Baldur's Gate 3 Plugin - Missing dependencies")
-                    )
-                    if old_archives:
-                        msg_box.setText(self._utils.tr("LSLib update available."))
-                    else:
-                        msg_box.setText(
-                            self._utils.tr(
-                                "LSLib tools are missing.\nThese are necessary for the plugin to create the load order file for BG3."
-                            )
-                        )
-                    msg_box.addButton(
-                        self._utils.tr("Download"),
-                        QMessageBox.ButtonRole.DestructiveRole,
-                    )
-                    exit_btn = msg_box.addButton(
-                        self._utils.tr("Exit"), QMessageBox.ButtonRole.ActionRole
-                    )
-                    msg_box.setIcon(QMessageBox.Icon.Warning)
-                    msg_box.exec()
-
-                    if msg_box.clickedButton() == exit_btn:
-                        if not old_archives:
-                            err = QMessageBox(self._utils.main_window)
-                            err.setIcon(QMessageBox.Icon.Critical)
-                            err.setText(
-                                "LSLib tools are required for the proper generation of the modsettings.xml file, file will not be generated"
-                            )
-                            err.exec()
-                            return False
-                    else:
-                        progress = self._utils.create_progress_window(
-                            "Downloading LSLib", 100, cancelable=False
-                        )
-                        # MO2 Revamped: downloaded under another name first, so
-                        # a download cut halfway isn't taken next time for the
-                        # finished archive; the window closes whatever happens
-                        part_path = zip_path.with_name(zip_path.name + ".part")
-                        try:
-                            urllib.request.urlretrieve(
-                                assets["browser_download_url"],
-                                str(part_path),
-                                reporthook,
-                            )
-                            os.replace(part_path, zip_path)
-                        finally:
-                            progress.close()
-                            part_path.unlink(missing_ok=True)
-                        downloaded = True
-                        for archive in old_archives:
-                            archive.unlink(missing_ok=True)
-                        old_archives = []
-                else:
-                    old_archives = []
-                    new_msg = QMessageBox(self._utils.main_window)
-                    new_msg.setIcon(QMessageBox.Icon.Information)
-                    new_msg.setText(
-                        self._utils.tr("Latest version of LSLib already downloaded!")
-                    )
-                    new_msg.exec()
-
-        except Exception as e:
-            qDebug(f"Download failed: {e}")
-            err = QMessageBox(self._utils.main_window)
-            err.setIcon(QMessageBox.Icon.Critical)
-            err.setText(
-                self._utils.tr(
-                    f"Failed to download LSLib tools:\n{traceback.format_exc()}"
-                )
-            )
-            err.exec()
-            return False
-        if old_archives:
-            zip_path = sorted(old_archives)[-1]
-        verify_only = bool(old_archives) or not downloaded
-        try:
-            return self._install_tools(zip_path, verify_only)
-        except Exception as e:
-            qDebug(f"Extraction failed: {e}")
-            err = QMessageBox(self._utils.main_window)
-            err.setIcon(QMessageBox.Icon.Critical)
-            err.setText(
-                self._utils.tr(
-                    f"Failed to extract LSLib tools:\n{traceback.format_exc()}"
-                )
-            )
-            err.exec()
-            return False
+                asset["browser_download_url"], timeout=self._timeout
+            ) as response, open(part_path, "wb") as out:
+                total = int(response.headers.get("Content-Length") or 0)
+                done = 0
+                while True:
+                    chunk = response.read(1 << 16)
+                    if not chunk:
+                        break
+                    out.write(chunk)
+                    sha.update(chunk)
+                    done += len(chunk)
+                    if total > 0:
+                        progress.setValue(min(done * 100 // total, 100))
+                    QApplication.processEvents()
+                    if progress.wasCanceled():
+                        qWarning("LSLib download canceled by user")
+                        return False
+            if total and done != total:
+                raise OSError(f"download cut at {done} of {total} bytes")
+            if digest.lower().startswith("sha256:") and (
+                sha.hexdigest() != digest.split(":", 1)[1].strip().lower()
+            ):
+                raise OSError("the downloaded file doesn't match GitHub's SHA-256")
+            os.replace(part_path, zip_path)
+            return True
+        finally:
+            progress.close()
+            part_path.unlink(missing_ok=True)
 
     def _install_tools(self, zip_path: Path, verify_only: bool) -> bool:
         """MO2 Revamped: the archive's Packed/Tools/ files into the tools folder.
@@ -207,8 +285,9 @@ class LSLibRetriever:
             for info in zip_ref.infolist():
                 if info.is_dir() or not info.filename.startswith(prefix):
                     continue
-                rel = Path(info.filename[len(prefix) :])
-                if rel.is_absolute() or ".." in rel.parts or not rel.parts:
+                rel = _safe_member(info.filename[len(prefix) :], tools_dir, staging)
+                if rel is None:
+                    qWarning(f"LSLib archive entry skipped: {info.filename}")
                     continue
                 target = tools_dir / rel
                 if verify_only:
@@ -273,3 +352,20 @@ class LSLibRetriever:
             raise
         finally:
             shutil.rmtree(backup, ignore_errors=True)
+
+
+def _safe_member(name: str, *roots: Path) -> Path | None:
+    """MO2 Revamped: a zip entry's path below the tools folder, or None.
+    "Packed/Tools//Windows/x.dll", a backslash path or "C:x.dll" don't count
+    as absolute for pathlib on Windows and were written outside the folder."""
+    parts = name.replace("\\", "/").split("/")
+    if not parts or any(p in ("", ".", "..") or ":" in p for p in parts):
+        return None
+    rel = Path(*parts)
+    if rel.is_absolute() or rel.drive or rel.root:
+        return None
+    for root in roots:
+        base = root.resolve()
+        if not (base / rel).resolve().is_relative_to(base):
+            return None
+    return rel

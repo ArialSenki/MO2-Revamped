@@ -3,6 +3,7 @@ import hashlib
 import os
 import re
 import shutil
+import struct
 import subprocess
 import traceback
 from functools import cached_property
@@ -172,12 +173,19 @@ def _plain_value(value: str) -> str:
 
 
 
-def _open_package(file: Path) -> "lspk_reader.Package | None":
-    try:
-        return lspk_reader.Package(file)
-    except (lspk_reader.Unsupported, OSError, ValueError) as e:
-        qDebug(f"{file.name} read by Divine instead: {e}")
-        return None
+class DamagedPak(Exception):
+    """MO2 Revamped: a pak neither this plugin nor Divine could read; the mod
+    is named in the "Some mods aren't in the load order" warning."""
+
+
+_READ_ERRORS = (
+    lspk_reader.Unsupported,
+    OSError,
+    ValueError,
+    struct.error,
+    OverflowError,
+    MemoryError,
+)
 
 
 def _subfolders(path: Path) -> list[Path]:
@@ -354,17 +362,27 @@ class BG3PakParser:
                     # Divine.exe started (see lspk_reader); Divine only for
                     # the packages that reader doesn't know, or for the full
                     # extraction the settings ask for
-                    package = (
-                        None
-                        if self._utils.extract_full_package
-                        else _open_package(file)
-                    )
+                    damaged: Exception | None = None
+                    package = None
+                    if not self._utils.extract_full_package:
+                        try:
+                            package = lspk_reader.Package(file)
+                        except _READ_ERRORS as e:
+                            qDebug(f"{file.name} read by Divine instead: {e}")
+                            if not isinstance(e, lspk_reader.Unsupported) or (
+                                isinstance(e, lspk_reader.Damaged)
+                            ):
+                                damaged = e
                     if package is not None:
                         try:
                             entry = package.find("meta.lsx")
                             meta_data = package.read(entry) if entry else None
-                        except (lspk_reader.Unsupported, OSError) as e:
+                        except _READ_ERRORS as e:
                             qDebug(f"{file.name} read by Divine instead: {e}")
+                            if not isinstance(e, lspk_reader.Unsupported) or (
+                                isinstance(e, lspk_reader.Damaged)
+                            ):
+                                damaged = e
                             package = None
                     if package is not None:
                         if meta_data is None:
@@ -378,6 +396,10 @@ class BG3PakParser:
                         f'{"extract-package" if self._utils.extract_full_package else "extract-single-file -f meta.lsx"} -d "{meta_file if not self._utils.extract_full_package else out_dir}"',
                         file,
                     ).returncode:
+                        if damaged is not None:
+                            # MO2 Revamped: a cut or corrupt pak isn't taken
+                            # for an override mod without a word
+                            raise DamagedPak(f"{file.name} is damaged: {damaged}")
                         can_continue = False
                     if can_continue and self._utils.extract_full_package:
                         qDebug(f"archive {file} extracted to {out_dir}")
@@ -465,6 +487,8 @@ class BG3PakParser:
                 )
             else:
                 return ""
+        except DamagedPak:
+            raise
         except Exception:
             qWarning(traceback.format_exc())
             return ""
