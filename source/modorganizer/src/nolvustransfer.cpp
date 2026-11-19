@@ -4,6 +4,7 @@
 #include "fluentdialogs.h"
 #include "instancemanager.h"
 #include "shared/util.h"
+#include "envfs.h"
 #include <log.h>
 #include <utility.h>
 
@@ -27,6 +28,7 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QSaveFile>
 #include <QRegularExpression>
 #include <QSet>
 #include <QSettings>
@@ -129,11 +131,17 @@ struct Walk
   };
   std::vector<File> list;
   std::vector<QString> dirs;
+  // folders that couldn't be read: a copy without them isn't complete
+  std::size_t errors = 0;
 };
 
 void walk(const QString& folder, Walk& w)
 {
   w.root = QDir::toNativeSeparators(cleanPath(folder)).toStdWString();
+  // counts the folders it can't read, and stops at once when cancelled
+  env::WalkControl control;
+  control.cancel = w.cancel;
+  env::setWalkControl(&control);
   env::forEachEntry(
       w.root, &w,
       [](void* data, std::wstring_view name) {
@@ -167,6 +175,8 @@ void walk(const QString& folder, Walk& w)
           w.list.push_back({rel, size});
         }
       });
+  env::setWalkControl(nullptr);
+  w.errors += control.errors;
 }
 
 std::uint64_t folderSize(const QString& folder, const std::atomic_bool& cancel,
@@ -214,12 +224,16 @@ public:
   bool open() { return m_file.open(QIODevice::Append | QIODevice::Text); }
   void close() { m_file.close(); }
 
-  void write(QJsonObject o)
+  // false when the line isn't on disk: nothing may be done that it doesn't
+  // record
+  bool write(QJsonObject o)
   {
     o.insert(QStringLiteral("time"), QDateTime::currentDateTime().toString(Qt::ISODate));
-    m_file.write(QJsonDocument(o).toJson(QJsonDocument::Compact) + "\n");
-    m_file.flush();
-    ::FlushFileBuffers(reinterpret_cast<HANDLE>(_get_osfhandle(m_file.handle())));
+    const QByteArray line = QJsonDocument(o).toJson(QJsonDocument::Compact) + "\n";
+    if (!m_file.isOpen() || m_file.write(line) != line.size() || !m_file.flush()) {
+      return false;
+    }
+    return ::FlushFileBuffers(reinterpret_cast<HANDLE>(_get_osfhandle(m_file.handle())));
   }
 
   static std::vector<QJsonObject> read(const QString& path)
@@ -281,10 +295,15 @@ bool moveItem(const QString& from, const QString& to, QString* error)
 }
 
 // puts back what the manifest says was done, newest first; returns what
-// couldn't be put back
-QStringList applyUndo(const std::vector<QJsonObject>& entries)
+// couldn't be put back. Copies go to the Recycle Bin when recycle is set (an
+// undo the user asked for: those copies may hold what was made since);
+// otherwise, right after a failed transfer, they are deleted
+QStringList applyUndo(const std::vector<QJsonObject>& entries, bool recycle = false,
+                      QWidget* parent = nullptr)
 {
   QStringList problems;
+  QStringList toRemove;
+  std::vector<QString> emptyFolders;
   for (auto it = entries.rbegin(); it != entries.rend(); ++it) {
     const QString kind = it->value(QStringLiteral("op")).toString();
     const QString from = it->value(QStringLiteral("from")).toString();
@@ -295,6 +314,10 @@ QStringList applyUndo(const std::vector<QJsonObject>& entries)
       // old place (by the Dashboard) is left for the user to sort out
       if (QFileInfo(to).exists() && QFileInfo(from).exists()) {
         problems << Text::tr("%1 exists again; %2 stays where it is")
+                        .arg(QDir::toNativeSeparators(from), QDir::toNativeSeparators(to));
+      } else if (!QFileInfo(to).exists() && !QFileInfo(from).exists()) {
+        // moved or renamed since: it can't be found to be put back
+        problems << Text::tr("%1 isn't where the transfer put it (%2)")
                         .arg(QDir::toNativeSeparators(from), QDir::toNativeSeparators(to));
       } else if (QFileInfo(to).exists()) {
         QString error;
@@ -311,9 +334,13 @@ QStringList applyUndo(const std::vector<QJsonObject>& entries)
       }
     } else if (kind == QLatin1String("copy") || kind == QLatin1String("created")) {
       if (QFileInfo(to).exists()) {
-        removeOwnTree(to);
-        if (QFileInfo(to).exists()) {
-          problems << Text::tr("Couldn't remove %1").arg(QDir::toNativeSeparators(to));
+        if (recycle) {
+          toRemove << QDir::toNativeSeparators(to);
+        } else {
+          removeOwnTree(to);
+          if (QFileInfo(to).exists()) {
+            problems << Text::tr("Couldn't remove %1").arg(QDir::toNativeSeparators(to));
+          }
         }
       }
     } else if (kind == QLatin1String("meta")) {
@@ -321,9 +348,13 @@ QStringList applyUndo(const std::vector<QJsonObject>& entries)
         QSettings meta(to, QSettings::IniFormat);
         meta.setValue(QStringLiteral("installationFile"),
                       it->value(QStringLiteral("old")).toString());
+        meta.sync();
+        if (meta.status() != QSettings::NoError) {
+          problems << Text::tr("Couldn't restore %1").arg(QDir::toNativeSeparators(to));
+        }
       }
     } else if (kind == QLatin1String("mkdir")) {
-      QDir().rmdir(to);  // only when empty
+      emptyFolders.push_back(to);  // only when empty, once the rest is gone
     } else if (kind == QLatin1String("ini")) {
       // a linked instance's settings, as they were
       if (QFileInfo(from).isFile()) {
@@ -331,11 +362,38 @@ QStringList applyUndo(const std::vector<QJsonObject>& entries)
         if (!QFile::copy(from, to)) {
           problems << Text::tr("Couldn't restore %1").arg(QDir::toNativeSeparators(to));
         }
+      } else {
+        problems << Text::tr("Couldn't restore %1").arg(QDir::toNativeSeparators(to));
       }
     }
   }
+
+  if (!toRemove.isEmpty()) {
+    const auto r = MOShared::shellRemove(toRemove, true, parent);
+    for (const QString& left : r.remaining) {
+      problems << Text::tr("Couldn't remove %1").arg(left);
+    }
+  }
+  for (const QString& folder : emptyFolders) {
+    QDir().rmdir(folder);
+  }
   return problems;
 }
+
+// the record's first entry says whether a linked instance was transferred; a
+// damaged first line falls back to the linked instance's settings backup
+bool transferWasLinked(const std::vector<QJsonObject>& entries, const QString& instanceDir)
+{
+  for (const auto& e : entries) {
+    if (e.value(QStringLiteral("op")).toString() == QLatin1String("begin")) {
+      return e.value(QStringLiteral("linked")).toBool();
+    }
+  }
+  return QFileInfo(InstanceManager::singleton().iniPath(instanceDir) +
+                   QStringLiteral(".linked-backup"))
+      .isFile();
+}
+
 
 QString remapped(QString value, const std::vector<std::pair<QString, QString>>& map)
 {
@@ -345,6 +403,21 @@ QString remapped(QString value, const std::vector<std::pair<QString, QString>>& 
                   Qt::CaseInsensitive);
   }
   return value;
+}
+
+// rewrites a group's paths in the instance's own settings (a linked
+// instance: what its user set up there stays)
+void remapGroupInPlace(QSettings& ini, const QString& group,
+                       const std::vector<std::pair<QString, QString>>& map)
+{
+  for (const QString& key : ini.allKeys()) {
+    if (key.startsWith(group + QLatin1Char('/'))) {
+      const QVariant v = ini.value(key);
+      if (v.typeId() == QMetaType::QString) {
+        ini.setValue(key, remapped(v.toString(), map));
+      }
+    }
+  }
 }
 
 void copyGroupRemapped(const QSettings& from, QSettings& to, const QString& group,
@@ -423,6 +496,42 @@ bool copyFiles(const std::vector<std::pair<QString, QString>>& files,
 }
 
 }  // namespace
+
+// why the data folder can't be used, or empty: it must be a full path, and
+// not inside Nolvus' folders or MO2's own
+QString badDataFolder(const TransferSource& source, const QString& data)
+{
+  if (data.isEmpty() || !QDir::isAbsolutePath(data)) {
+    return Text::tr("Choose the data folder with its full path (for example D:\\Games\\%1).")
+        .arg(source.info.name);
+  }
+  const QString d = cleanPath(data);
+  const auto& i   = source.info;
+  const auto inside = [&](const QString& folder) {
+    const QString c = cleanPath(folder);
+    return !c.isEmpty() && (d.compare(c, Qt::CaseInsensitive) == 0 ||
+                            d.startsWith(c + QLatin1Char('/'), Qt::CaseInsensitive));
+  };
+  // MO2's folder, except its PortableInstances, where instances belong
+  const QString app = cleanPath(QCoreApplication::applicationDirPath());
+  if (inside(app) &&
+      !(inside(InstanceManager::singleton().portableInstancesRootPath()) &&
+        d.compare(cleanPath(InstanceManager::singleton().portableInstancesRootPath()),
+                  Qt::CaseInsensitive) != 0)) {
+    return Text::tr("The data folder can't be inside %1.").arg(QDir::toNativeSeparators(app));
+  }
+  for (const QString& f : {i.installPath, i.modsPath, i.stockGame, i.archivePath, i.root}) {
+    const QString c = cleanPath(f);
+    if (c.isEmpty()) {
+      continue;
+    }
+    if (d.compare(c, Qt::CaseInsensitive) == 0 ||
+        d.startsWith(c + QLatin1Char('/'), Qt::CaseInsensitive)) {
+      return Text::tr("The data folder can't be inside %1.").arg(QDir::toNativeSeparators(c));
+    }
+  }
+  return {};
+}
 
 QString transferInstanceDir(const TransferSource& source)
 {
@@ -547,6 +656,12 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
   }
 
   // checks before anything is done
+  if (!inPlace) {
+    if (const QString bad = badDataFolder(source, data); !bad.isEmpty()) {
+      finish(bad);
+      return;
+    }
+  }
   for (const auto& [from, to] : items) {
     if (QFileInfo(to).exists()) {
       finish(Text::tr("%1 already exists.").arg(QDir::toNativeSeparators(to)));
@@ -574,7 +689,15 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
     finish(Text::tr("Can't create %1").arg(QDir::toNativeSeparators(inst)));
     return;
   }
-  Manifest manifest(inst + QLatin1Char('/') + ManifestName);
+  // a new record for each transfer: an earlier one (undone) stays beside it
+  const QString manifestPath = inst + QLatin1Char('/') + ManifestName;
+  if (QFileInfo(manifestPath).exists()) {
+    QFile::rename(manifestPath,
+                  inst + QStringLiteral("/nolvus-transfer-") +
+                      QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmsszzz")) +
+                      QStringLiteral(".jsonl"));
+  }
+  Manifest manifest(manifestPath);
   if (!manifest.open()) {
     finish(Text::tr("Can't write %1").arg(QDir::toNativeSeparators(inst + "/" + ManifestName)));
     if (newInstance) {
@@ -589,9 +712,15 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
   QJsonObject begin = op(QStringLiteral("begin"), info.installPath, inst);
   begin.insert(QStringLiteral("mode"), modeName);
   begin.insert(QStringLiteral("linked"), linked);
-  manifest.write(begin);
-  if (newInstance) {
-    manifest.write(op(QStringLiteral("mkdir"), {}, inst));
+  if (!manifest.write(begin) ||
+      (newInstance && !manifest.write(op(QStringLiteral("mkdir"), {}, inst)))) {
+    manifest.close();
+    QFile::remove(manifestPath);
+    if (newInstance) {
+      QDir().rmdir(inst);
+    }
+    finish(Text::tr("Can't write %1").arg(QDir::toNativeSeparators(manifestPath)));
+    return;
   }
   log::info("Nolvus transfer: {} '{}' into '{}' (data in '{}')", modeName,
             QDir::toNativeSeparators(info.installPath), QDir::toNativeSeparators(inst),
@@ -601,8 +730,13 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
   if (linked) {
     const QString backup = iniPath + QStringLiteral(".linked-backup");
     QFile::remove(backup);
-    QFile::copy(iniPath, backup);
-    manifest.write(op(QStringLiteral("ini"), backup, iniPath));
+    if (!QFile::copy(iniPath, backup) ||
+        !manifest.write(op(QStringLiteral("ini"), backup, iniPath))) {
+      manifest.close();
+      QFile::remove(manifestPath);
+      finish(Text::tr("Can't write %1").arg(QDir::toNativeSeparators(backup)));
+      return;
+    }
   }
 
   // on failure: everything back, and the new instance's folder gone
@@ -626,15 +760,35 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
       }
       finish(error + QStringLiteral("\n\n") +
              Text::tr("Some things couldn't be put back; the list is in %1. Instances offers "
-                      "to try again.")
+                      "to try again (\"Put everything back\").")
                  .arg(QDir::toNativeSeparators(inst + QLatin1Char('/') + ManifestName)) +
              QStringLiteral("\n") + problems.join(QLatin1Char('\n')));
     }
   };
 
-  if (!data.isEmpty() && !QFileInfo(data).exists()) {
-    QDir().mkpath(data);
-    manifest.write(op(QStringLiteral("mkdir"), {}, data));
+  // every step is on disk before it is done
+  const auto record = [&](const QJsonObject& o) {
+    if (manifest.write(o)) {
+      return true;
+    }
+    rollback(Text::tr("Can't write %1; nothing more was done.")
+                 .arg(QDir::toNativeSeparators(manifestPath)));
+    return false;
+  };
+  // a folder made here is recorded first, so an undo takes it away
+  const auto makeFolder = [&](const QString& dir) {
+    if (QFileInfo(dir).exists()) {
+      return true;
+    }
+    if (!record(op(QStringLiteral("mkdir"), {}, dir))) {
+      return false;
+    }
+    QDir().mkpath(dir);
+    return true;
+  };
+
+  if (!data.isEmpty() && !makeFolder(data)) {
+    return;
   }
 
   QString error;
@@ -646,7 +800,9 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
         return;
       }
       setStep(Text::tr("Moving %1").arg(QFileInfo(from).fileName()));
-      manifest.write(op(QStringLiteral("move"), from, to));
+      if (!record(op(QStringLiteral("move"), from, to))) {
+        return;
+      }
       if (!moveItem(from, to, &error)) {
         rollback(error);
         return;
@@ -659,12 +815,23 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
     std::vector<std::uint64_t> sizes;
     std::uint64_t total = 0;
     for (const auto& [from, to] : items) {
-      manifest.write(op(QStringLiteral("copy"), from, to));
-      if (QFileInfo(from).isDir() && !QFileInfo(from).isJunction()) {
+      if (!record(op(QStringLiteral("copy"), from, to))) {
+        return;
+      }
+      // a junction (mods kept on another drive) is copied through: its files
+      // are what the instance needs
+      if (QFileInfo(from).isDir()) {
         Walk w;
         w.collect = true;
         w.cancel  = &progress.cancel;
         walk(from, w);
+        if (w.errors > 0 && !progress.cancel) {
+          rollback(Text::tr("%n folders in %1 couldn't be read, so the copy wouldn't be "
+                            "complete. The reason is in MO2's log.",
+                            nullptr, static_cast<int>(w.errors))
+                       .arg(QDir::toNativeSeparators(from)));
+          return;
+        }
         QDir().mkpath(to);
         for (const QString& d : w.dirs) {
           QDir().mkpath(to + QLatin1Char('/') + d);
@@ -679,6 +846,10 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
         files.push_back({from, to});
         sizes.push_back(static_cast<std::uint64_t>(QFileInfo(from).size()));
         total += sizes.back();
+      } else {
+        rollback(Text::tr("%1 can't be read, so it can't be copied.")
+                     .arg(QDir::toNativeSeparators(from)));
+        return;
       }
     }
     if (progress.cancel) {
@@ -703,10 +874,19 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
   QHash<QString, QString> archiveName;  // old path (case-folded) -> new file name
   if (archivesToo) {
     setStep(Text::tr("Listing the Nolvus archives"));
-    QDir().mkpath(downloads);
+    if (!makeFolder(downloads)) {
+      return;
+    }
     Walk w;
     w.collect = true;
     walk(p.archives, w);
+    if (w.errors > 0) {
+      rollback(Text::tr("%n folders in %1 couldn't be read, so the copy wouldn't be "
+                        "complete. The reason is in MO2's log.",
+                        nullptr, static_cast<int>(w.errors))
+                   .arg(QDir::toNativeSeparators(p.archives)));
+      return;
+    }
 
     QSet<QString> taken;
     for (const QString& f : QDir(downloads).entryList(QDir::Files)) {
@@ -739,7 +919,9 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
           rollback(Text::tr("Cancelled."));
           return;
         }
-        manifest.write(op(QStringLiteral("move"), from, to));
+        if (!record(op(QStringLiteral("move"), from, to))) {
+          return;
+        }
         if (!moveItem(from, to, &error)) {
           rollback(error);
           return;
@@ -756,7 +938,9 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
         return;
       }
       for (const auto& [from, to] : files) {
-        manifest.write(op(QStringLiteral("created"), from, to));
+        if (!record(op(QStringLiteral("created"), from, to))) {
+          return;
+        }
       }
       progress.total = total;
       setStep(Text::tr("Copying %n archives", nullptr, static_cast<int>(files.size())));
@@ -789,7 +973,9 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
       if (options.archives == Archives::Move) {
         QJsonObject o = op(QStringLiteral("meta"), {}, metaPath);
         o.insert(QStringLiteral("old"), file);
-        manifest.write(o);
+        if (!record(o)) {
+          return;
+        }
         meta.setValue(QStringLiteral("installationFile"), it.value());
       }
     }
@@ -802,7 +988,9 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
       if (QFileInfo(metaPath).exists()) {
         continue;
       }
-      manifest.write(op(QStringLiteral("created"), {}, metaPath));
+      if (!record(op(QStringLiteral("created"), {}, metaPath))) {
+        return;
+      }
       QString modName, version;
       int modId = 0;
       describeArchive(name, &modName, &modId, &version);
@@ -823,12 +1011,14 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
 
   // the instance's settings
   setStep(Text::tr("Writing the instance's settings"));
+  if ((!linked && !record(op(QStringLiteral("created"), {}, iniPath))) ||
+      !makeFolder(downloads) || !makeFolder(inst + QStringLiteral("/webcache"))) {
+    return;
+  }
+  bool iniWritten = false;
   {
     const QSettings nolvusIni(QDir(info.mo2Path).filePath(QStringLiteral("ModOrganizer.ini")),
                               QSettings::IniFormat);
-    if (!linked) {
-      manifest.write(op(QStringLiteral("created"), {}, iniPath));
-    }
     QSettings ini(iniPath, QSettings::IniFormat);
 
     std::vector<std::pair<QString, QString>> map;
@@ -862,17 +1052,22 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
     ini.setValue(QStringLiteral("Settings/base_directory"), base);
     ini.setValue(QStringLiteral("Settings/download_directory"), downloads);
     ini.setValue(QStringLiteral("Settings/cache_directory"), inst + QStringLiteral("/webcache"));
-    QDir().mkpath(downloads);
-    QDir().mkpath(inst + QStringLiteral("/webcache"));
     // a linked instance keeps its own profiles folder; a new one uses the
     // base directory's (the moved or copied profiles, or Nolvus' own)
     if (!linked) {
       ini.remove(QStringLiteral("Settings/profiles_directory"));
     }
 
-    copyGroupRemapped(nolvusIni, ini, QStringLiteral("customExecutables"), map);
-    copyGroupRemapped(nolvusIni, ini, QStringLiteral("Plugins"), map);
-    copyGroupRemapped(nolvusIni, ini, QStringLiteral("pluginBlacklist"), map);
+    // a linked instance keeps the programs and plugin settings its user set
+    // up, with their paths moved along; a new one gets Nolvus' own
+    for (const QString& group : {QStringLiteral("customExecutables"), QStringLiteral("Plugins"),
+                                 QStringLiteral("pluginBlacklist")}) {
+      if (linked) {
+        remapGroupInPlace(ini, group, map);
+      } else {
+        copyGroupRemapped(nolvusIni, ini, group, map);
+      }
+    }
 
     const QString s = QStringLiteral("Nolvus/");
     ini.remove(QStringLiteral("Nolvus"));
@@ -893,16 +1088,16 @@ void runTransfer(const TransferSource& source, const TransferOptions& options,
     ini.setValue(s + QStringLiteral("archivePath"),
                  options.archives == Archives::Leave ? p.archives : QString());
     ini.sync();
-    if (ini.status() != QSettings::NoError) {
-      rollback(Text::tr("Can't write %1").arg(QDir::toNativeSeparators(iniPath)));
-      return;
-    }
+    iniWritten = ini.status() == QSettings::NoError;
+  }
+  // past the settings' scope: nothing can write them again after the rollback
+  if (!iniWritten) {
+    rollback(Text::tr("Can't write %1").arg(QDir::toNativeSeparators(iniPath)));
+    return;
   }
 
-  manifest.write(op(QStringLiteral("finished")));
-  if (linked) {
-    // nothing to put back for the settings once it is done; the backup stays
-    // for an undo
+  if (!record(op(QStringLiteral("finished")))) {
+    return;
   }
   log::info("Nolvus transfer: finished '{}'", QDir::toNativeSeparators(inst));
   {
@@ -924,11 +1119,40 @@ std::vector<QString> interruptedTransfers()
       const QString kind = e.value(QStringLiteral("op")).toString();
       ended |= kind == QLatin1String("finished") || kind == QLatin1String("undone");
     }
+    // its settings were written (only "finished" is missing): it is used as an
+    // instance, and its undo is the finished one's
+    ended |= readLink(InstanceManager::singleton().iniPath(dir)).transferred;
     if (!ended) {
       list.push_back(dir);
     }
   }
   return list;
+}
+
+void retargetTransfer(const QString& oldDir, const QString& newDir)
+{
+  const QString path = newDir + QLatin1Char('/') + ManifestName;
+  if (!QFileInfo(path).isFile()) {
+    return;
+  }
+  const QString from = cleanPath(oldDir);
+  const QString to   = cleanPath(newDir);
+  QByteArray out;
+  for (QJsonObject e : Manifest::read(path)) {
+    for (const QString& field : {QStringLiteral("from"), QStringLiteral("to")}) {
+      const QString value = cleanPath(e.value(field).toString());
+      if (value.compare(from, Qt::CaseInsensitive) == 0 ||
+          value.startsWith(from + QLatin1Char('/'), Qt::CaseInsensitive)) {
+        e.insert(field, to + value.mid(from.size()));
+      }
+    }
+    out += QJsonDocument(e).toJson(QJsonDocument::Compact) + "\n";
+  }
+  QSaveFile file(path);
+  if (!file.open(QIODevice::WriteOnly) || file.write(out) != out.size() || !file.commit()) {
+    log::error("Nolvus transfer: can't update the record in '{}' after a rename",
+               QDir::toNativeSeparators(path));
+  }
 }
 
 bool canUndoTransfer(const QString& instanceDir)
@@ -943,8 +1167,18 @@ bool canUndoTransfer(const QString& instanceDir)
   return moved && !undone;
 }
 
-bool undoTransfer(const QString& instanceDir, QString* error)
+bool undoTransfer(const QString& instanceDir, QString* error, QWidget* parent)
 {
+  QString dummy;
+  if (!error) {
+    error = &dummy;
+  }
+  if (const auto active = InstanceManager::singleton().currentInstance();
+      active && samePaths(active->directory(), instanceDir)) {
+    *error = Text::tr("The instance in use can't be changed. Open another instance first.");
+    return false;
+  }
+
   const QString path = instanceDir + QLatin1Char('/') + ManifestName;
   auto entries       = Manifest::read(path);
   if (entries.empty()) {
@@ -952,14 +1186,19 @@ bool undoTransfer(const QString& instanceDir, QString* error)
                  .arg(QDir::toNativeSeparators(instanceDir));
     return false;
   }
-  const bool linked = entries.front().value(QStringLiteral("linked")).toBool();
+  const bool linked = transferWasLinked(entries, instanceDir);
 
   // the instance's own ini and folders stay (its settings, logs, the
   // downloads made since): only what came from Nolvus goes back
   // an interrupted transfer goes back entirely, copies included
-  const bool finished = std::any_of(entries.begin(), entries.end(), [](const QJsonObject& e) {
-    return e.value(QStringLiteral("op")).toString() == QLatin1String("finished");
-  });
+  // its settings were written: done in effect, whatever the record lacks
+  const bool finished =
+      std::any_of(entries.begin(), entries.end(),
+                  [](const QJsonObject& e) {
+                    return e.value(QStringLiteral("op")).toString() ==
+                           QLatin1String("finished");
+                  }) ||
+      readLink(InstanceManager::singleton().iniPath(instanceDir)).transferred;
   std::vector<QJsonObject> undo;
   for (const auto& e : entries) {
     const QString kind = e.value(QStringLiteral("op")).toString();
@@ -970,22 +1209,24 @@ bool undoTransfer(const QString& instanceDir, QString* error)
       undo.push_back(e);
     }
   }
-  const QStringList problems = applyUndo(undo);
+  const QStringList problems = applyUndo(undo, true, parent);
 
   Manifest manifest(path);
-  if (manifest.open()) {
-    manifest.write(op(QStringLiteral("undone")));
+  manifest.open();
+  // something is still where the transfer put it: the instance and its
+  // record stay, so the undo can be tried again
+  if (!problems.isEmpty()) {
+    manifest.write(op(QStringLiteral("undo-partial")));
+    *error = problems.join(QLatin1Char('\n'));
+    return false;
   }
+
+  manifest.write(op(QStringLiteral("undone")));
   if (!linked) {
     // not an instance any more: its mods went back to Nolvus
     const QString ini = InstanceManager::singleton().iniPath(instanceDir);
     QFile::remove(ini + QStringLiteral(".transfer-undone"));
     QFile::rename(ini, ini + QStringLiteral(".transfer-undone"));
-  }
-
-  if (!problems.isEmpty()) {
-    *error = problems.join(QLatin1Char('\n'));
-    return false;
   }
 
   // a transfer that never finished leaves nothing behind once put back
@@ -1148,6 +1389,10 @@ QString runTransferWizard(QWidget* parent, const TransferSource& source)
         (inPlace ? inst : (data.isEmpty() ? inst : data)) + QStringLiteral("/downloads");
 
     if (!inPlace) {
+      if (const QString bad = badDataFolder(source, data); !bad.isEmpty()) {
+        lines << bad.toHtmlEscaped();
+        ok = false;
+      }
       for (const QString& sub : {QStringLiteral("mods"), QStringLiteral("overwrite"),
                                  StockGameName, ToolsName}) {
         if (QFileInfo(data + QLatin1Char('/') + sub).exists()) {
@@ -1282,8 +1527,13 @@ QString runTransferWizard(QWidget* parent, const TransferSource& source)
   // a cancel puts back what was done, which takes a while: the window stays
   QObject::connect(&pd, &QProgressDialog::canceled, &pd, [&] {
     progress->cancel = true;
-    pd.setCancelButton(nullptr);
-    pd.show();
+    // not from inside the button's own signal
+    QTimer::singleShot(0, &pd, [&pd] {
+      if (auto* button = pd.findChild<QPushButton*>()) {
+        button->setEnabled(false);
+      }
+      pd.show();
+    });
   });
   QObject::connect(&tick, &QTimer::timeout, &pd, [&] {
     QString step;

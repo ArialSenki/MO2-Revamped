@@ -202,7 +202,8 @@ bool copyTree(const QString& from, const QString& to, QString* error)
   }
   const QDir src(from);
   for (const QFileInfo& fi :
-       src.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden)) {
+       src.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden |
+                         QDir::System)) {
     const QString target = QDir(to).filePath(fi.fileName());
     if (fi.isJunction() || fi.isSymLink()) {
       log::warn("Nolvus: not copying the link '{}'",
@@ -837,11 +838,21 @@ bool refreshProfiles(const QString& iniPath, QString* error)
     return false;
   }
 
-  const QString dir      = QFileInfo(iniPath).absolutePath();
-  const QString profiles = dir + QStringLiteral("/profiles");
-  const QString backup =
-      dir + QStringLiteral("/profiles-backup-") +
-      QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss"));
+  const QString dir = QFileInfo(iniPath).absolutePath();
+  QString profiles;
+  {
+    const QSettings settings(iniPath, QSettings::IniFormat);
+    profiles = clean(settings.value(QStringLiteral("Settings/profiles_directory")).toString());
+  }
+  if (profiles.isEmpty()) {
+    profiles = dir + QStringLiteral("/profiles");
+  }
+  // a name of its own even for two copies in the same second
+  QString backup = dir + QStringLiteral("/profiles-backup-") +
+                   QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmsszzz"));
+  for (int n = 2; QFileInfo(backup).exists(); ++n) {
+    backup = backup.section(QLatin1Char('~'), 0, 0) + QStringLiteral("~%1").arg(n);
+  }
 
   if (QFileInfo(profiles).isDir() && !QDir().rename(profiles, backup)) {
     *error = Text::tr("Can't move %1 aside; is a file in it open?")
@@ -851,10 +862,31 @@ bool refreshProfiles(const QString& iniPath, QString* error)
 
   if (!copyProfiles(QDir(link.modsPath).filePath(QStringLiteral("profiles")), profiles,
                     error)) {
-    // back as it was
+    // back as it was; the copy made here has no links in it
     QDir(profiles).removeRecursively();
-    QDir().rename(backup, profiles);
+    if (!QDir().rename(backup, profiles)) {
+      *error += QStringLiteral("\n") +
+                Text::tr("Your profiles are in %1.").arg(QDir::toNativeSeparators(backup));
+    }
     return false;
+  }
+
+  // the saves made here stay in use: each profile's saves folder comes back
+  // from the previous copy, Nolvus' own saves are kept beside it
+  for (const QString& profile : QDir(backup).entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    const QString oldSaves = backup + QLatin1Char('/') + profile + QStringLiteral("/saves");
+    const QString newDir   = profiles + QLatin1Char('/') + profile;
+    if (!QFileInfo(oldSaves).isDir() || !QFileInfo(newDir).isDir()) {
+      continue;
+    }
+    const QString newSaves = newDir + QStringLiteral("/saves");
+    if (QFileInfo(newSaves).exists()) {
+      QDir().rename(newSaves, newDir + QStringLiteral("/saves (Nolvus)"));
+    }
+    if (!QDir().rename(oldSaves, newSaves)) {
+      log::warn("Nolvus: the saves of '{}' stayed in '{}'", profile,
+                QDir::toNativeSeparators(oldSaves));
+    }
   }
 
   QSettings ini(iniPath, QSettings::IniFormat);
