@@ -290,7 +290,8 @@ namespace Mo2RevampedSetup
         // instances in AppData are what it removes. The exit code is 0 when
         // the task worked, 1 when it failed and 2 for a wrong command line
         // (an unknown switch, a stray word, /restore); the log is in
-        // %TEMP%\MO2 Revamped\Installer Logs.
+        // Program Files\MO2 Revamped Setup\Installer Logs (%TEMP%\MO2 Revamped\Installer
+        // Logs for a run without elevation).
         private static readonly HashSet<string> SilentSwitches = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "S", "quiet", "silent", "verysilent", "uninstall", "keepdata", "removeall", "removeappdata",
@@ -520,6 +521,17 @@ namespace Mo2RevampedSetup
         // write, and stops if Windows refuses it: falling back to %TEMP% would
         // undo that protection. Without elevation there is nothing to protect:
         // %TEMP% is used.
+        // where this run's log goes: Program Files\MO2 Revamped Setup\Installer
+        // Logs when elevated (see SetupDiagnostics.Initialize), %TEMP% otherwise
+        internal const string LogFolderName = "Installer Logs";
+
+        internal static string LogFolder()
+        {
+            if (IsElevated())
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "MO2 Revamped Setup", LogFolderName);
+            return Path.Combine(Path.GetTempPath(), "MO2 Revamped", LogFolderName);
+        }
+
         internal static string CreateWorkFolder()
         {
             string name = Guid.NewGuid().ToString("N");
@@ -533,6 +545,8 @@ namespace Mo2RevampedSetup
                     // what a power cut or a killed setup left behind
                     foreach (string old in Directory.GetDirectories(parent))
                     {
+                        // the logs live beside the work folders
+                        if (String.Equals(Path.GetFileName(old), LogFolderName, StringComparison.OrdinalIgnoreCase)) continue;
                         try
                         {
                             if (DateTime.UtcNow - Directory.GetLastWriteTimeUtc(old) > TimeSpan.FromDays(1)) Directory.Delete(old, true);
@@ -601,7 +615,7 @@ namespace Mo2RevampedSetup
             catch (UnauthorizedAccessException) { }
         }
 
-        private static bool IsElevated()
+        internal static bool IsElevated()
         {
 #if INSTALLER_TEST
             return Environment.GetEnvironmentVariable("MO2R_TEST_ELEVATED") == "1";

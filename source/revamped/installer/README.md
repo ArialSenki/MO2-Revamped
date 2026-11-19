@@ -34,7 +34,7 @@ An `unins000.exe` inside the installation it removes copies itself to its work f
 
 ## Silent runs
 
-Both the setup and `unins000.exe` run without the window when given `/S` (or `/quiet`); the exit code is 0 on success, 1 on failure and 2 for a wrong command line, and the log goes to `%TEMP%\MO2 Revamped\Installer Logs`.
+Both the setup and `unins000.exe` run without the window when given `/S` (or `/quiet`); the exit code is 0 on success, 1 on failure and 2 for a wrong command line, and the log goes to `%ProgramFiles%\MO2 Revamped Setup\Installer Logs` (`%TEMP%\MO2 Revamped\Installer Logs` for a run without elevation).
 
 - Install or update: `/S [/dir=<folder>] [/isolated] [/nodesktop] [/nostartmenu] [/nonxm] [/launch] [/forceclose]`. A folder that holds MO2 Revamped is updated (never to an older version); any other gets a new installation.
 - Uninstall: `/S /uninstall /dir=<folder> [/keepdata | /removeall [/removeappdata]] [/forceclose]`, or `unins000.exe /S` (the uninstall entry's `QuietUninstallString`; `unins000.exe` is the only one that may omit the folder, which is then its own). `/keepdata` is the default.

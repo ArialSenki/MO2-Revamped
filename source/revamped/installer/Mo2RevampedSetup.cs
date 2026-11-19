@@ -197,9 +197,13 @@ namespace Mo2RevampedSetup
         {
             try
             {
-                string root = Path.Combine(Path.GetTempPath(), "MO2 Revamped", "Installer Logs");
-                // the log stays where the user can read it, but an elevated run
-                // must not follow a link planted there to write somewhere else
+                // an elevated run writes (and prunes) its logs below Program
+                // Files, where every user can read them but only administrators
+                // can write: in %TEMP% a program of the user could swap the
+                // folder for a link between two writes and have the elevated
+                // setup write or delete elsewhere. Without elevation there is
+                // nothing to protect, and %TEMP% is used as before.
+                string root = InstallerBackend.LogFolder();
                 foreach (string folder in new string[] { Path.GetDirectoryName(root), root })
                 {
                     if (Directory.Exists(folder) && (File.GetAttributes(folder) & FileAttributes.ReparsePoint) != 0)
@@ -485,6 +489,12 @@ namespace Mo2RevampedSetup
                 createdRoot = missing;
             bool targetWasEmpty = createdRoot != null || Directory.GetFileSystemEntries(target).Length == 0;
             Directory.CreateDirectory(target);
+            // a new installation's folder is limited right away: the payload
+            // checks below take a while, and until now another account could
+            // put a plugins folder of its own in it. InstallInto still
+            // refuses a folder that stopped being empty. An update is limited
+            // later, once nothing can refuse it any more.
+            if (request.Mode != SetupMode.Update) RestrictInstallFolder(target);
             bool newInstallation = request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable || request.Mode == SetupMode.Migrate;
             try
             {
@@ -608,11 +618,85 @@ namespace Mo2RevampedSetup
                     Directory.SetAccessControl(full, owner);
                 }
                 catch (Exception ex) { SetupDiagnostics.Error("Could not make Administrators the owner of '" + full + "'.", ex); }
+                ResetInstallFolderChildren(full, user, administrators, system);
             }
             catch (Exception ex)
             {
                 SetupDiagnostics.Error("Could not limit the permissions of the install folder '" + target + "'.", ex);
             }
+        }
+
+        // What the folder held while it was open to everyone (an installation
+        // from before 1.1.0 beta 15): a file or folder with permissions of its
+        // own, or owned by another account, kept them when the folder was
+        // limited. Those go back to the folder's permissions and to
+        // Administrators as owner. Links are never followed, only named in the
+        // log. Runs once, when the folder is first limited.
+        private static void ResetInstallFolderChildren(string root, SecurityIdentifier user, SecurityIdentifier administrators, SecurityIdentifier system)
+        {
+            SecurityIdentifier trustedInstaller = new SecurityIdentifier("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464");
+            int reset = 0;
+            Stack<string> folders = new Stack<string>();
+            folders.Push(root);
+            while (folders.Count > 0)
+            {
+                string folder = folders.Pop();
+                string[] entries;
+                try { entries = Directory.GetFileSystemEntries(folder); }
+                catch (Exception ex) { SetupDiagnostics.Error("Could not list '" + folder + "' to reset its permissions.", ex); continue; }
+                foreach (string entry in entries)
+                {
+                    try
+                    {
+                        FileAttributes attributes = File.GetAttributes(entry);
+                        bool isFolder = (attributes & FileAttributes.Directory) != 0;
+                        if ((attributes & FileAttributes.ReparsePoint) != 0)
+                        {
+                            SetupDiagnostics.Info("WARNING: '" + entry + "' in the installation is a link; its permissions were left as they are.");
+                            continue;
+                        }
+                        FileSystemSecurity current = isFolder ? (FileSystemSecurity)Directory.GetAccessControl(entry) : File.GetAccessControl(entry);
+                        SecurityIdentifier owner = current.GetOwner(typeof(SecurityIdentifier)) as SecurityIdentifier;
+                        bool foreignOwner = owner != null && owner != user && owner != administrators && owner != system && owner != trustedInstaller;
+                        bool ownRules = current.AreAccessRulesProtected || current.GetAccessRules(true, false, typeof(SecurityIdentifier)).Count > 0;
+                        if (ownRules)
+                        {
+                            // no rules of its own, inheritance on: the folder's only
+                            if (isFolder)
+                            {
+                                DirectorySecurity inherit = new DirectorySecurity();
+                                inherit.SetAccessRuleProtection(false, false);
+                                Directory.SetAccessControl(entry, inherit);
+                            }
+                            else
+                            {
+                                FileSecurity inherit = new FileSecurity();
+                                inherit.SetAccessRuleProtection(false, false);
+                                File.SetAccessControl(entry, inherit);
+                            }
+                        }
+                        if (foreignOwner)
+                        {
+                            if (isFolder)
+                            {
+                                DirectorySecurity owned = new DirectorySecurity();
+                                owned.SetOwner(administrators);
+                                Directory.SetAccessControl(entry, owned);
+                            }
+                            else
+                            {
+                                FileSecurity owned = new FileSecurity();
+                                owned.SetOwner(administrators);
+                                File.SetAccessControl(entry, owned);
+                            }
+                        }
+                        if (ownRules || foreignOwner) reset++;
+                        if (isFolder) folders.Push(entry);
+                    }
+                    catch (Exception ex) { SetupDiagnostics.Error("Could not reset the permissions of '" + entry + "'.", ex); }
+                }
+            }
+            if (reset > 0) SetupDiagnostics.Info("Reset the permissions or owner of " + reset + " item(s) inside '" + root + "'.");
         }
 
         // the account signed in to this session, which runs MO2 (not the

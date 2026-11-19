@@ -587,11 +587,13 @@ private:
         // beside this program, in the folder the host extracted it to: an elevated
         // run reads its requests from there, where only administrators can write
         const QString name = pattern.arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        // never %TEMP%: there a program of the user could rewrite a request
+        // between this window writing it and the elevated engine reading it.
+        // The folder always exists (this program runs from it); if "work"
+        // can't be made, the task fails instead.
         const QString path = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("work/") + name);
-        if (QDir().mkpath(QFileInfo(path).absolutePath())) return path;
-        const QString fallback = QDir::temp().filePath(QStringLiteral("MO2 Revamped Setup/") + name);
-        QDir().mkpath(QFileInfo(fallback).absolutePath());
-        return fallback;
+        QDir().mkpath(QFileInfo(path).absolutePath());
+        return path;
     }
 
     // every run of the engine, in a folder no task touches (see systemDirectory)
@@ -1663,6 +1665,11 @@ private:
     }
 
     static QString logFolder() {
+        // an elevated engine logs beside the folder this window runs from
+        // (Program Files\MO2 Revamped Setup\Installer Logs); without elevation
+        // it uses %TEMP%
+        const QString beside = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(QStringLiteral("../Installer Logs"));
+        if (QDir(beside).exists()) return QDir::toNativeSeparators(QDir::cleanPath(beside));
         return QDir::toNativeSeparators(QDir::temp().filePath(QStringLiteral("MO2 Revamped/Installer Logs")));
     }
 
