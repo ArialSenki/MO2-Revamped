@@ -1295,6 +1295,22 @@ void WabbajackDialog::startInstall()
     }
   });
 
+  // the longest path the list writes under the install folder (its BSAs'
+  // gathered files included): libbsarch, DirectXTex and the archive library
+  // take plain Windows paths, which stop at 259 characters
+  int longest = 0;
+  for (const auto& d : m_list->directives) {
+    if (!d.modOrganizerFile) {
+      longest = qMax(longest, int(d.to.size()));
+    }
+  }
+  constexpr int MaxPath = 259;
+  // the room the install takes: its files (the BSAs' gathered files and the
+  // BSAs built from them both count), plus the temporary ones it unpacks on
+  // the way (the list's own files, archives inside archives): 5%, at least 1 GB
+  const qint64 needed =
+      m_list->installSize + qMax<qint64>(m_list->installSize / 20, 1024ll * 1024 * 1024);
+
   // why the name or the folder can't be used, empty when they can
   auto problemOf = [&]() -> QString {
     const QString n = name->text().trimmed();
@@ -1338,6 +1354,21 @@ void WabbajackDialog::startInstall()
     if (inside(downloads)) {
       return tr("The install folder can't be the downloads folder, inside it or around it.");
     }
+    if (longest > 0 && f.size() + 1 + longest > MaxPath) {
+      const int room = MaxPath - 1 - longest;
+      if (room < 4) {
+        return tr("The list has paths too long for Windows (%1 characters for its longest "
+                  "file, before the install folder): it can't be installed.")
+            .arg(longest);
+      }
+      return tr("Some of the list's files would get paths longer than Windows allows (%1 "
+                "characters, at most %2). Choose a folder whose path has at most %3 "
+                "characters, such as %4.")
+          .arg(f.size() + 1 + longest)
+          .arg(MaxPath)
+          .arg(room)
+          .arg(QDir::toNativeSeparators(QDir(f).rootPath() + QStringLiteral("Lists")));
+    }
     const QDir dir(f);
     if (dir.exists()) {
       // empty, or an install of this list stopped before
@@ -1354,9 +1385,13 @@ void WabbajackDialog::startInstall()
       existing = QFileInfo(existing).absolutePath();
     }
     const QStorageInfo storage(existing);
-    if (storage.isValid() && storage.bytesAvailable() < m_list->installSize) {
+    // an install going on in its folder has most of its files there already:
+    // only the room for the temporary ones is asked for
+    const bool goingOn = QFileInfo::exists(installStateFolder(f));
+    const qint64 room  = goingOn ? needed - m_list->installSize : needed;
+    if (storage.isValid() && storage.bytesAvailable() < room) {
       return tr("Not enough free space there: the list takes about %1 and the drive has %2.")
-          .arg(localizedByteSize(m_list->installSize))
+          .arg(localizedByteSize(room))
           .arg(localizedByteSize(storage.bytesAvailable()));
     }
     return {};

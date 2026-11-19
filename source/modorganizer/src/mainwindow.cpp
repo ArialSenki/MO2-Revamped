@@ -110,6 +110,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QAbstractItemDelegate>
 #include <QAction>
 #include <QApplication>
+#include <QThread>
 #include <QTextDocument>
 #include <QBuffer>
 #include <QButtonGroup>
@@ -6010,6 +6011,16 @@ void MainWindow::openCollection(const QString& text, bool autoStart, int updateF
                                   "close its window first."));
       m_CollectionDialog->raise();
       m_CollectionDialog->activateWindow();
+      return;
+    }
+    // a question, menu or file dialog of the window (or of its session) is up:
+    // closing it now would delete it under that question. The link waits
+    // until no modal loop runs, as a Wabbajack list does
+    if (QApplication::activeModalWidget() != nullptr || QThread::currentThread()->loopLevel() > 1) {
+      m_CollectionDialog->raise();
+      QTimer::singleShot(300, this, [this, text, autoStart, updateFrom] {
+        openCollection(text, autoStart, updateFrom);
+      });
       return;
     }
     m_CollectionDialog->close();

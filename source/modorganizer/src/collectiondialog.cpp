@@ -1709,7 +1709,9 @@ void CollectionDialog::closeEvent(QCloseEvent* e)
   // MO2 Revamped: closing deletes the window and its session; in the middle
   // of a wait (CollectionSession::waiting) that would free it under its own
   // feet, so the window closes once the wait is over
-  if (m_session->waiting()) {
+  // nor under one of its own questions or file dialogs: they are its children
+  const QWidget* modal = QApplication::activeModalWidget();
+  if (m_session->waiting() || (modal != nullptr && modal != this && isAncestorOf(modal))) {
     e->ignore();
     QTimer::singleShot(200, this, [this] {
       close();

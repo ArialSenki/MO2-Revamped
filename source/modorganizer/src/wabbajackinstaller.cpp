@@ -6,6 +6,7 @@
 #include <archive.h>
 #include <libbsarch.h>
 #include <log.h>
+#include <utility.h>
 
 #include <QDir>
 #include <QElapsedTimer>
@@ -17,6 +18,7 @@
 #include <QSaveFile>
 #include <QRegularExpression>
 #include <QSet>
+#include <QStorageInfo>
 
 #include <omp.h>
 
@@ -38,6 +40,11 @@ constexpr char StateName[] = ".mo2r-install";
 
 // how many failures are listed by name; the rest are counted
 constexpr int ListedFailures = 200;
+// the failures the summary names one by one; a full drive or a broken list
+// fails every file, and hundreds of thousands of lines help nobody
+constexpr int KeptFailures = 5000;
+// under this much free space the install folder's drive counts as full
+constexpr qint64 FullDrive = 64ll * 1024 * 1024;
 // a list's own file read whole (an InlineFile or RemappedInlineFile)
 constexpr qint64 MaxInlineFileSize = qint64(2) << 30;
 
@@ -508,7 +515,14 @@ private:
   // far fewer folders
   QSet<QString> m_folders;
 
-  bool cancelled() const { return m_cancel.load(); }
+  // the install folder's drive filled up: everything stops as for a cancel,
+  // with m_result.error saying why
+  bool m_driveFull = false;
+
+  bool cancelled() const { return m_cancel.load() || m_driveFull; }
+  // after a failure: a full drive stops the install instead of failing every
+  // file that is left, for hours
+  void checkDrive();
   void report(const QString& text, bool force = false);
   void fail(const Directive& d, const QString& why);
   QString stageFile();
@@ -544,12 +558,35 @@ void Installer::report(const QString& text, bool force)
 void Installer::fail(const Directive& d, const QString& why)
 {
   ++m_result.failed;
-  // the summary keeps them all; a broken list fails every file, so the log
-  // keeps the first and run() the total
-  m_result.failures.append(QStringLiteral("%1: %2").arg(d.to, why));
+  // the summary keeps the first thousands; a broken list fails every file,
+  // so the log keeps the first and run() the total
+  if (m_result.failures.size() < KeptFailures) {
+    m_result.failures.append(QStringLiteral("%1: %2").arg(d.to, why));
+  }
   if (m_result.failed <= ListedFailures) {
     log::warn("wabbajack install: {}: {}", d.to, why);
   }
+  if (m_result.failed <= 20 || m_result.failed % 50 == 0) {
+    checkDrive();
+  }
+}
+
+void Installer::checkDrive()
+{
+  if (m_driveFull) {
+    return;
+  }
+  const QStorageInfo storage(m_plan.installFolder);
+  if (!storage.isValid() || storage.bytesAvailable() >= FullDrive) {
+    return;
+  }
+  m_driveFull    = true;
+  m_result.error = tr("The install folder's drive is full (%1 free), so the install stopped. "
+                      "Free some space and install again into the same folder: the files "
+                      "already installed and checked stay.")
+                       .arg(localizedByteSize(storage.bytesAvailable()));
+  log::error("wabbajack install: the drive of {} is full, the install stops",
+             m_plan.installFolder);
 }
 
 QString Installer::stageFile()
@@ -634,6 +671,8 @@ bool Installer::verify(const Directive& d, const QString& path)
     return false;
   }
   if (*hash != d.hash) {
+    // a file cut short (a full drive) or wrong doesn't stay as if installed
+    QFile::remove(path);
     fail(d, tr("its hash isn't the list's"));
     return false;
   }
@@ -1442,7 +1481,11 @@ InstallResult Installer::run()
 
   m_result.plugins = m_plugins.values();
   m_result.plugins.sort(Qt::CaseInsensitive);
-  m_result.cancelled = cancelled();
+  if (m_result.failed > m_result.failures.size()) {
+    m_result.failures.append(tr("… and %n more files.", nullptr,
+                                m_result.failed - int(m_result.failures.size())));
+  }
+  m_result.cancelled = m_cancel.load();
   m_result.ok        = !m_result.cancelled && m_result.error.isEmpty();
   if (m_result.ok && m_result.failed == 0) {
     // a finished install: its folder isn't one to go on in
