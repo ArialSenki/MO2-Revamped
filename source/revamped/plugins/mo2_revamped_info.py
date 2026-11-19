@@ -11,6 +11,7 @@ import traceback
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 import mobase
 from PyQt6 import QtCore
@@ -1389,6 +1390,17 @@ class _Redactor:
             users.add(getpass.getuser())
         except Exception:
             pass
+        # the profile folder's 8.3 name ("JANEDO~1") shows in Temp paths
+        try:
+            import ctypes
+
+            profile = os.environ.get("USERPROFILE", "")
+            if profile:
+                buffer = ctypes.create_unicode_buffer(1024)
+                if ctypes.windll.kernel32.GetShortPathNameW(profile, buffer, 1024):
+                    users.add(Path(buffer.value).name)
+        except Exception:
+            pass
         computers = {
             os.environ.get("COMPUTERNAME", ""),
             platform.node(),
@@ -1422,12 +1434,21 @@ class _Redactor:
                         r"[A-Za-z0-9+=-]{64,}(?![A-Za-z0-9+=_./\\-])"), self.Removed),
         ]
         self._email = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+        # a SteamID64 (in Elden Ring's and other games' save paths) is the
+        # player's public Steam profile
+        self._steam = re.compile(r"(?<!\d)7656119\d{10}(?!\d)")
 
     def __call__(self, text: str) -> str:
         for pattern, replacement in self._secrets:
             text = pattern.sub(replacement, text)
         text = self._email.sub("<email>", text)
+        text = self._steam.sub("<steamid>", text)
         for user in self._users:
+            # file:/// links spell "Jane Doe" as "Jane%20Doe"
+            encoded = quote(user)
+            if encoded != user:
+                text = re.sub(r"(?i)(?<![A-Za-z0-9_])" + re.escape(encoded)
+                              + r"(?![A-Za-z0-9_])", "%USERNAME%", text)
             name = re.escape(user)
             # C:\Users\<name> and /Users/<name>, as the task's paths say
             text = re.sub(r"(?i)([\\/]Users[\\/]+)" + name + r"(?![A-Za-z0-9_])",
