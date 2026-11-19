@@ -1061,11 +1061,22 @@ InstallationManager::tryWinRARFallback(const QString& fileName)
   QWidget* parent = m_ParentWidget != nullptr ? m_ParentWidget : qApp->activeWindow();
   // MO2 Revamped: a WinRAR older than 7.13 can be made to write outside the
   // folder it extracts to (CVE-2025-6218, CVE-2025-8088), and the archive is one
-  // 7-Zip refused: the question then says so, and its answer isn't remembered
+  // 7-Zip refused: the question then says so, and this answer isn't remembered.
+  // A "yes, always" the user gave the usual question still counts (a
+  // collection's archives would otherwise ask one by one): the log says once
+  // that this WinRAR is old
   if (!WinRARFallback::isPatched(winrar)) {
     const QString version = WinRARFallback::version(winrar);
-    log::warn("WinRAR {} is older than 7.13", version.isEmpty() ? QString("?") : version);
-    const auto old = QMessageBox::warning(
+    static bool warned = false;
+    if (!warned) {
+      warned = true;
+      log::warn("WinRAR {} is older than 7.13: archives it extracts can write outside "
+                "their folder (CVE-2025-6218, CVE-2025-8088); update it",
+                version.isEmpty() ? QString("?") : version);
+    }
+    const bool rememberedYes =
+        QuestionBoxMemory::getMemory("winrarFallback", "") == QDialogButtonBox::Yes;
+    const auto old = rememberedYes ? QMessageBox::Yes : QMessageBox::warning(
         parent, tr("Open with WinRAR"),
         tr("7-Zip, which MO2 uses for archives, can't open %1.\n\nWinRAR is "
            "installed on this PC, but its version (%2) is older than 7.13: an archive "

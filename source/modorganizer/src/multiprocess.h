@@ -61,6 +61,9 @@ private:
   bool m_OwnsSM;
   QSharedMemory m_SharedMem;
   QLocalServer m_Server;
+  // MO2 Revamped: the name before beta 15, which upstream MO2 and older
+  // Revamped builds send to; also this Windows user's only
+  QLocalServer m_LegacyServer;
 };
 
 #endif  // MODORGANIZER_MOMULTIPROCESS_INCLUDED

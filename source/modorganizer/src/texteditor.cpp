@@ -673,12 +673,23 @@ QString offlineNotesHtml(const QString& notes)
   document.setHtml(notes);
 
   // images and background images out; what Qt itself takes for one is what
-  // goes, whatever the markup looked like
+  // goes, whatever the markup looked like. An image from data: or qrc: (a
+  // pasted screenshot) stays. Everything is found first and changed after:
+  // setCharFormat() can merge the fragment being looked at into its neighbour,
+  // which the fragment iterator doesn't survive
+  struct Range
+  {
+    int position;
+    int length;
+    QTextCharFormat format;
+  };
+  QList<Range> recoloured;
+  QList<QPair<int, QTextBlockFormat>> blocks;
   QList<QPair<int, int>> images;
   for (QTextBlock block = document.begin(); block.isValid(); block = block.next()) {
     QTextBlockFormat blockFormat = block.blockFormat();
     if (dropBackgroundImage(blockFormat)) {
-      QTextCursor(block).setBlockFormat(blockFormat);
+      blocks.append({block.position(), blockFormat});
     }
     for (auto it = block.begin(); !it.atEnd(); ++it) {
       const QTextFragment fragment = it.fragment();
@@ -687,15 +698,24 @@ QString offlineNotesHtml(const QString& notes)
       }
       QTextCharFormat charFormat = fragment.charFormat();
       if (charFormat.isImageFormat()) {
-        images.append({fragment.position(), fragment.length()});
+        if (!isOfflineResource(QUrl(charFormat.toImageFormat().name()))) {
+          images.append({fragment.position(), fragment.length()});
+        }
       } else if (dropBackgroundImage(charFormat)) {
-        QTextCursor cursor(&document);
-        cursor.setPosition(fragment.position());
-        cursor.setPosition(fragment.position() + fragment.length(),
-                           QTextCursor::KeepAnchor);
-        cursor.setCharFormat(charFormat);
+        recoloured.append({fragment.position(), fragment.length(), charFormat});
       }
     }
+  }
+  for (const Range& range : recoloured) {
+    QTextCursor cursor(&document);
+    cursor.setPosition(range.position);
+    cursor.setPosition(range.position + range.length, QTextCursor::KeepAnchor);
+    cursor.setCharFormat(range.format);
+  }
+  for (const auto& [position, format] : blocks) {
+    QTextCursor cursor(&document);
+    cursor.setPosition(position);
+    cursor.setBlockFormat(format);
   }
   for (auto image = images.crbegin(); image != images.crend(); ++image) {
     QTextCursor cursor(&document);

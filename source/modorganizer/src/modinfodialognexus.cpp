@@ -156,8 +156,13 @@ void NexusTab::ensureBrowserPage()
   connect(page, &NexusTabWebpage::linkClicked, [&](const QUrl& url) {
     // MO2 Revamped: a mod author writes these links; only web pages open
     // (file:, \\server and search-ms: ran programs or sent the password hash)
+    // nxm: (a download, through the nxm handler) and mailto: open as before.
+    // No base address for relative links: the page would then run as
+    // nexusmods.com, a site the mod author doesn't own
     const QString scheme = url.scheme().toLower();
-    if ((scheme == "http" || scheme == "https") && !url.host().isEmpty()) {
+    if (((scheme == "http" || scheme == "https") && !url.host().isEmpty()) ||
+        (scheme == "nxm" && !url.host().isEmpty()) ||
+        (scheme == "mailto" && !url.path().isEmpty())) {
       shell::Open(url);
     } else {
       log::warn("link '{}' in the description is not a web page, not opened",

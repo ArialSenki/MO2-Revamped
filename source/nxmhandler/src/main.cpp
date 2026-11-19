@@ -45,7 +45,8 @@ void logHandler(QtMsgType type, const QMessageLogContext &context, const QString
   file.write(qUtf8Printable(QString("[%1] %2\n").arg(QDateTime::currentDateTime().toString()).arg(message)));
 }
 
-void handleLink(const QString &executable, const QString &arguments, const QString &link)
+// false when the link was refused (the user is told)
+bool handleLink(const QString &executable, const QString &arguments, const QString &link)
 {
   QString quotedExecutable(executable);
   if (!quotedExecutable.contains(QRegularExpression("^\".*\"$"))) {
@@ -58,7 +59,13 @@ void handleLink(const QString &executable, const QString &arguments, const QStri
   for (const QChar c : link) {
     if (c == u'"' || c.unicode() < 0x20 || c.unicode() == 0x7f) {
       qWarning("link refused: it holds a quote or a control character");
-      return;
+      QMessageBox::warning(nullptr, QCoreApplication::translate("NxmHandler", "Invalid Arguments"),
+                           QCoreApplication::translate("NxmHandler",
+                                                       "This nxm link holds a quote or a control "
+                                                       "character, which no Nexus link has, so it "
+                                                       "wasn't opened. The program that passed it "
+                                                       "may have changed it."));
+      return false;
     }
   }
   const QString quotedLink = '"' + link + '"';
@@ -67,6 +74,7 @@ void handleLink(const QString &executable, const QString &arguments, const QStri
                  ToWString(arguments + " " + quotedLink).c_str(),
                  ToWString(QFileInfo(quotedExecutable).absolutePath()).c_str(),
                  SW_SHOWNORMAL);
+  return true;
 }
 
 HandlerStorage *registerExecutable(const QDir &storagePath,
@@ -370,8 +378,7 @@ int main(int argc, char *argv[])
         handlerVals.pop_front();
         QString arguments = handlerVals.join(" ");
         if (!executable.isEmpty()) {
-          handleLink(executable, arguments, args.at(1));
-          return 0;
+          return handleLink(executable, arguments, args.at(1)) ? 0 : 1;
         } else {
           if (chooseHandlerFor(*storage, url.game())) {
             handlerVals = storage->getHandler(url.game());
@@ -379,8 +386,7 @@ int main(int argc, char *argv[])
             handlerVals.pop_front();
             arguments = handlerVals.join(" ");
             if (!executable.isEmpty()) {
-              handleLink(executable, arguments, args.at(1));
-              return 0;
+              return handleLink(executable, arguments, args.at(1)) ? 0 : 1;
             }
           }
           return 1;

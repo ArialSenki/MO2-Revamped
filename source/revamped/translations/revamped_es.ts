@@ -14034,6 +14034,10 @@ Esto no cambia de inmediato cómo se gestionan los enlaces.
   <context>
     <name>NxmHandler</name>
     <message>
+      <source>This nxm link holds a quote or a control character, which no Nexus link has, so it wasn't opened. The program that passed it may have changed it.</source>
+      <translation>Este enlace nxm lleva comillas o un carácter de control, algo que ningún enlace de Nexus tiene, así que no se abrió. Puede que el programa que lo pasó lo haya cambiado.</translation>
+    </message>
+    <message>
       <source>Change Handler?</source>
       <translation>¿Cambiar el gestor?</translation>
     </message>
@@ -17133,6 +17137,14 @@ Instala .NET Desktop Runtime {1} para Windows x64 desde {0} y vuelve a abrir BG3
   </context>
   <context>
     <name>MOMultiProcess</name>
+    <message>
+      <source>Mod Organizer couldn't check that the Mod Organizer that is open runs as your Windows account; nothing was sent to it.</source>
+      <translation>Mod Organizer no pudo comprobar que el Mod Organizer abierto se ejecuta con tu cuenta de Windows; no se le envió nada.</translation>
+    </message>
+    <message>
+      <source>If Mod Organizer was started as administrator with another account's password, links can't reach it: start it with your own account.</source>
+      <translation>Si Mod Organizer se abrió como administrador con la contraseña de otra cuenta, los enlaces no le llegan: ábrelo con tu propia cuenta.</translation>
+    </message>
     <message>
       <source>Another Windows account&apos;s program answered instead of your Mod Organizer; nothing was sent to it.</source>
       <translation>Respondió un programa de otra cuenta de Windows en lugar de tu Mod Organizer; no se le envió nada.</translation>

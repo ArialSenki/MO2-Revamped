@@ -68,14 +68,23 @@ QString pipeName()
   return sid.isEmpty() ? QString(s_Key) : QString(s_Key) + "-" + sid;
 }
 
-// true when the pipe was made by this account (or, for an MO2 running as
+enum class ServerOwner
+{
+  ThisUser,
+  OtherAccount,
+  Unknown
+};
+
+// whether the pipe was made by this account (or, for an MO2 running as
 // administrator, by Administrators): another account can create a pipe of
-// any name, even this one's, and then read every nxm link with its key
-bool serverIsThisUser(QLocalSocket& socket)
+// any name, even this one's, and then read every nxm link with its key.
+// Unknown when this process's account or the pipe's owner can't be read
+ServerOwner serverOwner(QLocalSocket& socket)
 {
   const UserSid& user = currentUserSid();
   if (user.sid == nullptr) {
-    return false;
+    MOBase::log::error("couldn't read this process's Windows account");
+    return ServerOwner::Unknown;
   }
   PSID owner                = nullptr;
   PSECURITY_DESCRIPTOR desc = nullptr;
@@ -85,7 +94,7 @@ bool serverIsThisUser(QLocalSocket& socket)
                       nullptr, nullptr, &desc);
   if (error != ERROR_SUCCESS) {
     MOBase::log::error("couldn't check who runs the other MO2: error {}", error);
-    return false;
+    return ServerOwner::Unknown;
   }
   const bool ok = owner != nullptr && (EqualSid(owner, user.sid) ||
                                        IsWellKnownSid(owner, WinBuiltinAdministratorsSid));
@@ -101,7 +110,7 @@ bool serverIsThisUser(QLocalSocket& socket)
                        name);
   }
   LocalFree(desc);
-  return ok;
+  return ok ? ServerOwner::ThisUser : ServerOwner::OtherAccount;
 }
 
 }  // namespace
@@ -147,6 +156,18 @@ MOMultiProcess::MOMultiProcess(bool allowMultiple, QObject* parent)
                          "processes ({}): {}",
                          pipeName(), m_Server.errorString());
     }
+    // the old name too, for this user only as well: upstream MO2 and MO2
+    // Revamped before beta 15 share the lock and send there. If another
+    // account took that name first, only those lose their way here
+    if (pipeName() != s_Key) {
+      connect(&m_LegacyServer, SIGNAL(newConnection()), this, SLOT(receiveMessage()),
+              Qt::QueuedConnection);
+      m_LegacyServer.setSocketOptions(QLocalServer::UserAccessOption);
+      if (!m_LegacyServer.listen(s_Key)) {
+        MOBase::log::warn("couldn't open the pipe older MO2 versions send to ({}): {}",
+                          s_Key, m_LegacyServer.errorString());
+      }
+    }
   }
 }
 
@@ -177,12 +198,25 @@ void MOMultiProcess::sendMessage(const QString& message)
     }
   }
 
-  if (connected && !serverIsThisUser(socket)) {
-    socket.abort();
-    reportError(tr("Another Windows account's program answered instead of your "
-                   "Mod Organizer; nothing was sent to it."));
-    return;
+  if (connected) {
+    const ServerOwner owner = serverOwner(socket);
+    if (owner != ServerOwner::ThisUser) {
+      socket.abort();
+      reportError(owner == ServerOwner::OtherAccount
+                      ? tr("Another Windows account's program answered instead of "
+                           "your Mod Organizer; nothing was sent to it.")
+                      : tr("Mod Organizer couldn't check that the Mod Organizer "
+                           "that is open runs as your Windows account; nothing was "
+                           "sent to it."));
+      return;
+    }
   }
+
+  // MO2 Revamped: started as administrator with another account's password,
+  // the open MO2 listens for that account only (links can't cross accounts)
+  const QString otherAccount =
+      tr("If Mod Organizer was started as administrator with another account's "
+         "password, links can't reach it: start it with your own account.");
 
   if (!connected) {
     // MO2 Revamped: a link said plainly; the socket's error is for the log
@@ -190,10 +224,12 @@ void MOMultiProcess::sendMessage(const QString& message)
       MOBase::log::error("failed to connect to running process: {}",
                          socket.errorString());
       reportError(tr("Mod Organizer is running but didn't answer; the link wasn't "
-                     "added. Try again in a moment."));
+                     "added. Try again in a moment.") +
+                  "\n\n" + otherAccount);
     } else {
       reportError(
-          tr("failed to connect to running process: %1").arg(socket.errorString()));
+          tr("failed to connect to running process: %1").arg(socket.errorString()) +
+          "\n\n" + otherAccount);
     }
     return;
   }
@@ -223,7 +259,12 @@ void MOMultiProcess::receiveMessage()
   // sendMessage()), so waitForReadyRead() on a message that had already
   // arrived waited out its whole timeout: MO2 froze for five seconds on each
   // nxm link before "Download started"
-  while (QLocalSocket* socket = m_Server.nextPendingConnection()) {
+  // the per-user pipe or the old name (see the constructor)
+  auto* server = qobject_cast<QLocalServer*>(sender());
+  if (server == nullptr) {
+    server = &m_Server;
+  }
+  while (QLocalSocket* socket = server->nextPendingConnection()) {
     if (socket->bytesAvailable() > 0) {
       readMessage(socket);
       continue;

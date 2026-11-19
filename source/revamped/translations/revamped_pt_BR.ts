@@ -13808,6 +13808,10 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
   <context>
     <name>NxmHandler</name>
     <message>
+      <source>This nxm link holds a quote or a control character, which no Nexus link has, so it wasn't opened. The program that passed it may have changed it.</source>
+      <translation>Este link nxm tem aspas ou um caractere de controle, algo que nenhum link do Nexus tem, então ele não foi aberto. O programa que o passou pode tê-lo alterado.</translation>
+    </message>
+    <message>
       <source>Change Handler?</source>
       <translation>Alterar o manipulador?</translation>
     </message>
@@ -16829,6 +16833,14 @@ Instale o .NET Desktop Runtime {1} para Windows x64 em {0} e depois abra o BG3 M
   </context>
   <context>
     <name>MOMultiProcess</name>
+    <message>
+      <source>Mod Organizer couldn't check that the Mod Organizer that is open runs as your Windows account; nothing was sent to it.</source>
+      <translation>O Mod Organizer não conseguiu verificar se o Mod Organizer aberto roda com a sua conta do Windows; nada foi enviado a ele.</translation>
+    </message>
+    <message>
+      <source>If Mod Organizer was started as administrator with another account's password, links can't reach it: start it with your own account.</source>
+      <translation>Se o Mod Organizer foi aberto como administrador com a senha de outra conta, os links não chegam a ele: abra-o com a sua própria conta.</translation>
+    </message>
     <message>
       <source>Another Windows account&apos;s program answered instead of your Mod Organizer; nothing was sent to it.</source>
       <translation>Um programa de outra conta do Windows respondeu no lugar do seu Mod Organizer; nada foi enviado a ele.</translation>

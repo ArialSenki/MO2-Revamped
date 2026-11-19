@@ -14158,6 +14158,10 @@ Utilisez cette option si vous avez déplacé Mod Organizer ou désinstallé l'in
   <context>
     <name>NxmHandler</name>
     <message>
+      <source>This nxm link holds a quote or a control character, which no Nexus link has, so it wasn't opened. The program that passed it may have changed it.</source>
+      <translation>Ce lien nxm contient un guillemet ou un caractère de contrôle, ce qu'aucun lien Nexus ne contient ; il n'a donc pas été ouvert. Le programme qui l'a transmis l'a peut-être modifié.</translation>
+    </message>
+    <message>
       <source>Change Handler?</source>
       <translation>Changer de gestionnaire ?</translation>
     </message>
@@ -17036,6 +17040,14 @@ Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG
   </context>
   <context>
     <name>MOMultiProcess</name>
+    <message>
+      <source>Mod Organizer couldn't check that the Mod Organizer that is open runs as your Windows account; nothing was sent to it.</source>
+      <translation>Mod Organizer n'a pas pu vérifier que le Mod Organizer ouvert s'exécute avec votre compte Windows ; rien ne lui a été envoyé.</translation>
+    </message>
+    <message>
+      <source>If Mod Organizer was started as administrator with another account's password, links can't reach it: start it with your own account.</source>
+      <translation>Si Mod Organizer a été lancé en administrateur avec le mot de passe d'un autre compte, les liens ne lui parviennent pas : lancez-le avec votre propre compte.</translation>
+    </message>
     <message>
       <source>Another Windows account&apos;s program answered instead of your Mod Organizer; nothing was sent to it.</source>
       <translation>Un programme d&apos;un autre compte Windows a répondu à la place de votre Mod Organizer ; rien ne lui a été envoyé.</translation>
