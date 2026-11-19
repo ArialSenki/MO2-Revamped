@@ -253,7 +253,11 @@ bool fileVersionMatchesDll(const QString& exeVersion, const QString& dllName)
 
 QString defaultRoot()
 {
-  return QStringLiteral("C:/Nolvus");
+  // the Dashboard's own default, unless the global settings name another
+  // ("Nolvus/defaultRoot": an install elsewhere, or a test folder)
+  const QString set =
+      clean(GlobalSettings::value(QStringLiteral("Nolvus/defaultRoot")).toString());
+  return set.isEmpty() ? QStringLiteral("C:/Nolvus") : set;
 }
 
 QStringList roots()
