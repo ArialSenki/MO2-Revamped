@@ -62,5 +62,7 @@ def _convert_jsons_in_dir_to_yaml(path: Path):
                 qInfo(f"Converted {file} to YAML")
         except OSError as e:
             qWarning(f"Error accessing file {converted_path}: {e}")
-        except ValueError as e:
+        except Exception as e:  # noqa: BLE001
+            # MO2 Revamped: not valid JSON, or nested too deep (RecursionError):
+            # this file is skipped, the other files and mods still convert
             qWarning(f"Couldn't convert {file} to YAML: {e}")
