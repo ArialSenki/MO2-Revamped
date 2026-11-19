@@ -11230,6 +11230,14 @@ Usane uno per partita o per elenco di mod da provare. Il profilo in uso si scegl
       <translation>Riproduce il suono di notifica di Windows invece di mostrare i piccoli avvisi in fondo alla finestra (&quot;Installazione completata&quot; e simili). Restano nel registro di MO2. Domande ed errori vengono ancora mostrati.</translation>
     </message>
     <message>
+      <source>OLED Black</source>
+      <translation>Nero OLED</translation>
+    </message>
+    <message>
+      <source>Interface theme</source>
+      <translation>Tema dell'interfaccia</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Nuovo tema...</translation>
     </message>

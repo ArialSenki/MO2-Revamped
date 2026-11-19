@@ -84,6 +84,9 @@ private:
   QString m_defaultStyle;
   QString m_activeBaseStyle;
   QString m_appliedStyleFile;
+  // OLED Black asked for with dark.qss, and whether the applied style has it
+  bool m_oledStyle = false;
+  bool m_appliedOled = false;
   std::unique_ptr<env::ModuleNotification> m_modules;
 
   std::unique_ptr<Instance> m_instance;

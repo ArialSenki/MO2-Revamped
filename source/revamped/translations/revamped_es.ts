@@ -10920,6 +10920,14 @@ Usa uno por partida o por lista de mods que quieras probar. El perfil en uso se 
       <translation>Reproduce el sonido de notificación de Windows en lugar de mostrar los avisos pequeños de la parte inferior de la ventana (&quot;Instalación completada&quot; y similares). Siguen en el registro de MO2. Las preguntas y los errores se siguen mostrando.</translation>
     </message>
     <message>
+      <source>OLED Black</source>
+      <translation>Negro OLED</translation>
+    </message>
+    <message>
+      <source>Interface theme</source>
+      <translation>Tema de la interfaz</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Nuevo tema...</translation>
     </message>

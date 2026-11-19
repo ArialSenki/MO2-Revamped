@@ -10784,6 +10784,14 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <translation>Toca o som de notificação do Windows em vez de mostrar os pequenos avisos na parte de baixo da janela (&quot;Instalação concluída&quot; e afins). Eles continuam no registro do MO2. Perguntas e erros continuam aparecendo.</translation>
     </message>
     <message>
+      <source>OLED Black</source>
+      <translation>Preto OLED</translation>
+    </message>
+    <message>
+      <source>Interface theme</source>
+      <translation>Tema da interface</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Novo tema...</translation>
     </message>

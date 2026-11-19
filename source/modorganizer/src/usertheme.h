@@ -36,6 +36,7 @@ struct Theme
   QString name;         // shown in Settings
   bool dark = true;     // which built-in theme it loads on top of
   QMap<QString, QColor> colors;  // only the keys the theme sets
+  bool oled = false;    // OLED Black: built in, its rules are oledRules()
 };
 
 // Light.qss or dark.qss, whatever the case
@@ -67,8 +68,25 @@ void publishColors(const Theme* theme);
 // built-in theme
 QColor recolor(const QColor& color);
 
-// a user theme is in use
+// a user theme is in use (OLED Black counts: it is Dark in its own colors)
 bool active();
+
+// OLED Black: Dark with true black windows and panels for OLED screens, near
+// black only where a surface has to stand out (cards, menus, the log). It is
+// Dark in these colors plus oledRules(), so every fix to dark.qss carries over.
+// Stored as the style dark.qss with InterfaceSettings::oledBackground() set
+Theme oledTheme(const QString& stylesheetsDir);
+
+// the rules OLED Black adds on top of Dark in its colors
+QString oledRules();
+
+// the Settings choice for OLED Black, which no file has
+QString oledChoice();
+
+// a highlight color of the user's (conflicts, selected plugins) as the list
+// shows it: toned down like the status colors in OLED Black, itself otherwise.
+// What the user picked stays as it is in the settings
+QColor highlight(const QColor& color);
 
 // the six colors of Light or Dark, which a new theme starts from
 QMap<QString, QColor> builtInColors(bool dark);

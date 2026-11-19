@@ -20,6 +20,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "pluginlist.h"
+#include "usertheme.h"
 #include "modinfo.h"
 #include "modlist.h"
 #include "scopeguard.h"
@@ -1490,7 +1491,7 @@ QVariant PluginList::backgroundData(const QModelIndex& modelIndex) const
   const int index = modelIndex.row();
 
   if (m_ESPs[index].modSelected) {
-    return Settings::instance().colors().pluginListContained();
+    return UserTheme::highlight(Settings::instance().colors().pluginListContained());
   }
 
   return {};

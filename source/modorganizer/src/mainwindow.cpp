@@ -1815,8 +1815,9 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   writeStartupDiagnosticEvent("mainwindow.construct.begin");
 
   // the theme styles the window's surfaces by this property; set before any of
-  // them is polished, MOApplication doesn't have to polish them all again
-  if (usesFluentMica()) {
+  // them is polished, MOApplication doesn't have to polish them all again.
+  // OLED Black has none (see applyMica())
+  if (usesFluentMica() && !qApp->property("revampedOled").toBool()) {
     setProperty("fluentMica", true);
   }
 

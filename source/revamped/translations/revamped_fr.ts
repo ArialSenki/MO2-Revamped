@@ -11066,6 +11066,14 @@ Utilisez-en un par partie ou par liste de mods à essayer. Le profil utilisé se
       <translation>Joue le son de notification de Windows au lieu d&apos;afficher les petites notifications en bas de la fenêtre (&quot;Installation réussie&quot;, etc.). Elles restent dans le journal de MO2. Les questions et les erreurs s&apos;affichent toujours.</translation>
     </message>
     <message>
+      <source>OLED Black</source>
+      <translation>Noir OLED</translation>
+    </message>
+    <message>
+      <source>Interface theme</source>
+      <translation>Thème de l'interface</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Nouveau thème...</translation>
     </message>

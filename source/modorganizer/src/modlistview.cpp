@@ -40,6 +40,7 @@
 #include "modlistversiondelegate.h"
 #include "modlistviewactions.h"
 #include "organizercore.h"
+#include "usertheme.h"
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
@@ -1795,15 +1796,15 @@ QColor ModListView::computeMarkerColor(const QModelIndex& index) const
                                  m_markers.archiveLooseOverwritten.end();
 
   if (highligth) {
-    return Settings::instance().colors().modlistContainsPlugin();
+    return UserTheme::highlight(Settings::instance().colors().modlistContainsPlugin());
   } else if (overwritten || archiveLooseOverwritten) {
-    return Settings::instance().colors().modlistOverwritingLoose();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwritingLoose());
   } else if (overwrite || archiveLooseOverwrite) {
-    return Settings::instance().colors().modlistOverwrittenLoose();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwrittenLoose());
   } else if (archiveOverwritten) {
-    return Settings::instance().colors().modlistOverwritingArchive();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwritingArchive());
   } else if (archiveOverwrite) {
-    return Settings::instance().colors().modlistOverwrittenArchive();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwrittenArchive());
   }
 
   // collapsed separator
