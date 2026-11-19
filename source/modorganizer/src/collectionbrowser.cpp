@@ -24,6 +24,7 @@
 #include <QLineEdit>
 #include <QLocale>
 #include <QNetworkReply>
+#include <QPainter>
 #include <QPointer>
 #include <QPushButton>
 #include <QScreen>
@@ -158,6 +159,21 @@ void fetch(QNetworkAccessManager& network, const QString& url, QObject* context,
                      }
                      done(image);
                    });
+}
+
+QPixmap thumbnail(const QImage& image, QSize size, qreal dpr)
+{
+  const QSize box     = size * dpr;
+  const QImage scaled = image.scaled(box, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  QPixmap pixmap(box);
+  pixmap.fill(Qt::transparent);
+  {
+    QPainter painter(&pixmap);
+    painter.drawImage((box.width() - scaled.width()) / 2,
+                      (box.height() - scaled.height()) / 2, scaled);
+  }
+  pixmap.setDevicePixelRatio(dpr);
+  return pixmap;
 }
 
 }  // namespace CollectionImages
@@ -835,10 +851,7 @@ void CollectionBrowser::loadImage(const QString& url)
     if (image.isNull()) {
       return;
     }
-    const qreal dpr = devicePixelRatioF();
-    QPixmap pixmap  = QPixmap::fromImage(
-        image.scaled(ThumbSize * dpr, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    pixmap.setDevicePixelRatio(dpr);
+    const QPixmap pixmap = CollectionImages::thumbnail(image, ThumbSize, devicePixelRatioF());
     m_images.insert(url, pixmap);
     // the rows in the sections too
     for (QTreeWidgetItemIterator it(m_list); *it != nullptr; ++it) {

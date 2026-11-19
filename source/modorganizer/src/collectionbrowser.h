@@ -35,6 +35,11 @@ namespace CollectionImages
 // only, at most a few MB; done gets a null image when it can't be read
 void fetch(QNetworkAccessManager& network, const QString& url, QObject* context,
            std::function<void(const QImage&)> done);
+
+// a gallery row's picture: scaled into size and centred on a clear box of
+// that size, so a square picture and a wide one put the names at one place
+// (the Wabbajack gallery's too)
+QPixmap thumbnail(const QImage& image, QSize size, qreal dpr);
 }  // namespace CollectionImages
 
 class CollectionBrowser : public QDialog

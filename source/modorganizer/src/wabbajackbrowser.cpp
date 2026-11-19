@@ -1,5 +1,6 @@
 #include "wabbajackbrowser.h"
 
+#include "collectionbrowser.h"
 #include "fluenticons.h"
 #include "screenfitter.h"
 #include "settings.h"
@@ -654,8 +655,8 @@ void ListBrowser::loadImage(QTreeWidgetItem* item, const QString& url)
         reply->bytesAvailable() > MaxImageBytes || !image.loadFromData(reply->readAll())) {
       return;
     }
-    const QPixmap pixmap = QPixmap::fromImage(
-        image.scaled(QSize(96, 54), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // centred in one box, as the collections gallery's
+    const QPixmap pixmap = CollectionImages::thumbnail(image, QSize(96, 54), devicePixelRatioF());
     m_images.insert(url, pixmap);
     for (int i = 0; i < m_list->topLevelItemCount(); ++i) {
       QTreeWidgetItem* it = m_list->topLevelItem(i);
