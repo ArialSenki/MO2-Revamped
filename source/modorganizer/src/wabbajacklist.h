@@ -16,6 +16,7 @@
 #include <QByteArray>
 #include <QCoreApplication>
 #include <QHash>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -234,6 +235,12 @@ struct ModList
   qint64 installSize = 0;
   // the profiles the list brings (profiles\<name>\...)
   QStringList profiles;
+  // the longest path a directive writes under the install folder, in
+  // characters (Windows' 259-character paths)
+  int longestPath = 0;
+  // the programs the list writes (their paths, lower case, with backslashes):
+  // a Stock Game the list fills itself has its game exe among them
+  QSet<QString> programs;
   // MO2 plugins the list adds from archives other than Mod Organizer's own
   QStringList extraPlugins;
   // directive and source types this doesn't know

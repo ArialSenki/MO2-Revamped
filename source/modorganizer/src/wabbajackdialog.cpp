@@ -1311,12 +1311,8 @@ void WabbajackDialog::startInstall()
   // the longest path the list writes under the install folder (its BSAs'
   // gathered files included): libbsarch, DirectXTex and the archive library
   // take plain Windows paths, which stop at 259 characters
-  int longest = 0;
-  for (const auto& d : m_list->directives) {
-    if (!d.modOrganizerFile) {
-      longest = qMax(longest, int(d.to.size()));
-    }
-  }
+  // (counted as the list was read: the window keeps no directives)
+  const int longest = m_list->longestPath;
   constexpr int MaxPath = 259;
   // the room the install takes: its files (the BSAs' gathered files and the
   // BSAs built from them both count), plus the temporary ones it unpacks on
@@ -1380,7 +1376,7 @@ void WabbajackDialog::startInstall()
           .arg(f.size() + 1 + longest)
           .arg(MaxPath)
           .arg(room)
-          .arg(QDir::toNativeSeparators(QDir(f).rootPath() + QStringLiteral("Lists")));
+          .arg(QDir::toNativeSeparators(f.left(f.indexOf(u'/') + 1) + QStringLiteral("Lists")));
     }
     const QDir dir(f);
     if (dir.exists()) {
@@ -1871,13 +1867,8 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
               .relativeFilePath(QDir(QDir::fromNativeSeparators(gamePath))
                                     .filePath(game->binaryName()))
               .replace(u'/', u'\\');
-      bool listFillsIt = false;
-      for (const auto& d : m_list->directives) {
-        if (QString(d.to).replace(u'/', u'\\').compare(relative, Qt::CaseInsensitive) == 0) {
-          listFillsIt = true;
-          break;
-        }
-      }
+      // (the window keeps no directives: the programs were noted as it read)
+      const bool listFillsIt = m_list->programs.contains(relative.toLower());
       if (game->looksValid(QDir(gamePath))) {
         to.setValue("gamePath", from.value("gamePath"));
       } else if (listFillsIt) {

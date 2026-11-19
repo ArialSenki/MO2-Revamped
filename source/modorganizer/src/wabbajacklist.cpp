@@ -1022,6 +1022,10 @@ std::optional<ModList> readModList(const QString& path, QString* error,
     // what ends on disk: not the .meta files (they go with the downloads)
     if (d.type != DirectiveType::ArchiveMeta) {
       list.installSize += d.size;
+      list.longestPath = qMax(list.longestPath, int(d.to.size()));
+      if (d.to.endsWith(u".exe", Qt::CaseInsensitive)) {
+        list.programs.insert(QString(d.to).replace(u'/', u'\\').toLower());
+      }
     }
 
     if (keepDirectives) {
