@@ -1042,9 +1042,15 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             if entry.is_file() and name.casefold().endswith(".dll"):
                 # MO2's own plugin DLLs carry no version: their date tells
                 # which build they came with
-                version = self._file_version(entry) or "built " + datetime.fromtimestamp(
-                    entry.stat().st_mtime, timezone.utc
-                ).strftime("%Y-%m-%d")
+                version = self._file_version(entry)
+                if not version:
+                    try:
+                        version = "built " + datetime.fromtimestamp(
+                            entry.stat().st_mtime, timezone.utc
+                        ).strftime("%Y-%m-%d")
+                    except OSError:
+                        # removed or locked since the folder was listed
+                        version = ""
             elif entry.is_file() and name.casefold().endswith(".py"):
                 version = python_version(entry)
             elif entry.is_dir() and (entry / "__init__.py").is_file():
@@ -1063,19 +1069,26 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         """Where the last crash dump is; the dump itself is never included."""
         try:
             folder = Path(self._organizer.basePath()) / "crashDumps"
-            dumps = sorted(
-                folder.glob("*.dmp"), key=lambda p: p.stat().st_mtime, reverse=True
-            )
+            candidates = list(folder.glob("*.dmp"))
         except Exception:
             return ["Last crash dump: unavailable"]
+        # each dump's facts read once: one removed or locked meanwhile (MO2
+        # deletes the oldest) is left out instead of failing the whole report
+        dumps = []
+        for dump in candidates:
+            try:
+                dumps.append((dump, dump.stat()))
+            except OSError:
+                continue
         if not dumps:
             return ["Last crash dump: none"]
-        last = dumps[0]
-        when = datetime.fromtimestamp(last.stat().st_mtime, timezone.utc).isoformat()
+        dumps.sort(key=lambda item: item[1].st_mtime, reverse=True)
+        last, info = dumps[0]
+        when = datetime.fromtimestamp(info.st_mtime, timezone.utc).isoformat()
         return [
             f"Crash dumps: {len(dumps)}",
             f"Last crash dump: {last} (modified UTC {when}, "
-            f"{last.stat().st_size // 1024} KiB, not included)",
+            f"{info.st_size // 1024} KiB, not included)",
         ]
 
     def _report_summary(self) -> str:
@@ -1316,14 +1329,31 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 button.setObjectName("mo2RevampedReportSaveButton")
         save_dialog.setMinimumSize(760, 500)
         save_dialog.resize(860, 560)
-        if save_dialog.exec() != QDialog.DialogCode.Accepted:
-            return False
-        selected_files = save_dialog.selectedFiles()
-        destination = selected_files[0] if selected_files else ""
-        if not destination:
-            return False
-        if not destination.casefold().endswith(".zip"):
+        while True:
+            if save_dialog.exec() != QDialog.DialogCode.Accepted:
+                return False
+            selected_files = save_dialog.selectedFiles()
+            destination = selected_files[0] if selected_files else ""
+            if not destination:
+                return False
+            if destination.casefold().endswith(".zip"):
+                break
+            # a name with another extension ("report.txt") gets .zip here, after
+            # the dialog asked about overwriting the name as typed: ask again
+            # for the file that will really be written
             destination += ".zip"
+            if not Path(destination).exists():
+                break
+            answer = QMessageBox.question(
+                parent,
+                _tr("Save MO2 Revamped report"),
+                _tr("{name} already exists. Do you want to replace it?").format(
+                    name=Path(destination).name
+                ),
+            )
+            if answer == QMessageBox.StandardButton.Yes:
+                break
+            save_dialog.selectFile(Path(destination).name)
 
         archive_started = False
         try:
@@ -1437,7 +1467,12 @@ class _Redactor:
                         r"(?!(?:[A-Za-z0-9+=]*-){5})"
                         r"[A-Za-z0-9+=-]{64,}(?![A-Za-z0-9+=_./\\-])"), self.Removed),
         ]
-        self._email = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+        # from the start of a run only, and at most 64 characters before the @
+        # (the limit for an address): a long run without @ (base64, hex) is
+        # tried once instead of from each of its characters
+        self._email = re.compile(
+            r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+"
+        )
         # a SteamID64 (in Elden Ring's and other games' save paths) is the
         # player's public Steam profile
         self._steam = re.compile(r"(?<!\d)7656119\d{10}(?!\d)")

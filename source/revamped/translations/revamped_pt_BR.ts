@@ -7939,6 +7939,10 @@ Se acontecer de novo, anexe este arquivo (e o mo_interface.log da pasta logs) ao
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
+      <source>{name} already exists. Do you want to replace it?</source>
+      <translation>{name} já existe. Deseja substituí-lo?</translation>
+    </message>
+    <message>
       <source>Choose global or portable setups.</source>
       <translation>Escolha configurações globais ou portáteis.</translation>
     </message>

@@ -7987,6 +7987,10 @@ Si vuelve a pasar, adjunta este archivo (y el mo_interface.log de la carpeta log
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
+      <source>{name} already exists. Do you want to replace it?</source>
+      <translation>{name} ya existe. ¿Quieres reemplazarlo?</translation>
+    </message>
+    <message>
       <source>Choose global or portable setups.</source>
       <translation>Elige configuraciones globales o portables.</translation>
     </message>
