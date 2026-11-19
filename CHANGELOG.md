@@ -1,5 +1,82 @@
 # Changelog
 
+## 1.1.0-beta.15 (pre-release) — November 19, 2026
+
+Beta 14 plus installing several mods at once, archives dropped from Explorer,
+a Nexus Collections gallery laid out like the Wabbajack one, smoother corners
+and a new **OLED Black** theme.
+
+### Install several mods at once
+
+- **Downloads:** select several (Ctrl or Shift) and choose **Install N
+  selected**, press Enter, or double-click one of them. They install one after
+  another, top to bottom.
+- **Install a mod...** lets you pick several archives.
+- Each installer (quick, manual, FOMOD, BAIN) opens for its own mod. Cancel one
+  and MO2 asks whether to go on with the next or stop. At the end one notice
+  sums up installed, skipped and failed mods, and the virtual file tree is
+  rebuilt once.
+- A queue can't start while a collection is installing.
+
+### Drag archives from Explorer
+
+- **On the mod list:** one or more archives install where you drop them
+  (sorted by priority), or as the last mods anywhere else.
+- **On Downloads:** MO2 asks Copy / Move and adds them to the downloads folder
+  without installing.
+- While you drag, a soft hint shows **Drop to install** or **Drop to add to
+  Downloads**, in the theme's accent colour.
+- Several downloads dragged onto the mod list now all install (before, only
+  one did).
+- Explorer can't drop into a program running as administrator: start MO2
+  normally.
+
+### Nexus Collections gallery
+
+- Laid out like the Wabbajack gallery: search as you type, a game picker with
+  the number of collections of each game, sort order and adult content.
+- **All games** shows a section per game, the instance's game first, with
+  **See all N collections of ...** for each.
+- Every game MO2 Revamped supports that has collections on Nexus (43 today).
+  Collections of another game can be viewed and opened on Nexus, not installed
+  into this instance.
+- Thumbnails in both galleries sit centred in one box, so names line up.
+
+### Window sizes
+
+- The Collections and Wabbajack windows no longer open maximized: the first
+  time they take 80% of the screen, centred on MO2. They remember their size,
+  place and maximized state, fitted to the current screen.
+- The floating Log always undocks at its default size and place. Maximize and
+  restore brings it back to its own size, and it no longer shrinks a little
+  every session.
+
+### Smoother corners
+
+- Menus, drop-down lists, autocompletion and tooltips: one clean Windows 11
+  rounded corner with a single border in the theme's colour, instead of two
+  curves and two borders.
+- The floating Log has no black corners.
+- The status bar has no line across the window under the cards.
+
+### OLED Black theme
+
+Settings > Theme > **OLED Black**, applied live:
+
+- true black (#000000) window, title bar, toolbar, gaps, status bar and
+  dialogs; near-black cards, lists, menus and Log so they still stand apart;
+- off-white text, a calmer accent and dimmer status colours;
+- for burn-in: the Run button and default buttons are outlines on a dark tint,
+  the active tab line, progress bars and switches are dimmed;
+- Mica is off in this theme because it greys the black.
+
+It is built on top of Dark, so fixes to Dark reach it too.
+
+### Fixes
+
+- **nxm links:** MO2 no longer freezes for five seconds before "Download
+  started".
+
 ## 1.1.0-beta.14 (pre-release) — November 18, 2026
 
 Beta 13 plus **native installation of Wabbajack modlists**, which until now
