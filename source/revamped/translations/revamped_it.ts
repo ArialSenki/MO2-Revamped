@@ -8291,6 +8291,10 @@ Se succede di nuovo, allega questo file (e il mo_interface.log della cartella lo
       <source>Move</source>
       <translation>Sposta</translation>
     </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Rilascia per aggiungere ai download</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13949,6 +13953,10 @@ Avviarlo comunque?</translation>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>Impossibile copiare la cartella in una mod: %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Rilascia per installare</translation>
     </message>
   </context>
   <context>

@@ -7939,6 +7939,10 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
       <source>Move</source>
       <translation>Verschieben</translation>
     </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Loslassen, um zu den Downloads hinzuzufügen</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13476,6 +13480,10 @@ Trotzdem starten?</translation>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>Der Ordner konnte nicht in eine Mod kopiert werden: %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Zum Installieren loslassen</translation>
     </message>
   </context>
   <context>

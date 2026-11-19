@@ -52,6 +52,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "listdialog.h"
 #include "localsavegames.h"
 #include "messagedialog.h"
+#include "drophint.h"
 #include "modlist.h"
 #include "modlistcontextmenu.h"
 #include "modlistviewactions.h"
@@ -8055,6 +8056,40 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
   // a web link only means something to the downloads (it starts a download)
   if (anyLocal || ui->downloadView->isVisible()) {
     event->accept();
+    m_dragHasArchives = anyLocal;
+    updateDownloadsDropHint(event->position().toPoint());
+  }
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event)
+{
+  updateDownloadsDropHint(event->position().toPoint());
+  QMainWindow::dragMoveEvent(event);
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
+{
+  // also when the drag is cancelled (Escape), or the mod list takes it
+  m_dragHasArchives = false;
+  if (m_downloadsDropHint != nullptr) {
+    m_downloadsDropHint->hideHint();
+  }
+  QMainWindow::dragLeaveEvent(event);
+}
+
+void MainWindow::updateDownloadsDropHint(const QPoint& pos)
+{
+  QWidget* at = childAt(pos);
+  const bool over = m_dragHasArchives && ui->downloadView->isVisible() &&
+                    at != nullptr &&
+                    (at == ui->downloadView || ui->downloadView->isAncestorOf(at));
+  if (over) {
+    if (auto* hint = DropHintOverlay::forView(m_downloadsDropHint, ui->downloadView,
+                                              tr("Drop to add to Downloads"))) {
+      hint->showHint();
+    }
+  } else if (m_downloadsDropHint != nullptr) {
+    m_downloadsDropHint->hideHint();
   }
 }
 
@@ -8141,6 +8176,10 @@ void MainWindow::logDragDropState()
 
 void MainWindow::dropEvent(QDropEvent* event)
 {
+  m_dragHasArchives = false;
+  if (m_downloadsDropHint != nullptr) {
+    m_downloadsDropHint->hideHint();
+  }
   const QList<QUrl> urls = event->mimeData()->urls();
 
   // MO2 Revamped: onto the downloads, they are copied (or moved) into the

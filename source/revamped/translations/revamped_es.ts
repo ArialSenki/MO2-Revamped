@@ -7979,6 +7979,10 @@ Si vuelve a pasar, adjunta este archivo (y el mo_interface.log de la carpeta log
       <source>Move</source>
       <translation>Mover</translation>
     </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Suelta para añadir a Descargas</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13678,6 +13682,10 @@ Start it anyway?</source>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>No se pudo copiar la carpeta en un mod: %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Suelta para instalar</translation>
     </message>
   </context>
   <context>

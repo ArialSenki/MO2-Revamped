@@ -1,4 +1,5 @@
 #include "modlistview.h"
+#include "drophint.h"
 #include "fluentstatusdelegate.h"
 #include <QApplication>
 #include <QHash>
@@ -2026,6 +2027,13 @@ void ModListView::dragEnterEvent(QDragEnterEvent* event)
   // there is no drop event for invalid data since canDropMimeData
   // returns false, so we notify user on drag enter
   ModListDropInfo dropInfo(event->mimeData(), *m_core);
+  // MO2 Revamped: archives from Explorer: the list says what a drop does
+  // (only once the list took the drag: it then gets the leave that hides it)
+  if (dropInfo.isExternalArchiveDrop() && event->isAccepted()) {
+    if (auto* hint = DropHintOverlay::forView(m_dropHint, this, tr("Drop to install"))) {
+      hint->showHint();
+    }
+  }
   // MO2 Revamped: where a drag got, for drops that don't happen
   log::info("mod list: drag entered (valid {}, archives {}, downloads {}, mods {}, "
             "files {}), accepted {}",
@@ -2066,8 +2074,20 @@ void ModListView::dragMoveEvent(QDragMoveEvent* event)
   }
 }
 
+void ModListView::dragLeaveEvent(QDragLeaveEvent* event)
+{
+  // also when the drag is cancelled (Escape)
+  if (m_dropHint != nullptr) {
+    m_dropHint->hideHint();
+  }
+  QTreeView::dragLeaveEvent(event);
+}
+
 void ModListView::dropEvent(QDropEvent* event)
 {
+  if (m_dropHint != nullptr) {
+    m_dropHint->hideHint();
+  }
   // MO2 Revamped: archives from Explorer where the model has no place for
   // them (see dragMoveEvent()): installed after the drop has ended, as the
   // last mods

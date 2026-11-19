@@ -7931,6 +7931,10 @@ Se acontecer de novo, anexe este arquivo (e o mo_interface.log da pasta logs) ao
       <source>Move</source>
       <translation>Mover</translation>
     </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Solte para adicionar aos downloads</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13452,6 +13456,10 @@ Iniciar mesmo assim?</translation>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>Não foi possível copiar a pasta para um mod: %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Solte para instalar</translation>
     </message>
   </context>
   <context>

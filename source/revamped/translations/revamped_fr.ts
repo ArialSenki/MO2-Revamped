@@ -8127,6 +8127,10 @@ Si cela se reproduit, joignez ce fichier (et le mo_interface.log du dossier logs
       <source>Move</source>
       <translation>Déplacer</translation>
     </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Déposez pour ajouter aux téléchargements</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -13786,6 +13790,10 @@ Le lancer quand même ?</translation>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>Le dossier n'a pas pu être copié dans un mod : %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Déposez pour installer</translation>
     </message>
   </context>
   <context>
