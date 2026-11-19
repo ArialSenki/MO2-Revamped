@@ -19,7 +19,7 @@ namespace DropHint
 inline constexpr bool Enabled = true;
 }  // namespace DropHint
 
-// a child of the view's viewport, the viewport's size; it takes no mouse
+// a child of the view laid exactly over its viewport; it takes no mouse
 // events, so the drag and the drop still reach the view
 class DropHintOverlay : public QWidget
 {
@@ -41,6 +41,10 @@ protected:
   bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+  void followViewport();
+
+private:
+  QPointer<QAbstractScrollArea> m_view;
   QString m_text;
   QIcon m_icon;
 };
