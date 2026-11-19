@@ -660,6 +660,29 @@ void CollectionBrowser::readOverview(const QVariantMap& data)
     QVariantList nodes;
   };
   std::vector<Section> sections;
+
+  // not one game came back (`{"data": null}`, or a proxy's page that isn't
+  // JSON, without "errors"): Nexus' failure, not "no collections"; the games'
+  // counts from before stay
+  bool anyGame = false;
+  for (std::size_t i = 0; i < m_games.size() && !anyGame; ++i) {
+    const QString key = QStringLiteral("g%1").arg(i);
+    anyGame = data.contains(key) && !data.value(key).isNull();
+  }
+  if (!anyGame && !m_games.empty()) {
+    const QString error =
+        m_overviewError.isEmpty() ? tr("invalid response") : m_overviewError;
+    log::warn("collections gallery: no game in Nexus' answer ({})", error);
+    // (only the counts were asked for while one game is shown: its page stays)
+    if (!allGames()) {
+      return;
+    }
+    m_more->hide();
+    m_status->setText(tr("Nexus didn't answer: %1").arg(error));
+    showDetails();
+    return;
+  }
+
   m_counts.clear();
   int all = 0;
   for (std::size_t i = 0; i < m_games.size(); ++i) {

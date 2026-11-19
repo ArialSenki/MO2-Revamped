@@ -8294,17 +8294,23 @@ void MainWindow::dropEvent(QDropEvent* event)
       ui->downloadView->isVisible() && at != nullptr &&
       (at == ui->downloadView || ui->downloadView->isAncestorOf(at));
 
-  // the mod list's own drops (archives, downloads, a folder) are its own
-  if (at != nullptr && (at == ui->modList || ui->modList->isAncestorOf(at))) {
+  // the mod list's own drops (archives, downloads, a folder) are its own;
+  // only its rows take them: on its header or scroll bars the drop comes
+  // here and installs like anywhere else in the window
+  QWidget* modRows = ui->modList->viewport();
+  if (at != nullptr && (at == modRows || modRows->isAncestorOf(at))) {
     event->ignore();
     return;
   }
 
   if (!onDownloads) {
     QStringList archives;
+    QStringList links;
     for (const QUrl& url : urls) {
       if (url.isLocalFile()) {
         archives << url.toLocalFile();
+      } else {
+        links << url.url();
       }
     }
     if (archives.isEmpty()) {
@@ -8314,6 +8320,11 @@ void MainWindow::dropEvent(QDropEvent* event)
     event->setDropAction(Qt::CopyAction);
     event->accept();
     log::info("{} archive(s) dropped on the window", archives.size());
+    // web links that came along start their downloads, as on the downloads
+    for (const QString& link : links) {
+      log::info("link dropped with the archives, downloading: {}", link);
+      m_OrganizerCore.downloadManager()->startDownloadURLs(QStringList() << link);
+    }
     // after the drop has ended: Explorer waits for it, and the installers open
     // their own windows
     QTimer::singleShot(0, this, [this, archives] {
