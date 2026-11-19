@@ -19377,6 +19377,18 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <source>Warning: the list's own copy of the game, %1, should hold %2 after the install, and it doesn't: the install didn't finish as it should. Install the list again into the same folder. Until then the instance uses your game folder.</source>
       <translation>Warnung: Die eigene Kopie des Spiels der Liste, %1, sollte nach der Installation %2 enthalten, tut es aber nicht: Die Installation ist nicht richtig fertig geworden. Installiere die Liste erneut in denselben Ordner. Bis dahin nutzt die Instanz deinen Spielordner.</translation>
     </message>
+    <message>
+      <source>The list has paths too long for Windows (%1 characters for its longest file, before the install folder): it can't be installed.</source>
+      <translation>Die Liste hat Pfade, die für Windows zu lang sind (%1 Zeichen bei ihrer längsten Datei, ohne den Installationsordner): sie kann nicht installiert werden.</translation>
+    </message>
+    <message>
+      <source>Some of the list's files would get paths longer than Windows allows (%1 characters, at most %2). Choose a folder whose path has at most %3 characters, such as %4.</source>
+      <translation>Einige Dateien der Liste bekämen Pfade, die länger sind, als Windows erlaubt (%1 Zeichen, höchstens %2). Wähle einen Ordner, dessen Pfad höchstens %3 Zeichen hat, etwa %4.</translation>
+    </message>
+    <message>
+      <source>The install folder holds an unfinished install of another list (%1).</source>
+      <translation>Der Installationsordner enthält eine unfertige Installation einer anderen Liste (%1).</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack</name>
@@ -19411,6 +19423,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
     <message>
       <source>its modlist is not valid JSON (%1)</source>
       <translation>ihre modlist ist kein gültiges JSON (%1)</translation>
+    </message>
+    <message>
+      <source>stopped</source>
+      <translation>angehalten</translation>
     </message>
 </context>
 <context>
@@ -19703,6 +19719,18 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <source>The download was sent on to an address that isn't secure (http instead of https).</source>
       <translation>Der Download wurde an eine unsichere Adresse weitergeleitet (http statt https).</translation>
     </message>
+    <message>
+      <source>%1 is in %2, but the downloads folder's drive has no room for it (%3 needed, %4 free).</source>
+      <translation>%1 liegt in %2, aber auf dem Laufwerk des Download-Ordners ist kein Platz dafür (%3 nötig, %4 frei).</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder (is its drive full?). Free some space, then choose it with a right click, Choose the downloaded file.</source>
+      <translation>%1 konnte nicht in den Download-Ordner kopiert werden (ist sein Laufwerk voll?). Schaffe Platz und wähle die Datei dann per Rechtsklick, Heruntergeladene Datei wählen.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder.</source>
+      <translation>%1 konnte nicht in den Download-Ordner kopiert werden.</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack::Installer</name>
@@ -19907,6 +19935,17 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
     <message>
       <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. They have to be put in the game's folder, with Root Builder or by hand.</source>
       <translation>Diese Mods haben Programme oder DLLs für den Spielordner selbst (in ihrem Root-Ordner): %1. Sie müssen in den Spielordner, mit Root Builder oder von Hand.</translation>
+    </message>
+    <message>
+      <source>The install folder's drive is full (%1 free), so the install stopped. Free some space and install again into the same folder: the files already installed and checked stay.</source>
+      <translation>Das Laufwerk des Installationsordners ist voll (%1 frei), daher wurde die Installation angehalten. Schaffe Platz und installiere erneut in denselben Ordner: die schon installierten und geprüften Dateien bleiben.</translation>
+    </message>
+    <message numerus="yes">
+      <source>… and %n more files.</source>
+      <translation>
+        <numerusform>… und %n weitere Dateien.</numerusform>
+        <numerusform>… und %n weitere Dateien.</numerusform>
+      </translation>
     </message>
 </context>
 <context>

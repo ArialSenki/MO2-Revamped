@@ -19353,6 +19353,18 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <source>Warning: the list's own copy of the game, %1, should hold %2 after the install, and it doesn't: the install didn't finish as it should. Install the list again into the same folder. Until then the instance uses your game folder.</source>
       <translation>Aviso: a cópia do jogo da própria lista, %1, deveria conter %2 após a instalação, e não contém: a instalação não terminou como deveria. Instale a lista de novo na mesma pasta. Até lá a instância usa a sua pasta do jogo.</translation>
     </message>
+    <message>
+      <source>The list has paths too long for Windows (%1 characters for its longest file, before the install folder): it can't be installed.</source>
+      <translation>A lista tem caminhos longos demais para o Windows (%1 caracteres no arquivo mais longo, sem a pasta de instalação): ela não pode ser instalada.</translation>
+    </message>
+    <message>
+      <source>Some of the list's files would get paths longer than Windows allows (%1 characters, at most %2). Choose a folder whose path has at most %3 characters, such as %4.</source>
+      <translation>Alguns arquivos da lista teriam caminhos mais longos do que o Windows permite (%1 caracteres, no máximo %2). Escolha uma pasta cujo caminho tenha no máximo %3 caracteres, por exemplo %4.</translation>
+    </message>
+    <message>
+      <source>The install folder holds an unfinished install of another list (%1).</source>
+      <translation>A pasta de instalação tem uma instalação não terminada de outra lista (%1).</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack</name>
@@ -19387,6 +19399,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     <message>
       <source>its modlist is not valid JSON (%1)</source>
       <translation>a modlist não é um JSON válido (%1)</translation>
+    </message>
+    <message>
+      <source>stopped</source>
+      <translation>interrompida</translation>
     </message>
 </context>
 <context>
@@ -19679,6 +19695,18 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <source>The download was sent on to an address that isn't secure (http instead of https).</source>
       <translation>O download foi redirecionado para um endereço não seguro (http em vez de https).</translation>
     </message>
+    <message>
+      <source>%1 is in %2, but the downloads folder's drive has no room for it (%3 needed, %4 free).</source>
+      <translation>%1 está em %2, mas a unidade da pasta de downloads não tem espaço para ele (são necessários %3, há %4 livres).</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder (is its drive full?). Free some space, then choose it with a right click, Choose the downloaded file.</source>
+      <translation>Não foi possível copiar %1 para a pasta de downloads (a unidade está cheia?). Libere espaço e depois escolha-o com o botão direito, Escolher o arquivo baixado.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder.</source>
+      <translation>Não foi possível copiar %1 para a pasta de downloads.</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack::Installer</name>
@@ -19883,6 +19911,17 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     <message>
       <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. They have to be put in the game's folder, with Root Builder or by hand.</source>
       <translation>Estes mods têm programas ou DLLs para a pasta do próprio jogo (na pasta Root): %1. Eles precisam ir para a pasta do jogo, com o Root Builder ou à mão.</translation>
+    </message>
+    <message>
+      <source>The install folder's drive is full (%1 free), so the install stopped. Free some space and install again into the same folder: the files already installed and checked stay.</source>
+      <translation>A unidade da pasta de instalação está cheia (%1 livres), então a instalação parou. Libere espaço e instale de novo na mesma pasta: os arquivos já instalados e verificados ficam.</translation>
+    </message>
+    <message numerus="yes">
+      <source>… and %n more files.</source>
+      <translation>
+        <numerusform>… e mais %n arquivos.</numerusform>
+        <numerusform>… e mais %n arquivos.</numerusform>
+      </translation>
     </message>
 </context>
 <context>

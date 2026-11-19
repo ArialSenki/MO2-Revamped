@@ -40,6 +40,9 @@ constexpr int MaxParallel = 3;
 constexpr int MaxRetries = 3;
 // tries of one part of a file from Wabbajack's servers
 constexpr int MaxPartRetries = 4;
+// a part of a file on Wabbajack's servers is held in memory until its hash is
+// checked; the real ones are 2 MB, and three download at once
+constexpr qint64 MaxCdnPart = 64LL * 1024 * 1024;
 // a Nexus link not answered in this time is given up (the request was lost)
 constexpr qint64 NexusAnswerMs = 180000;
 // a direct download whose size the list doesn't give stops here (no archive
@@ -1471,7 +1474,17 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
                    code != 401 && code != 403 && code != 404 && code != 410);
       return;
     }
+    // the last of the data is written as the file closes: a full drive shows
+    // there, and the download stops with that reason instead of being taken
+    // for a connection that ended early, three times
+    const bool flushed = j->file.flush();
     j->file.close();
+    if (!flushed || j->file.error() != QFileDevice::NoError) {
+      failDownload(i, tr("The disk is full, or %1 can't be written.")
+                          .arg(QDir::toNativeSeparators(j->file.fileName())),
+                   false);
+      return;
+    }
     const Archive& a   = m_list->archives[std::size_t(i)];
     const qint64 size  = j->file.size();
     const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
@@ -1564,7 +1577,7 @@ void DownloadQueue::downloadCdn(int i)
       const QJsonObject p = v.toObject();
       const qint64 offset = qint64(p.value("Offset").toDouble());
       const qint64 psize  = qint64(p.value("Size").toDouble());
-      if (offset < 0 || psize <= 0 || psize > 256LL * 1024 * 1024 || offset + psize > size) {
+      if (offset < 0 || psize <= 0 || psize > MaxCdnPart || offset + psize > size) {
         failDownload(i, wrong, false);
         return;
       }
@@ -1686,7 +1699,14 @@ void DownloadQueue::nextCdnPart(int i, quint64 id)
     ++j->part;
   }
   if (j->part >= j->parts.size()) {
+    const bool flushed = j->file.flush();
     j->file.close();
+    if (!flushed || j->file.error() != QFileDevice::NoError) {
+      failDownload(i, tr("The disk is full, or %1 can't be written.")
+                          .arg(QDir::toNativeSeparators(j->file.fileName())),
+                   false);
+      return;
+    }
     verifyDownload(i);
     return;
   }
@@ -2153,6 +2173,24 @@ void DownloadQueue::adoptHashed(Adoption job, std::optional<uint64_t> hash)
 
 void DownloadQueue::copyAdopted(Adoption job, int row)
 {
+  // the right file, but no room for its copy: said once, and not read nor
+  // copied again at every tick (a full disk filled again and again) until
+  // the file changes or the user takes it by hand
+  const qint64 size = QFileInfo(job.path).size();
+  const qint64 free = freeSpace();
+  if (free >= 0 && free < size) {
+    m_adopting = false;
+    setStatus(row, Status::Failed,
+              tr("%1 is in %2, but the downloads folder's drive has no room for it (%3 "
+                 "needed, %4 free).")
+                  .arg(QFileInfo(job.path).fileName(),
+                       QDir::toNativeSeparators(QFileInfo(job.path).absolutePath()),
+                       localizedByteSize(size), localizedByteSize(free)));
+    emit changed();
+    nextAdoption();
+    return;
+  }
+
   // copied into the downloads folder's own place, hashed on the way: what is
   // kept is what was checked, even if the user's file changed since its read
   const QString aside = QDir(stateFolder(m_folder)).filePath("adopting");
@@ -2162,11 +2200,30 @@ void DownloadQueue::copyAdopted(Adoption job, int row)
 
   auto cancel   = m_cancelAdopt;
   auto* watcher = new QFutureWatcher<std::optional<uint64_t>>(this);
-  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, job, row, copy] {
+  connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, job, row, copy, cancel] {
     watcher->deleteLater();
     m_adopting       = false;
     const auto hash  = watcher->result();
     const Archive& a = m_list->archives[std::size_t(row)];
+    // the source was read whole and is the list's: a copy that failed is the
+    // copy's own problem (the drive full, an antivirus holding it). It stops
+    // there, with its reason, instead of reading and copying the file again
+    // at every tick
+    if (!hash && !cancel->load() && QFileInfo(job.path).size() == a.size && canAdopt(row) &&
+        !isChecking()) {
+      QFile::remove(copy);
+      setStatus(row, Status::Failed,
+                tr("%1 couldn't be copied into the downloads folder (is its drive full?). "
+                   "Free some space, then choose it with a right click, Choose the downloaded file.")
+                    .arg(QFileInfo(job.path).fileName()));
+      if (job.byUser) {
+        emit message(tr("%1 couldn't be copied into the downloads folder.")
+                         .arg(QDir::toNativeSeparators(job.path)));
+      }
+      emit changed();
+      nextAdoption();
+      return;
+    }
     if (!hash || *hash != a.hash || isChecking() || !canAdopt(row)) {
       QFile::remove(copy);
       // changed meanwhile, held, or a check or the user filled the entry:

@@ -17,6 +17,8 @@
 #include <QObject>
 #include <QSet>
 #include <QPointer>
+
+class QThread;
 #include <QTimer>
 #include <boost/signals2/connection.hpp>
 #include <functional>
@@ -233,7 +235,11 @@ signals:
   void finished();
 
 private:
-  int m_waiting = 0;
+  // mutable: a const step (extractArchiveFiles) waits on a worker too
+  mutable int m_waiting = 0;
+  // the worker reading the mods' folders for the grouping (finalize): told to
+  // stop and waited for when the session goes (MO2 closing meanwhile)
+  QPointer<QThread> m_conflictWorker;
   OrganizerCore& m_core;
   Collections::CollectionLink m_link;
   int m_revision = -1;
