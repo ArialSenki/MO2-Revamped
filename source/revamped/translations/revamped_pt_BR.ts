@@ -6232,6 +6232,18 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
       <source>What the transfer into %1 moved goes back to Nolvus, and what it copied is deleted.</source>
       <translation>O que a transferência para %1 moveu volta para o Nolvus, e o que copiou é apagado.</translation>
     </message>
+    <message>
+      <source>Nolvus&apos; own folders (its mods, profiles, stock game and archives) are not listed: they are never deleted from here.</source>
+      <translation>As pastas do próprio Nolvus (mods, perfis, jogo base e arquivos) não são listadas: nunca são apagadas daqui.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;This instance holds the list moved out of Nolvus.&lt;/b&gt; Deleting its folder deletes those mods and the stock game. To give them back to Nolvus, use &quot;Undo the Nolvus transfer&quot; first.</source>
+      <translation>&lt;b&gt;Esta instância contém a lista tirada do Nolvus.&lt;/b&gt; Apagar a pasta dela apaga esses mods e o jogo base. Para devolvê-los ao Nolvus, use antes &quot;Desfazer a transferência do Nolvus&quot;.</translation>
+    </message>
+    <message>
+      <source>The profiles of %1 are replaced with a new copy of Nolvus&apos; profiles (after a Nolvus update, for instance). The saves made here stay in use; the rest of the current copy is kept beside them, in a profiles-backup folder.</source>
+      <translation>Os perfis de %1 são substituídos por uma nova cópia dos perfis do Nolvus (após uma atualização do Nolvus, por exemplo). Os saves feitos aqui continuam em uso; o resto da cópia atual fica ao lado, numa pasta profiles-backup.</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -9858,6 +9870,45 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
         <numerusform>Movendo %n arquivos</numerusform>
       </translation>
     </message>
+    <message>
+      <source>%1 isn&apos;t where the transfer put it (%2)</source>
+      <translation>%1 não está onde a transferência o colocou (%2)</translation>
+    </message>
+    <message>
+      <source>Some things couldn&apos;t be put back; the list is in %1. Instances offers to try again (&quot;Put everything back&quot;).</source>
+      <translation>Algumas coisas não puderam ser devolvidas; a lista está em %1. Instâncias permite tentar de novo (&quot;Devolver tudo&quot;).</translation>
+    </message>
+    <message>
+      <source>Can&apos;t write %1; nothing more was done.</source>
+      <translation>Não foi possível gravar %1; nada mais foi feito.</translation>
+    </message>
+    <message>
+      <source>%1 can&apos;t be read, so it can&apos;t be copied.</source>
+      <translation>%1 não pode ser lido, então não pode ser copiado.</translation>
+    </message>
+    <message>
+      <source>The instance in use can&apos;t be changed. Open another instance first.</source>
+      <translation>A instância em uso não pode ser alterada. Abra outra instância primeiro.</translation>
+    </message>
+    <message>
+      <source>Choose the data folder with its full path (for example D:\Games\%1).</source>
+      <translation>Escolha a pasta de dados com o caminho completo (por exemplo D:\Jogos\%1).</translation>
+    </message>
+    <message>
+      <source>The data folder can&apos;t be inside %1.</source>
+      <translation>A pasta de dados não pode ficar dentro de %1.</translation>
+    </message>
+    <message>
+      <source>Your profiles are in %1.</source>
+      <translation>Seus perfis estão em %1.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n folders in %1 couldn&apos;t be read, so the copy wouldn&apos;t be complete. The reason is in MO2&apos;s log.</source>
+      <translation>
+        <numerusform>%n pasta de %1 não pôde ser lida, então a cópia não estaria completa. O motivo está no log do MO2.</numerusform>
+        <numerusform>%n pastas de %1 não puderam ser lidas, então a cópia não estaria completa. O motivo está no log do MO2.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>OrganizerCore</name>
@@ -11919,6 +11970,13 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Sends the installed mod&apos;s files to the Recycle Bin once this one is installed in their place</source>
       <translation>Envia os arquivos do mod instalado para a Lixeira depois que este for instalado no lugar deles</translation>
+    </message>
+    <message numerus="yes">
+      <source>No instance was chosen, so the %n Nexus link(s) that came meanwhile weren&apos;t opened. Open them again from the browser.</source>
+      <translation>
+        <numerusform>Nenhuma instância foi escolhida, então o link do Nexus que chegou nesse meio-tempo não foi aberto. Abra-o de novo pelo navegador.</numerusform>
+        <numerusform>Nenhuma instância foi escolhida, então os %n links do Nexus que chegaram nesse meio-tempo não foram abertos. Abra-os de novo pelo navegador.</numerusform>
+      </translation>
     </message>
   </context>
   <context>

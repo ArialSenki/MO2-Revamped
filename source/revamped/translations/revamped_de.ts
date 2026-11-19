@@ -6240,6 +6240,18 @@ Sie suchen weiter im alten Ordner und finden nichts, bis ihre Pfade geändert we
       <source>What the transfer into %1 moved goes back to Nolvus, and what it copied is deleted.</source>
       <translation>Was die Übertragung nach %1 verschoben hat, geht an Nolvus zurück, und was sie kopiert hat, wird gelöscht.</translation>
     </message>
+    <message>
+      <source>Nolvus&apos; own folders (its mods, profiles, stock game and archives) are not listed: they are never deleted from here.</source>
+      <translation>Die Ordner von Nolvus selbst (Mods, Profile, Stock-Spiel und Archive) werden nicht aufgeführt: Sie werden hier nie gelöscht.</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;This instance holds the list moved out of Nolvus.&lt;/b&gt; Deleting its folder deletes those mods and the stock game. To give them back to Nolvus, use &quot;Undo the Nolvus transfer&quot; first.</source>
+      <translation>&lt;b&gt;Diese Instanz enthält die aus Nolvus verschobene Liste.&lt;/b&gt; Wer ihren Ordner löscht, löscht diese Mods und das Stock-Spiel. Um sie Nolvus zurückzugeben, zuerst &quot;Nolvus-Übertragung rückgängig machen&quot; verwenden.</translation>
+    </message>
+    <message>
+      <source>The profiles of %1 are replaced with a new copy of Nolvus&apos; profiles (after a Nolvus update, for instance). The saves made here stay in use; the rest of the current copy is kept beside them, in a profiles-backup folder.</source>
+      <translation>Die Profile von %1 werden durch eine neue Kopie der Profile von Nolvus ersetzt (etwa nach einem Nolvus-Update). Die hier gemachten Spielstände bleiben in Gebrauch; der Rest der bisherigen Kopie bleibt daneben in einem Ordner profiles-backup.</translation>
+    </message>
   </context>
   <context>
     <name>ListDialog</name>
@@ -9870,6 +9882,45 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
         <numerusform>%n Archive werden verschoben</numerusform>
       </translation>
     </message>
+    <message>
+      <source>%1 isn&apos;t where the transfer put it (%2)</source>
+      <translation>%1 ist nicht dort, wo die Übertragung es abgelegt hat (%2)</translation>
+    </message>
+    <message>
+      <source>Some things couldn&apos;t be put back; the list is in %1. Instances offers to try again (&quot;Put everything back&quot;).</source>
+      <translation>Einiges ließ sich nicht zurückstellen; die Liste steht in %1. Unter Instanzen kann man es erneut versuchen (&quot;Alles zurückstellen&quot;).</translation>
+    </message>
+    <message>
+      <source>Can&apos;t write %1; nothing more was done.</source>
+      <translation>%1 kann nicht geschrieben werden; es wurde nichts weiter getan.</translation>
+    </message>
+    <message>
+      <source>%1 can&apos;t be read, so it can&apos;t be copied.</source>
+      <translation>%1 kann nicht gelesen und daher nicht kopiert werden.</translation>
+    </message>
+    <message>
+      <source>The instance in use can&apos;t be changed. Open another instance first.</source>
+      <translation>Die verwendete Instanz kann nicht geändert werden. Öffnen Sie zuerst eine andere Instanz.</translation>
+    </message>
+    <message>
+      <source>Choose the data folder with its full path (for example D:\Games\%1).</source>
+      <translation>Wählen Sie den Datenordner mit vollständigem Pfad (zum Beispiel D:\Spiele\%1).</translation>
+    </message>
+    <message>
+      <source>The data folder can&apos;t be inside %1.</source>
+      <translation>Der Datenordner darf nicht in %1 liegen.</translation>
+    </message>
+    <message>
+      <source>Your profiles are in %1.</source>
+      <translation>Ihre Profile liegen in %1.</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n folders in %1 couldn&apos;t be read, so the copy wouldn&apos;t be complete. The reason is in MO2&apos;s log.</source>
+      <translation>
+        <numerusform>%n Ordner in %1 konnte nicht gelesen werden, die Kopie wäre also unvollständig. Der Grund steht im MO2-Log.</numerusform>
+        <numerusform>%n Ordner in %1 konnten nicht gelesen werden, die Kopie wäre also unvollständig. Der Grund steht im MO2-Log.</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>OrganizerCore</name>
@@ -11935,6 +11986,13 @@ p, li { white-space: pre-wrap; }
     <message>
       <source>Sends the installed mod&apos;s files to the Recycle Bin once this one is installed in their place</source>
       <translation>Verschiebt die Dateien des installierten Mods in den Papierkorb, sobald dieser an ihrer Stelle installiert ist</translation>
+    </message>
+    <message numerus="yes">
+      <source>No instance was chosen, so the %n Nexus link(s) that came meanwhile weren&apos;t opened. Open them again from the browser.</source>
+      <translation>
+        <numerusform>Es wurde keine Instanz gewählt, daher wurde der zwischenzeitlich eingetroffene Nexus-Link nicht geöffnet. Öffnen Sie ihn erneut im Browser.</numerusform>
+        <numerusform>Es wurde keine Instanz gewählt, daher wurden die %n zwischenzeitlich eingetroffenen Nexus-Links nicht geöffnet. Öffnen Sie sie erneut im Browser.</numerusform>
+      </translation>
     </message>
   </context>
   <context>
