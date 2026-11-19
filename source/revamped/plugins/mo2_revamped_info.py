@@ -1417,7 +1417,11 @@ class _Redactor:
             # Nexus links and API requests: the download key and the account
             (re.compile(r"(?i)(\b(?:key|apikey|api_key|api-key|access_token|"
                         r"refresh_token|id_token|token|password|secret|session|"
-                        r"user_id|userid)\b\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
+                        r"user_id|userid)\b[\"']?\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
+            # a Nexus API key: base64 pieces joined by "--" ("...==--...--...=="),
+            # which can hold "/" and so isn't caught below
+            (re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{8,}={0,2}--[A-Za-z0-9+/]{8,}={0,2}"
+                        r"(?:--[A-Za-z0-9+/]{8,}={0,2})+(?![A-Za-z0-9+/=])"), self.Removed),
             # headers with keys and cookies, to the end of the line
             (re.compile(r"(?im)^(.*?\b(?:cookie|set-cookie|authorization|apikey)\s*:\s*).*$"),
              r"\1" + self.Removed),
@@ -1437,12 +1441,18 @@ class _Redactor:
         # a SteamID64 (in Elden Ring's and other games' save paths) is the
         # player's public Steam profile
         self._steam = re.compile(r"(?<!\d)7656119\d{10}(?!\d)")
+        # the same account by Steam's 32-bit id: Steam\userdata\<id> and
+        # SteamID3 ("[U:1:<id>]")
+        self._steam_folder = re.compile(r"(?i)(userdata[\\/]+)\d{3,}(?!\d)")
+        self._steam3 = re.compile(r"\[U:1:\d+\]")
 
     def __call__(self, text: str) -> str:
         for pattern, replacement in self._secrets:
             text = pattern.sub(replacement, text)
         text = self._email.sub("<email>", text)
         text = self._steam.sub("<steamid>", text)
+        text = self._steam_folder.sub(r"\1<steamid>", text)
+        text = self._steam3.sub("[U:1:<steamid>]", text)
         for user in self._users:
             # file:/// links spell "Jane Doe" as "Jane%20Doe"
             encoded = quote(user)

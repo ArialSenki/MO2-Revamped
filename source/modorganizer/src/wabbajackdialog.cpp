@@ -1551,6 +1551,9 @@ std::vector<QVariantMap> keptPrograms(const std::vector<QVariantMap>& programs,
     if (!isIn(binary, installFolder) && !inGame(binary) && !isIn(binary, ownFolder)) {
       log::info("wabbajack: program '{}' runs from {}, outside the install", title, binary);
       outside.append(QStringLiteral("%1 (%2)").arg(title, QDir::toNativeSeparators(binary)));
+      // MO2 Revamped: named in the notes, and never hidden in the programs
+      // list, so the user sees what it is before running it
+      program.insert("hide", false);
     }
     kept.push_back(std::move(program));
   }

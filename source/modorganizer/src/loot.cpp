@@ -6,6 +6,10 @@
 #include <log.h>
 #include <report.h>
 
+#include <QUuid>
+#include <atomic>
+#include <string>
+
 using namespace MOBase;
 using namespace json;
 
@@ -71,7 +75,15 @@ private:
 
   HANDLE createPipe()
   {
-    static const wchar_t* PipeName = L"\\\\.\\pipe\\lootcli_pipe";
+    // MO2 Revamped: a name of its own each time (the fixed lootcli_pipe could be
+    // taken first by another account, and LOOT then never started), made only
+    // by this process and only for this computer
+    static std::atomic<unsigned> counter{0};
+    const std::wstring name = L"\\\\.\\pipe\\lootcli_pipe-" +
+                              std::to_wstring(GetCurrentProcessId()) + L"-" +
+                              QUuid::createUuid().toString(QUuid::Id128).toStdWString() +
+                              L"-" + std::to_wstring(counter++);
+    const wchar_t* PipeName = name.c_str();
 
     SECURITY_ATTRIBUTES sa = {};
     sa.nLength             = sizeof(SECURITY_ATTRIBUTES);
@@ -82,8 +94,12 @@ private:
     // creating pipe
     {
       HANDLE pipeHandle =
-          ::CreateNamedPipe(PipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-                            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 50'000,
+          ::CreateNamedPipe(PipeName,
+                            PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
+                                FILE_FLAG_FIRST_PIPE_INSTANCE,
+                            PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
+                                PIPE_REJECT_REMOTE_CLIENTS,
+                            1, 50'000,
                             50'000, PipeTimeout, &sa);
 
       if (pipeHandle == INVALID_HANDLE_VALUE) {

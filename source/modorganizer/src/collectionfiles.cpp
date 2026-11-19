@@ -565,7 +565,11 @@ bool isSafeRelativePath(const QString& relative)
   if (relative.isEmpty()) {
     return false;
   }
-  static const QString forbidden = QStringLiteral("<>:\"|?*");
+  // MO2 Revamped: "\\" too, though every caller turns it into "/" first
+  static const QString forbidden = QStringLiteral("<>:\"|?*\\");
+  // an 8.3 short name ("SKYUI~1"): it can stand for another file or folder
+  // that is already there
+  static const QRegularExpression shortName(QStringLiteral("^[^.~]{1,6}~[0-9]+(\\.[^.]{0,3})?$"));
   static const QRegularExpression device(
       QStringLiteral("^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|"
                      "lpt[0-9\u00b9\u00b2\u00b3]|conin\\$|conout\\$|clock\\$)$"),
@@ -582,6 +586,9 @@ bool isSafeRelativePath(const QString& relative)
     }
     // Windows' device names, alone or with an extension ("nul.txt")
     if (device.match(part.section('.', 0, 0).trimmed()).hasMatch()) {
+      return false;
+    }
+    if (shortName.match(part).hasMatch()) {
       return false;
     }
   }

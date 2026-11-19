@@ -587,7 +587,12 @@ namespace shell
     if (g_urlHandler.isEmpty()) {
       return ShellExecuteWrapper(L"open", ws_url.c_str(), nullptr);
     } else {
-      return OpenCustomURL(g_urlHandler.toStdWString(), ws_url);
+      // MO2 Revamped: the custom browser gets the address percent-encoded. The
+      // pretty form turns %20 back into a space, so with an unquoted %1 in the
+      // command an address from a mod list became several arguments
+      // ("--load-extension=...")
+      return OpenCustomURL(g_urlHandler.toStdWString(),
+                           url.toString(QUrl::FullyEncoded).toStdWString());
     }
   }
 
