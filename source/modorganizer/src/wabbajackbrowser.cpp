@@ -1,5 +1,6 @@
 #include "wabbajackbrowser.h"
 
+#include "collectionbrowser.h"
 #include "fluenticons.h"
 #include "screenfitter.h"
 #include "settings.h"
@@ -181,15 +182,17 @@ ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* man
 {
   m_listsFolder = QDir(downloadsFolder).filePath(QStringLiteral("Wabbajack lists"));
   setupUi();
-  // its size by the screen it is on, also when it is moved to another one
+  // its size by the screen it is on, also when it is moved to another one; as
+  // the user left it last time
   auto* fitter            = new ScreenFitter(this, QSize(820, 560));
   const QWidget* anchor   = parentWidget();
   QScreen* screen = anchor != nullptr ? anchor->screen() : QGuiApplication::primaryScreen();
   if (screen != nullptr) {
     const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                             !anchor->isMinimized();
-    fitter->place(screen, overWindow ? anchor->frameGeometry().center()
-                                     : screen->availableGeometry().center());
+    fitter->restore(QStringLiteral("wabbajack_browser"), screen,
+                    overWindow ? anchor->frameGeometry().center()
+                               : screen->availableGeometry().center());
   }
   loadGallery(false);
 }
@@ -652,8 +655,8 @@ void ListBrowser::loadImage(QTreeWidgetItem* item, const QString& url)
         reply->bytesAvailable() > MaxImageBytes || !image.loadFromData(reply->readAll())) {
       return;
     }
-    const QPixmap pixmap = QPixmap::fromImage(
-        image.scaled(QSize(96, 54), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // centred in one box, as the collections gallery's
+    const QPixmap pixmap = CollectionImages::thumbnail(image, QSize(96, 54), devicePixelRatioF());
     m_images.insert(url, pixmap);
     for (int i = 0; i < m_list->topLevelItemCount(); ++i) {
       QTreeWidgetItem* it = m_list->topLevelItem(i);

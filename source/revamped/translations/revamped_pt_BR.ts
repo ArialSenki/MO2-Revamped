@@ -17954,6 +17954,70 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
   <context>
     <name>CollectionBrowser</name>
     <message>
+      <source>invalid response</source>
+      <translation>resposta inválida</translation>
+    </message>
+    <message>
+      <source>Some games couldn't be read: %1</source>
+      <translation>Alguns jogos não puderam ser lidos: %1</translation>
+    </message>
+    <message>
+      <source>Nexus collections</source>
+      <translation>Coleções do Nexus</translation>
+    </message>
+    <message>
+      <source>Game</source>
+      <translation>Jogo</translation>
+    </message>
+    <message>
+      <source>Revision</source>
+      <translation>Revisão</translation>
+    </message>
+    <message>
+      <source>Refresh</source>
+      <translation>Atualizar</translation>
+    </message>
+    <message>
+      <source>All games</source>
+      <translation>Todos os jogos</translation>
+    </message>
+    <message>
+      <source>All games (%1)</source>
+      <translation>Todos os jogos (%1)</translation>
+    </message>
+    <message>
+      <source>Waiting for the Nexus sign-in. If Mod Organizer isn't signed in, sign in under Settings &gt; Nexus.</source>
+      <translation>Aguardando o login no Nexus. Se o Mod Organizer não estiver conectado, entre em Configurações &gt; Nexus.</translation>
+    </message>
+    <message>
+      <source>None of the games MO2 Revamped has a plugin for is on Nexus.</source>
+      <translation>Nenhum dos jogos para os quais o MO2 Revamped tem plugin está no Nexus.</translation>
+    </message>
+    <message>
+      <source>%1 · %2 collections</source>
+      <translation>%1 · %2 coleções</translation>
+    </message>
+    <message>
+      <source>Shows all of %1's collections.</source>
+      <translation>Mostra todas as coleções de %1.</translation>
+    </message>
+    <message>
+      <source>Show all %1 of %2's collections</source>
+      <translation>Ver as %1 coleções de %2</translation>
+    </message>
+    <message>
+      <source>%1 collections in %2 games. Choose a game to see all of its own.</source>
+      <translation>%1 coleções em %2 jogos. Escolha um jogo para ver todas as dele.</translation>
+    </message>
+    <message>
+      <source>It is for %1: open it from an instance for %1 to install it. Its page opens from here.</source>
+      <translation>É para %1: abra-a a partir de uma instância de %1 para instalá-la. A página dela abre daqui.</translation>
+    </message>
+    <message>
+      <source>This instance manages another game.</source>
+      <translation>Esta instância gerencia outro jogo.</translation>
+    </message>
+    <message>
       <source>Nexus collections for %1</source>
       <translation>Coleções do Nexus para %1</translation>
     </message>

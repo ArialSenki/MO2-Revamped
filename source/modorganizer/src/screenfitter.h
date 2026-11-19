@@ -2,10 +2,11 @@
 #define SCREENFITTER_H
 
 // MO2 Revamped: a large window's size, by the screen it is on. It opens at a
-// size for that screen's work area (at most 1500x1000, or 70% x 80% of it) and,
+// size for that screen's work area (80% of it, centred, not maximized) and,
 // moved to another screen (a 2K one to a 1080p one), takes that screen's size;
 // once the user sized it by hand it keeps that size but never gets larger than
-// the screen. As CollectionDialog does it.
+// the screen. With a key, the size, place and maximized state the user left
+// are remembered in the instance's settings and restored, kept on a screen.
 
 #include <QObject>
 #include <QSize>
@@ -33,12 +34,11 @@ public:
   // where it fits
   void setUserSized(bool sized) { m_userSized = sized; }
 
-  // MO2 Revamped: large browsers open maximized, so everything fits, until
-  // the user leaves one not maximized; key names the window in the
-  // instance's settings
-  static bool opensMaximized(const QString& key);
-  // what the window was when it closed, for opensMaximized()
-  static void rememberMaximized(const QString& key, const QWidget* window);
+  // the window as the user left it last time (key names it in the instance's
+  // settings), kept on the screen it is now on; else as place() puts it. From
+  // here on, closing the window remembers it under key. True when it was
+  // restored (the user's place, not to be moved after)
+  bool restore(const QString& key, QScreen* screen, const QPoint& middle);
 
 protected:
   bool eventFilter(QObject* watched, QEvent* e) override;
@@ -50,6 +50,9 @@ private:
   bool m_fitting      = false;
   bool m_watching     = false;
   QSize m_applied;  // the last size this set: a resize to another one is the user's
+  QString m_key;    // where the window is remembered; empty: it isn't
+
+  void remember() const;
 
   void fitTo(QScreen* screen);
   void apply(const QRect& available, QSize size, const QPoint& middle);

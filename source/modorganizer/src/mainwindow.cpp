@@ -5838,14 +5838,37 @@ void MainWindow::noticeLastCrash(int tries)
 
 void MainWindow::browseCollections()
 {
-  const IPluginGame* game = m_OrganizerCore.managedGame();
-  if (game == nullptr || game->gameNexusName().isEmpty()) {
+  // every game MO2 Revamped has a plugin for, as the Wabbajack gallery; the
+  // instance's own game (and those it takes links for) install from here
+  std::vector<CollectionBrowser::Game> games;
+  QSet<QString> seen;
+  for (IPluginGame* g : m_PluginContainer.plugins<IPluginGame>()) {
+    const QString domain = g != nullptr ? g->gameNexusName().trimmed().toLower() : QString();
+    if (!domain.isEmpty() && !seen.contains(domain)) {
+      seen.insert(domain);
+      games.push_back({domain, g->displayGameName()});
+    }
+  }
+  QStringList instanceDomains;
+  if (const IPluginGame* game = m_OrganizerCore.managedGame(); game != nullptr) {
+    if (!game->gameNexusName().isEmpty()) {
+      instanceDomains << game->gameNexusName().trimmed().toLower();
+    }
+    for (const QString& name : game->validShortNames()) {
+      if (const IPluginGame* other = m_OrganizerCore.getGame(name);
+          other != nullptr && !other->gameNexusName().isEmpty() &&
+          !instanceDomains.contains(other->gameNexusName(), Qt::CaseInsensitive)) {
+        instanceDomains << other->gameNexusName().trimmed().toLower();
+      }
+    }
+  }
+  if (games.empty()) {
     QMessageBox::information(this, tr("Nexus collections"),
                              tr("This game has no collections on Nexus Mods."));
     return;
   }
   auto* browser = new CollectionBrowser(
-      game->gameNexusName(), game->displayGameName(),
+      std::move(games), instanceDomains,
       [this](const QString& url) {
         openCollection(url);
       },

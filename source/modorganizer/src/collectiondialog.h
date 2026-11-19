@@ -155,6 +155,7 @@ private:
   // its size by the screen it is on (shared with the Wabbajack list window)
   ScreenFitter* m_fitter = nullptr;
   bool m_placing    = false;
+  bool m_placedOnce = false;  // restored or placed the first time
   QFrame* createHeader();
   QFrame* createNeeds();
   QFrame* createSteps();

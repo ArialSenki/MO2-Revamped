@@ -27,26 +27,68 @@ ScreenFitter::ScreenFitter(QWidget* window, QSize least)
 QSize ScreenFitter::wantedSize(const QRect& available, QSize least)
 {
   least = least.boundedTo(available.size());
-  QSize wanted(qMin(available.width() * 7 / 10, 1500),
-               qMin(available.height() * 8 / 10, 1000));
+  const QSize wanted(available.width() * 8 / 10, available.height() * 8 / 10);
   return wanted.expandedTo(least).boundedTo(available.size() - FrameRoom);
 }
 
-bool ScreenFitter::opensMaximized(const QString& key)
+namespace
 {
-  return QSettings(Settings::instance().filename(), QSettings::IniFormat)
-      .value(QStringLiteral("Geometry/%1_maximized").arg(key), true)
-      .toBool();
+QString settingName(const QString& key)
+{
+  return QStringLiteral("Geometry/%1_window").arg(key);
+}
+}  // namespace
+
+bool ScreenFitter::restore(const QString& key, QScreen* screen, const QPoint& middle)
+{
+  m_key = key;
+  Settings* settings = Settings::maybeInstance();
+  const QByteArray saved =
+      settings != nullptr
+          ? QSettings(settings->filename(), QSettings::IniFormat).value(settingName(key)).toByteArray()
+          : QByteArray();
+  if (saved.isEmpty() || !m_window->restoreGeometry(saved)) {
+    place(screen, middle);
+    return false;
+  }
+  m_userSized = true;
+  // the screen it was left on, or this one when that one is gone; Qt already
+  // brings a window from a missing screen back, this keeps it whole on it
+  QScreen* on = QGuiApplication::screenAt(m_window->geometry().center());
+  if (on == nullptr) {
+    on = screen != nullptr ? screen : QGuiApplication::primaryScreen();
+  }
+  if (on == nullptr) {
+    return true;
+  }
+  const QRect available = on->availableGeometry();
+  m_window->setMinimumSize(m_least.boundedTo(available.size() - FrameRoom));
+  if (m_window->isMaximized() || m_window->isFullScreen()) {
+    return true;
+  }
+  // moved only when it doesn't fit: a window that does (snapped to an edge
+  // too) stays exactly where it was. It fits when it isn't larger than the
+  // work area and its title bar is on it
+  const QRect g    = m_window->geometry();
+  const bool fits  = g.width() <= available.width() && g.height() <= available.height() &&
+                    g.top() >= available.top() && g.top() < available.bottom() - 40 &&
+                    g.left() < available.right() - 100 && g.right() > available.left() + 100;
+  if (!fits) {
+    apply(available, m_window->size(),
+          available.contains(g.center()) ? g.center() : available.center());
+  }
+  return true;
 }
 
-void ScreenFitter::rememberMaximized(const QString& key, const QWidget* window)
+void ScreenFitter::remember() const
 {
+  Settings* settings = Settings::maybeInstance();
   // a minimized window says nothing of what the user wants
-  if (window == nullptr || window->isMinimized()) {
+  if (m_key.isEmpty() || settings == nullptr || m_window->isMinimized()) {
     return;
   }
-  QSettings(Settings::instance().filename(), QSettings::IniFormat)
-      .setValue(QStringLiteral("Geometry/%1_maximized").arg(key), window->isMaximized());
+  QSettings(settings->filename(), QSettings::IniFormat)
+      .setValue(settingName(m_key), m_window->saveGeometry());
 }
 
 void ScreenFitter::place(QScreen* screen, const QPoint& middle)
@@ -61,7 +103,11 @@ void ScreenFitter::place(QScreen* screen, const QPoint& middle)
 bool ScreenFitter::eventFilter(QObject* watched, QEvent* e)
 {
   if (watched == m_window) {
-    if (e->type() == QEvent::Show && !m_watching) {
+    if ((e->type() == QEvent::Hide && !e->spontaneous()) || e->type() == QEvent::Close) {
+      // closed (a minimize is a spontaneous hide): kept for the next time; a
+      // close MO2 sends when it quits, too, which hides nothing
+      remember();
+    } else if (e->type() == QEvent::Show && !m_watching) {
       if (QWindow* handle = m_window->windowHandle(); handle != nullptr) {
         m_watching = true;
         connect(handle, &QWindow::screenChanged, this, &ScreenFitter::fitTo);
