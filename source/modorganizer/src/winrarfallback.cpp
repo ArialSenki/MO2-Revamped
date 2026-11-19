@@ -1,6 +1,7 @@
 #include "winrarfallback.h"
 
 #include <log.h>
+#include <utility.h>
 
 #include <QCoreApplication>
 #include <QDir>
@@ -10,6 +11,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QProcess>
+#include <QVersionNumber>
 #include <QProgressDialog>
 #include <QSettings>
 #include <QSet>
@@ -89,6 +91,24 @@ QString findWinRAR()
     }
   }
   return {};
+}
+
+QString version(const QString& winrar)
+{
+  const QString v = MOBase::getFileVersion(winrar).trimmed();
+  if (v.isEmpty()) {
+    return {};
+  }
+  const QVersionNumber n = QVersionNumber::fromString(v);
+  // WinRAR numbers its releases 7.13 as file version 7.13.0
+  return n.segmentCount() >= 2 ? QStringLiteral("%1.%2").arg(n.majorVersion()).arg(n.minorVersion(), 2, 10, QChar(u'0'))
+                               : v;
+}
+
+bool isPatched(const QString& winrar)
+{
+  const QVersionNumber n = QVersionNumber::fromString(MOBase::getFileVersion(winrar).trimmed());
+  return !n.isNull() && QVersionNumber(n.majorVersion(), n.minorVersion()) >= QVersionNumber(7, 13);
 }
 
 bool canHandle(const QString& archivePath)

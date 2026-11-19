@@ -13873,6 +13873,22 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     <context>
     <name>InstallationManager</name>
     <message>
+      <source>unknown</source>
+      <translation>desconhecida</translation>
+    </message>
+    <message>
+      <source>7-Zip, which MO2 uses for archives, can't open %1.
+
+WinRAR is installed on this PC, but its version (%2) is older than 7.13: an archive made for it can write files outside the folder it is extracted to, for example into Windows' Startup folder. Update WinRAR first, or only go on if you trust where this archive came from.
+
+Extract it with this WinRAR anyway?</source>
+      <translation>O 7-Zip, que o MO2 usa para arquivos compactados, não consegue abrir %1.
+
+O WinRAR está instalado neste PC, mas a versão dele (%2) é anterior à 7.13: um arquivo preparado para ela pode gravar arquivos fora da pasta de extração, por exemplo na pasta Inicializar do Windows. Atualize o WinRAR antes, ou só continue se confiar na origem deste arquivo.
+
+Extrair com este WinRAR mesmo assim?</translation>
+    </message>
+    <message>
       <source>Extraction failed: the disk is full. Free some space on %1 and install the mod again.</source>
       <translation>Falha na extração: o disco está cheio. Libere espaço em %1 e instale o mod de novo.</translation>
     </message>
@@ -19329,6 +19345,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
 <context>
     <name>Wabbajack</name>
     <message>
+      <source>its modlist is too large</source>
+      <translation>a modlist dela é grande demais</translation>
+    </message>
+    <message>
       <source>the archive library couldn't be loaded</source>
       <translation>não foi possível carregar a biblioteca de arquivos compactados</translation>
     </message>
@@ -19359,6 +19379,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
 </context>
 <context>
     <name>Wabbajack::DownloadQueue</name>
+    <message>
+      <source>The download is larger than %1 and the list doesn't give its size.</source>
+      <translation>O download passa de %1 e a lista não informa o tamanho dele.</translation>
+    </message>
     <message>
       <source>%1/s</source>
       <translation>%1/s</translation>
@@ -19646,6 +19670,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
 </context>
 <context>
     <name>Wabbajack::Installer</name>
+    <message>
+      <source>the list's own copy is too large</source>
+      <translation>a cópia da própria lista é grande demais</translation>
+    </message>
     <message>
       <source>it wasn't written</source>
       <translation>não foi gravado</translation>

@@ -47,6 +47,9 @@ namespace Wabbajack
 // address is one of Wabbajack's
 QUrl cdnUrl(const QString& url);
 bool isWabbajackCdnHost(const QUrl& url);
+// an address on this computer or its local network, by the name or number it
+// is written with (a list's downloads and gallery images never go there)
+bool isLocalNetworkAddress(const QUrl& url);
 // a gzip stream, whole; nullopt when damaged or too large for a definition
 std::optional<QByteArray> gunzip(const QByteArray& data);
 // why a request failed, in the user's language

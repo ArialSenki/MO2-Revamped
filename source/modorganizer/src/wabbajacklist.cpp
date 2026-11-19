@@ -841,7 +841,18 @@ bool extractEntries(const QString& path, const QString& into, QString* listFile,
     return false;
   }
 
+  // MO2 Revamped: the biggest real lists' modlist is a few hundred MB; a far
+  // larger one (a zip bomb) isn't written out
+  constexpr uint64_t MaxModlistSize = uint64_t(4) << 30;
+  if (list->getSize() > MaxModlistSize) {
+    archive->close();
+    *error = QCoreApplication::translate("Wabbajack", "its modlist is too large");
+    return false;
+  }
   list->addOutputFilePath(L"modlist");
+  if (image != nullptr && image->getSize() > (uint64_t(64) << 20)) {
+    image = nullptr;
+  }
   if (image != nullptr) {
     image->addOutputFilePath(L"modlist-image.png");
   }

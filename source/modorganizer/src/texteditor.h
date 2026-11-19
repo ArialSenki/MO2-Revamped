@@ -171,4 +171,8 @@ private:
 // isn't rich text comes back escaped.
 QString offlineNotesHtml(const QString& notes);
 
+// MO2 Revamped: the text of a name Nexus gives as HTML (entities like
+// &amp;), read without loading any image or style sheet it names
+QString htmlToPlainText(const QString& html);
+
 #endif  // MO_TEXTEDITOR_H

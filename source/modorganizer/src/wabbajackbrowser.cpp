@@ -69,6 +69,19 @@ constexpr int SortRole  = Qt::UserRole + 2;
 constexpr int PartTries = 3;
 // a gallery card is a few hundred KB: a thumbnail larger than this is dropped
 constexpr qint64 MaxImageBytes = 8 * 1024 * 1024;
+// the gallery's index and each repository's list of lists (a few MB)
+constexpr qint64 MaxGalleryJsonBytes = qint64(64) << 20;
+
+// MO2 Revamped: stops a reply as soon as it is larger than the limit
+void limitReply(QNetworkReply* reply, qint64 limit)
+{
+  QObject::connect(reply, &QNetworkReply::downloadProgress, reply,
+                   [reply, limit](qint64 received, qint64) {
+                     if (received > limit) {
+                       reply->abort();
+                     }
+                   });
+}
 
 enum Column
 {
@@ -395,6 +408,7 @@ void ListBrowser::loadGallery(bool fresh)
   });
 
   QNetworkReply* index = m_network.get(request(QUrl(QString::fromLatin1(RepositoriesUrl))));
+  limitReply(index, MaxGalleryJsonBytes);
   connect(index, &QNetworkReply::finished, this, [this, index, generation] {
     index->deleteLater();
     if (generation != m_generation) {
@@ -415,6 +429,7 @@ void ListBrowser::loadGallery(bool fresh)
       }
       ++m_pending;
       QNetworkReply* repo = m_network.get(request(url));
+      limitReply(repo, MaxGalleryJsonBytes);
       connect(repo, &QNetworkReply::finished, this, [this, repo, name, generation] {
         repo->deleteLater();
         if (generation != m_generation) {
@@ -642,7 +657,25 @@ void ListBrowser::loadImage(QTreeWidgetItem* item, const QString& url)
     return;
   }
   m_imagesAsked.insert(url);
-  QNetworkReply* reply = m_network.get(request(QUrl(url)));
+  // MO2 Revamped: a list's picture never comes from this computer or the
+  // local network (a router's page), nor is sent on there or down to http
+  if (Wabbajack::isLocalNetworkAddress(QUrl(url))) {
+    return;
+  }
+  QNetworkRequest imageRequest = request(QUrl(url));
+  imageRequest.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                            QNetworkRequest::UserVerifiedRedirectPolicy);
+  QNetworkReply* reply = m_network.get(imageRequest);
+  connect(reply, &QNetworkReply::redirected, this, [reply](const QUrl& to) {
+    const bool downgrade =
+        reply->url().scheme().compare("https", Qt::CaseInsensitive) == 0 &&
+        to.scheme().compare("https", Qt::CaseInsensitive) != 0;
+    if (Wabbajack::isLocalNetworkAddress(to) || downgrade) {
+      reply->abort();
+      return;
+    }
+    emit reply->redirectAllowed();
+  });
   // stopped as soon as it is too large, not read whole first
   connect(reply, &QNetworkReply::downloadProgress, this, [reply](qint64 received, qint64) {
     if (received > MaxImageBytes) {

@@ -42,6 +42,9 @@ constexpr int MaxRetries = 3;
 constexpr int MaxPartRetries = 4;
 // a Nexus link not answered in this time is given up (the request was lost)
 constexpr qint64 NexusAnswerMs = 180000;
+// a direct download whose size the list doesn't give stops here (no archive
+// of a real list is near it)
+constexpr qint64 MaxUnsizedDownload = qint64(64) << 30;
 
 constexpr char PartSuffix[]  = ".mo2r-part";
 constexpr char StateFolder[] = ".mo2r";
@@ -209,7 +212,14 @@ bool isAllowedHeader(const QString& name)
 // never goes there (a router's page, a local service), nor is sent on there.
 // Only the name or the number in the address: a public name that resolves to
 // a local number isn't seen
+bool isLocalAddressImpl(const QUrl& url);
+
 bool isLocalAddress(const QUrl& url)
+{
+  return isLocalAddressImpl(url);
+}
+
+bool isLocalAddressImpl(const QUrl& url)
 {
   const QString host = url.host().toLower();
   if (host.isEmpty() || host == u"localhost" || host.endsWith(u".localhost") ||
@@ -224,8 +234,12 @@ bool isLocalAddress(const QUrl& url)
   const quint32 ip = address.toIPv4Address(&v4);  // also ::ffff:a.b.c.d
   if (v4) {
     const quint32 a = ip >> 24, b = (ip >> 16) & 0xff;
+    // also the carrier-grade NAT range, the benchmarking one and multicast
+    // or reserved numbers (224 and up)
     return a == 0 || a == 10 || a == 127 || (a == 169 && b == 254) ||
-           (a == 172 && b >= 16 && b < 32) || (a == 192 && b == 168);
+           (a == 172 && b >= 16 && b < 32) || (a == 192 && b == 168) ||
+           (a == 100 && b >= 64 && b < 128) || (a == 198 && (b == 18 || b == 19)) ||
+           a >= 224;
   }
   const Q_IPV6ADDR v6 = address.toIPv6Address();
   return address.isLoopback() || address == QHostAddress(QHostAddress::AnyIPv6) ||
@@ -234,6 +248,11 @@ bool isLocalAddress(const QUrl& url)
 }
 
 }  // namespace
+
+bool isLocalNetworkAddress(const QUrl& url)
+{
+  return isLocalAddressImpl(url);
+}
 
 // ---- the hash cache -------------------------------------------------------
 
@@ -1400,6 +1419,14 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
     }
     Entry& e = m_entries[std::size_t(i)];
     const qint64 size      = m_list->archives[std::size_t(i)].size;
+    // MO2 Revamped: a list that gives no size gets a ceiling no real archive
+    // reaches, so a server can't fill the disk
+    if (size <= 0 && e.received + chunk.size() > MaxUnsizedDownload) {
+      failDownload(i, tr("The download is larger than %1 and the list doesn't give its size.")
+                          .arg(localizedByteSize(MaxUnsizedDownload)),
+                   false);
+      return;
+    }
     if (size > 0 && e.received + chunk.size() > size) {
       // more than the file the list names: not it
       failDownload(i, tr("The download has another size than the list's (%1 instead of %2).")

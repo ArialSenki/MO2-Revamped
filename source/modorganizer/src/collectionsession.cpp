@@ -78,6 +78,8 @@ constexpr qint64 MaxArchiveSize = qint64(2) << 30;
 
 // collection.json is read whole; real ones are well under a megabyte
 constexpr qint64 MaxManifestSize = qint64(64) << 20;
+// an INI tweak's file (a few lines)
+constexpr qint64 MaxIniTweakSize = qint64(4) << 20;
 
 // a folder name from the collection (a mod, profile or instance name): what
 // fixDirectoryName leaves can still be "..", a device name or the original
@@ -96,6 +98,12 @@ bool makeFolderName(QString& name)
   if (fixed.isEmpty() || fixed.contains(u'/') || fixed.contains(u'\\')) {
     name.clear();
     return false;
+  }
+  // a name shaped like an 8.3 short name ("SKYUI~1") could stand for another
+  // mod's folder: its "~" becomes "-"
+  static const QRegularExpression shortName(QStringLiteral("^[^.~]{1,6}~[0-9]+(\\.[^.]{0,3})?$"));
+  if (shortName.match(fixed).hasMatch()) {
+    fixed.replace(u'~', u'-');
   }
   // what's left that isn't a safe folder starts with a device name ("Aux. Armors")
   if (!isSafeRelativePath(fixed)) {
@@ -1171,6 +1179,9 @@ void CollectionSession::readManifest()
     QTemporaryDir temp;
     if (manifestFile == nullptr) {
       problem = tr("it has no collection.json");
+    } else if (manifestFile->getSize() > uint64_t(MaxManifestSize)) {
+      // MO2 Revamped: before it is written out, not after
+      problem = tr("collection.json is too large");
     } else if (!temp.isValid()) {
       problem = tr("no temporary folder");
     } else {
@@ -3821,6 +3832,11 @@ void CollectionSession::applyIniTweaks()
     QFile in(extracted);
     QFile current(file);
     if (!in.open(QIODevice::ReadOnly)) {
+      continue;
+    }
+    // MO2 Revamped: an INI tweak is a few lines; a huge one isn't merged
+    if (in.size() > MaxIniTweakSize) {
+      m_iniNotes.append(tr("INI tweak not applied: %1").arg(name));
       continue;
     }
     QString text;

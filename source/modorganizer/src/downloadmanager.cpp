@@ -33,6 +33,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugincontainer.h"
 #include "selectiondialog.h"
 #include "shared/util.h"
+#include "texteditor.h"
 #include "utility.h"
 #include <nxmurl.h>
 #include <report.h>
@@ -1911,9 +1912,7 @@ QString DownloadManager::getDisplayName(int index) const
     if (plainNames.size() > 8192) {
       plainNames.clear();
     }
-    QTextDocument doc;
-    doc.setHtml(html);
-    return *plainNames.insert(html, doc.toPlainText());
+    return *plainNames.insert(html, htmlToPlainText(html));
   };
 
   if (!info->m_FileInfo->name.isEmpty()) {
@@ -2420,9 +2419,7 @@ void DownloadManager::nxmDescriptionAvailable(QString, int, QVariant userData,
   if (info == nullptr)
     return;
   info->m_FileInfo->categoryID = result["category_id"].toInt();
-  QTextDocument doc;
-  doc.setHtml(result["name"].toString().trimmed());
-  info->m_FileInfo->modName = doc.toPlainText();
+  info->m_FileInfo->modName = htmlToPlainText(result["name"].toString().trimmed());
   if (info->m_FileInfo->fileID != 0) {
     setState(info, STATE_READY);
   } else {
@@ -2730,7 +2727,16 @@ void DownloadManager::nxmDownloadURLsAvailable(QString gameName, int modID, int 
   QStringList URLs;
 
   foreach (const QVariant& server, resultList) {
-    URLs.append(server.toMap()["URI"].toString());
+    // MO2 Revamped: Nexus' CDN links are https; anything else in the answer
+    // (a file:// or \\server address) is never opened
+    const QString uri = server.toMap()["URI"].toString();
+    const QUrl url(uri);
+    if (url.scheme().compare("https", Qt::CaseInsensitive) != 0 || url.host().isEmpty()) {
+      log::warn("download link from Nexus ignored, not https: '{}'",
+                url.scheme().isEmpty() ? QString("?") : url.scheme());
+      continue;
+    }
+    URLs.append(uri);
   }
 
   // MO2 Revamped: the same file, paused in the list (its link may have expired):

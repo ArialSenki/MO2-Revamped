@@ -656,6 +656,13 @@ QVariant HTMLEditor::loadResource(int type, const QUrl& name)
   return QByteArray();
 }
 
+QString htmlToPlainText(const QString& html)
+{
+  OfflineTextDocument document;
+  document.setHtml(html);
+  return document.toPlainText();
+}
+
 QString offlineNotesHtml(const QString& notes)
 {
   if (!Qt::mightBeRichText(notes)) {

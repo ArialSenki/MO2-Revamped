@@ -66,6 +66,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/scoped_ptr.hpp>
 
 #include "archivefiletree.h"
+#include "texteditor.h"
 #include "winrarfallback.h"
 #include "scriptextendersetup.h"
 #include <scriptextender.h>
@@ -1058,15 +1059,37 @@ InstallationManager::tryWinRARFallback(const QString& fileName)
   // the main window, also when MO2 isn't in front (a download finishing
   // while the game runs)
   QWidget* parent = m_ParentWidget != nullptr ? m_ParentWidget : qApp->activeWindow();
-  const auto answer = QuestionBoxMemory::query(
-      parent, "winrarFallback", tr("Open with WinRAR"),
-      tr("7-Zip, which MO2 uses for archives, can't open %1.\n\nWinRAR is "
-         "installed on this PC and may be able to. Extract the archive with WinRAR "
-         "and install it from there?")
-          .arg(QFileInfo(fileName).fileName()),
-      QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::Yes);
-  if (answer != QDialogButtonBox::Yes) {
-    return WinRARResult::NotTried;
+  // MO2 Revamped: a WinRAR older than 7.13 can be made to write outside the
+  // folder it extracts to (CVE-2025-6218, CVE-2025-8088), and the archive is one
+  // 7-Zip refused: the question then says so, and its answer isn't remembered
+  if (!WinRARFallback::isPatched(winrar)) {
+    const QString version = WinRARFallback::version(winrar);
+    log::warn("WinRAR {} is older than 7.13", version.isEmpty() ? QString("?") : version);
+    const auto old = QMessageBox::warning(
+        parent, tr("Open with WinRAR"),
+        tr("7-Zip, which MO2 uses for archives, can't open %1.\n\nWinRAR is "
+           "installed on this PC, but its version (%2) is older than 7.13: an archive "
+           "made for it can write files outside the folder it is extracted to, for "
+           "example into Windows' Startup folder. Update WinRAR first, or only go on "
+           "if you trust where this archive came from.\n\nExtract it with this "
+           "WinRAR anyway?")
+            .arg(QFileInfo(fileName).fileName(),
+                 version.isEmpty() ? tr("unknown") : version),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if (old != QMessageBox::Yes) {
+      return WinRARResult::NotTried;
+    }
+  } else {
+    const auto answer = QuestionBoxMemory::query(
+        parent, "winrarFallback", tr("Open with WinRAR"),
+        tr("7-Zip, which MO2 uses for archives, can't open %1.\n\nWinRAR is "
+           "installed on this PC and may be able to. Extract the archive with WinRAR "
+           "and install it from there?")
+            .arg(QFileInfo(fileName).fileName()),
+        QDialogButtonBox::Yes | QDialogButtonBox::No, QDialogButtonBox::Yes);
+    if (answer != QDialogButtonBox::Yes) {
+      return WinRARResult::NotTried;
+    }
   }
 
   WinRARFallback::removeLeftovers();
@@ -1198,9 +1221,8 @@ InstallationResult InstallationManager::install(const QString& fileName,
     QSettings metaFile(metaName, QSettings::IniFormat);
     gameName = metaFile.value("gameName", "").toString();
     modID    = metaFile.value("modID", 0).toInt();
-    QTextDocument doc;
-    doc.setHtml(metaFile.value("name", "").toString());
-    modName.update(doc.toPlainText(), GUESS_FALLBACK);
+    modName.update(htmlToPlainText(metaFile.value("name", "").toString()),
+                   GUESS_FALLBACK);
     modName.update(metaFile.value("modName", "").toString(), GUESS_META);
 
     version                    = metaFile.value("version", "").toString();

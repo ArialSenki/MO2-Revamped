@@ -38,6 +38,8 @@ constexpr char StateName[] = ".mo2r-install";
 
 // how many failures are listed by name; the rest are counted
 constexpr int ListedFailures = 200;
+// a list's own file read whole (an InlineFile or RemappedInlineFile)
+constexpr qint64 MaxInlineFileSize = qint64(2) << 30;
 
 QString tr(const char* text, const char* disambiguation = nullptr, int n = -1)
 {
@@ -1122,6 +1124,12 @@ void Installer::installInline()
                                      : QString());
     if (!isPlainId(d.dataId) || !source.open(QIODevice::ReadOnly)) {
       fail(d, tr("the list doesn't carry it"));
+      continue;
+    }
+    // MO2 Revamped: read whole, so not without end (the list's own files are
+    // settings and small generated files)
+    if (source.size() > MaxInlineFileSize) {
+      fail(d, tr("the list's own copy is too large"));
       continue;
     }
     QByteArray data = source.readAll();

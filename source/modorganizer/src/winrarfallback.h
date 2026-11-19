@@ -25,6 +25,12 @@ QString findWinRAR();
 // whether the file is a format WinRAR extracts (by its extension)
 bool canHandle(const QString& archivePath);
 
+// WinRAR.exe's version ("7.13"), empty when it can't be read; and whether it
+// is 7.13 or later, which fixed the path traversal flaws CVE-2025-6218 and
+// CVE-2025-8088 (an archive writing outside the folder it is extracted to)
+QString version(const QString& winrar);
+bool isPatched(const QString& winrar);
+
 // extracts the whole archive into destination (created if missing), showing a
 // window the user can cancel from; error is set when it returns false (empty
 // when the user cancelled). incomplete is set when WinRAR finished with
