@@ -2338,6 +2338,18 @@ int main(int argc, char *argv[]) {
         else if (arg == QStringLiteral("--snapshot-mode") && i + 1 < args.size()) snapshotMode = args.at(++i).toInt();
         else if (arg == QStringLiteral("--snapshot-language-menu")) snapshotLanguageMenu = true;
         else if (arg == QStringLiteral("--elden-ring-only")) isolated = true;
+        else if (arg == QStringLiteral("--host-lock") && i + 1 < args.size()) {
+#ifdef Q_OS_WIN
+            // the setup file, held open by the host (see its LockHost): only
+            // this window keeps it, not the engines and helpers it starts
+            bool ok = false;
+            const qulonglong value = args.at(++i).toULongLong(&ok);
+            if (ok && value != 0)
+                SetHandleInformation(reinterpret_cast<HANDLE>(static_cast<quintptr>(value)), HANDLE_FLAG_INHERIT, 0);
+#else
+            ++i;
+#endif
+        }
     }
     app.setWindowIcon(!iconPath.isEmpty() && QFileInfo::exists(iconPath) ? QIcon(iconPath) : QIcon(QStringLiteral(":/brand/icon.png")));
     if (host.isEmpty() || !QFileInfo::exists(host)) {

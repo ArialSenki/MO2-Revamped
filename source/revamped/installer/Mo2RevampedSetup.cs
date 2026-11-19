@@ -494,7 +494,11 @@ namespace Mo2RevampedSetup
             // put a plugins folder of its own in it. InstallInto still
             // refuses a folder that stopped being empty. An update is limited
             // later, once nothing can refuse it any more.
-            if (request.Mode != SetupMode.Update) RestrictInstallFolder(target);
+            // Only one this run created or found empty: a silent /dir= at a
+            // folder of other data is refused by InstallInto just below, and
+            // its permissions must stay as they were. A reinstall over kept
+            // data is limited later, once InstallInto has accepted it.
+            if (request.Mode != SetupMode.Update && targetWasEmpty) RestrictInstallFolder(target, worker);
             bool newInstallation = request.Mode == SetupMode.Fresh || request.Mode == SetupMode.EldenRingPortable || request.Mode == SetupMode.Migrate;
             try
             {
@@ -563,14 +567,19 @@ namespace Mo2RevampedSetup
         // mods or unins000.exe, which Windows runs as administrator. Such a
         // folder gets its own permissions instead: full control for the user
         // signed in to this session (the one who runs MO2), Administrators and
-        // SYSTEM, and nobody else; Administrators own it, so an account that
-        // made the folder beforehand can't hand the rights back to itself.
-        // Windows applies them to what is already inside too (an update over
-        // an existing installation, its portable instances). A folder that
-        // already grants nobody else write access is left as it is. Never
-        // fatal: a drive with no permissions (FAT, exFAT), a network share or
-        // an unknown user only goes to the log.
-        internal static void RestrictInstallFolder(string target)
+        // SYSTEM, read and run for the other users of the PC (they can still
+        // start MO2 from a shared folder, not change it), and Administrators
+        // as owner, so an account that made the folder beforehand can't hand
+        // the rights back to itself.
+        // One pass over the folder: everything inside drops permissions of its
+        // own and takes these (an update over an installation from before
+        // 1.1.0 beta 15, with its portable instances), with Administrators as
+        // owner, and the count goes to the progress. A folder that already has
+        // exactly these is left as it is. Never fatal: a drive with no
+        // permissions (FAT, exFAT), a network share or an unknown user only
+        // goes to the log. Only ever called on a folder this setup may take:
+        // one it created, an empty one or its own installation.
+        internal static void RestrictInstallFolder(string target, BackgroundWorker worker)
         {
             try
             {
@@ -596,29 +605,68 @@ namespace Mo2RevampedSetup
                 }
                 SecurityIdentifier administrators = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
                 SecurityIdentifier system = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
-                if (!InstallFolderOpenToOthers(full, user, administrators, system))
+                SecurityIdentifier users = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+                if (!InstallFolderOpenToOthers(full, user, administrators, system) && UsersCanRead(full, users))
                 {
-                    SetupDiagnostics.Info("Install folder permissions already limited to this user: '" + full + "'.");
+                    SetupDiagnostics.Info("Install folder permissions already limited: '" + full + "'.");
                     return;
                 }
-                DirectorySecurity security = new DirectorySecurity();
-                security.SetAccessRuleProtection(true, false);
+
+                RawAcl acl = new RawAcl(GenericAcl.AclRevision, 4);
+                int index = 0;
                 foreach (SecurityIdentifier account in new SecurityIdentifier[] { user, administrators, system })
+                    acl.InsertAce(index++, new CommonAce(AceFlags.ContainerInherit | AceFlags.ObjectInherit, AceQualifier.AccessAllowed,
+                        (int)FileSystemRights.FullControl, account, false, null));
+                acl.InsertAce(index, new CommonAce(AceFlags.ContainerInherit | AceFlags.ObjectInherit, AceQualifier.AccessAllowed,
+                    (int)(FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize), users, false, null));
+                byte[] aclBytes = new byte[acl.BinaryLength];
+                acl.GetBinaryForm(aclBytes, 0);
+                byte[] ownerBytes = new byte[administrators.BinaryLength];
+                administrators.GetBinaryForm(ownerBytes, 0);
+
+                int seen = 0;
+                int failed = 0;
+                string lastName = null;
+                TreeProgress progress = delegate (IntPtr objectName, uint status, ref int invokeSetting, IntPtr args, IntPtr securitySet)
                 {
-                    security.AddAccessRule(new FileSystemAccessRule(account, FileSystemRights.FullControl,
-                        InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
-                }
-                // Windows passes the new rules on to every file and folder below
-                Directory.SetAccessControl(full, security);
-                SetupDiagnostics.Info("Install folder permissions limited to " + user.Value + ", Administrators and SYSTEM: '" + full + "'.");
+                    // called more than once for an item: each name counts once
+                    string name = Marshal.PtrToStringUni(objectName) ?? "";
+                    invokeSetting = ProgressInvokeEveryObject;
+                    if (status == 0 && String.Equals(name, lastName, StringComparison.Ordinal)) return;
+                    lastName = name;
+                    seen++;
+                    if (status != 0)
+                    {
+                        failed++;
+                        if (failed <= 20)
+                            SetupDiagnostics.Info("WARNING: could not set the permissions of '" + name + "' (error " + status + ").");
+                    }
+                    if ((seen % 2000) == 0)
+                        Report(worker, 9, String.Format(InstallerText.T("Protegiendo la carpeta de la instalación ({0})…"), seen));
+                    invokeSetting = ProgressInvokeEveryObject;
+                };
+                GCHandle aclPin = GCHandle.Alloc(aclBytes, GCHandleType.Pinned);
+                GCHandle ownerPin = GCHandle.Alloc(ownerBytes, GCHandleType.Pinned);
+                uint result;
                 try
                 {
-                    DirectorySecurity owner = new DirectorySecurity();
-                    owner.SetOwner(administrators);
-                    Directory.SetAccessControl(full, owner);
+                    // the folder's own rules, protected; everything below takes
+                    // them by inheritance only, and Administrators as owner
+                    result = TreeSetNamedSecurityInfoW(full, SeFileObject,
+                        DaclSecurityInformation | OwnerSecurityInformation | ProtectedDaclSecurityInformation,
+                        ownerPin.AddrOfPinnedObject(), IntPtr.Zero, aclPin.AddrOfPinnedObject(), IntPtr.Zero,
+                        TreeSecInfoReset, progress, ProgressInvokeEveryObject, IntPtr.Zero);
                 }
-                catch (Exception ex) { SetupDiagnostics.Error("Could not make Administrators the owner of '" + full + "'.", ex); }
-                ResetInstallFolderChildren(full, user, administrators, system);
+                finally
+                {
+                    aclPin.Free();
+                    ownerPin.Free();
+                    GC.KeepAlive(progress);
+                }
+                if (result != 0)
+                    throw new System.ComponentModel.Win32Exception((int)result);
+                SetupDiagnostics.Info("Install folder permissions limited to " + user.Value + ", Administrators and SYSTEM (other users read and run) on " +
+                    seen + " item(s)" + (failed > 0 ? ", " + failed + " not changed" : "") + ": '" + full + "'.");
             }
             catch (Exception ex)
             {
@@ -626,77 +674,34 @@ namespace Mo2RevampedSetup
             }
         }
 
-        // What the folder held while it was open to everyone (an installation
-        // from before 1.1.0 beta 15): a file or folder with permissions of its
-        // own, or owned by another account, kept them when the folder was
-        // limited. Those go back to the folder's permissions and to
-        // Administrators as owner. Links are never followed, only named in the
-        // log. Runs once, when the folder is first limited.
-        private static void ResetInstallFolderChildren(string root, SecurityIdentifier user, SecurityIdentifier administrators, SecurityIdentifier system)
+        private const int SeFileObject = 1;
+        private const uint OwnerSecurityInformation = 0x00000001;
+        private const uint DaclSecurityInformation = 0x00000004;
+        private const uint ProtectedDaclSecurityInformation = 0x80000000;
+        private const uint TreeSecInfoReset = 2;
+        // PROG_INVOKE_SETTING: ProgressInvokeNever is 1
+        private const int ProgressInvokeEveryObject = 2;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void TreeProgress(IntPtr objectName, uint status, ref int invokeSetting, IntPtr args, IntPtr securitySet);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        private static extern uint TreeSetNamedSecurityInfoW(string objectName, int objectType, uint securityInfo,
+            IntPtr owner, IntPtr group, IntPtr dacl, IntPtr sacl, uint action, TreeProgress progress, int invokeSetting, IntPtr args);
+
+        // the folder already lets the other users of the PC read and run it
+        private static bool UsersCanRead(string folder, SecurityIdentifier users)
         {
-            SecurityIdentifier trustedInstaller = new SecurityIdentifier("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464");
-            int reset = 0;
-            Stack<string> folders = new Stack<string>();
-            folders.Push(root);
-            while (folders.Count > 0)
+            const FileSystemRights readRun = FileSystemRights.ReadAndExecute;
+            foreach (FileSystemAccessRule rule in Directory.GetAccessControl(folder).GetAccessRules(true, true, typeof(SecurityIdentifier)))
             {
-                string folder = folders.Pop();
-                string[] entries;
-                try { entries = Directory.GetFileSystemEntries(folder); }
-                catch (Exception ex) { SetupDiagnostics.Error("Could not list '" + folder + "' to reset its permissions.", ex); continue; }
-                foreach (string entry in entries)
-                {
-                    try
-                    {
-                        FileAttributes attributes = File.GetAttributes(entry);
-                        bool isFolder = (attributes & FileAttributes.Directory) != 0;
-                        if ((attributes & FileAttributes.ReparsePoint) != 0)
-                        {
-                            SetupDiagnostics.Info("WARNING: '" + entry + "' in the installation is a link; its permissions were left as they are.");
-                            continue;
-                        }
-                        FileSystemSecurity current = isFolder ? (FileSystemSecurity)Directory.GetAccessControl(entry) : File.GetAccessControl(entry);
-                        SecurityIdentifier owner = current.GetOwner(typeof(SecurityIdentifier)) as SecurityIdentifier;
-                        bool foreignOwner = owner != null && owner != user && owner != administrators && owner != system && owner != trustedInstaller;
-                        bool ownRules = current.AreAccessRulesProtected || current.GetAccessRules(true, false, typeof(SecurityIdentifier)).Count > 0;
-                        if (ownRules)
-                        {
-                            // no rules of its own, inheritance on: the folder's only
-                            if (isFolder)
-                            {
-                                DirectorySecurity inherit = new DirectorySecurity();
-                                inherit.SetAccessRuleProtection(false, false);
-                                Directory.SetAccessControl(entry, inherit);
-                            }
-                            else
-                            {
-                                FileSecurity inherit = new FileSecurity();
-                                inherit.SetAccessRuleProtection(false, false);
-                                File.SetAccessControl(entry, inherit);
-                            }
-                        }
-                        if (foreignOwner)
-                        {
-                            if (isFolder)
-                            {
-                                DirectorySecurity owned = new DirectorySecurity();
-                                owned.SetOwner(administrators);
-                                Directory.SetAccessControl(entry, owned);
-                            }
-                            else
-                            {
-                                FileSecurity owned = new FileSecurity();
-                                owned.SetOwner(administrators);
-                                File.SetAccessControl(entry, owned);
-                            }
-                        }
-                        if (ownRules || foreignOwner) reset++;
-                        if (isFolder) folders.Push(entry);
-                    }
-                    catch (Exception ex) { SetupDiagnostics.Error("Could not reset the permissions of '" + entry + "'.", ex); }
-                }
+                if (rule.AccessControlType == AccessControlType.Allow && rule.IdentityReference as SecurityIdentifier == users &&
+                    (rule.FileSystemRights & readRun) == readRun &&
+                    (rule.InheritanceFlags & (InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit)) == (InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit) &&
+                    (rule.PropagationFlags & PropagationFlags.InheritOnly) == 0)
+                    return true;
             }
-            if (reset > 0) SetupDiagnostics.Info("Reset the permissions or owner of " + reset + " item(s) inside '" + root + "'.");
+            return false;
         }
 
         // the account signed in to this session, which runs MO2 (not the
@@ -965,7 +970,7 @@ namespace Mo2RevampedSetup
             // the folder only this user, Administrators and SYSTEM can change,
             // before anything is written to it (see RestrictInstallFolder)
             Report(worker, 9, InstallerText.T("Protegiendo la carpeta de la instalación…"));
-            RestrictInstallFolder(target);
+            RestrictInstallFolder(target, worker);
             SaveState(state);
             try
             {

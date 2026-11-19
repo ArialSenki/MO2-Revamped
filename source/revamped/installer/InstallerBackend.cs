@@ -202,6 +202,9 @@ namespace Mo2RevampedSetup
                         catch (Exception copyError)
                         {
                             SetupDiagnostics.Error("Could not copy the uninstaller out of '" + fixedTarget + "'; it runs from there.", copyError);
+                            // not held: the uninstall has to delete it, and the
+                            // folder it is in is limited to administrators
+                            if (hostLock != null) { hostLock.Dispose(); hostLock = null; }
                         }
                     }
 
@@ -211,6 +214,13 @@ namespace Mo2RevampedSetup
                     arguments.Add("--language");
                     arguments.Add(InstallerText.DetectLanguage());
                     if (File.Exists(iconPath)) { arguments.Add("--icon"); arguments.Add(iconPath); }
+                    // the window keeps the inherited handle and stops it going on
+                    // to the engines and helpers it starts (see LockHost)
+                    if (hostLock != null)
+                    {
+                        arguments.Add("--host-lock");
+                        arguments.Add(hostLock.SafeFileHandle.DangerousGetHandle().ToInt64().ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    }
 #if ELDENRING_ONLY_INSTALLER
                     arguments.Add("--elden-ring-only");
 #endif
@@ -266,8 +276,10 @@ namespace Mo2RevampedSetup
         // program of the user rename a running exe in Downloads and put
         // another one in its place, so the file stays open while the window
         // runs: no write or delete sharing, which also keeps its folder from
-        // being renamed. The handle is inheritable, so the window (and the
-        // engines it starts) hold it after this process exits.
+        // being renamed. The handle is inheritable, so the window holds it
+        // after this process exits; the window makes it uninheritable at once
+        // (--host-lock), so the engines and helpers it starts don't hold it
+        // and the work folder can go when they end.
         private static FileStream LockHost(string path)
         {
             try { return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Inheritable); }
