@@ -1,6 +1,7 @@
 #ifndef ENV_ENVFS_H
 #define ENV_ENVFS_H
 
+#include <atomic>
 #include "thread_utils.h"
 #include <thread>
 
@@ -162,6 +163,17 @@ using DirEndF   = void(void*, std::wstring_view);
 using FileF     = void(void*, std::wstring_view, FILETIME, uint64_t);
 
 void setHandleCloserThreadCount(std::size_t n);
+
+// MO2 Revamped: for walks that must know they saw everything (a copy) or
+// stop early (a cancelled measure). While set on a thread, forEachEntry() on
+// that thread counts the folders it couldn't read and stops when cancel is
+// set; other walks are unaffected.
+struct WalkControl
+{
+  const std::atomic_bool* cancel = nullptr;
+  std::size_t errors             = 0;
+};
+void setWalkControl(WalkControl* control);
 
 class DirectoryWalker
 {

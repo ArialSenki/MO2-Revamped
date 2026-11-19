@@ -1129,6 +1129,17 @@ std::unique_ptr<Instance> MOApplication::getCurrentInstance(bool forceSelect)
     }
   }
 
+  // MO2 Revamped: Nexus links that came while no instance was chosen would
+  // go with MO2 closing; the user is told they weren't opened
+  if (!currentInstance && !m_waitingLinks.isEmpty()) {
+    log::warn("{} Nexus links weren't opened: no instance was chosen",
+              m_waitingLinks.size());
+    reportError(QObject::tr("No instance was chosen, so the %n Nexus link(s) that came "
+                            "meanwhile weren't opened. Open them again from the browser.",
+                            nullptr, static_cast<int>(m_waitingLinks.size())));
+    m_waitingLinks.clear();
+  }
+
   return currentInstance;
 }
 

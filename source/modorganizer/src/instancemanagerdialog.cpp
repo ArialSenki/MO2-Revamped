@@ -190,6 +190,7 @@ bool retargetInstancePaths(const QString& ini, const QString& source,
     return false;
   }
 
+  bool byteArrays = false;
   {
     QString contents = QString::fromUtf8(file.readAll());
     file.close();
@@ -217,12 +218,23 @@ bool retargetInstancePaths(const QString& ini, const QString& source,
       result += text.mid(position);
       text = result;
     };
-    for (const auto& [from, to] :
-         {std::pair{forward, QDir::cleanPath(destination)},
-          std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
-                                 .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
-      replaceFolder(contents, from, to);
+    // a @ByteArray(...) value (gamePath) keeps its bytes escaped in the file
+    // (\xNN for anything past ASCII): those lines are left out here and
+    // rewritten below through QSettings
+    QStringList lines = contents.split(QLatin1Char('\n'));
+    for (QString& line : lines) {
+      if (line.contains(QStringLiteral("@ByteArray("))) {
+        byteArrays = true;
+        continue;
+      }
+      for (const auto& [from, to] :
+           {std::pair{forward, QDir::cleanPath(destination)},
+            std::pair{escaped, QDir::toNativeSeparators(QDir::cleanPath(destination))
+                                   .replace(QStringLiteral("\\"), QStringLiteral("\\\\"))}}) {
+        replaceFolder(line, from, to);
+      }
     }
+    contents = lines.join(QLatin1Char('\n'));
     // written whole or not at all, and on disk before the list reads the
     // instance back
     QSaveFile out(ini);
@@ -230,6 +242,35 @@ bool retargetInstancePaths(const QString& ini, const QString& source,
     if (!out.open(QIODevice::WriteOnly) || out.write(bytes) != bytes.size() ||
         !out.commit()) {
       log::error("can't write {} to update its paths: {}", ini, out.errorString());
+      return false;
+    }
+  }
+
+  // the byte array values, as the UTF-8 text MO2 stores in them
+  if (byteArrays) {
+    QSettings settings(ini, QSettings::IniFormat);
+    const QString from = QDir::cleanPath(source);
+    const QString to   = QDir::cleanPath(destination);
+    for (const QString& key : settings.allKeys()) {
+      const QVariant v = settings.value(key);
+      if (v.typeId() != QMetaType::QByteArray) {
+        continue;
+      }
+      const QString text  = QString::fromUtf8(v.toByteArray());
+      const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(text));
+      if (clean.compare(from, Qt::CaseInsensitive) != 0 &&
+          !clean.startsWith(from + QLatin1Char('/'), Qt::CaseInsensitive)) {
+        continue;
+      }
+      QString moved = to + clean.mid(from.size());
+      if (text.contains(QLatin1Char('\\'))) {
+        moved = QDir::toNativeSeparators(moved);
+      }
+      settings.setValue(key, moved.toUtf8());
+    }
+    settings.sync();
+    if (settings.status() != QSettings::NoError) {
+      log::error("can't write {} to update its paths", ini);
       return false;
     }
   }
@@ -1044,8 +1085,10 @@ void InstanceManagerDialog::updateNolvus()
               QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Ok) {
         return;
       }
+      // the size scan keeps folders open, and a folder in use can't move back
+      stopSizeScan();
       QString error;
-      if (!Nolvus::undoTransfer(dir, &error)) {
+      if (!Nolvus::undoTransfer(dir, &error, this)) {
         QMessageBox::warning(this, tr("Put everything back"), error);
       }
       updateInstances();
@@ -1146,6 +1189,7 @@ void InstanceManagerDialog::transferSelectedNolvus()
   source.info.mo2Path     = link.mo2Path;
   source.info.modsPath    = link.modsPath;
 
+  stopSizeScan();
   if (!Nolvus::runTransferWizard(this, source).isEmpty()) {
     updateInstances();
     updateList();
@@ -1173,8 +1217,9 @@ void InstanceManagerDialog::undoNolvusTransfer()
           QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Ok) {
     return;
   }
+  stopSizeScan();
   QString error;
-  if (!Nolvus::undoTransfer(i->directory(), &error)) {
+  if (!Nolvus::undoTransfer(i->directory(), &error, this)) {
     QMessageBox::warning(this, tr("Undo the Nolvus transfer"),
                          tr("Some things couldn't be put back:\n%1").arg(error));
   }
@@ -1235,14 +1280,15 @@ void InstanceManagerDialog::copyNolvusProfilesAgain()
   const auto answer = QMessageBox::question(
       this, tr("Copy Nolvus' profiles again"),
       tr("The profiles of %1 are replaced with a new copy of Nolvus' profiles (after a "
-         "Nolvus update, for instance). The current copy is kept beside them, in a "
-         "profiles-backup folder.")
+         "Nolvus update, for instance). The saves made here stay in use; the rest of "
+         "the current copy is kept beside them, in a profiles-backup folder.")
           .arg(i->displayName()),
       QMessageBox::Ok | QMessageBox::Cancel, QMessageBox::Cancel);
   if (answer != QMessageBox::Ok) {
     return;
   }
 
+  stopSizeScan();
   QString error;
   if (!Nolvus::refreshProfiles(i->iniPath(), &error)) {
     QMessageBox::warning(this, tr("Copy Nolvus' profiles again"), error);
@@ -1680,8 +1726,16 @@ void InstanceManagerDialog::rename()
     return;
   }
 
-  // its settings still pointed into the old folder
+  // its settings still pointed into the old folder, and so did a Nolvus
+  // transfer's record and the linked settings it keeps for an undo
   const QString newIni = QDir(dest).filePath(QFileInfo(i->iniPath()).fileName());
+  Nolvus::retargetTransfer(QDir::cleanPath(QDir::fromNativeSeparators(src)),
+                           QDir::cleanPath(QDir::fromNativeSeparators(dest)));
+  if (QFileInfo(newIni + QStringLiteral(".linked-backup")).isFile()) {
+    retargetInstancePaths(newIni + QStringLiteral(".linked-backup"),
+                          QDir::cleanPath(QDir::fromNativeSeparators(src)),
+                          QDir::fromNativeSeparators(dest));
+  }
   if (!retargetInstancePaths(newIni, QDir::cleanPath(QDir::fromNativeSeparators(src)),
                              QDir::fromNativeSeparators(dest))) {
     QMessageBox::warning(
@@ -1777,12 +1831,64 @@ void InstanceManagerDialog::deleteInstance()
     return;
   }
 
-  const auto files = i->objectsForDeletion();
+  auto files = i->objectsForDeletion();
+
+  // MO2 Revamped: a Nolvus instance (linked, or kept in place) uses Nolvus'
+  // own mods, overwrite, profiles and stock game: nothing inside the Nolvus
+  // folders is ever offered for deletion
+  const auto link   = Nolvus::readLink(i->iniPath());
+  bool keptNolvus   = false;
+  if (link.valid) {
+    QStringList nolvusFolders;
+    for (const QString& f : {link.root, link.installPath, link.archivePath, link.mo2Path,
+                             link.transferred ? QString() : link.modsPath,
+                             link.transferred ? QString() : link.stockGame}) {
+      if (!f.trimmed().isEmpty()) {
+        nolvusFolders << Nolvus::cleanPath(f);
+      }
+    }
+    const auto inNolvus = [&](const QString& path) {
+      const QString p = Nolvus::cleanPath(path);
+      for (const QString& f : nolvusFolders) {
+        if (p.compare(f, Qt::CaseInsensitive) == 0 ||
+            p.startsWith(f + QLatin1Char('/'), Qt::CaseInsensitive)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    const auto before = files.size();
+    files.erase(std::remove_if(files.begin(), files.end(),
+                               [&](const Instance::Object& o) {
+                                 return inNolvus(o.path);
+                               }),
+                files.end());
+    keptNolvus = files.size() != before;
+  }
 
   FluentContentDialog dlg(
       this, QStringLiteral("DeleteInstanceDialog"),
       tr("Delete %1?").arg(i->displayName()),
       tr("Choose what to remove. Items the instance can't do without stay checked."));
+
+  if (keptNolvus) {
+    auto* note = new QLabel(tr("Nolvus' own folders (its mods, profiles, stock game and "
+                               "archives) are not listed: they are never deleted from "
+                               "here."),
+                            &dlg);
+    note->setWordWrap(true);
+    dlg.body()->addWidget(note);
+  }
+  if (Nolvus::canUndoTransfer(i->directory())) {
+    auto* note = new QLabel(tr("<b>This instance holds the list moved out of Nolvus.</b> "
+                               "Deleting its folder deletes those mods and the stock game. "
+                               "To give them back to Nolvus, use \"Undo the Nolvus "
+                               "transfer\" first."),
+                            &dlg);
+    note->setWordWrap(true);
+    note->setTextFormat(Qt::RichText);
+    dlg.body()->addWidget(note);
+  }
 
   // the paths in a card of check box rows
   auto* list = new QFrame(&dlg);
@@ -2353,6 +2459,12 @@ void InstanceManagerDialog::duplicateInstance()
     updateInstances();
     updateList();
     return;
+  }
+
+  // a copied Nolvus transfer record would undo the original's transfer
+  for (const QString& f : QDir(destination).entryList(
+           {QStringLiteral("nolvus-transfer*.jsonl")}, QDir::Files)) {
+    QFile::remove(QDir(destination).filePath(f));
   }
 
   // paths in the copied settings that pointed into the original now point

@@ -105,7 +105,12 @@ bool canUndoTransfer(const QString& instanceDir);
 
 // puts a moved transfer back where it came from; the instance stops being one
 // (its ini is renamed) unless it was a linked instance, which is restored
-bool undoTransfer(const QString& instanceDir, QString* error);
+// refused for the instance in use; copies go to the Recycle Bin; the record
+// stays (and the undo can be tried again) while anything couldn't be put back
+bool undoTransfer(const QString& instanceDir, QString* error, QWidget* parent = nullptr);
+
+// the paths of a renamed instance's transfer record
+void retargetTransfer(const QString& oldDir, const QString& newDir);
 
 // the wizard: choices, warnings, then the transfer with its progress; returns
 // the instance's folder, or an empty string when nothing was done
