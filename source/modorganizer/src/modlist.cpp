@@ -39,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
 #include "shared/util.h"
+#include "texteditor.h"
 #include "viewmarkingscrollbar.h"
 #include "widgetutility.h"
 
@@ -144,10 +145,13 @@ QString ModList::getFlagText(ModInfo::EFlag flag, ModInfo::Ptr modInfo) const
     return tr("Not endorsed yet");
   case ModInfo::FLAG_NOTES: {
     QStringList output;
+    // MO2 Revamped: comments are plain text and notes load nothing (see
+    // offlineNotesHtml): meta.ini can come from a Wabbajack list, and an
+    // <img src="\\server\..."> sent the Windows password hash on hover
     if (!modInfo->comments().isEmpty())
-      output << QString("<i>%1</i>").arg(modInfo->comments());
+      output << QString("<i>%1</i>").arg(modInfo->comments().toHtmlEscaped());
     if (!modInfo->notes().isEmpty())
-      output << QString("<i>%1</i>").arg(modInfo->notes());
+      output << QString("<i>%1</i>").arg(offlineNotesHtml(modInfo->notes()));
     return output.join("");
   }
   case ModInfo::FLAG_ALTERNATE_GAME:

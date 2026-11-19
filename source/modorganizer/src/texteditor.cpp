@@ -4,6 +4,11 @@
 #include <QDir>
 #include <QSaveFile>
 #include <QSplitter>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <QTextFrame>
+#include <QTextTable>
 #include <log.h>
 #include <report.h>
 
@@ -581,4 +586,117 @@ void HTMLEditor::focusOutEvent(QFocusEvent* e)
   }
 
   QTextEdit::focusOutEvent(e);
+}
+
+namespace
+{
+
+bool isOfflineResource(const QUrl& url)
+{
+  const QString scheme = url.scheme().toLower();
+  return scheme == "data" || scheme == "qrc";
+}
+
+// an empty answer, not a null one: QTextDocument would then read the file
+// itself
+class OfflineTextDocument : public QTextDocument
+{
+public:
+  using QTextDocument::QTextDocument;
+
+protected:
+  QVariant loadResource(int type, const QUrl& name) override
+  {
+    if (isOfflineResource(name)) {
+      return QTextDocument::loadResource(type, name);
+    }
+    return QByteArray();
+  }
+};
+
+template <class Format>
+bool dropBackgroundImage(Format& format)
+{
+  if (!format.hasProperty(QTextFormat::BackgroundImageUrl)) {
+    return false;
+  }
+  format.clearProperty(QTextFormat::BackgroundImageUrl);
+  return true;
+}
+
+void dropFrameImages(QTextFrame* frame)
+{
+  QTextFrameFormat format = frame->frameFormat();
+  if (dropBackgroundImage(format)) {
+    frame->setFrameFormat(format);
+  }
+  if (auto* table = qobject_cast<QTextTable*>(frame)) {
+    for (int row = 0; row < table->rows(); ++row) {
+      for (int column = 0; column < table->columns(); ++column) {
+        QTextTableCell cell       = table->cellAt(row, column);
+        QTextCharFormat cellFormat = cell.format();
+        if (dropBackgroundImage(cellFormat)) {
+          cell.setFormat(cellFormat);
+        }
+      }
+    }
+  }
+  for (QTextFrame* child : frame->childFrames()) {
+    dropFrameImages(child);
+  }
+}
+
+}  // namespace
+
+QVariant HTMLEditor::loadResource(int type, const QUrl& name)
+{
+  if (isOfflineResource(name)) {
+    return QTextEdit::loadResource(type, name);
+  }
+  return QByteArray();
+}
+
+QString offlineNotesHtml(const QString& notes)
+{
+  if (!Qt::mightBeRichText(notes)) {
+    return notes.toHtmlEscaped();
+  }
+
+  OfflineTextDocument document;
+  document.setHtml(notes);
+
+  // images and background images out; what Qt itself takes for one is what
+  // goes, whatever the markup looked like
+  QList<QPair<int, int>> images;
+  for (QTextBlock block = document.begin(); block.isValid(); block = block.next()) {
+    QTextBlockFormat blockFormat = block.blockFormat();
+    if (dropBackgroundImage(blockFormat)) {
+      QTextCursor(block).setBlockFormat(blockFormat);
+    }
+    for (auto it = block.begin(); !it.atEnd(); ++it) {
+      const QTextFragment fragment = it.fragment();
+      if (!fragment.isValid()) {
+        continue;
+      }
+      QTextCharFormat charFormat = fragment.charFormat();
+      if (charFormat.isImageFormat()) {
+        images.append({fragment.position(), fragment.length()});
+      } else if (dropBackgroundImage(charFormat)) {
+        QTextCursor cursor(&document);
+        cursor.setPosition(fragment.position());
+        cursor.setPosition(fragment.position() + fragment.length(),
+                           QTextCursor::KeepAnchor);
+        cursor.setCharFormat(charFormat);
+      }
+    }
+  }
+  for (auto image = images.crbegin(); image != images.crend(); ++image) {
+    QTextCursor cursor(&document);
+    cursor.setPosition(image->first);
+    cursor.setPosition(image->first + image->second, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+  }
+  dropFrameImages(document.rootFrame());
+
+  return document.toHtml();
 }

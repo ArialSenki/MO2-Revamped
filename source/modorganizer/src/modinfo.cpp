@@ -714,5 +714,16 @@ QUrl ModInfo::parseCustomURL() const
     return {};
   }
 
+  // MO2 Revamped: a web page only. meta.ini can come from a Wabbajack list or
+  // a mod archive, and "Visit web page" hands the address to the shell: a
+  // file path or \\server\share ran a program or sent the Windows password
+  // hash with one click
+  const QString scheme = url.scheme().toLower();
+  if ((scheme != "http" && scheme != "https") || url.host().isEmpty()) {
+    log::warn("mod '{}': custom url '{}' is not a web page, ignored", name(),
+              this->url());
+    return {};
+  }
+
   return url;
 }

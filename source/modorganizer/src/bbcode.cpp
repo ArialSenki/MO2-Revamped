@@ -115,6 +115,16 @@ public:
             } else {
               log::warn("don't know how to deal with tag {}", tagName);
             }
+          } else if (tagName == "url") {
+            // MO2 Revamped: the address goes into the attribute escaped, so a
+            // quote in it can't add attributes or markup (and no \1 in it is
+            // taken for a capture by QString::replace)
+            const bool named   = tagIter->first == "url=";
+            const QString href = match.captured(1).trimmed();
+            const QString text = named ? match.captured(2) : match.captured(1);
+            return temp.left(match.capturedStart(0)) +
+                   QString("<a href=\"%1\">%2</a>").arg(href.toHtmlEscaped(), text) +
+                   temp.mid(match.capturedEnd(0));
           } else {
             if (tagName == "*") {
               temp.remove(QRegularExpression("(\\[/\\*\\])?(<br/>)?$"));

@@ -6,12 +6,105 @@
 #include <report.h>
 #include <scopeguard.h>
 
+#include <Windows.h>
+#include <aclapi.h>
+#include <sddl.h>
+
+#include <memory>
+
+// the shared memory lock (shared with upstream MO2 on purpose: one or the
+// other runs) and, before MO2 Revamped 1.1.0 beta 15, the pipe
 static const char s_Key[]  = "mo-43d1a3ad-eeb0-4818-97c9-eda5216c29b5";
 static const int s_Timeout = 5000;
 // how long a link waits for a starting MO2 to take it
 static const int s_AnswerTimeout = 60000;
 
 using MOBase::reportError;
+
+namespace
+{
+
+// the SID of the account this process runs as, as S-1-5-...
+struct UserSid
+{
+  std::unique_ptr<BYTE[]> buffer;
+  PSID sid = nullptr;
+  QString text;
+};
+
+const UserSid& currentUserSid()
+{
+  static const UserSid user = [] {
+    UserSid result;
+    HANDLE token = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+      return result;
+    }
+    DWORD size = 0;
+    GetTokenInformation(token, TokenUser, nullptr, 0, &size);
+    if (size > 0) {
+      result.buffer = std::make_unique<BYTE[]>(size);
+      if (GetTokenInformation(token, TokenUser, result.buffer.get(), size, &size)) {
+        result.sid  = reinterpret_cast<TOKEN_USER*>(result.buffer.get())->User.Sid;
+        LPWSTR text = nullptr;
+        if (ConvertSidToStringSidW(result.sid, &text)) {
+          result.text = QString::fromWCharArray(text);
+          LocalFree(text);
+        }
+      }
+    }
+    CloseHandle(token);
+    return result;
+  }();
+  return user;
+}
+
+// MO2 Revamped: the pipe is per Windows account. Pipe names are the same for
+// every account of the PC, so with the fixed name another account's MO2 (or
+// a program of another account) took this one's links and command lines
+QString pipeName()
+{
+  const QString& sid = currentUserSid().text;
+  return sid.isEmpty() ? QString(s_Key) : QString(s_Key) + "-" + sid;
+}
+
+// true when the pipe was made by this account (or, for an MO2 running as
+// administrator, by Administrators): another account can create a pipe of
+// any name, even this one's, and then read every nxm link with its key
+bool serverIsThisUser(QLocalSocket& socket)
+{
+  const UserSid& user = currentUserSid();
+  if (user.sid == nullptr) {
+    return false;
+  }
+  PSID owner                = nullptr;
+  PSECURITY_DESCRIPTOR desc = nullptr;
+  const auto error =
+      GetSecurityInfo(reinterpret_cast<HANDLE>(socket.socketDescriptor()),
+                      SE_KERNEL_OBJECT, OWNER_SECURITY_INFORMATION, &owner, nullptr,
+                      nullptr, nullptr, &desc);
+  if (error != ERROR_SUCCESS) {
+    MOBase::log::error("couldn't check who runs the other MO2: error {}", error);
+    return false;
+  }
+  const bool ok = owner != nullptr && (EqualSid(owner, user.sid) ||
+                                       IsWellKnownSid(owner, WinBuiltinAdministratorsSid));
+  if (!ok) {
+    LPWSTR text = nullptr;
+    QString name;
+    if (owner != nullptr && ConvertSidToStringSidW(owner, &text)) {
+      name = QString::fromWCharArray(text);
+      LocalFree(text);
+    }
+    MOBase::log::error("the program answering on MO2's pipe runs as another account "
+                       "({}); nothing was sent to it",
+                       name);
+  }
+  LocalFree(desc);
+  return ok;
+}
+
+}  // namespace
 
 MOMultiProcess::MOMultiProcess(bool allowMultiple, QObject* parent)
     : QObject(parent), m_Ephemeral(false), m_OwnsSM(false)
@@ -48,7 +141,12 @@ MOMultiProcess::MOMultiProcess(bool allowMultiple, QObject* parent)
     // world access let another account run programs as this user. The user's
     // own SID still lets a link reach an MO2 running as administrator
     m_Server.setSocketOptions(QLocalServer::UserAccessOption);
-    m_Server.listen(s_Key);
+    if (!m_Server.listen(pipeName())) {
+      // links clicked while this MO2 runs then can't reach it
+      MOBase::log::error("couldn't open the pipe for links from other MO2 "
+                         "processes ({}): {}",
+                         pipeName(), m_Server.errorString());
+    }
   }
 }
 
@@ -67,8 +165,23 @@ void MOMultiProcess::sendMessage(const QString& message)
     }
 
     // other process may be just starting up
-    socket.connectToServer(s_Key, QIODevice::ReadWrite);
+    socket.connectToServer(pipeName(), QIODevice::ReadWrite);
     connected = socket.waitForConnected(s_Timeout);
+    // an MO2 from before the per-account pipe (or upstream MO2, which shares
+    // the lock) listens on the old name
+    if (!connected && socket.error() == QLocalSocket::ServerNotFoundError &&
+        pipeName() != s_Key) {
+      socket.abort();
+      socket.connectToServer(s_Key, QIODevice::ReadWrite);
+      connected = socket.waitForConnected(s_Timeout);
+    }
+  }
+
+  if (connected && !serverIsThisUser(socket)) {
+    socket.abort();
+    reportError(tr("Another Windows account's program answered instead of your "
+                   "Mod Organizer; nothing was sent to it."));
+    return;
   }
 
   if (!connected) {

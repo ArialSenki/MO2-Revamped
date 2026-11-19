@@ -157,7 +157,18 @@ signals:
 protected:
   void focusOutEvent(QFocusEvent* e);
 
+  // MO2 Revamped: notes come from meta.ini, which a Wabbajack list or a mod
+  // archive can write: only data: and qrc: resources load, never a file or
+  // \\server path (Qt read those right away, sending the password hash)
+  QVariant loadResource(int type, const QUrl& name) override;
+
 private:
 };
+
+// MO2 Revamped: mod notes for a tooltip. Their formatting stays, but images,
+// background images and style sheets from anywhere but data: and qrc: are
+// dropped, so showing them loads nothing from disk or the network. Text that
+// isn't rich text comes back escaped.
+QString offlineNotesHtml(const QString& notes);
 
 #endif  // MO_TEXTEDITOR_H

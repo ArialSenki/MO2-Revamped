@@ -16838,6 +16838,10 @@ Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3
   <context>
     <name>MOMultiProcess</name>
     <message>
+      <source>Another Windows account&apos;s program answered instead of your Mod Organizer; nothing was sent to it.</source>
+      <translation>Statt deines Mod Organizer hat ein Programm eines anderen Windows-Kontos geantwortet; es wurde nichts gesendet.</translation>
+    </message>
+    <message>
       <source>Mod Organizer is running but didn't answer; the link wasn't added. Try again in a moment.</source>
       <translation>Mod Organizer läuft, hat aber nicht geantwortet; der Link wurde nicht hinzugefügt. Versuche es gleich noch einmal.</translation>
     </message>
