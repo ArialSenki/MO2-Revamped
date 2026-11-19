@@ -420,6 +420,10 @@ public:  // member variables
   mutable QHash<QModelIndex, QColor> m_markerColors;
 
   bool m_inDragMoveEvent = false;
+  // MO2 Revamped: archives from Explorer over a place the model doesn't take
+  // (a mod, the empty space, a sort or grouping without priorities): they
+  // still install, as the last mods
+  bool m_externalArchivesAtEnd = false;
 
   // a click on a separator's arrow is the arrow's alone, its release included
   bool m_arrowClick = false;

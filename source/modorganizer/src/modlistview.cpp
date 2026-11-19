@@ -2051,10 +2051,49 @@ void ModListView::dragMoveEvent(QDragMoveEvent* event)
   m_inDragMoveEvent = true;
   QAbstractItemView::dragMoveEvent(event);
   m_inDragMoveEvent = false;
+
+  // MO2 Revamped: archives from Explorer are taken anywhere over the list;
+  // where the model has no place for them they go in as the last mods
+  // (refused here, the drop never came: once the list took the drag, Qt
+  // gives the window no other chance)
+  const ModListDropInfo dropInfo(event->mimeData(), *m_core);
+  if (dropInfo.isExternalArchiveDrop()) {
+    m_externalArchivesAtEnd = !event->isAccepted();
+    if (m_externalArchivesAtEnd) {
+      event->setDropAction(Qt::CopyAction);
+      event->accept();
+    }
+  }
 }
 
 void ModListView::dropEvent(QDropEvent* event)
 {
+  // MO2 Revamped: archives from Explorer where the model has no place for
+  // them (see dragMoveEvent()): installed after the drop has ended, as the
+  // last mods
+  if (m_externalArchivesAtEnd) {
+    m_externalArchivesAtEnd = false;
+    const QStringList archives =
+        ModListDropInfo(event->mimeData(), *m_core).externalArchives();
+    if (!archives.isEmpty()) {
+      event->setDropAction(Qt::CopyAction);
+      event->accept();
+      stopAutoScroll();
+      setState(NoState);
+      viewport()->update();
+      log::info("mod list: {} archive(s) dropped, installed as the last mods",
+                archives.size());
+      QTimer::singleShot(0, this, [this, archives] {
+        window()->activateWindow();
+        m_core->installArchives(archives);
+      });
+      return;
+    }
+  }
+  if (ModListDropInfo(event->mimeData(), *m_core).isExternalArchiveDrop()) {
+    log::info("mod list: archive(s) dropped where the drop indicator was");
+  }
+
   // from Qt source
   QModelIndex index;
   if (viewport()->rect().contains(event->pos())) {

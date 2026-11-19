@@ -8169,7 +8169,7 @@ void MainWindow::dropEvent(QDropEvent* event)
     }
     event->setDropAction(Qt::CopyAction);
     event->accept();
-    log::debug("{} archive(s) dropped on the window", archives.size());
+    log::info("{} archive(s) dropped on the window", archives.size());
     // after the drop has ended: Explorer waits for it, and the installers open
     // their own windows
     QTimer::singleShot(0, this, [this, archives] {
