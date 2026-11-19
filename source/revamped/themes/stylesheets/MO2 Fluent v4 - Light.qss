@@ -6192,3 +6192,10 @@ QDockWidget#logDock[fluentFloating="true"] QTreeView#logList {
     border-bottom: none;
     border-radius: 0px;
 }
+
+/* The status bar is a caption on the window surface, like the gaps between
+   the cards: no full-width line cutting under the cards' rounded edges. */
+QStatusBar,
+QMainWindow#MainWindow QStatusBar#statusBar {
+    border: none;
+}
