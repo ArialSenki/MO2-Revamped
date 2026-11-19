@@ -141,6 +141,8 @@ namespace Mo2RevampedSetup
             {
                 if (resource == null) return false;
 
+                // held until the window has its own copy of the handle (see LockHost)
+                FileStream hostLock = LockHost(Application.ExecutablePath);
                 string extractionRoot = CreateWorkFolder();
                 bool cleanupScheduled = false;
                 string archivePath = Path.Combine(extractionRoot, "qt-runtime.zip");
@@ -193,6 +195,9 @@ namespace Mo2RevampedSetup
                             File.Copy(host, copy, true);
                             host = copy;
                             hostCopied = true;
+                            // the uninstaller in the folder must stay deletable
+                            if (hostLock != null) hostLock.Dispose();
+                            hostLock = LockHost(copy);
                         }
                         catch (Exception copyError)
                         {
@@ -221,7 +226,19 @@ namespace Mo2RevampedSetup
                     start.Arguments = JoinArguments(arguments);
                     start.WorkingDirectory = extractionRoot;
                     start.UseShellExecute = false;
+                    // the elevated window loads no Qt plugin, style or platform
+                    // setting from the user's environment
+                    foreach (object name in Environment.GetEnvironmentVariables().Keys)
+                    {
+                        string variable = Convert.ToString(name) ?? "";
+                        if (variable.StartsWith("QT", StringComparison.OrdinalIgnoreCase) ||
+                            variable.StartsWith("QML", StringComparison.OrdinalIgnoreCase))
+                            start.EnvironmentVariables.Remove(variable);
+                    }
                     Process process = Process.Start(start);
+                    // the window inherited the handle; the cleanup helper must
+                    // not, or it couldn't delete a copied uninstaller
+                    if (hostLock != null) { hostLock.Dispose(); hostLock = null; }
                     if (process == null) throw new InvalidOperationException(InstallerText.T("Windows no pudo abrir la ventana del instalador."));
                     int processId = process.Id;
                     cleanupScheduled = ScheduleExtractionCleanup(extractionRoot, processId);
@@ -238,8 +255,26 @@ namespace Mo2RevampedSetup
                 }
                 finally
                 {
+                    if (hostLock != null) hostLock.Dispose();
                     if (!cleanupScheduled) RemoveWorkFolder(extractionRoot);
                 }
+            }
+        }
+
+        // The window runs this file again, elevated and with no prompt, for
+        // every task (--backend, --inspect, --open-path). Windows lets a
+        // program of the user rename a running exe in Downloads and put
+        // another one in its place, so the file stays open while the window
+        // runs: no write or delete sharing, which also keeps its folder from
+        // being renamed. The handle is inheritable, so the window (and the
+        // engines it starts) hold it after this process exits.
+        private static FileStream LockHost(string path)
+        {
+            try { return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Inheritable); }
+            catch (Exception ex)
+            {
+                SetupDiagnostics.Error("Could not hold '" + path + "' open while the setup window runs.", ex);
+                return null;
             }
         }
 

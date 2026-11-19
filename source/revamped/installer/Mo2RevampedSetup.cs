@@ -106,9 +106,18 @@ namespace Mo2RevampedSetup
 
     internal static class Program
     {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetDefaultDllDirectories(uint directoryFlags);
+
         [STAThread]
         private static void Main(string[] args)
         {
+            // DLLs Windows or .NET load by name from here on come from
+            // System32 only, never from the folder the setup was started
+            // in (Downloads): see DefaultDllImportSearchPaths in AssemblyInfo
+            const uint LoadLibrarySearchSystem32 = 0x00000800;
+            try { SetDefaultDllDirectories(LoadLibrarySearchSystem32); }
+            catch (EntryPointNotFoundException) { }
             // what this process and its helpers start must never hold the
             // folder being removed (a double-clicked unins000.exe starts in
             // it): Windows can't delete a folder that is a current directory
@@ -558,7 +567,7 @@ namespace Mo2RevampedSetup
                 string full = Path.GetFullPath(target);
                 if (full.StartsWith(@"\\", StringComparison.Ordinal))
                 {
-                    SetupDiagnostics.Info("Install folder permissions left as they are: '" + full + "' is a network path.");
+                    SetupDiagnostics.Info("WARNING: install folder permissions left as they are: '" + full + "' is a network path, whose permissions the share decides.");
                     return;
                 }
                 DriveInfo drive = new DriveInfo(Path.GetPathRoot(full));
@@ -566,13 +575,13 @@ namespace Mo2RevampedSetup
                     !(String.Equals(drive.DriveFormat, "NTFS", StringComparison.OrdinalIgnoreCase) ||
                       String.Equals(drive.DriveFormat, "ReFS", StringComparison.OrdinalIgnoreCase)))
                 {
-                    SetupDiagnostics.Info("Install folder permissions left as they are: drive " + drive.Name + " is " + drive.DriveType + " / " + drive.DriveFormat + ".");
+                    SetupDiagnostics.Info("WARNING: install folder permissions left as they are: drive " + drive.Name + " is " + drive.DriveType + " / " + drive.DriveFormat + " (no permissions to set). Other accounts of this PC may be able to change the program files there, unins000.exe included.");
                     return;
                 }
                 SecurityIdentifier user = InstallFolderUser();
                 if (user == null)
                 {
-                    SetupDiagnostics.Info("Install folder permissions left as they are: the signed-in user of this session is unknown.");
+                    SetupDiagnostics.Info("WARNING: install folder permissions left as they are: no user is signed in to this session (a silent run as SYSTEM or a service), so there is no account to give the folder to. Other accounts of this PC may be able to change the program files there, unins000.exe included; run the setup from the user's session to limit them.");
                     return;
                 }
                 SecurityIdentifier administrators = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);

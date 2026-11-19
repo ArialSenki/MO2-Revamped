@@ -11,3 +11,7 @@ using System.Runtime.InteropServices;
 // the release name; Build-Release.ps1 checks it against its own version
 [assembly: AssemblyInformationalVersion("1.1.0-beta.15")]
 [assembly: ComVisible(false)]
+// the setup runs as administrator from Downloads: a DLL dropped next to it
+// (wtsapi32.dll, rstrtmgr.dll, wintrust.dll) must never be loaded instead
+// of Windows' own
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
