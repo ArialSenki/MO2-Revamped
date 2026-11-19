@@ -2339,10 +2339,37 @@ void DownloadManager::checkStalledDownloads()
   // a server that keeps the connection open but sends nothing (a stuck CDN
   // node, a dropped Wi-Fi the system didn't notice) gets this long
   static const qint64 stallLimit = 60 * 1000;
+  const auto receiving = [](const DownloadInfo* d) {
+    return d->m_State == STATE_DOWNLOADING && d->m_Reply != nullptr &&
+           d->m_Reply->isRunning() && !d->m_Stalled;
+  };
+  const auto hasHeaders = [](const DownloadInfo* d) {
+    return d->m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).isValid();
+  };
   for (DownloadInfo* info : m_ActiveDownloads) {
-    if (info->m_State != STATE_DOWNLOADING || info->m_Reply == nullptr ||
-        !info->m_Reply->isRunning() || info->m_Stalled) {
+    if (!receiving(info)) {
       continue;
+    }
+    // a reply without an answer yet may only be waiting for a connection: Qt
+    // opens a few per server (6 over HTTP/1.1) and queues the rest. While
+    // another download from that server is getting data it is in that queue,
+    // and its clock starts again; a server that answers nobody still times out
+    if (!hasHeaders(info)) {
+      const QString host = info->m_Reply->url().host();
+      const qint64 now   = info->m_StartTime.elapsed();
+      bool queued        = false;
+      for (const DownloadInfo* other : m_ActiveDownloads) {
+        if (other != info && receiving(other) && hasHeaders(other) &&
+            other->m_Reply->url().host().compare(host, Qt::CaseInsensitive) == 0 &&
+            other->m_StartTime.elapsed() - other->m_LastDataAt < stallLimit) {
+          queued = true;
+          break;
+        }
+      }
+      if (queued) {
+        info->m_LastDataAt = now;
+        continue;
+      }
     }
     const qint64 quiet = info->m_StartTime.elapsed() - info->m_LastDataAt;
     if (quiet >= stallLimit) {
@@ -3270,6 +3297,9 @@ void DownloadManager::metaDataChanged()
 
   DownloadInfo* info = findDownload(this->sender(), &index);
   if (info != nullptr) {
+    // the server answered: the time without data counts from here (it may
+    // have waited in Qt's queue for a connection before)
+    info->m_LastDataAt = info->m_StartTime.elapsed();
     QString newName = getFileNameFromNetworkReply(info->m_Reply);
     if (!newName.isEmpty() && (info->m_FileName.isEmpty())) {
       startDisableDirWatcher();
