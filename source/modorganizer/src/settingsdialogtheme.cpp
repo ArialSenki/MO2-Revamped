@@ -90,6 +90,7 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   // the width of the other pickers, and the Restore button as wide as its
   // text, as the other pages' action buttons
   ui->styleBox->setFixedWidth(260);
+  ui->styleBox->setAccessibleName(QObject::tr("Interface theme"));
   ui->resetColorsBtn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
   ui->horizontalLayout_3->addStretch(1);
   // the cards stay at the top now that the table fits its rows
@@ -106,15 +107,20 @@ void ThemeSettingsTab::update()
 {
   // style
   const QString oldStyle = settings().interface().styleName().value_or("");
-  const QString newStyle =
+  const bool oldOled     = settings().interface().oledBackground();
+  const QString choice =
       ui->styleBox->itemData(ui->styleBox->currentIndex()).toString();
+  // OLED Black is stored as Dark with a setting of its own
+  const bool newOled = choice == UserTheme::oledChoice();
+  const QString newStyle = newOled ? UserTheme::baseFileName(true) : choice;
 
   // only a theme the user picked here: a stored style the list doesn't
   // know leaves the box on its first entry, which is not a choice
   const bool picked = ui->styleBox->property("mo2Picked").toBool();
 
-  if (picked && oldStyle != newStyle) {
+  if (picked && (oldStyle != newStyle || oldOled != newOled)) {
     settings().interface().setStyleName(newStyle);
+    settings().interface().setOledBackground(newOled);
     emit settings().styleChanged(newStyle);
   }
 
@@ -139,6 +145,10 @@ void ThemeSettingsTab::addStyles()
                                     ? QObject::tr("Light")
                                     : QObject::tr("Dark");
     ui->styleBox->addItem(displayName, fileName);
+    // true black for OLED screens: Dark in other colors, right under it
+    if (fileName == UserTheme::baseFileName(true)) {
+      ui->styleBox->addItem(QObject::tr("OLED Black"), UserTheme::oledChoice());
+    }
   }
 
   // themes of the user's own: any other .qss in the folder, on top of Light or
@@ -160,8 +170,11 @@ void ThemeSettingsTab::addStyles()
 
 void ThemeSettingsTab::selectStyle()
 {
-  const int currentID =
-      ui->styleBox->findData(settings().interface().styleName().value_or(""));
+  const QString style = settings().interface().styleName().value_or("");
+  const int currentID = ui->styleBox->findData(
+      style == UserTheme::baseFileName(true) && settings().interface().oledBackground()
+          ? UserTheme::oledChoice()
+          : style);
 
   if (currentID != -1) {
     ui->styleBox->setCurrentIndex(currentID);
@@ -222,6 +235,7 @@ void ThemeSettingsTab::addThemeButtons()
     // saved: the theme is in use now, and the list shows it
     const QString saved = editor.savedFileName();
     settings().interface().setStyleName(saved);
+    settings().interface().setOledBackground(false);
     ui->styleBox->blockSignals(true);
     ui->styleBox->clear();
     addStyles();

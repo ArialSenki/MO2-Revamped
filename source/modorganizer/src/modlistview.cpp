@@ -1,4 +1,5 @@
 #include "modlistview.h"
+#include "usertheme.h"
 #include "fluentstatusdelegate.h"
 #include <QApplication>
 #include <QHash>
@@ -1781,15 +1782,15 @@ QColor ModListView::computeMarkerColor(const QModelIndex& index) const
                                  m_markers.archiveLooseOverwritten.end();
 
   if (highligth) {
-    return Settings::instance().colors().modlistContainsPlugin();
+    return UserTheme::highlight(Settings::instance().colors().modlistContainsPlugin());
   } else if (overwritten || archiveLooseOverwritten) {
-    return Settings::instance().colors().modlistOverwritingLoose();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwritingLoose());
   } else if (overwrite || archiveLooseOverwrite) {
-    return Settings::instance().colors().modlistOverwrittenLoose();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwrittenLoose());
   } else if (archiveOverwritten) {
-    return Settings::instance().colors().modlistOverwritingArchive();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwritingArchive());
   } else if (archiveOverwrite) {
-    return Settings::instance().colors().modlistOverwrittenArchive();
+    return UserTheme::highlight(Settings::instance().colors().modlistOverwrittenArchive());
   }
 
   // collapsed separator

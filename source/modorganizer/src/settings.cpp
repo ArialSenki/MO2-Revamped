@@ -2202,6 +2202,16 @@ void InterfaceSettings::setStyleName(const QString& name)
   set(m_Settings, "Settings", "style", name);
 }
 
+bool InterfaceSettings::oledBackground() const
+{
+  return get<bool>(m_Settings, "Settings", "revamped_oled_background", false);
+}
+
+void InterfaceSettings::setOledBackground(bool b)
+{
+  set(m_Settings, "Settings", "revamped_oled_background", b);
+}
+
 bool InterfaceSettings::themeChoicePromptCompleted() const
 {
   return get<bool>(m_Settings, "Settings",

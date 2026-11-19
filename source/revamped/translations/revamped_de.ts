@@ -10731,6 +10731,14 @@ Nutze eines pro Durchlauf oder pro Mod-Liste, die du ausprobieren willst. Das ve
       <translation>Spielt den Windows-Benachrichtigungston ab, statt die kleinen Hinweise unten im Fenster zu zeigen (&quot;Installation erfolgreich&quot; usw.). Sie stehen weiter im MO2-Protokoll. Fragen und Fehler werden weiterhin angezeigt.</translation>
     </message>
     <message>
+      <source>OLED Black</source>
+      <translation>OLED-Schwarz</translation>
+    </message>
+    <message>
+      <source>Interface theme</source>
+      <translation>Oberflächendesign</translation>
+    </message>
+    <message>
       <source>New theme...</source>
       <translation>Neues Design...</translation>
     </message>

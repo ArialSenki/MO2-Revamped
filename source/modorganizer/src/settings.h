@@ -619,6 +619,12 @@ public:
   std::optional<QString> styleName() const;
   void setStyleName(const QString& name);
 
+  // OLED Black: with the style dark.qss, true black backgrounds for OLED
+  // screens (see UserTheme::oledTheme())
+  //
+  bool oledBackground() const;
+  void setOledBackground(bool b);
+
   // whether the one-time Revamped theme choice has been completed
   //
   bool themeChoicePromptCompleted() const;

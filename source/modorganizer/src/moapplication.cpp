@@ -1200,8 +1200,8 @@ QColor styleWindowBackgroundColor(const QString& styleName)
   // a user theme: the built-in theme's background in the theme's colors
   if (const auto theme = userThemeNamed(styleName)) {
     if (UserTheme::active()) {
-      return UserTheme::recolor(
-          styleWindowBackgroundColor(UserTheme::baseFileName(theme->dark)));
+      // the built-in theme's color comes back recolored
+      return styleWindowBackgroundColor(UserTheme::baseFileName(theme->dark));
     }
     return {};
   }
@@ -1234,7 +1234,9 @@ QColor styleWindowBackgroundColor(const QString& styleName)
       if (colorMatch.hasMatch()) {
         const QColor color(QStringLiteral("#") + colorMatch.captured(1));
         if (color.isValid()) {
-          return color;
+          // in the colors of the theme on top of it (OLED Black, a user
+          // theme), the color itself otherwise
+          return UserTheme::recolor(color);
         }
       }
     }
@@ -1281,7 +1283,9 @@ bool stylePrefersDarkTitleBar(const QString& styleName)
 bool applyMica(QWidget* window)
 {
   const HWND handle = reinterpret_cast<HWND>(window->winId());
-  const bool mica   = window->testAttribute(Qt::WA_TranslucentBackground);
+  // OLED Black has no Mica: its backdrop would turn the black grey
+  const bool mica = window->testAttribute(Qt::WA_TranslucentBackground) &&
+                    !qApp->property("revampedOled").toBool();
 
   // DWMWA_SYSTEMBACKDROP_TYPE: 2 is DWMSBT_MAINWINDOW (Mica), 1 is none
   const int backdrop = mica ? 2 : 1;
@@ -1304,10 +1308,45 @@ bool applyMica(QWidget* window)
 }
 #endif
 
+// OLED Black: the other windows (dialogs, tool windows) get a black caption
+// and a dim frame, instead of Windows' grey dark caption; with the other
+// themes Windows' own colors. The main window gets its colors below
+void applyWindowCaptionColors(QWidget* window)
+{
+#ifdef Q_OS_WIN
+  if (window == nullptr || qobject_cast<QMainWindow*>(window) != nullptr ||
+      !window->testAttribute(Qt::WA_WState_Created) ||
+      window->windowType() == Qt::Popup || window->windowType() == Qt::ToolTip ||
+      window->windowFlags().testFlag(Qt::FramelessWindowHint)) {
+    return;
+  }
+
+  const bool oled = qApp->property("revampedOled").toBool();
+  // DWMWA_COLOR_DEFAULT puts Windows' colors back after OLED Black
+  const COLORREF caption = oled ? RGB(0x00, 0x00, 0x00) : static_cast<COLORREF>(0xFFFFFFFFu);
+  const COLORREF frame   = oled ? RGB(0x26, 0x26, 0x26) : static_cast<COLORREF>(0xFFFFFFFFu);
+  const COLORREF text    = oled ? RGB(0xE6, 0xE6, 0xE6) : static_cast<COLORREF>(0xFFFFFFFFu);
+  const HWND handle      = reinterpret_cast<HWND>(window->winId());
+  // DWMWA_CAPTION_COLOR, DWMWA_BORDER_COLOR, DWMWA_TEXT_COLOR
+  DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(35), &caption,
+                        sizeof(caption));
+  DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(34), &frame,
+                        sizeof(frame));
+  DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(36), &text,
+                        sizeof(text));
+#else
+  Q_UNUSED(window);
+#endif
+}
+
 void applyNativeTitleBarTheme(QWidget* window, const QString& styleName)
 {
 #ifdef Q_OS_WIN
-  if (window == nullptr || !qobject_cast<QMainWindow*>(window)) {
+  if (window != nullptr && !qobject_cast<QMainWindow*>(window)) {
+    applyWindowCaptionColors(window);
+    return;
+  }
+  if (window == nullptr) {
     return;
   }
 
@@ -1440,8 +1479,12 @@ bool MOApplication::setStyleFile(const QString& styleName)
   // already applied: startup sets the default theme for the instance dialogs
   // and then the instance's own, usually the same 6,000-line sheet, and each
   // pass parses it again. Edits to the file still reload through the watcher
+  // OLED Black is dark.qss with a setting of its own
+  const bool oled = m_settings && m_settings->interface().oledBackground() &&
+                    styleName.compare(UserTheme::baseFileName(true),
+                                      Qt::CaseInsensitive) == 0;
   if (!styleName.isEmpty() && styleName == m_appliedStyleFile &&
-      !styleSheet().isEmpty()) {
+      oled == m_appliedOled && !styleSheet().isEmpty()) {
     // an editor that saves by replacing the file drops it from the watch
     const QString watched = applicationDirPath() + "/" +
                             MOBase::ToQString(AppConfig::stylesheetsPath()) + "/" +
@@ -1451,6 +1494,8 @@ bool MOApplication::setStyleFile(const QString& styleName)
     }
     return true;
   }
+
+  m_oledStyle = oled;
 
   // remove all files from watch
   QStringList currentWatch = m_styleWatcher.files();
@@ -1494,6 +1539,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   m_appliedStyleFile = styleName;
+  m_appliedOled      = oled;
   return true;
 }
 
@@ -1793,6 +1839,10 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
       for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
         FluentIcons::apply(child);
       }
+      // OLED Black: a black caption on dialogs too
+      if (property("revampedOled").toBool()) {
+        applyWindowCaptionColors(window);
+      }
     } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
                button != nullptr && !button->icon().isNull()) {
       FluentIcons::apply(button);
@@ -1948,7 +1998,15 @@ void MOApplication::updateStyle(const QString& fileName)
     userTheme = UserTheme::load(QFileInfo(fileName).absolutePath(),
                                 QFileInfo(fileName).fileName());
   }
+  // OLED Black: Dark in its own colors, like a user theme without a file
+  if (!userTheme && m_oledStyle && !QStyleFactory::keys().contains(fileName) &&
+      QFileInfo(fileName).fileName().compare(UserTheme::baseFileName(true),
+                                             Qt::CaseInsensitive) == 0 &&
+      QFile::exists(fileName)) {
+    userTheme = UserTheme::oledTheme(QFileInfo(fileName).absolutePath());
+  }
   UserTheme::publishColors(userTheme ? &*userTheme : nullptr);
+  setProperty("revampedOled", userTheme && userTheme->oled);
 
   setProperty("revampedDark",
               userTheme ? userTheme->dark : stylePrefersDarkTitleBar(fileName));
@@ -2036,7 +2094,16 @@ void MOApplication::updateStyle(const QString& fileName)
         }
       }
       setPalette(themePalette);
-      if (userTheme) {
+      if (userTheme && userTheme->oled) {
+        if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
+          setStyleSheet(UserTheme::composeStyleSheet(
+              *userTheme, QString::fromUtf8(stylesheet.readAll()),
+              UserTheme::oledRules()));
+          log::info("theme OLED Black on top of {}", stylesheet.fileName());
+        } else {
+          log::warn("can't read '{}' for OLED Black", stylesheet.fileName());
+        }
+      } else if (userTheme) {
         QFile own(fileName);
         if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text) &&
             own.open(QIODevice::ReadOnly | QIODevice::Text)) {
