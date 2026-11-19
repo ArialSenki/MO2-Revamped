@@ -20,6 +20,19 @@ qreal snap(qreal v, qreal dpr)
 {
   return std::round(v * dpr) / dpr;
 }
+
+// black or white on a fill: the one with the higher contrast ratio
+QColor inkOn(const QColor& fill)
+{
+  const auto channel = [](qreal c) {
+    return c <= 0.03928 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4);
+  };
+  const qreal l = 0.2126 * channel(fill.redF()) + 0.7152 * channel(fill.greenF()) +
+                  0.0722 * channel(fill.blueF());
+  const qreal onBlack = (l + 0.05) / 0.05;
+  const qreal onWhite = 1.05 / (l + 0.05);
+  return onBlack >= onWhite ? QColor(Qt::black) : QColor(Qt::white);
+}
 }  // namespace
 
 DropHintOverlay::DropHintOverlay(QAbstractScrollArea* view, const QString& text,
@@ -165,8 +178,10 @@ void DropHintOverlay::paintEvent(QPaintEvent*)
   p.fillPath(shadow, QColor(0, 0, 0, dark ? 90 : 40));
   p.fillPath(pillPath, accent);
 
-  // text on the accent as on the Run button: black in dark, white in light
-  const QColor ink = dark ? QColor(Qt::black) : QColor(Qt::white);
+  // the text and icon on the accent: black or white, whichever stands out
+  // more against it (WCAG contrast), so a user theme's light or dark accent
+  // reads too (#4CC2FF and OLED's #5AA9D6 give black, #005FB8 white)
+  const QColor ink = inkOn(accent);
 
   // icon and text as one block in the middle of the pill
   const qreal content = iconSize + gap + textWidth;
