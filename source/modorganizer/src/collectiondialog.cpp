@@ -224,36 +224,21 @@ void CollectionDialog::placeWindow()
   }
   const QRect available = screen->availableGeometry();
 
-  // never smaller than this, never larger than the work area
-  const QSize least = QSize(900, 640).boundedTo(available.size());
-  setMinimumSize(least);
-
-  // where the user left it, when that is on the main window's monitor
-  // MO2 Revamped: maximized unless the user left it otherwise, so the mod
-  // table and the details fit; the size below is the one it restores to
-  const bool maximize = ScreenFitter::opensMaximized(QStringLiteral("collection_dialog"));
-  if (Settings::instance().geometry().restoreGeometry(this) &&
-      QGuiApplication::screenAt(geometry().center()) == screen &&
-      available.contains(geometry().center()) && width() >= least.width() &&
-      height() >= least.height()) {
-    if (!isMaximized()) {
-      resize(size().boundedTo(available.size() - QSize(16, 40)));
-    }
-    m_fitter->setUserSized(true);
-    if (maximize) {
-      setWindowState(windowState() | Qt::WindowMaximized);
-    }
-    return;
-  }
-
-  // else sized by the screen, not by the main window, which may be small or
-  // not shown yet; centred over the main window when it is shown
+  // sized by the screen, not by the main window, which may be small or not
+  // shown yet; centred over the main window when it is shown
   const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
-  m_fitter->place(screen, overWindow ? anchor->frameGeometry().center() : available.center());
-  if (maximize) {
-    setWindowState(windowState() | Qt::WindowMaximized);
+  const QPoint middle = overWindow ? anchor->frameGeometry().center() : available.center();
+  if (m_placedOnce) {
+    m_fitter->place(screen, middle);
+    return;
+  }
+  m_placedOnce = true;
+  // where and as the user left it last time: then it doesn't follow the main
+  // window
+  if (m_fitter->restore(QStringLiteral("collection_dialog"), screen, middle)) {
+    m_userPlaced = true;
   }
 }
 
@@ -1711,8 +1696,6 @@ void CollectionDialog::chooseFile(int row)
 
 void CollectionDialog::closeEvent(QCloseEvent* e)
 {
-  Settings::instance().geometry().saveGeometry(this);
-  ScreenFitter::rememberMaximized(QStringLiteral("collection_dialog"), this);
   if (m_session->stage() == Stage::Running) {
     // nothing is lost: it continues from the same place next time
     m_session->pause();

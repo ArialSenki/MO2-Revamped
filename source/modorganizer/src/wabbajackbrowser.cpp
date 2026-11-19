@@ -181,15 +181,17 @@ ListBrowser::ListBrowser(std::vector<IPluginGame*> games, const IPluginGame* man
 {
   m_listsFolder = QDir(downloadsFolder).filePath(QStringLiteral("Wabbajack lists"));
   setupUi();
-  // its size by the screen it is on, also when it is moved to another one
+  // its size by the screen it is on, also when it is moved to another one; as
+  // the user left it last time
   auto* fitter            = new ScreenFitter(this, QSize(820, 560));
   const QWidget* anchor   = parentWidget();
   QScreen* screen = anchor != nullptr ? anchor->screen() : QGuiApplication::primaryScreen();
   if (screen != nullptr) {
     const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                             !anchor->isMinimized();
-    fitter->place(screen, overWindow ? anchor->frameGeometry().center()
-                                     : screen->availableGeometry().center());
+    fitter->restore(QStringLiteral("wabbajack_browser"), screen,
+                    overWindow ? anchor->frameGeometry().center()
+                               : screen->availableGeometry().center());
   }
   loadGallery(false);
 }

@@ -675,38 +675,18 @@ void WabbajackDialog::placeWindow()
     return;
   }
   const QRect available = screen->availableGeometry();
-  const QSize least(900, 680);
-  // its size by the screen it is on, also when it is moved to another one
-  auto* fitter = new ScreenFitter(this, least);
-  setMinimumSize(least.boundedTo(available.size()));
-
-  if (Settings::instance().geometry().restoreGeometry(this) &&
-      QGuiApplication::screenAt(geometry().center()) == screen &&
-      available.contains(geometry().center()) &&
-      width() >= least.boundedTo(available.size()).width() &&
-      height() >= least.boundedTo(available.size()).height()) {
-    // where the user left it, the user's size. The one older versions saved
-    // (most of a 2K screen) comes down to this screen's once
-    const char* shrunk = "Wabbajack/windowSizeChecked";
-    if (!GlobalSettings::value(QString::fromLatin1(shrunk), false).toBool()) {
-      resize(size().boundedTo(ScreenFitter::wantedSize(available, least)));
-      GlobalSettings::setValue(QString::fromLatin1(shrunk), true);
-    } else {
-      resize(size().boundedTo(available.size() - QSize(16, 40)));
-    }
-    fitter->setUserSized(true);
-    return;
-  }
-
+  // its size by the screen it is on, also when it is moved to another one; as
+  // the user left it last time
+  auto* fitter = new ScreenFitter(this, QSize(900, 680));
   const bool overWindow = anchor != nullptr && anchor->isVisible() &&
                           !anchor->isMinimized() &&
                           available.contains(anchor->frameGeometry().center());
-  fitter->place(screen, overWindow ? anchor->frameGeometry().center() : available.center());
+  fitter->restore(QStringLiteral("wabbajack_dialog"), screen,
+                  overWindow ? anchor->frameGeometry().center() : available.center());
 }
 
 void WabbajackDialog::closeEvent(QCloseEvent* e)
 {
-  Settings::instance().geometry().saveGeometry(this);
   m_readCancel->store(true);
   if (isInstalling()) {
     // the install stops (inside the archive it is in, too); the window closes
