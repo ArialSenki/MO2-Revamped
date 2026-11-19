@@ -1074,24 +1074,39 @@ void NexusInterface::nextRequest()
       return;
     }
     m_PausedUntil = QDateTime();
-    // the counts are the ones from before the wait: one request asks again
+    // the counts are the ones from before the wait: one request asks again,
+    // alone, until Nexus answers it (six at once would each get a 429 again)
     m_User.limits(APILimits{m_User.limits().maxDailyRequests, 1,
                             m_User.limits().maxHourlyRequests, 1});
+    m_Probing = true;
+  }
+  if (m_Probing && !m_ActiveRequest.empty()) {
+    return;
   }
 
   if (m_User.exhausted()) {
     // MO2 Revamped: the queue waits for the next hourly batch instead of
     // dropping every request (each a failed download, a failed collection mod)
-    const QDateTime now = QDateTime::currentDateTime();
-    QDateTime target    = now;
-    target.setTime(QTime(now.time().hour(), 5, 0));
-    if (target <= now) {
-      target = target.addSecs(3600);
+    // until the time Nexus gave for its next hourly count, else its daily
+    // one, else five minutes past the next full hour (UTC, as Nexus counts)
+    const QDateTime now = QDateTime::currentDateTimeUtc();
+    QDateTime target;
+    if (m_HourlyReset.isValid() && m_HourlyReset > now) {
+      target = m_HourlyReset.addSecs(5);
+    } else if (m_DailyReset.isValid() && m_DailyReset > now) {
+      target = m_DailyReset.addSecs(5);
+    } else {
+      target = now;
+      target.setTime(QTime(now.time().hour(), 5, 0));
+      if (target <= now) {
+        target = target.addSecs(3600);
+      }
     }
     log::warn("All Nexus API requests have been used up; the {} queued ones wait "
               "until {}.",
-              m_RequestQueue.size(), target.toString(QStringLiteral("HH:mm")));
-    pauseRequests(target.toUTC());
+              m_RequestQueue.size(),
+              target.toLocalTime().toString(QStringLiteral("HH:mm")));
+    pauseRequests(target);
     return;
   }
 
@@ -1314,6 +1329,7 @@ NexusInterface::resumeTimeAfter429(const QList<QNetworkReply::RawHeaderPair>& he
 {
   QDateTime until;
   QDateTime hourlyReset, dailyReset;
+  readResetTimes(headers, hourlyReset, dailyReset);
   for (const auto& pair : headers) {
     const QByteArray name  = pair.first.toLower();
     const QString value    = QString::fromLatin1(pair.second).trimmed();
@@ -1327,16 +1343,6 @@ NexusInterface::resumeTimeAfter429(const QList<QNetworkReply::RawHeaderPair>& he
         if (date.isValid()) {
           until = date.toUTC();
         }
-      }
-    } else if (name == "x-rl-hourly-reset" || name == "x-rl-daily-reset") {
-      // "2026-11-18T02:00:00+00:00" or "2026-11-18 02:00:00 +0000"
-      QString iso = value;
-      iso.replace(QLatin1Char(' '), QLatin1Char('T'));
-      static const QRegularExpression offset(QStringLiteral("T?([+-]\\d\\d):?(\\d\\d)$"));
-      iso.replace(offset, QStringLiteral("\\1:\\2"));
-      QDateTime date = QDateTime::fromString(iso, Qt::ISODate);
-      if (date.isValid()) {
-        (name == "x-rl-hourly-reset" ? hourlyReset : dailyReset) = date.toUTC();
       }
     }
   }
@@ -1353,6 +1359,26 @@ NexusInterface::resumeTimeAfter429(const QList<QNetworkReply::RawHeaderPair>& he
   return qMin(until, now.addSecs(2 * 3600));
 }
 
+void NexusInterface::readResetTimes(const QList<QNetworkReply::RawHeaderPair>& headers,
+                                    QDateTime& hourly, QDateTime& daily)
+{
+  for (const auto& pair : headers) {
+    const QByteArray name = pair.first.toLower();
+    if (name != "x-rl-hourly-reset" && name != "x-rl-daily-reset") {
+      continue;
+    }
+    // "2026-11-18T02:00:00+00:00" or "2026-11-18 02:00:00 +0000"
+    QString iso = QString::fromLatin1(pair.second).trimmed();
+    iso.replace(QLatin1Char(' '), QLatin1Char('T'));
+    static const QRegularExpression offset(QStringLiteral("T?([+-]\\d\\d):?(\\d\\d)$"));
+    iso.replace(offset, QStringLiteral("\\1:\\2"));
+    const QDateTime date = QDateTime::fromString(iso, Qt::ISODate);
+    if (date.isValid()) {
+      (name == "x-rl-hourly-reset" ? hourly : daily) = date.toUTC();
+    }
+  }
+}
+
 void NexusInterface::downloadRequestedNXM(const QString& url)
 {
   emit requestNXMDownload(url);
@@ -1361,6 +1387,29 @@ void NexusInterface::downloadRequestedNXM(const QString& url)
 void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
 {
   QNetworkReply* reply = iter->m_Reply;
+
+  // MO2 Revamped: when Nexus counts again, for a wait when the requests are
+  // used up
+  {
+    QDateTime hourly, daily;
+    readResetTimes(reply->rawHeaderPairs(), hourly, daily);
+    if (hourly.isValid()) {
+      m_HourlyReset = hourly;
+    }
+    if (daily.isValid()) {
+      m_DailyReset = daily;
+    }
+  }
+  // the request sent alone after a pause was answered: the others may go
+  const int answer = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+  if (m_Probing && answer != 429) {
+    m_Probing = false;
+    QTimer::singleShot(0, this, [this] {
+      for (int i = 0; i < MAX_ACTIVE_DOWNLOADS; ++i) {
+        nextRequest();
+      }
+    });
+  }
 
   auto error = reply->error();
   if (error != QNetworkReply::NoError) {

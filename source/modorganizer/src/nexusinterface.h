@@ -712,11 +712,21 @@ public:
                                       bool exhausted, int attempt,
                                       const QDateTime& now);
 
+  // the X-RL-Hourly-Reset and X-RL-Daily-Reset times of a reply, invalid
+  // when it has none; public for the test
+  static void readResetTimes(const QList<QNetworkReply::RawHeaderPair>& headers,
+                             QDateTime& hourly, QDateTime& daily);
+
 private:
   // waits until `until` before sending anything more
   void pauseRequests(const QDateTime& until);
   QDateTime m_PausedUntil;
   QTimer* m_ResumeTimer = nullptr;
+  // MO2 Revamped: after a pause one request goes alone; the others follow
+  // once Nexus answers it with something other than 429
+  bool m_Probing = false;
+  // when Nexus said its hourly and daily counts start again (last reply)
+  QDateTime m_HourlyReset, m_DailyReset;
 
   void nextRequest();
   void requestFinished(std::list<NXMRequestInfo>::iterator iter);
