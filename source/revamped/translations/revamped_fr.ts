@@ -1174,6 +1174,13 @@ Voulez-vous vraiment continuer ?</translation>
       <source>Remove</source>
       <translation>Retirer</translation>
     </message>
+    <message numerus="yes">
+      <source>Install %n selected</source>
+      <translation>
+        <numerusform>Installer %n sélectionné</numerusform>
+        <numerusform>Installer les %n sélectionnés</numerusform>
+      </translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -8100,6 +8107,30 @@ Si cela se reproduit, joignez ce fichier (et le mo_interface.log du dossier logs
       <source>Copies the files the list leaves for the game's folder, backing up what they replace, and runs its patchers when you ask.</source>
       <translation>Copie les fichiers que la liste laisse pour le dossier du jeu, en sauvegardant ce qu'ils remplacent, et exécute ses patchers quand vous le demandez.</translation>
     </message>
+    <message>
+      <source>Add to downloads</source>
+      <translation>Ajouter aux téléchargements</translation>
+    </message>
+    <message>
+      <source>Copy or move the dropped files into the downloads folder?</source>
+      <translation>Copier ou déplacer les fichiers déposés dans le dossier des téléchargements ?</translation>
+    </message>
+    <message>
+      <source>They aren&apos;t installed: install them from the downloads when you want. To install them now, drop them on the mod list instead.</source>
+      <translation>Ils ne sont pas installés : installez-les depuis les téléchargements quand vous voulez. Pour les installer maintenant, déposez-les plutôt sur la liste des mods.</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <translation>Copier</translation>
+    </message>
+    <message>
+      <source>Move</source>
+      <translation>Déplacer</translation>
+    </message>
+    <message>
+      <source>Drop to add to Downloads</source>
+      <translation>Déposez pour ajouter aux téléchargements</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -10113,6 +10144,40 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>Error</source>
       <translation>Erreur</translation>
+    </message>
+    <message numerus="yes">
+      <source>Installing %n mods, one after another. Each one&apos;s installer opens in turn.</source>
+      <translation>
+        <numerusform>Installation de %n mods, l&apos;un après l&apos;autre. L&apos;installateur de chacun s&apos;ouvre à son tour.</numerusform>
+        <numerusform>Installation de %n mods, l&apos;un après l&apos;autre. L&apos;installateur de chacun s&apos;ouvre à son tour.</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>Mods still waiting to be installed: %n.</source>
+      <translation>
+        <numerusform>Mods encore en attente d&apos;installation : %n.</numerusform>
+        <numerusform>Mods encore en attente d&apos;installation : %n.</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Installation cancelled</source>
+      <translation>Installation annulée</translation>
+    </message>
+    <message>
+      <source>&quot;%1&quot; wasn&apos;t installed.</source>
+      <translation>&quot;%1&quot; n&apos;a pas été installé.</translation>
+    </message>
+    <message>
+      <source>Install the next one</source>
+      <translation>Installer le suivant</translation>
+    </message>
+    <message>
+      <source>Cancel remaining</source>
+      <translation>Annuler les autres</translation>
+    </message>
+    <message>
+      <source>Installation of %1 mods finished: %2 installed, %3 skipped, %4 failed.</source>
+      <translation>Installation de %1 mods terminée : %2 installés, %3 ignorés, %4 en échec.</translation>
     </message>
   </context>
   <context>
@@ -13725,6 +13790,10 @@ Le lancer quand même ?</translation>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
       <translation>Le dossier n'a pas pu être copié dans un mod : %1</translation>
+    </message>
+    <message>
+      <source>Drop to install</source>
+      <translation>Déposez pour installer</translation>
     </message>
   </context>
   <context>

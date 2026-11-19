@@ -1274,7 +1274,10 @@ bool ModList::dropMimeData(const QMimeData* mimeData, Qt::DropAction action, int
   }
 
   int dropPriority = this->dropPriority(row, parent);
-  if (dropPriority == -1) {
+  // MO2 Revamped: archives dropped where no priority goes (below the last
+  // mod, or with the list sorted by something else) install as the last ones
+  if (dropPriority == -1 &&
+      !(dropInfo.isExternalArchiveDrop() || dropInfo.isDownloadDrop())) {
     return false;
   }
 
@@ -1284,9 +1287,18 @@ bool ModList::dropMimeData(const QMimeData* mimeData, Qt::DropAction action, int
     if (dropInfo.isModDrop()) {
       changeModPriority(dropInfo.rows(), dropPriority);
     } else if (dropInfo.isDownloadDrop()) {
-      emit downloadArchiveDropped(dropInfo.download(), dropPriority);
+      if (dropInfo.downloads().size() > 1 && !dropInfo.downloadNames().isEmpty()) {
+        emit downloadArchivesDropped(dropInfo.downloadNames(), dropPriority);
+      } else {
+        emit downloadArchiveDropped(dropInfo.download(), dropPriority);
+      }
     } else if (dropInfo.isExternalArchiveDrop()) {
-      emit externalArchiveDropped(dropInfo.externalUrl(), dropPriority);
+      const QStringList archives = dropInfo.externalArchives();
+      if (archives.size() > 1) {
+        emit externalArchivesDropped(archives, dropPriority);
+      } else {
+        emit externalArchiveDropped(dropInfo.externalUrl(), dropPriority);
+      }
     } else if (dropInfo.isExternalFolderDrop()) {
       emit externalFolderDropped(dropInfo.externalUrl(), dropPriority);
     } else {

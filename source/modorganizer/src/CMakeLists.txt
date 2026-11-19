@@ -230,6 +230,7 @@ mo2_add_filter(NAME src/mainwindow GROUPS
 	fluentstatusdelegate
 	fluentswitch
 	fluentscrollbar
+	drophint
 	fluentmotion
 	fluenttabwidget
 	revampedguide

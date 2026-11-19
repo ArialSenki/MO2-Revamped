@@ -323,8 +323,25 @@ void DownloadListView::onDoubleClick(const QModelIndex& index)
   if (row < 0 || row >= m_Manager->numTotalDownloads()) {
     return;
   }
-  if (m_Manager->getState(row) >= DownloadManager::STATE_READY)
+  if (m_Manager->getState(row) >= DownloadManager::STATE_READY) {
+    // MO2 Revamped: a double-click on one of several selected installs them
+    // all; its first press left only this row selected, so they are selected
+    // again as they were
+    const QStringList before = std::exchange(m_PressSelection, {});
+    const QString name       = m_Manager->getFileName(row);
+    if (before.size() > 1 && before.contains(name)) {
+      const QStringList ready = readyNames(before);
+      if (ready.size() > 1) {
+        if (selectionModel() != nullptr) {
+          selectionModel()->select(m_PressRanges, QItemSelectionModel::ClearAndSelect);
+        }
+        m_PressRanges = {};
+        emit installDownloads(ready);
+        return;
+      }
+    }
     emit installDownload(row);
+  }
   else if ((m_Manager->getState(row) == DownloadManager::STATE_PAUSED) ||
            (m_Manager->getState(row) == DownloadManager::STATE_PAUSING))
     emit resumeDownload(row);
@@ -430,9 +447,15 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       // MO2 Revamped: an archive of a read-only source (Nolvus' archives) can
       // be installed and looked at; nothing is written or deleted beside it
       const bool readOnly = m_Manager->isReadOnly(row);
+      // MO2 Revamped: on one of several selected, Install takes them all
+      const QStringList selected = selectedFileNames();
+      const int many =
+          selected.contains(fileName) ? static_cast<int>(readyNames(selected).size()) : 0;
+      const QString installText =
+          many > 1 ? tr("Install %n selected", "", many) : tr("Install");
       if (state >= DownloadManager::STATE_READY && readOnly) {
         setDefaultMenuAction(&menu, 
-            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
+            addAction(menu, installText, svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
         if (m_Manager->getModID(row) > 0) {
           addAction(menu, tr("Visit on Nexus"), svg(":/MO/gui/contextmenu/visit.svg"),
                     onRow(&DownloadListView::issueVisitOnNexus));
@@ -444,7 +467,7 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
                             {tr("File path"), nativePath(filePath)}});
       } else if (state >= DownloadManager::STATE_READY) {
         setDefaultMenuAction(&menu, 
-            addAction(menu, tr("Install"), svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
+            addAction(menu, installText, svg(":/MO/gui/mainwindow/install.svg"), onRow(&DownloadListView::issueInstall)));
         if (m_Manager->isInfoIncomplete(row)) {
           addAction(menu, tr("Query info"), svg(":/MO/gui/contextmenu/information.svg"),
                     onRow(&DownloadListView::issueQueryInfoMd5));
@@ -595,7 +618,29 @@ void DownloadListView::keyPressEvent(QKeyEvent* event)
 
 void DownloadListView::issueInstall(int index)
 {
+  // MO2 Revamped: the row is one of several selected: all of them, in turn
+  const QStringList selected = selectedFileNames();
+  if (index >= 0 && index < m_Manager->numTotalDownloads() &&
+      selected.contains(m_Manager->getFileName(index))) {
+    const QStringList ready = readyNames(selected);
+    if (ready.size() > 1) {
+      emit installDownloads(ready);
+      return;
+    }
+  }
   emit installDownload(index);
+}
+
+QStringList DownloadListView::readyNames(const QStringList& names) const
+{
+  QStringList ready;
+  for (const QString& name : names) {
+    const int row = m_Manager->indexByName(name);
+    if (row >= 0 && m_Manager->getState(row) >= DownloadManager::STATE_READY) {
+      ready << name;
+    }
+  }
+  return ready;
 }
 
 void DownloadListView::issueQueryInfoMd5(int index)
@@ -959,7 +1004,13 @@ QStringList DownloadListView::selectedFileNames() const
   if (selectionModel() == nullptr) {
     return names;
   }
-  for (const QModelIndex& index : selectionModel()->selectedRows()) {
+  // top to bottom, as the user sees them (the selection keeps the order of
+  // the clicks)
+  QModelIndexList rows = selectionModel()->selectedRows();
+  std::sort(rows.begin(), rows.end(), [this](const QModelIndex& a, const QModelIndex& b) {
+    return visualRect(a).top() < visualRect(b).top();
+  });
+  for (const QModelIndex& index : rows) {
     const int row = downloadRow(index);
     if (row >= 0 && row < m_Manager->numTotalDownloads()) {
       names << m_Manager->getFileName(row);
@@ -1115,6 +1166,10 @@ void DownloadListView::mousePressEvent(QMouseEvent* event)
               downloadRow(at));
     m_MoveLogged = false;
   }
+  // what was selected before this press (see onDoubleClick())
+  m_PressSelection = selectedFileNames();
+  m_PressRanges    = selectionModel() != nullptr ? selectionModel()->selection()
+                                                 : QItemSelection();
   // one click on a group's header opens or closes it
   if (event->button() == Qt::LeftButton && event->modifiers() == Qt::NoModifier) {
     const QModelIndex index = indexAt(event->position().toPoint());
@@ -1223,21 +1278,31 @@ void DownloadListView::startDrag(Qt::DropActions supportedActions)
                       .pixmap(QSize(32, 32), devicePixelRatioF()));
   drag->setHotSpot(QPoint(-8, -8));
 
-  log::debug("downloads: dragging {} download(s)", count);
+  // Windows ends a drag at once when it doesn't see the button held
+  log::info("downloads: dragging {} download(s), left button held for Windows: {}",
+             count, (GetAsyncKeyState(GetSystemMetrics(SM_SWAPBUTTON) ? VK_RBUTTON
+                                                                      : VK_LBUTTON) &
+                     0x8000) != 0);
   const Qt::DropAction action =
       drag->exec(supportedActions | Qt::CopyAction, Qt::CopyAction);
-  log::debug("downloads: drag ended ({})", static_cast<int>(action));
+  log::info("downloads: drag ended ({})", static_cast<int>(action));
 }
 
 void DownloadListView::dragEnterEvent(QDragEnterEvent* event)
 {
-  log::debug("downloads: drag entered, {} download(s)",
+  log::info("downloads: drag entered, {} download(s)",
              draggedFiles(event->mimeData()).size());
   // a drag of this list's downloads (the names say so; the source is only
   // known while a real drag runs)
   if (!draggedFiles(event->mimeData()).isEmpty()) {
     event->setDropAction(Qt::CopyAction);
     event->accept();
+    return;
+  }
+  // MO2 Revamped: files from Explorer go to the main window, which copies
+  // them into the downloads folder (it knows where that is)
+  if (event->mimeData() != nullptr && event->mimeData()->hasUrls()) {
+    event->ignore();
     return;
   }
   QTreeView::dragEnterEvent(event);
@@ -1277,7 +1342,7 @@ void DownloadListView::dropEvent(QDropEvent* event)
   m_DropGroup = QPersistentModelIndex();
   viewport()->update();
   const QStringList files = draggedFiles(event->mimeData());
-  log::debug("downloads: drop of {} download(s)", files.size());
+  log::info("downloads: drop of {} download(s)", files.size());
   if (files.isEmpty()) {
     QTreeView::dropEvent(event);
     return;

@@ -1,4 +1,5 @@
 #include "modlistview.h"
+#include "drophint.h"
 #include "fluentstatusdelegate.h"
 #include <QApplication>
 #include <QHash>
@@ -1221,6 +1222,19 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
         m_core->installArchive(url.toLocalFile(), priority, false, nullptr);
       },
       Qt::QueuedConnection);
+  connect(
+      m_core->modList(), &ModList::downloadArchivesDropped, this,
+      [=](const QStringList& names, int priority) {
+        m_core->installDownloads(names, priority);
+      },
+      Qt::QueuedConnection);
+  connect(
+      m_core->modList(), &ModList::externalArchivesDropped, this,
+      [=](const QStringList& paths, int priority) {
+        setWindowState(Qt::WindowActive);
+        m_core->installArchives(paths, priority);
+      },
+      Qt::QueuedConnection);
   connect(m_core->modList(), &ModList::externalFolderDropped, this,
           &ModListView::onExternalFolderDropped);
 
@@ -2013,6 +2027,21 @@ void ModListView::dragEnterEvent(QDragEnterEvent* event)
   // there is no drop event for invalid data since canDropMimeData
   // returns false, so we notify user on drag enter
   ModListDropInfo dropInfo(event->mimeData(), *m_core);
+  // MO2 Revamped: archives from Explorer: the list says what a drop does
+  // (only once the list took the drag: it then gets the leave that hides it)
+  if (dropInfo.isExternalArchiveDrop() && event->isAccepted()) {
+    if (auto* hint = DropHintOverlay::forView(
+            m_dropHint, this, tr("Drop to install"),
+            FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/install.svg")))) {
+      hint->showHint();
+    }
+  }
+  // MO2 Revamped: where a drag got, for drops that don't happen
+  log::info("mod list: drag entered (valid {}, archives {}, downloads {}, mods {}, "
+            "files {}), accepted {}",
+            dropInfo.isValid(), dropInfo.externalArchives().size(),
+            dropInfo.downloads().size(), dropInfo.rows().size(),
+            dropInfo.localUrls().size(), event->isAccepted());
 
   if (dropInfo.isValid() && !dropInfo.isLocalFileDrop() &&
       sortColumn() != ModList::COL_PRIORITY) {
@@ -2032,10 +2061,61 @@ void ModListView::dragMoveEvent(QDragMoveEvent* event)
   m_inDragMoveEvent = true;
   QAbstractItemView::dragMoveEvent(event);
   m_inDragMoveEvent = false;
+
+  // MO2 Revamped: archives from Explorer are taken anywhere over the list;
+  // where the model has no place for them they go in as the last mods
+  // (refused here, the drop never came: once the list took the drag, Qt
+  // gives the window no other chance)
+  const ModListDropInfo dropInfo(event->mimeData(), *m_core);
+  if (dropInfo.isExternalArchiveDrop()) {
+    m_externalArchivesAtEnd = !event->isAccepted();
+    if (m_externalArchivesAtEnd) {
+      event->setDropAction(Qt::CopyAction);
+      event->accept();
+    }
+  }
+}
+
+void ModListView::dragLeaveEvent(QDragLeaveEvent* event)
+{
+  // also when the drag is cancelled (Escape)
+  if (m_dropHint != nullptr) {
+    m_dropHint->hideHint();
+  }
+  QTreeView::dragLeaveEvent(event);
 }
 
 void ModListView::dropEvent(QDropEvent* event)
 {
+  if (m_dropHint != nullptr) {
+    m_dropHint->hideHint();
+  }
+  // MO2 Revamped: archives from Explorer where the model has no place for
+  // them (see dragMoveEvent()): installed after the drop has ended, as the
+  // last mods
+  if (m_externalArchivesAtEnd) {
+    m_externalArchivesAtEnd = false;
+    const QStringList archives =
+        ModListDropInfo(event->mimeData(), *m_core).externalArchives();
+    if (!archives.isEmpty()) {
+      event->setDropAction(Qt::CopyAction);
+      event->accept();
+      stopAutoScroll();
+      setState(NoState);
+      viewport()->update();
+      log::info("mod list: {} archive(s) dropped, installed as the last mods",
+                archives.size());
+      QTimer::singleShot(0, this, [this, archives] {
+        window()->activateWindow();
+        m_core->installArchives(archives);
+      });
+      return;
+    }
+  }
+  if (ModListDropInfo(event->mimeData(), *m_core).isExternalArchiveDrop()) {
+    log::info("mod list: archive(s) dropped where the drop indicator was");
+  }
+
   // from Qt source
   QModelIndex index;
   if (viewport()->rect().contains(event->pos())) {

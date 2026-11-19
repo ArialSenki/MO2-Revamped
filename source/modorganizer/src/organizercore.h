@@ -500,6 +500,13 @@ public slots:
   void refreshLists();
 
   ModInfo::Ptr installDownload(int downloadIndex, int priority = -1);
+  // MO2 Revamped: several downloads or archives, one after another. Each one's
+  // installer opens in turn; cancelling one asks whether to go on with the
+  // rest. One notice when the queue starts and one with what came of it, and
+  // the full refresh runs once at the end. A single one installs as before
+  // (downloads by file name: the list's rows change as installs go)
+  void installDownloads(const QStringList& downloadNames, int priority = -1);
+  void installArchives(const QStringList& archivePaths, int priority = -1);
   ModInfo::Ptr installArchive(const QString& archivePath, int priority = -1,
                               bool reinstallation     = false,
                               ModInfo::Ptr currentMod = nullptr,
@@ -647,6 +654,13 @@ private:
   // they were when it started, so another one follows. UI thread only
   bool m_RefreshPending = false;
   bool m_DeferDirectoryRefresh  = false;
+  // MO2 Revamped: a queue of installs runs (installDownloads/installArchives)
+  bool m_InstallQueueRunning = false;
+  // how the last doInstall() ended, for the queue
+  MOBase::IPluginInstaller::EInstallResult m_LastInstallResult =
+      MOBase::IPluginInstaller::RESULT_FAILED;
+  // what the user should know about the last cancelled one (files restored)
+  QString m_LastInstallNote;
   bool m_DirectoryRefreshWaiting = false;
 
   // the last refresh failed, so the plugin list and the structure may not match
@@ -671,6 +685,10 @@ private:
 
   // MO2 Revamped: asks for another name for a mod just installed under a name
   // isReservedModName() refuses, and renames its folder
+  // the queue behind installDownloads() and installArchives(): files are the
+  // downloads' names (found again by name, as the list changes) or paths
+  void runInstallQueue(const QStringList& files, bool downloads, int priority);
+
   void renameReservedInstall(MOBase::GuessedValue<QString>& modName);
 
   // MO2 Revamped: plugins whose file time couldn't be set the last time the

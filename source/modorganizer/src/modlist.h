@@ -332,6 +332,11 @@ signals:
   //
   void externalArchiveDropped(const QUrl& url, int priority);
 
+  // MO2 Revamped: several downloads or archives dropped at once; they install
+  // one after another
+  void downloadArchivesDropped(const QStringList& names, int priority);
+  void externalArchivesDropped(const QStringList& paths, int priority);
+
   // emitted when an external folder is dropped on the mod list
   //
   void externalFolderDropped(const QUrl& url, int priority);

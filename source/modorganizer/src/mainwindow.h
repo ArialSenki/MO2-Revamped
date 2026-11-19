@@ -187,6 +187,8 @@ protected:
   bool eventFilter(QObject* obj, QEvent* event) override;
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dropEvent(QDropEvent* event) override;
+  void dragMoveEvent(QDragMoveEvent* event) override;
+  void dragLeaveEvent(QDragLeaveEvent* event) override;
 
 private slots:
   void on_actionChange_Game_triggered();
@@ -326,6 +328,14 @@ private:
   QMenu* openFolderMenu();
 
   void dropLocalFile(const QUrl& url, const QString& outputDir, bool move);
+  // MO2 Revamped: whether Windows drag and drop can work in this thread (OLE
+  // in a single-threaded apartment, same integrity as Explorer), in the log
+  void logDragDropState();
+  // MO2 Revamped: "Drop to add to Downloads" over the downloads while
+  // archives from Explorer are dragged there (see drophint.h)
+  QPointer<class DropHintOverlay> m_downloadsDropHint;
+  bool m_dragHasArchives = false;
+  void updateDownloadsDropHint(const QPoint& pos);
 
   void toggleRevampedEndorseState();
 

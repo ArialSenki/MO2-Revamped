@@ -48,6 +48,14 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
     refresh();
   });
   connect(ui.list, SIGNAL(installDownload(int)), &m_core, SLOT(installDownload(int)));
+  // MO2 Revamped: several, one after another (after the menu or the click
+  // that asked for it has closed)
+  connect(
+      ui.list, &DownloadListView::installDownloads, &m_core,
+      [this](const QStringList& names) {
+        m_core.installDownloads(names);
+      },
+      Qt::QueuedConnection);
   connect(ui.list, SIGNAL(queryInfoMd5(int)), m_core.downloadManager(),
           SLOT(queryInfoMd5(int)));
   connect(ui.list, SIGNAL(visitOnNexus(int)), m_core.downloadManager(),

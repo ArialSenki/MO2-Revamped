@@ -1,6 +1,7 @@
 #include "multiprocess.h"
 #include "utility.h"
 #include <QLocalSocket>
+#include <QTimer>
 #include <log.h>
 #include <report.h>
 #include <scopeguard.h>
@@ -100,10 +101,57 @@ void MOMultiProcess::sendMessage(const QString& message)
 
 void MOMultiProcess::receiveMessage()
 {
-  QLocalSocket* socket = m_Server.nextPendingConnection();
-  if (!socket) {
+  // MO2 Revamped: every connection waiting, each read without blocking. The
+  // sender keeps its connection open until it gets the answer (see
+  // sendMessage()), so waitForReadyRead() on a message that had already
+  // arrived waited out its whole timeout: MO2 froze for five seconds on each
+  // nxm link before "Download started"
+  while (QLocalSocket* socket = m_Server.nextPendingConnection()) {
+    if (socket->bytesAvailable() > 0) {
+      readMessage(socket);
+      continue;
+    }
+
+    connect(socket, &QLocalSocket::readyRead, this, [this, socket] {
+      readMessage(socket);
+    });
+    // closed with nothing sent, or nothing within the timeout: as before, said
+    // once (the socket goes either way)
+    const auto fail = [socket] {
+      if (socket->property("mo2r.read").toBool()) {
+        return;
+      }
+      socket->setProperty("mo2r.read", true);
+      MOBase::log::error("failed to receive data from secondary process: {}",
+                         socket->errorString());
+      reportError(tr("failed to receive data from secondary process: %1")
+                      .arg(socket->errorString()));
+      socket->deleteLater();
+    };
+    connect(socket, &QLocalSocket::disconnected, this, [this, socket, fail] {
+      // whatever came before it closed is still the message
+      if (socket->bytesAvailable() > 0) {
+        readMessage(socket);
+      } else {
+        fail();
+      }
+    });
+    QTimer::singleShot(s_Timeout, socket, [this, socket, fail] {
+      if (socket->bytesAvailable() > 0) {
+        readMessage(socket);
+      } else {
+        fail();
+      }
+    });
+  }
+}
+
+void MOMultiProcess::readMessage(QLocalSocket* socket)
+{
+  if (socket->property("mo2r.read").toBool()) {
     return;
   }
+  socket->setProperty("mo2r.read", true);
 
   // the server owns each connection until it closes: one per message would
   // otherwise stay open until MO2 exits
@@ -111,26 +159,12 @@ void MOMultiProcess::receiveMessage()
     socket->deleteLater();
   });
 
-  if (!socket->waitForReadyRead(s_Timeout)) {
-    // check if there are bytes available; if so, it probably means the data was
-    // already received by the time waitForReadyRead() was called and the
-    // connection has been closed
-    const auto av = socket->bytesAvailable();
-
-    if (av <= 0) {
-      MOBase::log::error("failed to receive data from secondary process: {}",
-                         socket->errorString());
-
-      reportError(tr("failed to receive data from secondary process: %1")
-                      .arg(socket->errorString()));
-      return;
-    }
-  }
-
   QString message = QString::fromUtf8(socket->readAll().constData());
   // the sender waits for this before closing (see sendMessage())
-  socket->write("+");
-  socket->flush();
+  if (socket->state() == QLocalSocket::ConnectedState) {
+    socket->write("+");
+    socket->flush();
+  }
   emit messageSent(message);
   socket->disconnectFromServer();
 }

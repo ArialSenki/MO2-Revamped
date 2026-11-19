@@ -16,6 +16,7 @@
 #include "qtgroupingproxy.h"
 #include "viewmarkingscrollbar.h"
 #include <QHash>
+#include <QPointer>
 
 namespace Ui
 {
@@ -241,6 +242,7 @@ protected:
   void dragEnterEvent(QDragEnterEvent* event) override;
   void dragMoveEvent(QDragMoveEvent* event) override;
   void dropEvent(QDropEvent* event) override;
+  void dragLeaveEvent(QDragLeaveEvent* event) override;
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   void mouseDoubleClickEvent(QMouseEvent* event) override;
@@ -420,6 +422,12 @@ public:  // member variables
   mutable QHash<QModelIndex, QColor> m_markerColors;
 
   bool m_inDragMoveEvent = false;
+  // MO2 Revamped: archives from Explorer over a place the model doesn't take
+  // (a mod, the empty space, a sort or grouping without priorities): they
+  // still install, as the last mods
+  bool m_externalArchivesAtEnd = false;
+  // "Drop to install" over the list while archives from Explorer are dragged
+  QPointer<class DropHintOverlay> m_dropHint;
 
   // a click on a separator's arrow is the arrow's alone, its release included
   bool m_arrowClick = false;
