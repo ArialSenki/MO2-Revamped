@@ -133,6 +133,14 @@ QColor recolorWith(const Theme& theme, const QColor& color)
   const BaseColors& base = baseColors(theme.dark);
   QColor out;
 
+  // OLED Black: Dark's faintly blue selection would turn plain grey; on black
+  // it stays a low tint of the accent
+  if (theme.oled && color.rgb() == QColor(0x34, 0x3B, 0x44).rgb()) {
+    out = QColor(0x10, 0x21, 0x2C);
+    out.setAlphaF(color.alphaF());
+    return out;
+  }
+
   if (isNeutral(color)) {
     const QList<Anchor> anchors = neutralAnchors(theme);
     const double l = color.lightnessF();
@@ -159,7 +167,10 @@ QColor recolorWith(const Theme& theme, const QColor& color)
                          accent.hslSaturationF()),
                    0.0, 1.0),
         std::clamp(carry(color.lightnessF(), base.accent.lightnessF(), accent.lightnessF()),
-                   0.0, 1.0));
+                   0.0,
+                   // OLED Black: no shade brighter than the accent (Dark's
+                   // focus lines are lighter than its accent)
+                   theme.oled ? double(accent.lightnessF()) : 1.0));
   } else if (theme.oled) {
     out = oledStatusColor(color);
   } else {
@@ -273,9 +284,19 @@ QString recolorImages(const Theme& theme, const QString& sheet)
           .left(12);
   const QDir cache(QDir::temp().filePath(QStringLiteral("mo2r-theme-images/") +
                                          QString::fromLatin1(key)));
-  if (!cache.exists() && !QDir().mkpath(cache.path())) {
-    log::warn("can't create '{}' for the theme's images", cache.path());
-    return sheet;
+  if (!cache.exists()) {
+    if (!QDir().mkpath(cache.path())) {
+      log::warn("can't create '{}' for the theme's images", cache.path());
+      return sheet;
+    }
+    // one set of images at a time: the editor's preview makes a new one for
+    // each change of color
+    QDir root(QFileInfo(cache.path()).absolutePath());
+    for (const QString& other : root.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      if (other != QString::fromLatin1(key)) {
+        QDir(root.filePath(other)).removeRecursively();
+      }
+    }
   }
 
   static const QRegularExpression svgUrl(
@@ -536,6 +557,7 @@ QToolButton#startButton[runState="running"]:disabled {
 }
 
 /* a dialog's main button: the same dark accent tint, not a bright block */
+QPushButton:default,
 QDialog QPushButton[fluentPrimary="true"],
 QMessageBox QPushButton:default,
 QDialog QPushButton#fixButton,
@@ -545,14 +567,17 @@ QMainWindow#MainWindow QPushButton#displayCategoriesBtn:checked {
     background-color: #0C1F2B;
     border: 1px solid #2F6383;
 }
+QPushButton:default:hover,
 QDialog QPushButton[fluentPrimary="true"]:hover,
 QMessageBox QPushButton:default:hover,
+QMainWindow#MainWindow QPushButton#displayCategoriesBtn:checked:hover,
 QDialog QPushButton#fixButton:hover,
 QDialog QPushButton#manageOverwriteButton:hover {
     color: #C8E4F3;
     background-color: #112A3A;
     border-color: #3A769A;
 }
+QPushButton:default:pressed,
 QDialog QPushButton[fluentPrimary="true"]:pressed,
 QMessageBox QPushButton:default:pressed,
 QDialog QPushButton#fixButton:pressed,
@@ -562,7 +587,10 @@ QMainWindow#MainWindow QPushButton#displayCategoriesBtn:pressed {
     background-color: #09171F;
     border-color: #285470;
 }
-QDialog QPushButton[fluentPrimary="true"]:disabled {
+QDialog QPushButton:default:disabled,
+QDialog QPushButton[fluentPrimary="true"]:disabled,
+QDialog QPushButton#fixButton:disabled,
+QDialog QPushButton#manageOverwriteButton:disabled {
     color: #6B6B6B;
     background-color: #0B0B0B;
     border-color: #1E1E1E;
@@ -573,7 +601,49 @@ QTabBar::tab:selected,
 QWidget#centralWidget QTabWidget#tabWidget QTabBar::tab:selected,
 QDialog#SettingsDialog QTabWidget#tabWidget QTabBar::tab:selected,
 QDialog#ModInfoDialog QTabWidget#tabWidget QTabBar::tab:selected {
-    border-bottom: 2px solid #3A7395;
+    border-bottom: 3px solid #3A7395;
+}
+
+/* switches: a dim accent track, a light knob */
+QMainWindow#MainWindow ModListView#modList {
+    qproperty-switchOnColor: #2F6383;
+    qproperty-switchKnobOnColor: #C8E4F3;
+}
+FluentSwitchPainter {
+    qproperty-onColor: #2F6383;
+    qproperty-knobOnColor: #C8E4F3;
+}
+
+/* progress: the loading bar under the status bar stays up the longest */
+QProgressBar::chunk,
+QProgressBar#wizardDiskBar::chunk,
+QProgressBar#statusLoadingBar::chunk,
+QProgressBar#wizardProgress::chunk {
+    background-color: #2F6383;
+}
+
+/* hover and selection steps that still show on near black */
+QPushButton:hover {
+    background-color: #1A1A1A;
+}
+QMenu::item:selected,
+QMenu#modListOptionsMenu::item:selected,
+QMenu#openFolderMenuPopup::item:selected {
+    background-color: #1C1C1C;
+}
+QSplitter::handle:hover,
+QSplitter::handle:pressed,
+QWidget#centralWidget QSplitter#splitter::handle:hover,
+QWidget#centralWidget QSplitter#splitter::handle:pressed,
+QSplitter#categoriesSplitter::handle:hover,
+QSplitter#categoriesSplitter::handle:pressed {
+    background-color: #262626;
+}
+
+/* disabled settings: still readable */
+QLabel#fluentSettingTitle:disabled,
+QLabel#fluentSettingDescription:disabled {
+    color: #6E6E6E;
 }
 )");
 }

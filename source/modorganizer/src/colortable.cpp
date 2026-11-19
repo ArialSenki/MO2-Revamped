@@ -2,6 +2,7 @@
 #include "modconflicticondelegate.h"
 #include "modflagicondelegate.h"
 #include "settings.h"
+#include "usertheme.h"
 
 class ColorItem;
 ColorItem* colorItemForRow(QTableWidget* table, int row);
@@ -173,7 +174,8 @@ void paintBackground(QTableWidget* table, QPainter* p,
 {
   if (auto* ci = colorItemForRow(table, index.row())) {
     p->save();
-    p->fillRect(option.rect, ci->get());
+    // as the mod list shows it (toned down in OLED Black)
+    p->fillRect(option.rect, UserTheme::highlight(ci->get()));
     p->restore();
   }
 }

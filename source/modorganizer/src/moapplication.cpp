@@ -87,6 +87,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProxyStyle>
 #include <QStyleHints>
 #include <QCheckBox>
+#include <QDockWidget>
 #include <QRegularExpression>
 #include <QSSLSocket>
 #include <QStringList>
@@ -1317,7 +1318,9 @@ void applyWindowCaptionColors(QWidget* window)
   if (window == nullptr || qobject_cast<QMainWindow*>(window) != nullptr ||
       !window->testAttribute(Qt::WA_WState_Created) ||
       window->windowType() == Qt::Popup || window->windowType() == Qt::ToolTip ||
-      window->windowFlags().testFlag(Qt::FramelessWindowHint)) {
+      window->windowFlags().testFlag(Qt::FramelessWindowHint) ||
+      // the floating log matches its caption to its rows itself
+      qobject_cast<QDockWidget*>(window) != nullptr) {
     return;
   }
 
@@ -1839,10 +1842,9 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
       for (QAbstractButton* child : window->findChildren<QAbstractButton*>()) {
         FluentIcons::apply(child);
       }
-      // OLED Black: a black caption on dialogs too
-      if (property("revampedOled").toBool()) {
-        applyWindowCaptionColors(window);
-      }
+      // OLED Black: a black caption on dialogs too; Windows' own again after
+      // it, for a window that was hidden while the theme changed
+      applyWindowCaptionColors(window);
     } else if (auto* button = qobject_cast<QAbstractButton*>(receiver);
                button != nullptr && !button->icon().isNull()) {
       FluentIcons::apply(button);
