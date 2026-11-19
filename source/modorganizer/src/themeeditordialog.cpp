@@ -53,6 +53,14 @@ QIcon swatchIcon(const QColor& color)
   return QIcon(pm);
 }
 
+// counts the editor's openings: a closed editor's delayed clean-up knows
+// whether another one has been opened since
+int& editorSession()
+{
+  static int session = 0;
+  return session;
+}
+
 }  // namespace
 
 ThemeEditorDialog::ThemeEditorDialog(QWidget* parent, const QString& stylesheetsDir,
@@ -64,6 +72,7 @@ ThemeEditorDialog::ThemeEditorDialog(QWidget* parent, const QString& stylesheets
                              "Cancel puts back the theme you had.")),
       m_dir(stylesheetsDir), m_styleInUse(styleInUse), m_apply(std::move(apply))
 {
+  ++editorSession();
   if (existing) {
     m_existingFile = existing->fileName;
     m_rules        = UserTheme::rulesOf(existing->path);
@@ -87,11 +96,14 @@ ThemeEditorDialog::ThemeEditorDialog(QWidget* parent, const QString& stylesheets
 
   grid->addWidget(new QLabel(tr("Name"), this), row, 0);
   m_name = new QLineEdit(existing ? existing->name : tr("My theme"), this);
+  // screen readers name the fields by their labels, as the colors' are
+  m_name->setAccessibleName(tr("Name"));
   m_name->setMaxLength(60);
   grid->addWidget(m_name, row++, 1, 1, 2);
 
   grid->addWidget(new QLabel(tr("Based on"), this), row, 0);
   m_base = new QComboBox(this);
+  m_base->setAccessibleName(tr("Based on"));
   m_base->addItem(tr("Dark"), true);
   m_base->addItem(tr("Light"), false);
   m_base->setCurrentIndex(m_dark ? 0 : 1);
@@ -271,8 +283,13 @@ void ThemeEditorDialog::preview()
 
 void ThemeEditorDialog::removePreviews()
 {
-  // a little later: a preview MO2 hasn't applied yet still reads its file
-  QTimer::singleShot(3000, qApp, [dir = m_dir] {
+  // a little later: a preview MO2 hasn't applied yet still reads its file.
+  // Not if the editor was opened again meanwhile: its previews have the same
+  // names, and it removes them when it closes
+  QTimer::singleShot(3000, qApp, [dir = m_dir, session = editorSession()] {
+    if (session != editorSession()) {
+      return;
+    }
     for (int turn = 0; turn < 2; ++turn) {
       QFile::remove(QDir(dir).filePath(UserTheme::previewFileName(turn)));
     }
