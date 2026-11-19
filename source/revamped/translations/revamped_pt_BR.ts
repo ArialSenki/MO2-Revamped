@@ -987,6 +987,14 @@ As alterações são salvas quando você escolhe OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>1 download will be moved to the Recycle Bin, even if the search keeps it out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>1 download irá para a Lixeira, mesmo que a busca o deixe fora da lista. Downloads ocultos não são excluídos; ative Mostrar downloads ocultos para incluí-los:</translation>
+    </message>
+    <message>
+      <source>%1 downloads will be moved to the Recycle Bin, including any the search keeps out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>%1 downloads irão para a Lixeira, incluindo os que a busca deixa fora da lista. Downloads ocultos não são excluídos; ative Mostrar downloads ocultos para incluí-los:</translation>
+    </message>
+    <message>
       <source>Move to category</source>
       <translation>Mover para categoria</translation>
     </message>

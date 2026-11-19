@@ -592,7 +592,16 @@ void DownloadManager::refreshList()
     // MO2 Revamped: the read-only sources, after the downloads folder: an
     // archive that is in both is listed once, from the downloads folder
     if (!m_ReadOnlySources.empty()) {
-      addReadOnlySources(cx.seen, nameFilters);
+      // a paused download here (foo.7z.unfinished) is that archive too: the
+      // source's foo.7z would be a second download of the same name
+      std::set<std::wstring> listed = cx.seen;
+      const std::wstring unfinished = QString(UNFINISHED).toLower().toStdWString();
+      for (const auto& name : cx.seen) {
+        if (name.size() > unfinished.size() && name.ends_with(unfinished)) {
+          listed.insert(name.substr(0, name.size() - unfinished.size()));
+        }
+      }
+      addReadOnlySources(listed, nameFilters);
     }
 
     log::debug("saw {} downloads", m_ActiveDownloads.size());
@@ -1267,6 +1276,7 @@ bool DownloadManager::removeFile(int index, bool deleteFile)
     if (metaFile.exists() && !shellDelete(QStringList(filePath), true)) {
       log::warn("failed to delete meta file {}", filePath);
     }
+    emit downloadDeleted(download->m_FileName);
   } else {
     QSettings metaSettings(filePath.append(".meta"), QSettings::IniFormat);
     if (!download->m_Hidden)
@@ -1403,6 +1413,41 @@ void DownloadManager::removeDownload(int index, bool deleteFile)
     emit update(-1);
   } catch (const std::exception& e) {
     log::error("failed to remove download: {}", e.what());
+  }
+  refreshList();
+
+  if (!m_RemovalFailures.isEmpty()) {
+    const QString names = m_RemovalFailures.join(QStringLiteral("\n"));
+    m_RemovalFailures.clear();
+    reportError(tr("These downloads were not deleted. They may be in use, or the "
+                   "deletion was cancelled:\n%1")
+                    .arg(names));
+  }
+}
+
+void DownloadManager::removeDownloads(const QStringList& archivePaths, bool deleteFile)
+{
+  try {
+    // avoid dirWatcher triggering refreshes
+    ScopedDisableDirWatcher scopedDirWatcher(this);
+    emit aboutToUpdate();
+
+    // chosen first and found again by id, as in removeDownload(): a dialog of
+    // Windows' delete can run events meanwhile
+    std::vector<unsigned int> chosen;
+    for (const QString& path : archivePaths) {
+      const int index = indexByArchive(path);
+      if (index >= 0 && !m_ActiveDownloads[index]->m_ReadOnly &&
+          m_ActiveDownloads[index]->m_State >= STATE_READY) {
+        chosen.push_back(m_ActiveDownloads[index]->m_DownloadID);
+      }
+    }
+    for (const unsigned int id : chosen) {
+      removeListed(id, deleteFile);
+    }
+    emit update(-1);
+  } catch (const std::exception& e) {
+    log::error("failed to remove downloads: {}", e.what());
   }
   refreshList();
 
@@ -2339,10 +2384,37 @@ void DownloadManager::checkStalledDownloads()
   // a server that keeps the connection open but sends nothing (a stuck CDN
   // node, a dropped Wi-Fi the system didn't notice) gets this long
   static const qint64 stallLimit = 60 * 1000;
+  const auto receiving = [](const DownloadInfo* d) {
+    return d->m_State == STATE_DOWNLOADING && d->m_Reply != nullptr &&
+           d->m_Reply->isRunning() && !d->m_Stalled;
+  };
+  const auto hasHeaders = [](const DownloadInfo* d) {
+    return d->m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).isValid();
+  };
   for (DownloadInfo* info : m_ActiveDownloads) {
-    if (info->m_State != STATE_DOWNLOADING || info->m_Reply == nullptr ||
-        !info->m_Reply->isRunning() || info->m_Stalled) {
+    if (!receiving(info)) {
       continue;
+    }
+    // a reply without an answer yet may only be waiting for a connection: Qt
+    // opens a few per server (6 over HTTP/1.1) and queues the rest. While
+    // another download from that server is getting data it is in that queue,
+    // and its clock starts again; a server that answers nobody still times out
+    if (!hasHeaders(info)) {
+      const QString host = info->m_Reply->url().host();
+      const qint64 now   = info->m_StartTime.elapsed();
+      bool queued        = false;
+      for (const DownloadInfo* other : m_ActiveDownloads) {
+        if (other != info && receiving(other) && hasHeaders(other) &&
+            other->m_Reply->url().host().compare(host, Qt::CaseInsensitive) == 0 &&
+            other->m_StartTime.elapsed() - other->m_LastDataAt < stallLimit) {
+          queued = true;
+          break;
+        }
+      }
+      if (queued) {
+        info->m_LastDataAt = now;
+        continue;
+      }
     }
     const qint64 quiet = info->m_StartTime.elapsed() - info->m_LastDataAt;
     if (quiet >= stallLimit) {
@@ -2671,6 +2743,29 @@ int DownloadManager::indexByName(const QString& fileName) const
 {
   for (int i = 0; i < m_ActiveDownloads.size(); ++i) {
     if (m_ActiveDownloads[i]->m_FileName == fileName) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+QString DownloadManager::getArchivePath(int index) const
+{
+  if ((index < 0) || (index >= m_ActiveDownloads.size())) {
+    return {};
+  }
+  return QDir::fromNativeSeparators(m_ActiveDownloads.at(index)->m_Output.fileName());
+}
+
+int DownloadManager::indexByArchive(const QString& archivePath) const
+{
+  if (archivePath.isEmpty()) {
+    return -1;
+  }
+  const QString wanted = QDir::fromNativeSeparators(archivePath);
+  for (int i = 0; i < m_ActiveDownloads.size(); ++i) {
+    if (QDir::fromNativeSeparators(m_ActiveDownloads[i]->m_Output.fileName())
+            .compare(wanted, Qt::CaseInsensitive) == 0) {
       return i;
     }
   }
@@ -3270,6 +3365,9 @@ void DownloadManager::metaDataChanged()
 
   DownloadInfo* info = findDownload(this->sender(), &index);
   if (info != nullptr) {
+    // the server answered: the time without data counts from here (it may
+    // have waited in Qt's queue for a connection before)
+    info->m_LastDataAt = info->m_StartTime.elapsed();
     QString newName = getFileNameFromNetworkReply(info->m_Reply);
     if (!newName.isEmpty() && (info->m_FileName.isEmpty())) {
       startDisableDirWatcher();

@@ -991,6 +991,14 @@ Les modifications sont enregistrées lorsque vous choisissez OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>1 download will be moved to the Recycle Bin, even if the search keeps it out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>1 téléchargement ira à la Corbeille, même si la recherche le cache de la liste. Les téléchargements masqués ne sont pas supprimés ; activez Afficher les téléchargements masqués pour les inclure :</translation>
+    </message>
+    <message>
+      <source>%1 downloads will be moved to the Recycle Bin, including any the search keeps out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>%1 téléchargements iront à la Corbeille, y compris ceux que la recherche cache de la liste. Les téléchargements masqués ne sont pas supprimés ; activez Afficher les téléchargements masqués pour les inclure :</translation>
+    </message>
+    <message>
       <source>Move to category</source>
       <translation>Déplacer vers la catégorie</translation>
     </message>

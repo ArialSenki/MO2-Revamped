@@ -1022,6 +1022,14 @@ Le modifiche vengono salvate quando scegli OK.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>1 download will be moved to the Recycle Bin, even if the search keeps it out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>1 download verrà spostato nel Cestino, anche se la ricerca lo nasconde dall'elenco. I download nascosti non vengono eliminati; attiva Mostra download nascosti per includerli:</translation>
+    </message>
+    <message>
+      <source>%1 downloads will be moved to the Recycle Bin, including any the search keeps out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>%1 download verranno spostati nel Cestino, compresi quelli che la ricerca nasconde dall'elenco. I download nascosti non vengono eliminati; attiva Mostra download nascosti per includerli:</translation>
+    </message>
+    <message>
       <source>Move to category</source>
       <translation>Sposta nella categoria</translation>
     </message>

@@ -1007,6 +1007,14 @@ Los cambios se guardan al elegir Aceptar.</translation>
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>1 download will be moved to the Recycle Bin, even if the search keeps it out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>1 descarga irá a la Papelera, aunque la búsqueda la deje fuera de la lista. Las descargas ocultas no se borran; activa Mostrar descargas ocultas para incluirlas:</translation>
+    </message>
+    <message>
+      <source>%1 downloads will be moved to the Recycle Bin, including any the search keeps out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>%1 descargas irán a la Papelera, incluidas las que la búsqueda deja fuera de la lista. Las descargas ocultas no se borran; activa Mostrar descargas ocultas para incluirlas:</translation>
+    </message>
+    <message>
       <source>Move to category</source>
       <translation>Mover a categoría</translation>
     </message>

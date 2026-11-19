@@ -317,6 +317,9 @@ private:
   struct CachedHeader
   {
     FILETIME time;
+    // with the time: a tool that rewrites a plugin keeping its date (as MO2
+    // sets dates for the load order in older games) still changes its size
+    uint64_t size;
     bool mediumSupported;
     std::shared_ptr<const PluginHeader> header;
   };

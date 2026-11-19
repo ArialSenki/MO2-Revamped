@@ -47,6 +47,11 @@ public:
   // an empty category takes the download out of its category
   void setCategory(const QStringList& fileNames, const QString& category);
 
+  // a download was deleted: it is in no category any more, so a new one of
+  // that name starts where it comes from. No changed(): the list is about to
+  // be rebuilt by the deletion itself
+  void forget(const QString& fileName);
+
   bool isCollapsed(const QString& groupKey) const;
   void setCollapsed(const QString& groupKey, bool collapsed);
 
