@@ -330,6 +330,8 @@ void WabbajackDialog::setupUi()
   footer->setSpacing(8);
   m_status = new QLabel(this);
   m_status->setObjectName(QStringLiteral("instanceDetailCaption"));
+  // plain: it quotes names and errors that come from the list
+  m_status->setTextFormat(Qt::PlainText);
   m_status->setWordWrap(true);
   m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   footer->addWidget(m_status, 1);
@@ -1966,8 +1968,11 @@ void WabbajackDialog::onInstalled()
       QApplication::alert(this);
     }
     const ModalScope modal(this);
-    QMessageBox::warning(this, tr("Install the list"),
-                         tr("The install failed: %1").arg(r.error));
+    // plain: the error can quote paths and names from the list
+    QMessageBox box(QMessageBox::Warning, tr("Install the list"),
+                    tr("The install failed: %1").arg(r.error), QMessageBox::Ok, this);
+    box.setTextFormat(Qt::PlainText);
+    box.exec();
     return;
   }
   if (!made) {
@@ -1993,6 +1998,9 @@ void WabbajackDialog::onInstalled()
                       .arg(m_list->name, m_instanceName),
                   QMessageBox::NoButton, this);
   box.setInformativeText(lines.join("\n"));
+  // plain, informative text included: the list's name and failed paths come
+  // from the list, and a rich-text guess would load <img src> from a share
+  box.setTextFormat(Qt::PlainText);
   QPushButton* restart = box.addButton(tr("Restart in the new instance"), QMessageBox::AcceptRole);
   box.addButton(tr("Later"), QMessageBox::RejectRole);
   QPointer<WabbajackDialog> self(this);

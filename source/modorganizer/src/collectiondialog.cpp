@@ -453,6 +453,8 @@ void CollectionDialog::setupUi()
   footer->setSpacing(8);
   m_status = new QLabel(this);
   m_status->setObjectName(QStringLiteral("instanceDetailCaption"));
+  // plain: it shows Nexus' error text
+  m_status->setTextFormat(Qt::PlainText);
   m_status->setWordWrap(true);
   m_status->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   footer->addWidget(m_status, 1);
@@ -580,6 +582,7 @@ QFrame* CollectionDialog::createHeader()
 
   m_loading = new QLabel(card);
   m_loading->setObjectName(QStringLiteral("fluentStatCaption"));
+  m_loading->setTextFormat(Qt::PlainText);
   m_loading->setWordWrap(true);
   layout->addWidget(m_loading, 0, Qt::AlignTop | Qt::AlignRight);
   return card;
@@ -643,6 +646,9 @@ QFrame* CollectionDialog::createSteps()
     m_stepBar[i]->setAccessibleName(titles[i]);
     m_stepText[i] = new QLabel(m_stepsCard);
     m_stepText[i]->setObjectName(QStringLiteral("fluentStatCaption"));
+    // plain: it names the mod being installed, as the collection's author
+    // wrote it, and a rich-text guess would load an <img src> from a share
+    m_stepText[i]->setTextFormat(Qt::PlainText);
     // one line, its height fixed: a longer text never moves the bars
     m_stepText[i]->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     column->addWidget(title);

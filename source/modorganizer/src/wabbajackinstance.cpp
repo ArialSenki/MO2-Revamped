@@ -46,12 +46,25 @@ constexpr auto ReadmeKey      = "Wabbajack/readme";
 constexpr auto ManualKey      = "Wabbajack/manual_folders";
 constexpr auto NoticeKey      = "Wabbajack/notice_pending";
 
+// the list's readme is opened by the shell: only a web address, never file:,
+// a network share or another protocol handler a list could point it at
+bool isWebLink(const QString& text)
+{
+  const QUrl url(text);
+  const QString scheme = url.scheme().toLower();
+  return url.isValid() && (scheme == u"http" || scheme == u"https") &&
+         !url.host().isEmpty();
+}
+
 InstanceInfo readInfo(const QSettings& ini)
 {
   InstanceInfo info;
   info.list          = ini.value(ListKey).toString();
   info.gameVersion   = ini.value(GameVersionKey).toString();
   info.readme        = ini.value(ReadmeKey).toString();
+  if (!isWebLink(info.readme)) {
+    info.readme.clear();
+  }
   info.manualFolders = ini.value(ManualKey).toStringList();
   return info;
 }
@@ -95,8 +108,13 @@ QLabel* richLabel(const QString& html, QWidget* parent)
   auto* label = new QLabel(html, parent);
   label->setTextFormat(Qt::RichText);
   label->setWordWrap(true);
-  label->setOpenExternalLinks(true);
+  label->setOpenExternalLinks(false);
   label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  QObject::connect(label, &QLabel::linkActivated, label, [](const QString& link) {
+    if (isWebLink(link)) {
+      QDesktopServices::openUrl(QUrl(link));
+    }
+  });
   return label;
 }
 

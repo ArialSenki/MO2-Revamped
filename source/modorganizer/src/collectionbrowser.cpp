@@ -269,6 +269,8 @@ CollectionBrowser::CollectionBrowser(std::vector<Game> games,
   auto* footer = new QHBoxLayout;
   m_status     = new QLabel(this);
   m_status->setObjectName(QStringLiteral("instanceDetailCaption"));
+  // plain: it shows Nexus' error text
+  m_status->setTextFormat(Qt::PlainText);
   m_status->setWordWrap(true);
   auto* refreshButton = new QPushButton(FluentIcons::glyph(0xE72C), tr("Refresh"), this);
   refreshButton->setAutoDefault(false);
@@ -622,7 +624,7 @@ QTreeWidgetItem* CollectionBrowser::addRow(QTreeWidgetItem* section, Entry e)
                                 ? QString()
                                 : Qt::convertFromPlainText(e.summary, Qt::WhiteSpaceNormal));
   item->setText(ColGame, e.game);
-  item->setToolTip(ColGame, e.game);
+  item->setToolTip(ColGame, Qt::convertFromPlainText(e.game, Qt::WhiteSpaceNormal));
   item->setText(ColAuthor, e.author);
   item->setText(ColRevision, e.revision > 0 ? QString::number(e.revision) : QString());
   item->setTextAlignment(ColRevision, Qt::AlignRight | Qt::AlignVCenter);
@@ -928,7 +930,7 @@ void CollectionBrowser::showDetails()
                                      "nothing downloads until you press Start there.")
                                 : tr("This instance manages another game."));
   m_details->setText(lines.join(u'\n'));
-  m_page->setToolTip(pageOf(*e));
+  m_page->setToolTip(Qt::convertFromPlainText(pageOf(*e), Qt::WhiteSpaceNormal));
 }
 
 void CollectionBrowser::openSelected()

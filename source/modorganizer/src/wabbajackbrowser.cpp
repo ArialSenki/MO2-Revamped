@@ -292,6 +292,8 @@ void ListBrowser::setupUi()
   auto* footer = new QHBoxLayout;
   m_status     = new QLabel(this);
   m_status->setObjectName(QStringLiteral("instanceDetailCaption"));
+  // plain: it quotes list titles and errors from the gallery
+  m_status->setTextFormat(Qt::PlainText);
   m_status->setWordWrap(true);
   m_progress = new QProgressBar(this);
   m_progress->setMaximumWidth(220);

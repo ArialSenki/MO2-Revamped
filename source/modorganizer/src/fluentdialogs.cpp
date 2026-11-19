@@ -762,13 +762,19 @@ FluentContentDialog::FluentContentDialog(QWidget* parent, const QString& objectN
   contentLayout->setContentsMargins(24, 20, 24, 24);
   contentLayout->setSpacing(8);
 
+  // title and text are plain: they often carry names from lists, collections
+  // and archives, and a guessed rich-text label would load an <img src> from a
+  // network share without asking (and leak the user's NTLM hash); rich content
+  // goes into body() as its own label
   auto* titleLabel = new QLabel(title, content);
   titleLabel->setObjectName(QStringLiteral("fluentDialogTitle"));
+  titleLabel->setTextFormat(Qt::PlainText);
   titleLabel->setWordWrap(true);
   contentLayout->addWidget(titleLabel);
 
   m_text = new QLabel(text, content);
   m_text->setObjectName(QStringLiteral("fluentDialogText"));
+  m_text->setTextFormat(Qt::PlainText);
   m_text->setWordWrap(true);
   m_text->setVisible(!text.isEmpty());
   contentLayout->addWidget(m_text);
