@@ -1511,6 +1511,89 @@ bool MOApplication::event(QEvent* event)
   return QApplication::event(event);
 }
 
+namespace
+{
+// Menus, combo-box lists, completers and tooltips are windows of their own,
+// square and opaque. A theme's border-radius on them leaves pixels outside its
+// curve that only the window's background shows through, and Windows 11 rounds
+// and outlines the window itself on top: two curves and two borders at every
+// corner. The window keeps a square surface instead (whatever the theme says),
+// Windows 11 rounds it smoothly and draws its outline in the theme's border
+// color; Windows 10 shows it square and clean.
+const char* const NativeCornersProperty = "fluentNativeCorners";
+
+void squarePopupSurface(QWidget* popup)
+{
+  static const QString rule =
+      QStringLiteral("\n*[fluentNativeCorners=\"true\"] { border-radius: 0px; }");
+
+  // only the popups the theme draws a full border and surface for: a border
+  // rule of any kind replaces the native frame of a popup the theme leaves
+  // alone (a plugin's own picker, a rubber band)
+  if (qobject_cast<QMenu*>(popup) == nullptr && !popup->inherits("QTipLabel") &&
+      !popup->inherits("QComboBoxPrivateContainer") &&
+      qobject_cast<QAbstractItemView*>(popup) == nullptr) {
+    return;
+  }
+
+  const auto mark = [](QWidget* w) {
+    if (!w->property(NativeCornersProperty).toBool()) {
+      w->setProperty(NativeCornersProperty, true);
+      // a list added after the rule was set reads its style again
+      if (w->testAttribute(Qt::WA_WState_Polished)) {
+        w->style()->unpolish(w);
+        w->style()->polish(w);
+      }
+    }
+  };
+  mark(popup);
+  // a combo box's list fills its popup: rounded on its own, its corners would
+  // show the popup's surface (a QCompleter's list is the popup itself)
+  for (auto* view :
+       popup->findChildren<QAbstractItemView*>(Qt::FindDirectChildrenOnly)) {
+    mark(view);
+  }
+  // kept when code sets a style sheet of its own on the popup later
+  if (!popup->styleSheet().contains(rule)) {
+    popup->setStyleSheet(popup->styleSheet() + rule);
+  }
+}
+
+#ifdef Q_OS_WIN
+void roundPopupNatively(QWidget* popup, bool smallCorners)
+{
+  const HWND handle = reinterpret_cast<HWND>(popup->winId());
+  const DWM_WINDOW_CORNER_PREFERENCE preference = smallCorners ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND;
+  if (FAILED(DwmSetWindowAttribute(handle, DWMWA_WINDOW_CORNER_PREFERENCE, &preference,
+                                   sizeof(preference)))) {
+    // Windows 10: no rounding, no outline of its own; the square surface
+    // keeps the theme's border
+    return;
+  }
+
+  // Windows 11 draws its outline over the window's outer pixel: in the color
+  // the theme gives the border there (read from the popup as drawn, the
+  // theme sets it in its style sheet only)
+  if (popup->width() < 3 || popup->height() < 3) {
+    return;
+  }
+  const QImage edge = popup->grab(QRect(popup->width() / 2, 0, 1, 1)).toImage();
+  if (edge.isNull()) {
+    return;
+  }
+  const QColor color = edge.pixelColor(0, 0);
+  if (color.alpha() < 255) {
+    return;
+  }
+  const COLORREF border =
+      static_cast<COLORREF>(color.red() | (color.green() << 8) | (color.blue() << 16));
+  // DWMWA_BORDER_COLOR
+  DwmSetWindowAttribute(handle, static_cast<DWMWINDOWATTRIBUTE>(34), &border,
+                        sizeof(border));
+}
+#endif
+}  // namespace
+
 bool MOApplication::notify(QObject* receiver, QEvent* event)
 {
   // its counters are the UI thread's: notify() also runs for the events of
@@ -1815,30 +1898,25 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
         (popup->windowType() == Qt::Popup ||
          popup->windowType() == Qt::ToolTip)) {
       const bool isToolTip = popup->windowType() == Qt::ToolTip;
-      const qreal cornerRadius = isToolTip ? 12.0 : 8.0;
-      bool useRoundedRegionFallback = true;
+      // Qt's own effect windows (a picture of a popup it rolls or fades in)
+      const bool effect = popup->inherits("QRollEffect") || popup->inherits("QAlphaWidget");
+      // a popup that paints its own see-through shape keeps it
+      const bool translucent = popup->testAttribute(Qt::WA_TranslucentBackground);
+      if (!effect && !translucent) {
+        squarePopupSurface(popup);
+      }
 #ifdef Q_OS_WIN
-      const HWND handle = reinterpret_cast<HWND>(popup->winId());
-      const DWM_WINDOW_CORNER_PREFERENCE preference = DWMWCP_ROUNDSMALL;
-      const HRESULT result = DwmSetWindowAttribute(
-          handle, DWMWA_WINDOW_CORNER_PREFERENCE, &preference,
-          sizeof(preference));
-      useRoundedRegionFallback = FAILED(result);
+      if (!translucent) {
+        // tooltips round small, as Windows 11's own; menus and lists as its
+        // flyouts
+        roundPopupNatively(popup, isToolTip);
+      }
 #endif
 
-      // Fluent v4: menus and lists slide in, tooltips fade in; Qt's own effect
-      // windows (a picture of a popup it rolls or fades in) are left alone
-      if (!event->spontaneous() && !popup->inherits("QRollEffect") && !popup->inherits("QAlphaWidget")) {
+      // Fluent v4: menus and lists slide in, tooltips fade in; effect windows
+      // are left alone
+      if (!event->spontaneous() && !effect) {
         FluentMotion::popIn(popup, isToolTip ? 0 : 6);
-      }
-
-      if (useRoundedRegionFallback) {
-        QPainterPath roundedPopup;
-        roundedPopup.addRoundedRect(QRectF(popup->rect()), cornerRadius,
-                                    cornerRadius);
-        popup->setMask(QRegion(roundedPopup.toFillPolygon().toPolygon()));
-      } else {
-        popup->clearMask();
       }
     }
   }

@@ -6168,3 +6168,27 @@ QFrame#revampedSaveCard {
 QFrame#revampedSaveCard QLabel {
     background-color: transparent;
 }
+
+/* The floating log is a window of its own: Windows draws its frame and
+   corners, and the main window's Mica is not behind it. The log fills it
+   square and opaque, without a second frame inside Windows' own. */
+QDockWidget#logDock[fluentFloating="true"],
+QDockWidget#logDock[fluentFloating="true"] QWidget#dockWidgetContents,
+QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock[fluentFloating="true"],
+QMainWindow#MainWindow[fluentMica="true"] QDockWidget#logDock[fluentFloating="true"] QWidget#dockWidgetContents {
+    background-color: #FBFBFB;
+    border: none;
+    border-radius: 0px;
+}
+QDockWidget#logDock[fluentFloating="true"] QWidget#logDockTitleBar {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0px;
+}
+QDockWidget#logDock[fluentFloating="true"] QTreeView#logList {
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0px;
+}
