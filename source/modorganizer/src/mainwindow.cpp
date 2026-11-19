@@ -540,7 +540,6 @@ public:
     // a window of its own; dragging the row folds it rather than tearing it
     // out as a frameless strip
     dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetMovable);
-    dock->installEventFilter(this);
     if (m_Foldable) {
       setCursor(Qt::PointingHandCursor);
     }
@@ -669,12 +668,9 @@ public:
         }
         m_PlaceFloating = false;
         // a folded log that leaves the window opens again; a floating
-        // window only one row tall would hide the list. The moves made here
-        // are not the user's: not remembered
-        m_Arranging = true;
+        // window only one row tall would hide the list
         unfoldNow();
         makeFloatingWindow(byUser);
-        m_Arranging = false;
         QTimer::singleShot(0, m_Dock, [this] { keepFloatingOnScreen(); });
       } else {
         // docked, a window state left from a maximized float would come back
@@ -717,15 +713,6 @@ public:
     }
   }
 
-  // where the floating log was last, kept between sessions (see MainWindow)
-  QRect floatGeometry() const { return m_FloatGeometry; }
-  void setFloatGeometry(const QRect& geometry)
-  {
-    // the size of a log that was maximized, which older versions kept as its
-    // place by mistake: it floats at its usual place instead
-    m_FloatGeometry = fillsScreen(geometry) ? QRect() : geometry;
-  }
-
   // the floating log is maximized, kept between sessions too
   bool floatMaximized() const { return m_Dock->isFloating() && m_Dock->isMaximized(); }
 
@@ -760,9 +747,6 @@ public:
     if (!m_Dock->isFloating()) {
       return;
     }
-    // the moves Qt makes while it shows the window are not the user's
-    const QRect kept = m_FloatGeometry;
-    m_Arranging      = true;
     m_Dock->show();
 #ifdef Q_OS_WIN
     // its window frame was set while it was hidden: Windows applies it once
@@ -771,9 +755,7 @@ public:
                  SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
                      SWP_NOACTIVATE);
 #endif
-    m_Arranging     = false;
-    m_FloatGeometry = kept;
-    bool placed     = false;
+    bool placed = false;
 #ifdef Q_OS_WIN
     // where Windows had the window last session (see floatPlacement())
     const QStringList corners = m_FloatPlacement.split(QLatin1Char(' '), Qt::SkipEmptyParts);
@@ -787,14 +769,14 @@ public:
                                       corners[2].toInt(), corners[3].toInt()};
         placement.showCmd = SW_SHOWNOACTIVATE;
         placement.flags   = 0;
-        // Windows' normal place is never a maximized one; Qt hears of the
-        // move later, and the place is noted then (see eventFilter())
+        // Windows' normal place is never a maximized one
         placed = SetWindowPlacement(handle, &placement) != FALSE;
       }
     }
 #endif
-    // older versions also left a maximized log at the whole screen
-    if (!placed && (m_FloatGeometry.isValid() || maximized || fillsScreen(m_Dock->geometry()))) {
+    // no place kept (older versions also left a maximized log at the whole
+    // screen): its usual place
+    if (!placed) {
       placeFloating();
     }
     matchFloatingTitleBar();
@@ -930,47 +912,10 @@ protected:
         watched == m_Viewport.data()) {
       placeHeadings();
     }
-    // where the user puts the floating log, for the next time it floats; a
-    // maximized window is not a place: the window goes back to its own size
-    if (watched == m_Dock && !m_Arranging && m_Dock->isFloating() &&
-        m_Dock->isVisible() && isNormalWindow() &&
-        (e->type() == QEvent::Move || e->type() == QEvent::Resize)) {
-      m_FloatGeometry = m_Dock->geometry();
-    }
     return QWidget::eventFilter(watched, e);
   }
 
 private:
-  // as large as the whole work area of the screen it is on
-  static bool fillsScreen(const QRect& geometry)
-  {
-    const QScreen* screen = QGuiApplication::screenAt(geometry.center());
-    if (screen == nullptr || !geometry.isValid()) {
-      return false;
-    }
-    const QRect area = screen->availableGeometry();
-    return geometry.width() >= area.width() - 16 && geometry.height() >= area.height() - 48;
-  }
-
-  // neither maximized nor minimized: Windows moves and sizes a window it
-  // maximizes before Qt reports the new state, so Windows is asked too
-  bool isNormalWindow() const
-  {
-    if (m_Dock->windowState() &
-        (Qt::WindowMaximized | Qt::WindowMinimized | Qt::WindowFullScreen)) {
-      return false;
-    }
-#ifdef Q_OS_WIN
-    if (m_Dock->isWindow() && m_Dock->testAttribute(Qt::WA_WState_Created)) {
-      const HWND handle = reinterpret_cast<HWND>(m_Dock->winId());
-      if (IsZoomed(handle) || IsIconic(handle)) {
-        return false;
-      }
-    }
-#endif
-    return true;
-  }
-
   // the theme squares the log's corners and fills it while it is a window of
   // its own (Windows draws that window's frame and corners), and rounds it
   // docked in the main window
@@ -1121,15 +1066,12 @@ private:
     place(m_MessageHeading, 2, m_FloatButton->x() - 8);
   }
 
-  // the first time, a window at the main window's lower right, wide enough
-  // for a log line and as tall as the opened log; afterwards where it was
+  // each time the log floats: a window at the main window's lower right, wide
+  // enough for a log line and as tall as the opened log. A size the user gives
+  // it while it floats lasts until it docks (and between sessions while it
+  // stays floating), not to the next float
   void placeFloating()
   {
-    if (m_FloatGeometry.isValid()) {
-      m_Dock->setGeometry(m_FloatGeometry);
-      return;
-    }
-
     const QWidget* window = m_Dock->parentWidget();
     if (window == nullptr) {
       return;
@@ -1350,10 +1292,8 @@ private:
   bool m_FoldWhenShown  = false;
   bool m_PressFloating  = false;
   bool m_PlaceFloating     = false;
-  bool m_Arranging         = false;
   bool m_FoldedBeforeFloat = false;
   int m_DockedHeight       = 0;
-  QRect m_FloatGeometry;
   QString m_FloatPlacement;
   QTimer m_SummaryTimer;
   bool m_Expanded       = true;
@@ -3287,7 +3227,6 @@ void MainWindow::showEvent(QShowEvent* event)
     // readSettings() shows a log left floating
     if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
       const QSettings saved(m_OrganizerCore.settings().filename(), QSettings::IniFormat);
-      logBar->setFloatGeometry(saved.value("Settings/fluent_v4_log_float_geometry").toRect());
       logBar->setFloatPlacement(saved.value("Settings/fluent_v4_log_float_placement").toString());
     }
     readSettings();
@@ -4591,13 +4530,13 @@ void MainWindow::storeSettings()
   s.geometry().saveState(this);
   s.geometry().saveGeometry(this);
   s.geometry().saveDocks(this);
-  // MO2 Revamped: where the log's window goes the next time it floats (Qt's
-  // state above keeps it only while it is floating)
+  // MO2 Revamped: a log left floating opens floating next time, where it was
+  // left and maximized if it was
   if (auto* logBar = dynamic_cast<LogDockTitleBar*>(ui->logDock->titleBarWidget())) {
     QSettings saved(s.filename(), QSettings::IniFormat);
-    if (logBar->floatGeometry().isValid()) {
-      saved.setValue("Settings/fluent_v4_log_float_geometry", logBar->floatGeometry());
-    }
+    // the place of an earlier float is not kept: each float starts at the
+    // log's usual place
+    saved.remove("Settings/fluent_v4_log_float_geometry");
     saved.setValue("Settings/fluent_v4_log_floating_open",
                    ui->logDock->isFloating() && ui->logDock->isVisible());
     saved.setValue("Settings/fluent_v4_log_float_maximized", logBar->floatMaximized());
