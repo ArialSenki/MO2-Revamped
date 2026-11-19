@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QSaveFile>
+#include <QStringDecoder>
 #include <algorithm>
 #include <cmath>
 #include <log.h>
@@ -179,6 +181,20 @@ QColor recolorWith(const Theme& theme, const QColor& color)
 
   out.setAlphaF(color.alphaF());
   return out;
+}
+
+// a theme's text: UTF-8, or the Windows code page for a sheet written by hand
+// in an older editor, whose accents UTF-8 would turn into replacement
+// characters (and saving would write them back that way)
+QString decodeText(const QByteArray& bytes)
+{
+  QStringDecoder utf8(QStringDecoder::Utf8);
+  QString text = utf8(bytes);
+  if (!utf8.hasError()) {
+    return text;
+  }
+  QStringDecoder local(QStringDecoder::System);
+  return local(bytes);
 }
 
 const QRegularExpression& headerPattern()
@@ -371,7 +387,7 @@ std::optional<Theme> load(const QString& stylesheetsDir, const QString& fileName
   theme.name     = QFileInfo(fileName).completeBaseName();
 
   // the header: the first comment that says mo2r-theme
-  const QString head = QString::fromUtf8(file.read(16 * 1024));
+  const QString head = decodeText(file.read(16 * 1024));
   const auto header  = headerPattern().match(head);
 
   std::optional<bool> dark;
@@ -683,7 +699,7 @@ QString rulesOf(const QString& path)
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
     return {};
   }
-  QString text      = QString::fromUtf8(file.readAll());
+  QString text      = decodeText(file.readAll());
   const auto header = headerPattern().match(text);
   if (header.hasMatch()) {
     text.remove(header.capturedStart(), header.capturedLength());
@@ -697,7 +713,14 @@ QString rulesOf(const QString& path)
 QString header(const Theme& theme)
 {
   QString out = QStringLiteral("/* mo2r-theme\n");
-  out += QStringLiteral("   name: %1\n").arg(QString(theme.name).remove(QStringLiteral("*/")));
+  // the name can't end the comment ("**//" left "*/" after one pass) nor
+  // start a line of its own in it
+  QString name = theme.name;
+  name.replace(QChar('\r'), QChar(' ')).replace(QChar('\n'), QChar(' '));
+  while (name.contains(QStringLiteral("*/"))) {
+    name.remove(QStringLiteral("*/"));
+  }
+  out += QStringLiteral("   name: %1\n").arg(name);
   out += QStringLiteral("   base: %1\n")
              .arg(theme.dark ? QStringLiteral("dark") : QStringLiteral("light"));
   for (const QString& key : colorKeys()) {
@@ -733,7 +756,9 @@ QString newFileName(const QString& stylesheetsDir, const QString& name)
 
 bool write(const QString& path, const Theme& theme, const QString& rules, QString* error)
 {
-  QFile file(path);
+  // written beside it and then put in its place: a full disk or a blocked
+  // file leaves the theme as it was, not empty
+  QSaveFile file(path);
   if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
     if (error) {
       *error = file.errorString();
@@ -746,6 +771,13 @@ bool write(const QString& path, const Theme& theme, const QString& rules, QStrin
   }
   const QByteArray bytes = text.toUtf8();
   if (file.write(bytes) != bytes.size()) {
+    if (error) {
+      *error = file.errorString();
+    }
+    file.cancelWriting();
+    return false;
+  }
+  if (!file.commit()) {
     if (error) {
       *error = file.errorString();
     }

@@ -7967,6 +7967,10 @@ Wenn es wieder passiert, hänge diese Datei (und die mo_interface.log aus dem Or
   <context>
     <name>Mo2RevampedInfo</name>
     <message>
+      <source>{name} already exists. Do you want to replace it?</source>
+      <translation>{name} ist bereits vorhanden. Möchtest du die Datei ersetzen?</translation>
+    </message>
+    <message>
       <source>Choose global or portable setups.</source>
       <translation>Wähle globale oder portable Setups.</translation>
     </message>
