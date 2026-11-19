@@ -311,12 +311,23 @@ void PluginList::refresh(const QString& profileName,
   // others are read in parallel. Reading them one by one on this thread froze
   // the window for 21 s on a cold disk with ~3850 plugins, and a forced
   // rebuild (every mod toggle) read them all again
+  // the size the directory scan saw, or the file's own when it saw none
+  const auto sizeOf = [](const NewPlugin& plugin) -> uint64_t {
+    const uint64_t known = (*plugin.entry)->getFileSize();
+    if (known != MOShared::FileEntry::NoFileSize) {
+      return known;
+    }
+    return static_cast<uint64_t>(QFileInfo(plugin.fullPath).size());
+  };
   std::vector<size_t> unread;
+  std::vector<uint64_t> sizes(newPlugins.size());
   for (size_t i = 0; i < newPlugins.size(); ++i) {
     const FILETIME time = (*newPlugins[i].entry)->getFileTime();
+    sizes[i]            = sizeOf(newPlugins[i]);
     auto cached         = m_HeaderCache.find(newPlugins[i].fullPath);
     if (cached != m_HeaderCache.end() &&
         CompareFileTime(&cached->second.time, &time) == 0 &&
+        cached->second.size == sizes[i] &&
         cached->second.mediumSupported == mediumPluginsAreSupported) {
       newPlugins[i].header = cached->second.header;
     } else {
@@ -330,7 +341,7 @@ void PluginList::refresh(const QString& profileName,
     });
     for (size_t i : unread) {
       m_HeaderCache[newPlugins[i].fullPath] = {(*newPlugins[i].entry)->getFileTime(),
-                                               mediumPluginsAreSupported,
+                                               sizes[i], mediumPluginsAreSupported,
                                                newPlugins[i].header};
     }
   }
