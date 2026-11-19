@@ -104,7 +104,7 @@ bool makeFolderName(QString& name)
   }
   // a name shaped like an 8.3 short name ("SKYUI~1") could stand for another
   // mod's folder: its "~" becomes "-"
-  static const QRegularExpression shortName(QStringLiteral("^[^.~]{1,6}~[0-9]+(\\.[^.]{0,3})?$"));
+  static const QRegularExpression shortName(QStringLiteral("^[^.~\\s]{1,6}~[0-9]{1,6}(\\.[^.\\s]{0,3})?$"));
   if (shortName.match(fixed).hasMatch()) {
     fixed.replace(u'~', u'-');
   }
