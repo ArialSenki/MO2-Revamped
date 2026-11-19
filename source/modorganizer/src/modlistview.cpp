@@ -1,5 +1,4 @@
 #include "modlistview.h"
-#include "usertheme.h"
 #include "fluentstatusdelegate.h"
 #include <QApplication>
 #include <QHash>
@@ -40,6 +39,7 @@
 #include "modlistversiondelegate.h"
 #include "modlistviewactions.h"
 #include "organizercore.h"
+#include "usertheme.h"
 #include "shared/directoryentry.h"
 #include "shared/fileentry.h"
 #include "shared/filesorigin.h"
