@@ -995,6 +995,14 @@ Nexus-Kategorien verknüpfen eine Kategorie mit denen, die Mods auf Nexus Mods h
   <context>
     <name>DownloadListView</name>
     <message>
+      <source>1 download will be moved to the Recycle Bin, even if the search keeps it out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>1 Download wird in den Papierkorb verschoben, auch wenn die Suche ihn ausblendet. Versteckte Downloads werden nicht gelöscht; schalte Versteckte Downloads anzeigen ein, um sie einzuschließen:</translation>
+    </message>
+    <message>
+      <source>%1 downloads will be moved to the Recycle Bin, including any the search keeps out of the list. Hidden downloads are not deleted; turn on Show hidden downloads to include them:</source>
+      <translation>%1 Downloads werden in den Papierkorb verschoben, auch die, die die Suche ausblendet. Versteckte Downloads werden nicht gelöscht; schalte Versteckte Downloads anzeigen ein, um sie einzuschließen:</translation>
+    </message>
+    <message>
       <source>Move to category</source>
       <translation>In Kategorie verschieben</translation>
     </message>

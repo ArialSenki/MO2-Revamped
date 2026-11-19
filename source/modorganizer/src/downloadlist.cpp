@@ -52,6 +52,20 @@ DownloadList::DownloadList(OrganizerCore& core, QObject* parent)
 
   m_groups->setInstanceFolder(m_settings.paths().base());
   connect(m_groups, &DownloadGroups::changed, this, &DownloadList::regroup);
+  connect(&m_manager, &DownloadManager::downloadDeleted, this,
+          [this](const QString& fileName) {
+            // the deleted one is still listed; another of that name (foo.7z
+            // beside a paused foo.7z.unfinished) keeps the category
+            int same = 0;
+            for (int i = 0; i < m_manager.numTotalDownloads(); ++i) {
+              if (m_manager.getFileName(i).compare(fileName, Qt::CaseInsensitive) == 0) {
+                ++same;
+              }
+            }
+            if (same <= 1) {
+              m_groups->forget(fileName);
+            }
+          });
   buildGroups();
 }
 

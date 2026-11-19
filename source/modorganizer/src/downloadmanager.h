@@ -255,6 +255,8 @@ public:
    * @brief sets whether hidden files are to be shown after all
    */
   void setShowHidden(bool showHidden);
+  // whether the hidden downloads are listed (they aren't loaded otherwise)
+  bool showsHidden() const { return m_ShowHidden; }
 
   void setPluginContainer(PluginContainer* pluginContainer);
 
@@ -480,6 +482,12 @@ public:  // IDownloadManager interface:
    * @return index of that download or -1 if it wasn't found
    */
   int indexByName(const QString& fileName) const;
+  // MO2 Revamped: the archive's own file (with ".unfinished" while it isn't
+  // done, and its folder): unlike the name it tells apart two downloads of
+  // the same name, and unlike the id it outlives a refresh of the list
+  QString getArchivePath(int index) const;
+  // the download whose archive is exactly that file, or -1
+  int indexByArchive(const QString& archivePath) const;
   int indexByInfo(const DownloadInfo* info) const;
 
   void pauseAll();
@@ -520,6 +528,9 @@ Q_SIGNALS:
    */
   void downloadAdded();
 
+  // MO2 Revamped: a download's file went to the Recycle Bin (not when hidden)
+  void downloadDeleted(const QString& fileName);
+
 public slots:
 
   /**
@@ -530,6 +541,11 @@ public slots:
    *only marked as hidden.
    **/
   void removeDownload(int index, bool deleteFile);
+
+  // MO2 Revamped: several downloads, by their archives (getArchivePath()), with
+  // one refresh of the list at the end instead of one per download; read-only
+  // sources' archives and unfinished downloads are left alone
+  void removeDownloads(const QStringList& archivePaths, bool deleteFile);
 
   /**
    * @brief restores the specified download to view (which was previously hidden

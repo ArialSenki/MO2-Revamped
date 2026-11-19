@@ -432,12 +432,14 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
       hidden = m_Manager->isHidden(row);
       const QString filePath = m_Manager->getFilePath(row);
       // the list is rebuilt when a download finishes, possibly while this menu
-      // is open: each command finds its archive again by name, and does
-      // nothing once it is gone
+      // is open: each command finds its archive again by its file (two
+      // downloads can share a name: foo.7z beside a paused foo.7z.unfinished,
+      // or a read-only source's), and does nothing once it is gone
       const QString fileName = m_Manager->getFileName(row);
-      const auto onRow = [this, fileName](void (DownloadListView::*command)(int)) {
-        return [this, fileName, command] {
-          const int current = m_Manager->indexByName(fileName);
+      const QString archive  = m_Manager->getArchivePath(row);
+      const auto onRow = [this, archive](void (DownloadListView::*command)(int)) {
+        return [this, archive, command] {
+          const int current = m_Manager->indexByArchive(archive);
           if (current >= 0) {
             (this->*command)(current);
           }
@@ -651,8 +653,8 @@ void DownloadListView::issueQueryInfoMd5(int index)
 void DownloadListView::issueDelete(int index)
 {
   // the list is rebuilt when a download finishes, possibly while the question
-  // is open; delete the archive that was asked about, found again by name
-  const QString fileName = m_Manager->getFileName(index);
+  // is open; delete the archive that was asked about, found again by its file
+  const QString archive = m_Manager->getArchivePath(index);
 
   const auto r = MOBase::TaskDialog(this, tr("Delete download"))
                      .main(tr("Are you sure you want to delete this download?"))
@@ -666,7 +668,7 @@ void DownloadListView::issueDelete(int index)
     return;
   }
 
-  const int current = m_Manager->indexByName(fileName);
+  const int current = m_Manager->indexByArchive(archive);
   if (current < 0) {
     return;
   }
@@ -728,7 +730,7 @@ void DownloadListView::issueResume(int index)
 void DownloadListView::issueCancelAsk(int index)
 {
   // the menu's Cancel and the Delete key ask the same question
-  const QString fileName = m_Manager->getFileName(index);
+  const QString archive = m_Manager->getArchivePath(index);
   const auto answer      = MOBase::TaskDialog(this, tr("Cancel download"))
                           .main(tr("Cancel this download?"))
                           .content(tr("What was downloaded so far is deleted."))
@@ -737,7 +739,7 @@ void DownloadListView::issueCancelAsk(int index)
                           .button({tr("Cancel download"), QMessageBox::Yes})
                           .exec();
   // the list can change while the question is open
-  const int current = m_Manager->indexByName(fileName);
+  const int current = m_Manager->indexByArchive(archive);
   if (answer == QMessageBox::Yes && current >= 0) {
     issueCancel(current);
   }
@@ -746,8 +748,9 @@ void DownloadListView::issueCancelAsk(int index)
 QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
 {
   // the same choice DownloadManager::removeDownload() makes: every download in
-  // that state, hidden ones and rows the search hides included
-  QStringList names;
+  // that state the list holds, rows the search hides included; the archives
+  // are kept, as two downloads can share a name
+  QStringList names, archives;
   for (int i = 0; i < m_Manager->numTotalDownloads(); ++i) {
     const auto state = m_Manager->getState(i);
     // a read-only source's archives are never deleted
@@ -758,6 +761,7 @@ QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
         (mode == -2 && state == DownloadManager::STATE_INSTALLED) ||
         (mode == -3 && state == DownloadManager::STATE_UNINSTALLED)) {
       names << m_Manager->getFileName(i);
+      archives << m_Manager->getArchivePath(i);
     }
   }
 
@@ -770,31 +774,42 @@ QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
   if (names.size() > shown.size()) {
     shown << tr("...and %1 more").arg(names.size() - shown.size());
   }
-  const QString text =
-      (names.size() == 1
-           ? tr("1 download will be moved to the Recycle Bin, even if the search "
-                "or Hide keeps it out of the list:")
-           : tr("%1 downloads will be moved to the Recycle Bin, including any the "
-                "search or Hide keeps out of the list:")
-                 .arg(names.size())) +
-      QStringLiteral("\n\n") + shown.join(QLatin1Char('\n'));
+  // hidden downloads are only in the list (and so only deleted) while they
+  // are shown
+  QString text;
+  if (m_Manager->showsHidden()) {
+    text = names.size() == 1
+               ? tr("1 download will be moved to the Recycle Bin, even if the search "
+                    "or Hide keeps it out of the list:")
+               : tr("%1 downloads will be moved to the Recycle Bin, including any the "
+                    "search or Hide keeps out of the list:")
+                     .arg(names.size());
+  } else {
+    text = names.size() == 1
+               ? tr("1 download will be moved to the Recycle Bin, even if the search "
+                    "keeps it out of the list. Hidden downloads are not deleted; "
+                    "turn on Show hidden downloads to include them:")
+               : tr("%1 downloads will be moved to the Recycle Bin, including any the "
+                    "search keeps out of the list. Hidden downloads are not deleted; "
+                    "turn on Show hidden downloads to include them:")
+                     .arg(names.size());
+  }
+  text += QStringLiteral("\n\n") + shown.join(QLatin1Char('\n'));
 
   // only what was named goes, even if another download finishes meanwhile
   if (QMessageBox::warning(this, title, text, QMessageBox::Yes | QMessageBox::No,
                            QMessageBox::No) != QMessageBox::Yes) {
     return {};
   }
-  return names;
+  return archives;
 }
 
-void DownloadListView::deleteDownloads(const QStringList& names)
+void DownloadListView::deleteDownloads(const QStringList& archives)
 {
-  // each removal renumbers the list, so every name is looked up again
-  for (const QString& name : names) {
-    const int index = m_Manager->indexByName(name);
-    if (index >= 0 && m_Manager->getState(index) >= DownloadManager::STATE_READY) {
-      emit removeDownload(index, true);
-    }
+  // one removal and one refresh of the list for all of them; each is found
+  // again by its archive and only if it is still finished
+  if (!archives.isEmpty()) {
+    m_Manager->removeDownloads(archives, true);
   }
 }
 
@@ -986,6 +1001,25 @@ void DownloadListView::applyGroupState(int first, int last)
   m_Restoring = false;
 }
 
+void DownloadListView::setAllGroupsExpanded(bool expanded)
+{
+  // one group at a time: QTreeView::expandAll() says nothing per group, so
+  // what it opened wasn't kept and closed again at the next refresh
+  if (model() == nullptr) {
+    return;
+  }
+  for (int row = 0; row < model()->rowCount(); ++row) {
+    const QModelIndex index = model()->index(row, 0);
+    if (index.data(DownloadList::GroupKeyRole).isValid()) {
+      if (isExpanded(index) != expanded) {
+        setExpanded(index, expanded);
+      } else {
+        rememberGroupState(index, expanded);
+      }
+    }
+  }
+}
+
 void DownloadListView::rememberGroupState(const QModelIndex& index, bool expanded)
 {
   // only what the user did; opening every group for a search isn't kept
@@ -1144,10 +1178,10 @@ void DownloadListView::addGroupActions(QMenu& menu, const QModelIndex& index)
 
   if (groups.grouped() && model() != nullptr && model()->rowCount() > 1) {
     menu.addAction(tr("Expand all groups"), [this] {
-      expandAll();
+      setAllGroupsExpanded(true);
     });
     menu.addAction(tr("Collapse all groups"), [this] {
-      collapseAll();
+      setAllGroupsExpanded(false);
     });
   }
 }

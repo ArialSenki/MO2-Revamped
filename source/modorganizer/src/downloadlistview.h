@@ -152,7 +152,8 @@ private slots:
   // and returns the file names confirmed (empty when declined)
   QStringList confirmBulkDelete(int mode, const QString& title);
   // removes those downloads, found again by name one by one
-  void deleteDownloads(const QStringList& names);
+  // removes those downloads, by their archives, in one go
+  void deleteDownloads(const QStringList& archives);
   void issuePause(int index);
   void issueResume(int index);
   void issueDeleteAll();
@@ -179,6 +180,8 @@ private:
   // their headers span the row
   void applyGroupState(int first = 0, int last = -1);
   void rememberGroupState(const QModelIndex& index, bool expanded);
+  // opens or closes every group, and keeps that
+  void setAllGroupsExpanded(bool expanded);
   // the group a drop at that point goes to, if downloads can move there
   QModelIndex dropGroupAt(const QPoint& pos, const QStringList& files) const;
   // the downloads a drag from this list carries, by file name; empty for any

@@ -245,6 +245,13 @@ void DownloadGroups::setCategory(const QStringList& fileNames, const QString& ca
   }
 }
 
+void DownloadGroups::forget(const QString& fileName)
+{
+  if (m_assigned.remove(nameKey(fileName)) > 0) {
+    markDirty();
+  }
+}
+
 bool DownloadGroups::isCollapsed(const QString& groupKey) const
 {
   return m_collapsed.contains(groupKey);
