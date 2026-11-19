@@ -714,8 +714,18 @@ bool Installer::extractInline()
           QDir::toNativeSeparators(QDir(m_inline).filePath(name.toLower())).toStdWString());
     }
   }
-  const bool ok = archive->extract(QDir::toNativeSeparators(m_inline).toStdWString(), {}, {}, {});
+  ::Archive* raw = archive.get();
+  auto progress  = [this, raw](::Archive::ProgressType, uint64_t, uint64_t) {
+    if (cancelled()) {
+      raw->cancel();
+    }
+  };
+  const bool ok =
+      archive->extract(QDir::toNativeSeparators(m_inline).toStdWString(), progress, {}, {});
   archive->close();
+  if (cancelled()) {
+    return false;
+  }
   if (!ok) {
     m_result.error = tr("The list's own files can't be taken out of it.");
     return false;
@@ -1396,6 +1406,15 @@ InstallResult Installer::run()
     m_result.error     = tr("The list can't be read: %1").arg(error);
     return m_result;
   }
+  // whose install this folder holds, from the start: another list's window
+  // won't go on in it (WabbajackDialog's folder check)
+  {
+    QSaveFile owner(QDir(m_state).filePath("list"));
+    if (owner.open(QIODevice::WriteOnly)) {
+      owner.write(m_list->name.toUtf8());
+      owner.commit();
+    }
+  }
   m_result.profiles = m_list->profiles;
   m_total           = 0;
   for (const Directive& d : m_list->directives) {
@@ -1518,6 +1537,15 @@ QString installStateFolder(const QString& installFolder)
 bool isFinishedInstall(const QString& installFolder)
 {
   return QFileInfo::exists(QDir(installStateFolder(installFolder)).filePath("finished"));
+}
+
+QString installListName(const QString& installFolder)
+{
+  QFile f(QDir(installStateFolder(installFolder)).filePath("list"));
+  if (!f.open(QIODevice::ReadOnly) || f.size() > 4096) {
+    return {};
+  }
+  return QString::fromUtf8(f.readAll()).trimmed();
 }
 
 QStringList byHandFolders(const QString& installFolder)

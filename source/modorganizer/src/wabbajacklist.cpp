@@ -803,7 +803,7 @@ QString firstPart(const QString& path, QString* second = nullptr)
 
 // takes "modlist" (or "modlist.json") and the image out of the zip
 bool extractEntries(const QString& path, const QString& into, QString* listFile,
-                    QString* imageFile, QString* error)
+                    QString* imageFile, QString* error, const std::atomic_bool* cancel)
 {
   std::unique_ptr<::Archive> archive = CreateArchive();
   if (!archive->isValid()) {
@@ -856,8 +856,21 @@ bool extractEntries(const QString& path, const QString& into, QString* listFile,
   if (image != nullptr) {
     image->addOutputFilePath(L"modlist-image.png");
   }
-  const bool ok = archive->extract(QDir::toNativeSeparators(into).toStdWString(), {}, {}, {});
+  // a modlist of hundreds of MB takes a while: stopping (closing the window,
+  // quitting MO2) doesn't wait for its end
+  ::Archive* raw = archive.get();
+  auto progress  = [raw, cancel](::Archive::ProgressType, uint64_t, uint64_t) {
+    if (cancel != nullptr && cancel->load()) {
+      raw->cancel();
+    }
+  };
+  const bool ok =
+      archive->extract(QDir::toNativeSeparators(into).toStdWString(), progress, {}, {});
   archive->close();
+  if (cancel != nullptr && cancel->load()) {
+    *error = QCoreApplication::translate("Wabbajack", "stopped");
+    return false;
+  }
   if (!ok) {
     *error = QCoreApplication::translate("Wabbajack", "its modlist couldn't be extracted");
     return false;
@@ -900,7 +913,7 @@ std::optional<ModList> readModList(const QString& path, QString* error,
   }
 
   QString listFile, imageFile;
-  if (!extractEntries(path, temp.path(), &listFile, &imageFile, error)) {
+  if (!extractEntries(path, temp.path(), &listFile, &imageFile, error, cancel)) {
     return std::nullopt;
   }
 

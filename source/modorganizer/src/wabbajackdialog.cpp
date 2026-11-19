@@ -23,6 +23,7 @@
 #include <QFormLayout>
 #include <QMessageBox>
 #include <QSaveFile>
+#include <QEventLoop>
 #include <QSettings>
 #include <QDir>
 #include <QFileDialog>
@@ -227,7 +228,19 @@ void WabbajackDialog::stopInstallAndWait()
     return;
   }
   m_installCancel->store(true);
+  // MO2 is quitting: no summary or restart question at the end
+  disconnect(m_installer, &QFutureWatcherBase::finished, this, &WabbajackDialog::onInstalled);
+  m_status->setText(tr("Stopping the install…"));
+  m_install->setEnabled(false);
+  // a step that can't be cut short (a BA2 of gigabytes being written, a
+  // texture) takes a while: the windows keep painting and Windows doesn't
+  // mark MO2 as not responding, but nothing the user clicks happens meanwhile
   QApplication::setOverrideCursor(Qt::WaitCursor);
+  if (m_installer->isRunning()) {
+    QEventLoop loop;
+    connect(m_installer, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
+    loop.exec(QEventLoop::ExcludeUserInputEvents);
+  }
   m_installer->waitForFinished();
   QApplication::restoreOverrideCursor();
 }
@@ -1377,6 +1390,14 @@ void WabbajackDialog::startInstall()
       if (!entries.isEmpty() &&
           (!QFileInfo::exists(installStateFolder(f)) || Wabbajack::isFinishedInstall(f))) {
         return tr("The install folder isn't empty.");
+      }
+      // an unfinished install of another list: going on there would mix the
+      // two lists' mods and profiles
+      const QString owner = Wabbajack::installListName(f);
+      if (!entries.isEmpty() && !owner.isEmpty() &&
+          owner.compare(m_list->name, Qt::CaseInsensitive) != 0) {
+        return tr("The install folder holds an unfinished install of another list (%1).")
+            .arg(owner);
       }
     }
     // the nearest folder that exists, for its drive's free space

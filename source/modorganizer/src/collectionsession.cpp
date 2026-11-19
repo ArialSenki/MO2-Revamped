@@ -67,6 +67,9 @@ using namespace Collections;
 namespace
 {
 
+// runs job on a worker thread while events (not the user's) go on; below
+void runOnWorker(int& waiting, std::function<void()> job);
+
 // how many Premium downloads run at once
 constexpr int PremiumParallel = 3;
 
@@ -330,6 +333,14 @@ CollectionSession::CollectionSession(OrganizerCore& core, const CollectionLink& 
 
 CollectionSession::~CollectionSession()
 {
+  // the folders' reading stops at its next files, and is waited for: it
+  // isn't left walking folders while MO2 ends
+  if (m_conflictWorker) {
+    QThread* worker = m_conflictWorker;
+    worker->disconnect(this);
+    worker->requestInterruption();
+    worker->wait();
+  }
   if (m_stage == Stage::Running) {
     qApp->setProperty(QuietProperty, QVariant());
     qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
@@ -1159,23 +1170,30 @@ void CollectionSession::readManifest()
 {
   setLoading(tr("Reading the collection…"));
 
+  // opened and read on a worker: in a solid 7z of hundreds of MB the
+  // decompressor goes through what comes before collection.json, and the
+  // window (and MO2) kept still meanwhile
   QString problem;
-  std::unique_ptr<Archive> archive = CreateArchive();
-  if (!archive->isValid()) {
-    problem = tr("the archive library couldn't be loaded");
-  } else if (!archive->open(m_archivePath.toStdWString(), {})) {
-    problem = tr("the archive couldn't be opened");
-  } else {
+  QByteArray manifestData;
+  const QString archivePath = m_archivePath;
+  runOnWorker(m_waiting, [&problem, &manifestData, archivePath] {
+    std::unique_ptr<Archive> archive = CreateArchive();
+    if (!archive->isValid()) {
+      problem = tr("the archive library couldn't be loaded");
+      return;
+    }
+    if (!archive->open(archivePath.toStdWString(), {})) {
+      problem = tr("the archive couldn't be opened");
+      return;
+    }
     FileData* manifestFile = nullptr;
     for (FileData* f : archive->getFileList()) {
       const QString path = QString::fromStdWString(f->getArchiveFilePath());
-      if (!f->isDirectory() &&
-          path.compare("collection.json", Qt::CaseInsensitive) == 0) {
+      if (!f->isDirectory() && path.compare("collection.json", Qt::CaseInsensitive) == 0) {
         manifestFile = f;
         break;
       }
     }
-
     QTemporaryDir temp;
     if (manifestFile == nullptr) {
       problem = tr("it has no collection.json");
@@ -1186,8 +1204,8 @@ void CollectionSession::readManifest()
       problem = tr("no temporary folder");
     } else {
       manifestFile->addOutputFilePath(L"collection.json");
-      if (!archive->extract(QDir::toNativeSeparators(temp.path()).toStdWString(), {},
-                            {}, {})) {
+      if (!archive->extract(QDir::toNativeSeparators(temp.path()).toStdWString(), {}, {},
+                            {})) {
         problem = tr("collection.json couldn't be extracted");
       } else {
         QFile f(QDir(temp.path()).filePath("collection.json"));
@@ -1196,18 +1214,21 @@ void CollectionSession::readManifest()
         } else if (f.size() > MaxManifestSize) {
           problem = tr("collection.json is too large");
         } else {
-          QString error;
-          auto m = CollectionManifest::parse(f.readAll(), &error);
-          if (!m) {
-            problem = tr("collection.json is not valid: %1").arg(error);
-          } else {
-            m_manifest     = std::move(*m);
-            m_haveManifest = true;
-          }
+          manifestData = f.readAll();
         }
       }
     }
     archive->close();
+  });
+  if (problem.isEmpty()) {
+    QString error;
+    auto m = CollectionManifest::parse(manifestData, &error);
+    if (!m) {
+      problem = tr("collection.json is not valid: %1").arg(error);
+    } else {
+      m_manifest     = std::move(*m);
+      m_haveManifest = true;
+    }
   }
 
   if (!m_haveManifest) {
@@ -2320,8 +2341,14 @@ void CollectionSession::startInNewInstance()
     const QDir archives(QDir(ci.dataPath).filePath(
         QString::fromStdWString(AppConfig::downloadPath()) + "/collections"));
     archives.mkpath(".");
-    if (!QFile::copy(m_archivePath,
-                     archives.filePath(QFileInfo(m_archivePath).fileName()))) {
+    // a copy of up to GBs: on a worker, the window keeps painting
+    bool copied          = false;
+    const QString source = m_archivePath;
+    const QString target = archives.filePath(QFileInfo(m_archivePath).fileName());
+    runOnWorker(m_waiting, [&copied, source, target] {
+      copied = QFile::copy(source, target);
+    });
+    if (!copied) {
       log::warn("collection {}: the archive couldn't be copied to the new instance",
                 m_link.slug);
     }
@@ -3378,27 +3405,34 @@ bool CollectionSession::extractArchiveFiles(
   if (m_archivePath.isEmpty()) {
     return false;
   }
-  std::unique_ptr<Archive> archive = CreateArchive();
-  if (!archive->isValid() || !archive->open(m_archivePath.toStdWString(), {})) {
-    return false;
-  }
-  int n = 0;
-  for (FileData* f : archive->getFileList()) {
-    QString path = QString::fromStdWString(f->getArchiveFilePath());
-    path.replace('\\', '/');
-    if (f->isDirectory() || !wanted(path) || !isSafeRelativePath(path)) {
-      continue;
+  // on a worker: a solid 7z of the collection is decompressed up to the
+  // files wanted, seconds for each mod with patches, and the window kept
+  // still meanwhile
+  bool ok                   = false;
+  const QString archivePath = m_archivePath;
+  runOnWorker(m_waiting, [&] {
+    std::unique_ptr<Archive> archive = CreateArchive();
+    if (!archive->isValid() || !archive->open(archivePath.toStdWString(), {})) {
+      return;
     }
-    // flat in the folder: numbered, so no path from the archive is used
-    const QString name = QStringLiteral("%1.bin").arg(n++);
-    f->addOutputFilePath(name.toStdWString());
-    found->emplace_back(path, QDir(dir).filePath(name));
-  }
-  bool ok = true;
-  if (n > 0) {
-    ok = archive->extract(QDir::toNativeSeparators(dir).toStdWString(), {}, {}, {});
-  }
-  archive->close();
+    int n = 0;
+    for (FileData* f : archive->getFileList()) {
+      QString path = QString::fromStdWString(f->getArchiveFilePath());
+      path.replace('\\', '/');
+      if (f->isDirectory() || !wanted(path) || !isSafeRelativePath(path)) {
+        continue;
+      }
+      // flat in the folder: numbered, so no path from the archive is used
+      const QString name = QStringLiteral("%1.bin").arg(n++);
+      f->addOutputFilePath(name.toStdWString());
+      found->emplace_back(path, QDir(dir).filePath(name));
+    }
+    ok = true;
+    if (n > 0) {
+      ok = archive->extract(QDir::toNativeSeparators(dir).toStdWString(), {}, {}, {});
+    }
+    archive->close();
+  });
   return ok;
 }
 
@@ -4105,6 +4139,7 @@ void CollectionSession::finalize()
     });
     // freed when it ends, even with the session gone
     connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    m_conflictWorker = worker;
     connect(worker, &QThread::finished, this, [this, pairs] {
       m_conflictPairs  = std::move(*pairs);
       m_conflictsReady = true;
@@ -4194,6 +4229,10 @@ CollectionSession::sharedFilePairs(const std::vector<std::pair<int, QString>>& f
     QDirIterator walk(path, QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
     QSet<quint64> own;  // a mod's own repeats count once
     while (walk.hasNext()) {
+      // the session going (MO2 closing): no answer is wanted any more
+      if (QThread::currentThread()->isInterruptionRequested()) {
+        return {};
+      }
       const QString relative = dir.relativeFilePath(walk.next()).toLower();
       if (relative == QLatin1String("meta.ini") ||
           relative.endsWith(QLatin1String(".mohidden"))) {

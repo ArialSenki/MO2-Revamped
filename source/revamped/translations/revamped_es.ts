@@ -19626,6 +19626,18 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
       <source>Warning: the list's own copy of the game, %1, should hold %2 after the install, and it doesn't: the install didn't finish as it should. Install the list again into the same folder. Until then the instance uses your game folder.</source>
       <translation>Aviso: la copia del juego de la propia lista, %1, debería contener %2 tras la instalación, y no lo contiene: la instalación no terminó como debía. Vuelve a instalar la lista en la misma carpeta. Hasta entonces la instancia usa tu carpeta del juego.</translation>
     </message>
+    <message>
+      <source>The list has paths too long for Windows (%1 characters for its longest file, before the install folder): it can't be installed.</source>
+      <translation>La lista tiene rutas demasiado largas para Windows (%1 caracteres en su archivo más largo, sin contar la carpeta de instalación): no se puede instalar.</translation>
+    </message>
+    <message>
+      <source>Some of the list's files would get paths longer than Windows allows (%1 characters, at most %2). Choose a folder whose path has at most %3 characters, such as %4.</source>
+      <translation>Algunos archivos de la lista tendrían rutas más largas de lo que Windows permite (%1 caracteres, como mucho %2). Elige una carpeta cuya ruta tenga como mucho %3 caracteres, por ejemplo %4.</translation>
+    </message>
+    <message>
+      <source>The install folder holds an unfinished install of another list (%1).</source>
+      <translation>La carpeta de instalación tiene una instalación sin terminar de otra lista (%1).</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack</name>
@@ -19660,6 +19672,10 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
     <message>
       <source>its modlist is not valid JSON (%1)</source>
       <translation>su modlist no es JSON válido (%1)</translation>
+    </message>
+    <message>
+      <source>stopped</source>
+      <translation>detenida</translation>
     </message>
 </context>
 <context>
@@ -19952,6 +19968,18 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
       <source>The download was sent on to an address that isn't secure (http instead of https).</source>
       <translation>La descarga se redirigió a una dirección que no es segura (http en vez de https).</translation>
     </message>
+    <message>
+      <source>%1 is in %2, but the downloads folder's drive has no room for it (%3 needed, %4 free).</source>
+      <translation>%1 está en %2, pero la unidad de la carpeta de descargas no tiene sitio para él (hacen falta %3, hay %4 libres).</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder (is its drive full?). Free some space, then choose it with a right click, Choose the downloaded file.</source>
+      <translation>No se pudo copiar %1 en la carpeta de descargas (¿está llena su unidad?). Libera espacio y luego elígelo con clic derecho, Elegir el archivo descargado.</translation>
+    </message>
+    <message>
+      <source>%1 couldn't be copied into the downloads folder.</source>
+      <translation>No se pudo copiar %1 en la carpeta de descargas.</translation>
+    </message>
 </context>
 <context>
     <name>Wabbajack::Installer</name>
@@ -20156,6 +20184,17 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
     <message>
       <source>These mods have programs or DLLs for the game's own folder (in their Root folder): %1. They have to be put in the game's folder, with Root Builder or by hand.</source>
       <translation>Estos mods tienen programas o DLL para la carpeta del propio juego (en su carpeta Root): %1. Hay que ponerlos en la carpeta del juego, con Root Builder o a mano.</translation>
+    </message>
+    <message>
+      <source>The install folder's drive is full (%1 free), so the install stopped. Free some space and install again into the same folder: the files already installed and checked stay.</source>
+      <translation>La unidad de la carpeta de instalación está llena (%1 libres), así que la instalación se detuvo. Libera espacio y vuelve a instalar en la misma carpeta: los archivos ya instalados y comprobados se quedan.</translation>
+    </message>
+    <message numerus="yes">
+      <source>… and %n more files.</source>
+      <translation>
+        <numerusform>… y %n archivos más.</numerusform>
+        <numerusform>… y %n archivos más.</numerusform>
+      </translation>
     </message>
 </context>
 <context>

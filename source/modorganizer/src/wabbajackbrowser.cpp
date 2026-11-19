@@ -163,8 +163,13 @@ QString fileNameFor(const QString& download, const QString& title, const QString
 
 }  // namespace
 
+// each download's own number: a retry scheduled for one never reaches the
+// next, even when it gets the freed one's address
+static quint64 s_downloadIds = 0;
+
 struct ListBrowser::Download
 {
+  quint64 id = 0;
   QString title;
   QString target;
   QUrl base;
@@ -858,6 +863,7 @@ void ListBrowser::install()
 void ListBrowser::startDownload(const Entry& e, const QString& target)
 {
   m_download         = std::make_unique<Download>();
+  m_download->id     = ++s_downloadIds;
   m_download->title  = e.title;
   m_download->target = target;
   m_download->base   = cdnUrl(e.download);
@@ -942,8 +948,22 @@ void ListBrowser::nextPart()
       finishDownload(false, tr("The list's file arrived damaged (its hash differs)."));
       return;
     }
-    if ((QFileInfo::exists(d.target) && !QFile::remove(d.target)) ||
-        !QFile::rename(d.file.fileName(), d.target)) {
+    // a file of that name (the same version, published again) isn't deleted:
+    // an install elsewhere may read it. It goes aside, into "replaced"
+    bool aside = true;
+    if (QFileInfo::exists(d.target)) {
+      const QFileInfo old(d.target);
+      const QDir replaced(old.absoluteDir().filePath(QStringLiteral("replaced")));
+      replaced.mkpath(QStringLiteral("."));
+      aside = QFile::rename(
+          d.target, replaced.filePath(old.completeBaseName() + QStringLiteral(" (") +
+                                      QString::number(QDateTime::currentSecsSinceEpoch()) +
+                                      QStringLiteral(").wabbajack")));
+      if (aside) {
+        log::info("wabbajack gallery: {} moved into {}", d.target, replaced.absolutePath());
+      }
+    }
+    if (!aside || !QFile::rename(d.file.fileName(), d.target)) {
       // the whole file came, checked: it stays, under its part name
       finishDownload(false,
                      tr("%1 can't be replaced (another program has it open); the downloaded "
@@ -985,9 +1005,9 @@ void ListBrowser::nextPart()
                                   : tr("A part of the list's file kept arriving damaged."));
         return;
       }
-      Download* mine = &d;
+      const quint64 mine = d.id;
       QTimer::singleShot(3000 * d.tries, this, [this, mine] {
-        if (m_download.get() == mine && !mine->cancelled) {
+        if (m_download && m_download->id == mine && !m_download->cancelled) {
           nextPart();
         }
       });

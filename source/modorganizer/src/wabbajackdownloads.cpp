@@ -40,6 +40,9 @@ constexpr int MaxParallel = 3;
 constexpr int MaxRetries = 3;
 // tries of one part of a file from Wabbajack's servers
 constexpr int MaxPartRetries = 4;
+// a part of a file on Wabbajack's servers is held in memory until its hash is
+// checked; the real ones are 2 MB, and three download at once
+constexpr qint64 MaxCdnPart = 64LL * 1024 * 1024;
 // a Nexus link not answered in this time is given up (the request was lost)
 constexpr qint64 NexusAnswerMs = 180000;
 // a direct download whose size the list doesn't give stops here (no archive
@@ -1471,7 +1474,17 @@ void DownloadQueue::downloadUrl(int i, const QUrl& url)
                    code != 401 && code != 403 && code != 404 && code != 410);
       return;
     }
+    // the last of the data is written as the file closes: a full drive shows
+    // there, and the download stops with that reason instead of being taken
+    // for a connection that ended early, three times
+    const bool flushed = j->file.flush();
     j->file.close();
+    if (!flushed || j->file.error() != QFileDevice::NoError) {
+      failDownload(i, tr("The disk is full, or %1 can't be written.")
+                          .arg(QDir::toNativeSeparators(j->file.fileName())),
+                   false);
+      return;
+    }
     const Archive& a   = m_list->archives[std::size_t(i)];
     const qint64 size  = j->file.size();
     const QString type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
@@ -1564,7 +1577,7 @@ void DownloadQueue::downloadCdn(int i)
       const QJsonObject p = v.toObject();
       const qint64 offset = qint64(p.value("Offset").toDouble());
       const qint64 psize  = qint64(p.value("Size").toDouble());
-      if (offset < 0 || psize <= 0 || psize > 256LL * 1024 * 1024 || offset + psize > size) {
+      if (offset < 0 || psize <= 0 || psize > MaxCdnPart || offset + psize > size) {
         failDownload(i, wrong, false);
         return;
       }
@@ -1686,7 +1699,14 @@ void DownloadQueue::nextCdnPart(int i, quint64 id)
     ++j->part;
   }
   if (j->part >= j->parts.size()) {
+    const bool flushed = j->file.flush();
     j->file.close();
+    if (!flushed || j->file.error() != QFileDevice::NoError) {
+      failDownload(i, tr("The disk is full, or %1 can't be written.")
+                          .arg(QDir::toNativeSeparators(j->file.fileName())),
+                   false);
+      return;
+    }
     verifyDownload(i);
     return;
   }
@@ -2194,7 +2214,7 @@ void DownloadQueue::copyAdopted(Adoption job, int row)
       QFile::remove(copy);
       setStatus(row, Status::Failed,
                 tr("%1 couldn't be copied into the downloads folder (is its drive full?). "
-                   "Free some space, then take it again with a right click.")
+                   "Free some space, then choose it with a right click, Choose the downloaded file.")
                     .arg(QFileInfo(job.path).fileName()));
       if (job.byUser) {
         emit message(tr("%1 couldn't be copied into the downloads folder.")
