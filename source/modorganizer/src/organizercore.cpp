@@ -1342,19 +1342,21 @@ void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
     }
   };
 
-  // one: as before, with its own "Installation successful"
-  if (files.size() == 1) {
-    installOne(files.first(), priority);
-    return;
-  }
-
   // (a collection running installs between its own dialogs: the two would
-  // take turns)
+  // take turns). Also for one file: dropped or picked during a collection,
+  // it would install in the middle of it, its notice hidden by the
+  // collection's quiet mode
   if (m_InstallQueueRunning || m_InstallationManager.isRunning() ||
       qApp->property("mo2r.collectionQuiet").toBool()) {
     QMessageBox::information(qApp->activeWindow(), tr("Installation cancelled"),
                              tr("Another installation is currently in progress."),
                              QMessageBox::Ok);
+    return;
+  }
+
+  // one: as before, with its own "Installation successful"
+  if (files.size() == 1) {
+    installOne(files.first(), priority);
     return;
   }
 
@@ -1367,9 +1369,10 @@ void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
 
   // each mod's "Installation successful" stays in the log: one notice at the
   // end says what came of all of them (a collection's install does the same)
-  const QVariant quietBefore = qApp->property("mo2r.collectionQuiet");
-  qApp->setProperty("mo2r.collectionQuiet", true);
-  qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
+  // (its own switch, not the collections' one: that one also hides warnings
+  // and skips the update check after each install)
+  qApp->setProperty("mo2r.installQueueQuiet", true);
+  qApp->setProperty("mo2r.installQueueQuietHidden", QVariant());
   // each mod is read on its own and the virtual file structure is rebuilt
   // once, at the end (as for a collection)
   const bool deferredBefore = m_DeferDirectoryRefresh;
@@ -1425,9 +1428,9 @@ void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
     }
   }
 
-  const int hidden = qApp->property("mo2r.collectionQuietHidden").toInt();
-  qApp->setProperty("mo2r.collectionQuietHidden", QVariant());
-  qApp->setProperty("mo2r.collectionQuiet", quietBefore);
+  const int hidden = qApp->property("mo2r.installQueueQuietHidden").toInt();
+  qApp->setProperty("mo2r.installQueueQuietHidden", QVariant());
+  qApp->setProperty("mo2r.installQueueQuiet", QVariant());
   m_InstallQueueRunning = false;
   log::info("install queue done: {} installed, {} skipped, {} failed ({} notices "
             "not shown)",

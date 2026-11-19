@@ -450,6 +450,15 @@ void MessageDialog::showNotice(const QString& text, QWidget* reference, bool bri
                       qApp->property("mo2r.collectionQuietHidden").toInt() + 1);
     return;
   }
+  // MO2 Revamped: while several mods install one after another, each one's
+  // "Installation successful" waits for the one notice at the end; what the
+  // caller says the user must see (warnings, errors) still shows
+  if (!status && !bringToFront && qApp->property("mo2r.installQueueQuiet").toBool()) {
+    log::info("notice not shown while an install queue runs: {}", text);
+    qApp->setProperty("mo2r.installQueueQuietHidden",
+                      qApp->property("mo2r.installQueueQuietHidden").toInt() + 1);
+    return;
+  }
   // the same while a Wabbajack list downloads or installs
   if (qApp->property("mo2r.wabbajackQuiet").toBool()) {
     log::info("notice not shown while a Wabbajack list runs: {}", text);
