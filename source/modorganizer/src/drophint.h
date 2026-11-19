@@ -1,6 +1,7 @@
 #ifndef MODORGANIZER_DROPHINT_H
 #define MODORGANIZER_DROPHINT_H
 
+#include <QIcon>
 #include <QPointer>
 #include <QString>
 #include <QWidget>
@@ -25,11 +26,12 @@ class DropHintOverlay : public QWidget
   Q_OBJECT
 
 public:
-  DropHintOverlay(QAbstractScrollArea* view, const QString& text);
+  DropHintOverlay(QAbstractScrollArea* view, const QString& text, const QIcon& icon);
 
   // made on first use, nothing when hints are off
   static DropHintOverlay* forView(QPointer<DropHintOverlay>& slot,
-                                  QAbstractScrollArea* view, const QString& text);
+                                  QAbstractScrollArea* view, const QString& text,
+                                  const QIcon& icon);
 
   void showHint();
   void hideHint();
@@ -40,6 +42,7 @@ protected:
 
 private:
   QString m_text;
+  QIcon m_icon;
 };
 
 #endif  // MODORGANIZER_DROPHINT_H

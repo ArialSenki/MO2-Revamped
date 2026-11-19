@@ -2030,7 +2030,9 @@ void ModListView::dragEnterEvent(QDragEnterEvent* event)
   // MO2 Revamped: archives from Explorer: the list says what a drop does
   // (only once the list took the drag: it then gets the leave that hides it)
   if (dropInfo.isExternalArchiveDrop() && event->isAccepted()) {
-    if (auto* hint = DropHintOverlay::forView(m_dropHint, this, tr("Drop to install"))) {
+    if (auto* hint = DropHintOverlay::forView(
+            m_dropHint, this, tr("Drop to install"),
+            FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/install.svg")))) {
       hint->showHint();
     }
   }

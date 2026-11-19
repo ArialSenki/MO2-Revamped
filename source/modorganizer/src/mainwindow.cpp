@@ -8085,7 +8085,8 @@ void MainWindow::updateDownloadsDropHint(const QPoint& pos)
                     (at == ui->downloadView || ui->downloadView->isAncestorOf(at));
   if (over) {
     if (auto* hint = DropHintOverlay::forView(m_downloadsDropHint, ui->downloadView,
-                                              tr("Drop to add to Downloads"))) {
+                                              tr("Drop to add to Downloads"),
+            FluentIcons::icon(QStringLiteral(":/MO/gui/mainwindow/files/archive.svg")))) {
       hint->showHint();
     }
   } else if (m_downloadsDropHint != nullptr) {
