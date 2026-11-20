@@ -1,3 +1,5 @@
+import os
+import stat
 from pathlib import Path
 
 import mobase
@@ -9,6 +11,10 @@ class Form43Checker(mobase.IPluginDiagnose):
 
     def __init__(self):
         super().__init__()
+        # MO2 Revamped: the form of each plugin by path, kept while its size and
+        # modification time stay the same. Every problem check opened all the
+        # plugins again (~0.5 s with a large Skyrim list, holding Python's lock)
+        self.__forms: dict[str, tuple[tuple[int, int], int]] = {}
 
     def init(self, organizer: mobase.IOrganizer):
         self.__organizer = organizer
@@ -80,13 +86,22 @@ class Form43Checker(mobase.IPluginDiagnose):
             return None
 
     def __getForm(self, file: str) -> int | str:
-        path = Path(file)
-        if path.is_file():
-            with path.open(mode="rb") as fp:
-                fp.seek(20)
-                return int.from_bytes(fp.read(2), byteorder="little")
-        else:
+        try:
+            info = os.stat(file)
+        except OSError:
+            self.__forms.pop(file, None)
             return "invalid"
+        if not stat.S_ISREG(info.st_mode):
+            return "invalid"
+        key = (info.st_size, info.st_mtime_ns)
+        cached = self.__forms.get(file)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        with open(file, mode="rb") as fp:
+            fp.seek(20)
+            form = int.from_bytes(fp.read(2), byteorder="little")
+        self.__forms[file] = (key, form)
+        return form
 
     def __listInvalidFiles(self):
         for file in self.__organizer.findFiles("", "*.es[pml]"):

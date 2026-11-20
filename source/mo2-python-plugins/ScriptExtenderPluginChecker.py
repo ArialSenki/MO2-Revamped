@@ -44,10 +44,16 @@ class PluginMessage():
 
     @staticmethod
     def PluginMessageFactory(line, organizer):
+        parsed = PluginMessage.parseLine(line)
+        return parsed[0](parsed[1], organizer) if parsed else None
+
+    @staticmethod
+    def parseLine(line):
+        """The message class and the match for a log line, or None."""
         for messageType in PluginMessage.messageTypes:
             match = messageType[0].fullmatch(line)
             if match:
-                return messageType[1](match, organizer)
+                return messageType[1], match
         return None
 
 
@@ -180,6 +186,10 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
     def __init__(self):
         super(ScriptExtenderPluginChecker, self).__init__()
         self.__organizer = None
+        # MO2 Revamped: each log's parsed lines by path, kept while its size
+        # and modification time stay the same; the problem checks ran the
+        # regular expressions over the whole log every time
+        self.__parsedLogs = {}
 
     def init(self, organizer):
         self.__organizer = organizer
@@ -242,6 +252,28 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
     def tr(self, str):
         return QCoreApplication.translate("ScriptExtenderPluginChecker", str)
 
+    def __parsedLog(self, path):
+        """The (message class, match) pairs of a log's plugin lines; [] with no
+        log. The plugins' origins are looked up again on every check, since
+        turning a mod on or off changes them without touching the log."""
+        try:
+            stat = path.stat()
+        except OSError:
+            self.__parsedLogs.pop(str(path), None)
+            return []
+        key = (stat.st_size, stat.st_mtime_ns)
+        cached = self.__parsedLogs.get(str(path))
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        parsed = []
+        with path.open('r', encoding='cp1252') as logFile:
+            for line in logFile:
+                result = PluginMessage.parseLine(line)
+                if result:
+                    parsed.append(result)
+        self.__parsedLogs[str(path)] = (key, parsed)
+        return parsed
+
     def __scanLog(self):
         return len(self.__listBadPluginMessagess()) > 0
 
@@ -260,12 +292,8 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
         if gameSuffix is not None:
             gameLogPath = base / gameSuffix
             try:
-                if gameLogPath.exists():
-                    with gameLogPath.open('r', encoding='cp1252') as logFile:
-                        for line in logFile:
-                            message = PluginMessage.PluginMessageFactory(line, self.__organizer)
-                            if message:
-                                gameMessageList.append(message)
+                for messageType, match in self.__parsedLog(gameLogPath):
+                    gameMessageList.append(messageType(match, self.__organizer))
             except Exception as e:
                 qDebug(str(e))
                 # There's almost certainly just no log yet
@@ -274,12 +302,8 @@ class ScriptExtenderPluginChecker(mobase.IPluginDiagnose):
         if editorSuffix is not None:
             editorLogPath = base / editorSuffix
             try:
-                if editorLogPath.exists():
-                    with editorLogPath.open('r', encoding='cp1252') as logFile:
-                        for line in logFile:
-                            message = PluginMessage.PluginMessageFactory(line, self.__organizer)
-                            if message:
-                                editorMessageList.append(message)
+                for messageType, match in self.__parsedLog(editorLogPath):
+                    editorMessageList.append(messageType(match, self.__organizer))
             except Exception as e:
                 qDebug(str(e))
                 # There's almost certainly just no log yet
