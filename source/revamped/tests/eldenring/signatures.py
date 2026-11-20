@@ -380,6 +380,41 @@ def mem_patch_allocator_table(image: Image) -> Result:
     return Result("mem_patch: allocator table", ok, f"{count} entries (limit 256)")
 
 
+# BootBoost (me3_compat boot_boost.rs, from me3's mod-host-assets ebl.rs at
+# the revision Cargo.toml pins): MountEbl, from the call that mounts each
+# archive, or else from the whole small function that calls it. The first
+# match is used.
+MOUNT_EBL = re.compile(
+    rb"(?s)\x48\x8b\x45.\x48\x89\x44\x24\x28[\x48|\x4c]\x89[\x44\x4c\x54\x5c\x64\x6c\x74\x7c]\x24\x20"
+    rb"\x4c\x8b\x0d.{4}[\x48|\x49]\x8b[\xd0-\xd7][\x48|\x49]\x8b[\xc8-\xcf]\xe8(.{4})\x0f\xb6\xd8"
+    rb"(?:(?:\x48\x83\x7d.\x08)|(?:\x48\x83\x7c\x24.\x08))\x72.")
+MOUNT_EBL_ALTERNATIVE = re.compile(
+    rb"(?s)\x53\x48\x83\xec\x30\x48\x8b\x44\x24\x70\x4d\x8b\xd1\x4c\x8b\x4c\x24\x60\x4d\x8b\xd8"
+    rb"\x48\x89\x44\x24\x28\x48\x8b\xca\x48\x8b\x44\x24\x68\x4d\x8b\xc2\x49\x8b\xd3\x48\x89\x44"
+    rb"\x24\x20\xe8(.{4})\x48\x83\xc4\x30\x5b\xc3")
+
+
+def boot_boost_mount_ebl(image: Image) -> Result:
+    text = image.section(".text")
+    if text is None:
+        return Result("BootBoost: MountEbl", False, "no .text")
+    data = image.data
+    found = []
+    for name, pattern in (("call site", MOUNT_EBL), ("caller", MOUNT_EBL_ALTERNATIVE)):
+        matches = list(pattern.finditer(data, text.rva, text.rva + text.size))
+        if matches:
+            first = matches[0]
+            target = first.end(1) + _rel32(data, first.start(1))
+            targets = {m.end(1) + _rel32(data, m.start(1)) for m in matches}
+            found.append((name, target, len(matches), len(targets)))
+    if not found:
+        return Result("BootBoost: MountEbl", False, "neither of me3's searches matches")
+    name, target, count, distinct = found[0]
+    ok = image.in_code(target) and distinct == 1
+    return Result("BootBoost: MountEbl", ok,
+                  f"by its {name}: {count} match(es), {distinct} target(s) -> rva 0x{target:X}")
+
+
 @dataclass
 class Report:
     image: Image
@@ -403,6 +438,7 @@ def scan(path: Path) -> Report:
         security_cookie(image),
         exit_check(image),
         long_sleep(image),
+        boot_boost_mount_ebl(image),
     ]
     if nightreign:
         checks.append(skip_logos_step_table(image))
