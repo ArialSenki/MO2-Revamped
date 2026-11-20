@@ -950,6 +950,17 @@ function Compile-PythonPlugins {
     if ($LASTEXITCODE -ne 0) { throw "Compiling the Python plugins in $StageRoot failed." }
 }
 
+# basic_games' manifest (make_basic_games_manifest.py): with it, MO2 imports
+# only the instance's game module and makes the other games from the manifest
+function Write-BasicGamesManifest {
+    param([string]$StageRoot)
+    & $PythonExecutable -I (Join-Path $PSScriptRoot 'make_basic_games_manifest.py') $StageRoot
+    if ($LASTEXITCODE -ne 0) { throw "Writing the basic_games manifest in $StageRoot failed." }
+    if (-not (Test-Path -LiteralPath (Join-Path $StageRoot 'plugins\basic_games\games\manifest.json') -PathType Leaf)) {
+        throw 'The basic_games manifest was not written.'
+    }
+}
+
 function Copy-CompiledPythonPlugins {
     param([string]$SourceRoot, [string]$DestinationRoot)
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $DestinationRoot 'plugins') -File -Recurse -Filter '*.py') {
@@ -1153,6 +1164,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $fullStage 'borderless') | 
 Copy-Item -LiteralPath $borderlessDll -Destination (Join-Path $fullStage 'borderless\mo2r_borderless.dll') -Force
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
+Write-BasicGamesManifest -StageRoot $fullStage
 Compile-PythonPlugins -StageRoot $fullStage
 
 New-Item -ItemType Directory -Force -Path $isolatedStage | Out-Null

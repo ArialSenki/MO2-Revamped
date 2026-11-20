@@ -822,6 +822,10 @@ int MOApplication::setup(MOMultiProcess& multiProcess, bool forceSelect)
   tt.start("MOApplication::doOneRun() plugins");
   log::debug("initializing plugins");
 
+  // MO2 Revamped: the instance's game, so that plugins can skip the code of
+  // other games while they load (basic_games imports only this game's module)
+  setProperty("revampedInstanceGame", m_settings->game().name().value_or(QString()));
+
   m_plugins = std::make_unique<PluginContainer>(m_core.get());
   m_plugins->loadPlugins();
   writeStartupDiagnosticEvent("application.setup.plugins.loaded");

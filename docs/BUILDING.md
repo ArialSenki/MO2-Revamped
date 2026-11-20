@@ -202,7 +202,11 @@ interpreter loads (`__pycache__\*.cpython-312.opt-2.pyc`, checked-hash, by
 `compile_python_plugins.py`), so the first start after an install doesn't
 compile them. `-PythonExecutable` names the CPython 3.12 that compiles them
 (by default `%ProgramFiles%\Python312\python.exe`); its bytecode version must
-be the one in `pythoncore.zip`. PyQt6 comes only from the upstream stage and
+be the one in `pythoncore.zip`. The same Python writes
+`plugins\basic_games\games\manifest.json` (`make_basic_games_manifest.py`, with
+the stage's own mobase and PyQt6): MO2 tells basic_games the instance's game,
+and the other games are built from the manifest instead of importing their
+modules. PyQt6 comes only from the upstream stage and
 without its `.pyi` stubs. Example:
 
 ```powershell
