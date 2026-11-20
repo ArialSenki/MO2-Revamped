@@ -21335,4 +21335,55 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
       <translation>le dossier Mods du jeu</translation>
     </message>
   </context>
+  <context>
+    <name>ValheimGame</name>
+    <message>
+      <source>Valheim support for MO2 Revamped: BepInEx and its plugins, Thunderstore packages, settings files back to their mods by plugin GUID, Jotunn and the saves with their world. Based on the work of Zash.</source>
+      <translation>Prise en charge de Valheim pour MO2 Revamped : BepInEx et ses plugins, paquets Thunderstore, fichiers de réglages renvoyés à leurs mods selon le GUID du plugin, Jotunn et les sauvegardes avec leur monde. Basé sur le travail de Zash.</translation>
+    </message>
+    <message>
+      <source>Move the settings files BepInEx plugins write to Overwrite into the mod of their plugin (by its GUID), when MO2 starts and after the game closes</source>
+      <translation>Déplace les fichiers de réglages que les plugins BepInEx écrivent dans Overwrite vers le mod de leur plugin (selon son GUID), au démarrage de MO2 et après la fermeture du jeu</translation>
+    </message>
+    <message>
+      <source>Also read the plugin GUID from the settings file&apos;s header, not only from its name</source>
+      <translation>Lire aussi le GUID du plugin dans l&apos;en-tête du fichier de réglages, pas seulement dans son nom</translation>
+    </message>
+    <message>
+      <source>Valheim Mod Check</source>
+      <translation>Vérification des mods de Valheim</translation>
+    </message>
+    <message>
+      <source>Warns when Valheim mods need BepInEx, another plugin (Jotunn...) or the InSlimVML loader and it isn&apos;t there.</source>
+      <translation>Avertit quand des mods de Valheim ont besoin de BepInEx, d&apos;un autre plugin (Jotunn…) ou du chargeur InSlimVML et qu&apos;il est absent.</translation>
+    </message>
+    <message>
+      <source>These active mods are for the InSlimVML loader (InSlimVML/Mods/*_VML.dll), and its inslimvml.ini isn&apos;t there:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install InSlimVML, or a BepInEx version of these mods.</source>
+      <translation>Ces mods actifs sont pour le chargeur InSlimVML (InSlimVML/Mods/*_VML.dll), et son inslimvml.ini est absent :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installez InSlimVML, ou une version BepInEx de ces mods.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• et {0} de plus</translation>
+    </message>
+    <message>
+      <source>BepInEx isn&apos;t installed</source>
+      <translation>BepInEx n&apos;est pas installé</translation>
+    </message>
+    <message>
+      <source>Plugins need other plugins that aren&apos;t there</source>
+      <translation>Des plugins ont besoin d&apos;autres plugins absents</translation>
+    </message>
+    <message>
+      <source>InSlimVML mods without their loader</source>
+      <translation>Mods InSlimVML sans leur chargeur</translation>
+    </message>
+    <message>
+      <source>These active mods are BepInEx plugins, and BepInEx (BepInEx/core and winhttp.dll) isn&apos;t in an active mod or the game folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install BepInExPack_Valheim as a mod from &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; or Nexus Mods; without it the game starts with no mods.</source>
+      <translation>Ces mods actifs sont des plugins BepInEx, et BepInEx (BepInEx/core et winhttp.dll) n&apos;est ni dans un mod actif ni dans le dossier du jeu :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installez BepInExPack_Valheim comme mod depuis &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; ou Nexus Mods ; sans lui le jeu démarre sans mods.</translation>
+    </message>
+    <message>
+      <source>These plugins are required (their [BepInDependency]), and no active mod has them (required plugin: the mods that need it):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install them or turn them on; BepInEx doesn&apos;t load a plugin whose required plugins are missing.</source>
+      <translation>Ces plugins sont requis (leur [BepInDependency]) et aucun mod actif ne les contient (plugin requis : les mods qui en ont besoin) :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installez-les ou activez-les ; BepInEx ne charge pas un plugin dont des plugins requis manquent.</translation>
+    </message>
+  </context>
 </TS>
