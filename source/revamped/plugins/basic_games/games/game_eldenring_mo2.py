@@ -1716,6 +1716,12 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if depth > self._archive_wrapper_depth_limit:
             return False
         managed = self._managed_dll_directories
+        # the game's own folders (chr, parts, map, sd...) hold its files, often
+        # thousands of them, and never a DLL anything loads: MO2 asks this for
+        # every mod at each start and refresh, on its interface thread, so
+        # they are not walked (a stray DLL there was never loaded either way;
+        # installing still moves it into DLLs)
+        skipped = managed | self._asset_directories
         # a DLL in this folder is misplaced unless the folder is a managed one
         dll_misplaced_here = bool(parent_name) and parent_name not in managed
         name_suffix = self._name_suffix
@@ -1723,7 +1729,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
             name = entry.name().casefold()
             if is_directory(entry):
                 # Managed DLL directories are already in a valid destination.
-                if name in managed:
+                if name in skipped:
                     continue
                 if name in {"mod", "native", "natives"} and any(
                     not is_directory(child)
