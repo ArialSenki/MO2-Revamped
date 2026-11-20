@@ -492,7 +492,7 @@ std::vector<Topic> topics()
                   "plugins in the Plugins tab. Starfield also warns about active ESP "
                   "plugins and sTestFile lines in StarfieldCustom.ini.")},
         runFromMo2(QStringLiteral("Steam")),
-        {0xE768, Text::tr("Programs"),
+        {0xE90F, Text::tr("Programs"),
          Text::tr("Add the script extender, LOOT, xEdit or other tools as programs, so "
                   "they also see the mods."),
          Text::tr("Executables"), QStringLiteral("executables")}}},
