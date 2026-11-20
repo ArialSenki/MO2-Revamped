@@ -7,6 +7,7 @@
 #include "skyrimsescriptextender.h"
 #include "skyrimseunmanagedmods.h"
 
+#include "steamutility.h"
 #include "versioninfo.h"
 #include <creationgameplugins.h>
 #include <executableinfo.h>
@@ -84,6 +85,12 @@ QString GameSkyrimSE::identifyGamePath() const
   if (result.isEmpty()) {
     result = parseEpicGamesLocation(
         {"ac82db5035584c7f8a2c548d98c86b2c", "5d600e4f59974aeba0259c7734134e27"});
+  }
+
+  // MO2 Revamped: a Steam library without Bethesda's key (Windows reinstalled,
+  // library moved, the game never started), as Fallout 4 does
+  if (result.isEmpty()) {
+    result = MOBase::findSteamGame("Skyrim Special Edition", "Data\\Skyrim.esm");
   }
 
   return result;
