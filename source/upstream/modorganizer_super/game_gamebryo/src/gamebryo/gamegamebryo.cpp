@@ -6,6 +6,8 @@
 #include "gamebryosavegame.h"
 #include "gameplugins.h"
 #include "iprofile.h"
+#include "imodlist.h"
+#include "imodinterface.h"
 #include "log.h"
 #include "registry.h"
 #include "savegameinfo.h"
@@ -588,7 +590,21 @@ bool GameGamebryo::scriptExtenderRuntimeMissing(const QString& runtimePrefix,
   if (expected != nullptr) {
     *expected = runtime;
   }
-  return !gameDirectory().exists(runtime);
+  if (gameDirectory().exists(runtime)) {
+    return false;
+  }
+  // MO2 Revamped: a Root/ folder of an active mod (Root Builder, or MO2
+  // Revamped's own Root/ mapping) puts it in the game folder at launch
+  for (const QString& name : m_Organizer->modList()->allModsByProfilePriority()) {
+    if (!(m_Organizer->modList()->state(name) & MOBase::IModList::STATE_ACTIVE)) {
+      continue;
+    }
+    const MOBase::IModInterface* mod = m_Organizer->modList()->getMod(name);
+    if (mod != nullptr && QFileInfo::exists(mod->absolutePath() + "/Root/" + runtime)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool GameGamebryo::addressLibraryMissing(const QString& pluginsDir,
@@ -601,7 +617,15 @@ bool GameGamebryo::addressLibraryMissing(const QString& pluginsDir,
   if (version.isEmpty()) {
     return false;
   }
+  // MO2 Revamped: a DLL there doesn't mean it needs the Address Library (many
+  // don't), so this only fires when an Address Library is installed, for
+  // other game versions only: the user needs it, and the game was updated
+  // past it. With none installed at all, nothing is said.
   if (m_Organizer->findFiles(pluginsDir, QStringList{"*.dll"}).isEmpty()) {
+    return false;
+  }
+  if (m_Organizer->findFiles(pluginsDir, QStringList{"versionlib-*.bin", "version-*.bin"})
+          .isEmpty()) {
     return false;
   }
   // "versionlib-" is the Anniversary Edition's, "version-" the older one's
