@@ -17,3 +17,5 @@ set_property(TARGET revamped_bethesda PROPERTY SOURCES ${_bethesda_sources})
 # the Saves tab card shared with the old game plugins (header-only)
 target_include_directories(revamped_bethesda PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../upstream/modorganizer_super/revamped_fluent)
+
+add_subdirectory(games/falloutnv)
