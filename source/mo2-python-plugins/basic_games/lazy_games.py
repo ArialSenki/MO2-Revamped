@@ -75,6 +75,25 @@ def read_manifest(games_dir: str) -> dict[str, Any] | None:
         return None
     if not isinstance(manifest, dict) or manifest.get("format") != MANIFEST_FORMAT:
         return None
+    # anything unexpected and the loader imports every game, as without one
+    modules, tools = manifest.get("modules"), manifest.get("tools", {})
+    if not isinstance(modules, dict) or not isinstance(tools, dict):
+        return None
+    for entry in modules.values():
+        if not isinstance(entry, dict) or not isinstance(entry.get("sha256"), str):
+            return None
+        classes = entry.get("classes")
+        if not isinstance(classes, list) or not all(
+            isinstance(c, dict)
+            and isinstance(c.get("class"), str)
+            and isinstance(c.get("answers"), dict)
+            and isinstance(c["answers"].get("gameName"), str)
+            for c in classes
+        ):
+            return None
+    for games in tools.values():
+        if not isinstance(games, list) or not all(isinstance(g, str) for g in games):
+            return None
     return manifest
 
 
