@@ -2129,7 +2129,7 @@ class EldenRingMo2Game(BasicGame):
     )
     DescriptionContext = _TR_CONTEXT
     Version = "0.5.0-alpha.97"
-    NativeBridgeVersion = "0.5.0-alpha.66"
+    NativeBridgeVersion = "0.5.0-alpha.67"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
