@@ -22,17 +22,40 @@ from .common import (
 from .checker import EldenRingModDataChecker
 
 
+def _bridge_readable_copy(path: str) -> str | None:
+    """A copy of the profile's settings at a path the bridge can read (it
+    reads at most 259 characters, and so do Windows' profile functions), in
+    the temporary folder; None when that fails too."""
+    try:
+        import hashlib
+        import shutil
+        import tempfile
+
+        digest = hashlib.sha1(path.casefold().encode("utf-8")).hexdigest()[:12]
+        copy = os.path.join(tempfile.gettempdir(), f"EldenRingMO2Profile-{digest}.ini")
+        if len(copy) >= 260:
+            return None
+        shutil.copyfile("\\\\?\\" + path, copy)
+        return copy
+    except OSError:
+        return None
+
+
 class EnvironmentMixin:
     def _activate_profile_config_environment(self, path: Path, initializers: list[dict] | None = None) -> None:
         config_key = self.ProfileLaunchConfigEnvironment
         self._profile_config_env_previous = os.environ.get(config_key)
         self._profile_config_env_active = True
         if path.is_file():
-            os.environ[config_key] = str(path)
-            if len(str(path)) >= 260:
-                # the bridge reads this path into a MAX_PATH buffer
+            value = str(path)
+            if len(value) >= 260:
+                # the bridge reads this path into a MAX_PATH buffer, and Windows'
+                # profile functions don't take a longer one: it gets a copy
+                value = _bridge_readable_copy(value) or value
+            os.environ[config_key] = value
+            if len(value) >= 260:
                 qWarning(
-                    f"Elden Ring MO2: the profile's settings path is {len(str(path))} "
+                    f"Elden Ring MO2: the profile's settings path is {len(value)} "
                     "characters long; the bridge reads at most 259, so it ignores this "
                     "profile's startup options (minimized start, black background, "
                     "CPU 0, priority) and skips the intro logos whatever the "
