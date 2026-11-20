@@ -21322,4 +21322,165 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
       <translation>El orden de carga que recibirá el juego, con los problemas de cada mod: dependencias que faltan o cargan tarde, el Script Extender y conflictos.</translation>
     </message>
   </context>
+  <context>
+    <name>Witcher3Game</name>
+    <message>
+      <source>The Witcher 3: Wild Hunt support for MO2 Revamped: mods, DLC folders, settings menus and DLLs from one mod, script conflicts for Script Merger, the next-gen menu lists and saves. Based on the work of Holt59.</source>
+      <translation>Compatibilidad con The Witcher 3: Wild Hunt para MO2 Revamped: mods, carpetas DLC, menús de ajustes y DLL desde un mismo mod, conflictos de scripts para Script Merger, las listas de menús de la versión next-gen y las partidas. Basado en el trabajo de Holt59.</translation>
+    </message>
+    <message>
+      <source>Map each mod&apos;s root folder to the game folder, where the game looks for DLC folders, settings menus and DLLs (not used when Root Builder does it)</source>
+      <translation>Hace que la carpeta root de cada mod aparezca en la carpeta del juego, donde el juego busca las carpetas DLC, los menús de ajustes y las DLL (no se usa si lo hace Root Builder)</translation>
+    </message>
+    <message>
+      <source>The Witcher 3 Mod Check</source>
+      <translation>Comprobación de mods de The Witcher 3</translation>
+    </message>
+    <message>
+      <source>Warns about scripts two Witcher 3 mods change (Script Merger can combine them) and about menus the next-gen game won&apos;t load.</source>
+      <translation>Avisa de los scripts que cambian dos mods de Witcher 3 (Script Merger puede combinarlos) y de los menús que la versión next-gen no cargará.</translation>
+    </message>
+    <message>
+      <source>Menus the next-gen game won&apos;t load</source>
+      <translation>Menús que la versión next-gen no cargará</translation>
+    </message>
+    <message>
+      <source>Mods change the same scripts</source>
+      <translation>Varios mods cambian los mismos scripts</translation>
+    </message>
+    <message>
+      <source>The next-gen version of the game loads a mod&apos;s settings menu only when bin/config/r4game/user_config_matrix/pc/dx11filelist.txt or dx12filelist.txt lists it, and these menus aren&apos;t listed:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Add a line “name.xml;” for each to both files (in a mod of their own, so the game&apos;s files stay as they are), or install the mods&apos; versions made for the next-gen game.</source>
+      <translation>La versión next-gen del juego solo carga el menú de ajustes de un mod cuando bin/config/r4game/user_config_matrix/pc/dx11filelist.txt o dx12filelist.txt lo incluyen, y estos menús no están:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Añade una línea «nombre.xml;» para cada uno en los dos archivos (en un mod aparte, para que los archivos del juego queden como están) o instala las versiones de los mods hechas para la next-gen.</translation>
+    </message>
+    <message>
+      <source>These scripts are changed by more than one mod. The game uses only one copy of each, so the other mod&apos;s changes are lost or the game stops with a script error:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Run Script Merger (WitcherScriptMerger) from MO2 to combine them into mod0000_MergedFiles, and keep its output as a mod. Run it again after adding, removing or updating these mods.</source>
+      <translation>Más de un mod cambia estos scripts. El juego usa una sola copia de cada uno, así que los cambios del otro mod se pierden o el juego se detiene con un error de scripts:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Ejecuta Script Merger (WitcherScriptMerger) desde MO2 para combinarlos en mod0000_MergedFiles y guarda su resultado como un mod. Vuelve a ejecutarlo al añadir, quitar o actualizar estos mods.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• y {0} más</translation>
+    </message>
+  </context>
+  <context>
+    <name>StardewValleyGame</name>
+    <message>
+      <source>Stardew Valley support for MO2 Revamped: SMAPI mods and content packs, their dependencies and duplicates, SMAPI&apos;s version and the saves with their farm. Based on the work of Syer10.</source>
+      <translation>Compatibilidad con Stardew Valley para MO2 Revamped: mods de SMAPI y paquetes de contenido, sus dependencias y duplicados, la versión de SMAPI y las partidas con su granja. Basado en el trabajo de Syer10.</translation>
+    </message>
+    <message>
+      <source>Stardew Valley Mod Check</source>
+      <translation>Comprobación de mods de Stardew Valley</translation>
+    </message>
+    <message>
+      <source>Warns when Stardew Valley mods need SMAPI, a framework or another mod that isn&apos;t there or is too old, and about mods SMAPI skips as duplicates.</source>
+      <translation>Avisa cuando los mods de Stardew Valley necesitan SMAPI, un framework u otro mod que no está o es demasiado antiguo, y de los mods que SMAPI se salta por estar duplicados.</translation>
+    </message>
+    <message>
+      <source>The same mod (the same UniqueID in manifest.json) is in more than one folder of the game&apos;s Mods folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;SMAPI then loads none of the copies. Keep one of them: turn the other mods off or remove the duplicate folder.</source>
+      <translation>El mismo mod (el mismo UniqueID en manifest.json) está en más de una carpeta de la carpeta Mods del juego:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Entonces SMAPI no carga ninguna de las copias. Deja solo una: desactiva los otros mods o borra la carpeta duplicada.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• y {0} más</translation>
+    </message>
+    <message>
+      <source>SMAPI isn&apos;t installed</source>
+      <translation>SMAPI no está instalado</translation>
+    </message>
+    <message>
+      <source>Mods need other mods that aren&apos;t there</source>
+      <translation>Hay mods que necesitan otros mods que no están</translation>
+    </message>
+    <message>
+      <source>Mods need newer versions of other mods</source>
+      <translation>Hay mods que necesitan versiones más nuevas de otros mods</translation>
+    </message>
+    <message>
+      <source>Mods need a newer SMAPI</source>
+      <translation>Hay mods que necesitan un SMAPI más nuevo</translation>
+    </message>
+    <message>
+      <source>The same mod is installed twice</source>
+      <translation>El mismo mod está instalado dos veces</translation>
+    </message>
+    <message>
+      <source>These active mods are SMAPI mods, and SMAPI isn&apos;t in the game folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install SMAPI with its own installer from &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; (into the game folder, not as a mod), then start the game with the SMAPI program in MO2.</source>
+      <translation>Estos mods activos son mods de SMAPI, y SMAPI no está en la carpeta del juego:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instala SMAPI con su propio instalador desde &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; (en la carpeta del juego, no como mod) y luego inicia el juego con el programa SMAPI de MO2.</translation>
+    </message>
+    <message>
+      <source>These mods are needed, and no active mod has them (needed mod: the mods that need it):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install them or turn them on in the mod list. SMAPI doesn&apos;t load a mod whose required mods are missing.</source>
+      <translation>Estos mods hacen falta y ningún mod activo los tiene (mod necesario: los mods que lo necesitan):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instálalos o actívalos en la lista de mods. SMAPI no carga un mod si le faltan los mods que requiere.</translation>
+    </message>
+    <message>
+      <source>These mods need a newer version of another mod:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Update the needed mods. SMAPI skips a mod whose required mods are too old.</source>
+      <translation>Estos mods necesitan una versión más nueva de otro mod:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Actualiza los mods necesarios. SMAPI se salta un mod si los mods que requiere son demasiado antiguos.</translation>
+    </message>
+    <message>
+      <source>The installed SMAPI ({0}) is older than these mods need:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Update SMAPI with its installer from &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt;.</source>
+      <translation>El SMAPI instalado ({0}) es más antiguo de lo que necesitan estos mods:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Actualiza SMAPI con su instalador desde &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt;.</translation>
+    </message>
+    <message>
+      <source>{0} needs {1} {2} or newer; {3} is installed</source>
+      <translation>{0} necesita {1} {2} o más nuevo; está instalada la {3}</translation>
+    </message>
+    <message>
+      <source>{0} needs SMAPI {1} or newer</source>
+      <translation>{0} necesita SMAPI {1} o más nuevo</translation>
+    </message>
+    <message>
+      <source>the game&apos;s Mods folder</source>
+      <translation>la carpeta Mods del juego</translation>
+    </message>
+  </context>
+  <context>
+    <name>ValheimGame</name>
+    <message>
+      <source>Valheim support for MO2 Revamped: BepInEx and its plugins, Thunderstore packages, settings files back to their mods by plugin GUID, Jotunn and the saves with their world. Based on the work of Zash.</source>
+      <translation>Compatibilidad con Valheim para MO2 Revamped: BepInEx y sus plugins, paquetes de Thunderstore, archivos de ajustes devueltos a sus mods por el GUID del plugin, Jotunn y las partidas con su mundo. Basado en el trabajo de Zash.</translation>
+    </message>
+    <message>
+      <source>Move the settings files BepInEx plugins write to Overwrite into the mod of their plugin (by its GUID), when MO2 starts and after the game closes</source>
+      <translation>Mueve los archivos de ajustes que los plugins de BepInEx escriben en Overwrite al mod de su plugin (por su GUID), al iniciar MO2 y al cerrarse el juego</translation>
+    </message>
+    <message>
+      <source>Also read the plugin GUID from the settings file&apos;s header, not only from its name</source>
+      <translation>Lee también el GUID del plugin en la cabecera del archivo de ajustes, no solo en su nombre</translation>
+    </message>
+    <message>
+      <source>Valheim Mod Check</source>
+      <translation>Comprobación de mods de Valheim</translation>
+    </message>
+    <message>
+      <source>Warns when Valheim mods need BepInEx, another plugin (Jotunn...) or the InSlimVML loader and it isn&apos;t there.</source>
+      <translation>Avisa cuando los mods de Valheim necesitan BepInEx, otro plugin (Jotunn…) o el cargador InSlimVML y no está.</translation>
+    </message>
+    <message>
+      <source>These active mods are for the InSlimVML loader (InSlimVML/Mods/*_VML.dll), and its inslimvml.ini isn&apos;t there:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install InSlimVML, or a BepInEx version of these mods.</source>
+      <translation>Estos mods activos son para el cargador InSlimVML (InSlimVML/Mods/*_VML.dll), y su inslimvml.ini no está:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instala InSlimVML o una versión para BepInEx de estos mods.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• y {0} más</translation>
+    </message>
+    <message>
+      <source>BepInEx isn&apos;t installed</source>
+      <translation>BepInEx no está instalado</translation>
+    </message>
+    <message>
+      <source>Plugins need other plugins that aren&apos;t there</source>
+      <translation>Hay plugins que necesitan otros plugins que no están</translation>
+    </message>
+    <message>
+      <source>InSlimVML mods without their loader</source>
+      <translation>Mods de InSlimVML sin su cargador</translation>
+    </message>
+    <message>
+      <source>These active mods are BepInEx plugins, and BepInEx (BepInEx/core and winhttp.dll) isn&apos;t in an active mod or the game folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install BepInExPack_Valheim as a mod from &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; or Nexus Mods; without it the game starts with no mods.</source>
+      <translation>Estos mods activos son plugins de BepInEx, y BepInEx (BepInEx/core y winhttp.dll) no está en ningún mod activo ni en la carpeta del juego:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instala BepInExPack_Valheim como mod desde &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; o Nexus Mods; sin él el juego arranca sin mods.</translation>
+    </message>
+    <message>
+      <source>These plugins are required (their [BepInDependency]), and no active mod has them (required plugin: the mods that need it):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install them or turn them on; BepInEx doesn&apos;t load a plugin whose required plugins are missing.</source>
+      <translation>Estos plugins son obligatorios (su [BepInDependency]) y ningún mod activo los tiene (plugin requerido: los mods que lo necesitan):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instálalos o actívalos; BepInEx no carga un plugin si le faltan los plugins que requiere.</translation>
+    </message>
+  </context>
 </TS>

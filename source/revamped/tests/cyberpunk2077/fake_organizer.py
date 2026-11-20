@@ -55,7 +55,7 @@ class FakeModList:
     def onModStateChanged(self, callback) -> bool:
         return True
 
-    onModInstalled = onModRemoved = onModStateChanged
+    onModInstalled = onModRemoved = onModMoved = onModStateChanged
 
 
 class FakeFeatures:
