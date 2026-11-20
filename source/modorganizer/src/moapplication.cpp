@@ -39,6 +39,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "fluentswitch.h"
 #include "fluentscrollbar.h"
 #include "commandline.h"
+#include "env.h"
 #include "instancemanager.h"
 #include "loglist.h"
 #include "mainwindow.h"
@@ -1973,7 +1974,9 @@ bool MOApplication::dispatch(QObject* receiver, QEvent* event)
         squarePopupSurface(popup);
       }
 #ifdef Q_OS_WIN
-      if (!translucent) {
+      // not under Wine: it accepts the corner request without rounding, and the
+      // outline color below would then be read for nothing on every popup
+      if (!translucent && !env::runningUnderWine()) {
         // tooltips round small, as Windows 11's own; menus and lists as its
         // flyouts
         roundPopupNatively(popup, isToolTip);

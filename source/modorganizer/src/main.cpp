@@ -625,6 +625,17 @@ int run(int argc, char* argv[])
     }
   }
 
+  // MO2 Revamped: Chromium's sandbox relies on Windows security features Wine
+  // doesn't have (Linux, Steam Deck), and QtWebEngine's page process can then
+  // fail to start, leaving MO2's web pages (Nexus, LOOT's report) blank. Qt
+  // runs it without the sandbox when this is set; a value the user set wins
+  if (env::runningUnderWine()) {
+    log::info("running under Wine {}", env::wineVersion());
+    if (!qEnvironmentVariableIsSet("QTWEBENGINE_DISABLE_SANDBOX")) {
+      qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
+    }
+  }
+
   // from MO2 8016e77 (#2283): obsolete Qt::AA_EnableHighDpiScaling removed
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);

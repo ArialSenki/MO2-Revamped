@@ -4,6 +4,7 @@
 // behavior that a stylesheet cannot express.
 
 #include "createinstancedialog.h"
+#include "env.h"
 #include "fluentdashboard.h"
 #include "fluenticons.h"
 #include "fluentmotion.h"
@@ -107,8 +108,13 @@ void repolish(QWidget* w)
 
 bool MainWindow::usesFluentMica()
 {
-  return QOperatingSystemVersion::current() >=
-             QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621);
+  // Wine can report Windows 11 but has no Mica: the see-through window would
+  // show whatever is behind it, or black
+  static const bool mica =
+      QOperatingSystemVersion::current() >=
+          QOperatingSystemVersion(QOperatingSystemVersion::Windows, 10, 0, 22621) &&
+      !env::runningUnderWine();
+  return mica;
 }
 
 void MainWindow::setupFluentLayout()
