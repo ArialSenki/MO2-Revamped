@@ -69,14 +69,22 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace MOBase;
 
+// an option's name as the FOMOD wrote it; the button's text doubles every '&'
+// so Qt doesn't take it for a keyboard shortcut and hide it
+static QString optionName(const QAbstractButton* button)
+{
+  const QVariant name = button->property("optionName");
+  return name.isValid() ? name.toString() : button->text();
+}
+
 bool ControlsAscending(QAbstractButton* LHS, QAbstractButton* RHS)
 {
-  return LHS->text() < RHS->text();
+  return optionName(LHS) < optionName(RHS);
 }
 
 bool ControlsDescending(QAbstractButton* LHS, QAbstractButton* RHS)
 {
-  return LHS->text() > RHS->text();
+  return optionName(LHS) > optionName(RHS);
 }
 
 bool PagesAscending(QGroupBox* LHS, QGroupBox* RHS)
@@ -374,11 +382,6 @@ int FomodInstallerDialog::bomOffset(const QByteArray& buffer)
   return 0;
 }
 
-struct XmlParseError : std::runtime_error
-{
-  XmlParseError(const QString& message) : std::runtime_error(qUtf8Printable(message)) {}
-};
-
 QByteArray skipXmlHeader(QIODevice& file)
 {
   static const unsigned char UTF16LE_BOM[] = {0xFF, 0xFE};
@@ -429,12 +432,13 @@ void FomodInstallerDialog::readXml(QFile& file,
       QStringConverter::Encoding::Latin1};
 
   bool success = false;
-  std::string errorMessage;
+  QString errorMessage;
   try {
     XmlReader reader(&file);
     (this->*callback)(reader);
     success = true;
   } catch (const XmlParseError& e) {
+    errorMessage = QString::fromUtf8(e.what());
     log::warn("The {} in this file is incorrectly encoded ({}). Applying heuristics...",
               file.fileName(), e.what());
   }
@@ -449,6 +453,11 @@ void FomodInstallerDialog::readXml(QFile& file,
     for (auto encoding : encodings) {
       log::debug("Trying encoding {} for {}... ", encoding, file.fileName());
       try {
+        // MO2 Revamped: what the failed reading built goes first, or the
+        // steps would show twice
+        if (callback == &FomodInstallerDialog::parseModuleConfig) {
+          clearModuleConfig();
+        }
         QStringEncoder encoder(encoding);
         XmlReader reader(
             encoder.encode(QString("<?xml version=\"1.0\" encoding=\"%1\" ?>")
@@ -463,12 +472,31 @@ void FomodInstallerDialog::readXml(QFile& file,
       }
     }
     if (!success) {
-      reportError(
-          tr("Failed to parse %1. See console for details.").arg(file.fileName()));
+      // MO2 Revamped: info.xml only names the mod; without a readable
+      // ModuleConfig.xml there is nothing to install (2.5.2 showed an empty
+      // installer after "See console for details")
+      if (callback == &FomodInstallerDialog::parseModuleConfig) {
+        clearModuleConfig();
+        throw Exception(tr("Its ModuleConfig.xml can't be read: %1").arg(errorMessage));
+      }
+      log::warn("{} can't be read, the mod's details are left out: {}", file.fileName(),
+                errorMessage);
     }
 
     file.close();
   }
+}
+
+void FomodInstallerDialog::clearModuleConfig()
+{
+  while (ui->stepsStack->count() > 0) {
+    QWidget* page = ui->stepsStack->widget(0);
+    ui->stepsStack->removeWidget(page);
+    delete page;
+  }
+  m_RequiredFiles.clear();
+  m_ConditionalInstalls.clear();
+  m_FileSystemItemSequence = 0;
 }
 
 void FomodInstallerDialog::readInfoXml()
@@ -890,8 +918,12 @@ void FomodInstallerDialog::highlightControl(QAbstractButton* button)
       ui->screenshotExpand->setVisible(false);
     }
   }
-  ui->optionName->setText(button->text());
+  ui->optionName->setText(optionName(button));
+  // a description's own pictures (<img src="fomod/images/...">) come from the
+  // extracted archive; 2.5.2 showed a broken picture
+  ui->descriptionText->setSearchPaths({QDir::tempPath() + "/" + m_FomodPath});
   ui->descriptionText->setText(button->property("description").toString());
+  RevampedFluent::adaptRichText(ui->descriptionText);
 }
 
 bool FomodInstallerDialog::eventFilter(QObject* object, QEvent* event)
@@ -1240,20 +1272,22 @@ void FomodInstallerDialog::readPluginList(XmlReader& reader, QString const& grou
     switch (groupType) {
     case TYPE_SELECTATLEASTONE:
     case TYPE_SELECTANY: {
-      newControl = new QCheckBox(plugin.m_Name);
+      newControl = new QCheckBox(QString(plugin.m_Name).replace(QLatin1Char('&'), QLatin1String("&&")));
     } break;
     case TYPE_SELECTATMOSTONE:
     case TYPE_SELECTEXACTLYONE: {
-      newControl = new QRadioButton(plugin.m_Name);
+      newControl = new QRadioButton(QString(plugin.m_Name).replace(QLatin1Char('&'), QLatin1String("&&")));
     } break;
     case TYPE_SELECTALL: {
-      newControl = new QCheckBox(plugin.m_Name);
+      newControl = new QCheckBox(QString(plugin.m_Name).replace(QLatin1Char('&'), QLatin1String("&&")));
       newControl->setChecked(true);
       newControl->setEnabled(false);
       newControl->setToolTip(tr("All components in this group are required"));
     } break;
     }
     newControl->setObjectName("choice");
+    newControl->setProperty("optionName", plugin.m_Name);
+    newControl->setAccessibleName(plugin.m_Name);
     newControl->setAttribute(Qt::WA_Hover);
     QVariant type(QVariant::fromValue(plugin.m_PluginTypeInfo));
     newControl->setProperty("plugintypeinfo", type);
@@ -2162,7 +2196,7 @@ bool FomodInstallerDialog::applyPresetGroup(QVBoxLayout* layout,
     QList<int> byName;
     if (!choice.name.isEmpty()) {
       for (int i = 0; i < controls.size(); ++i) {
-        if (controls[i]->text().trimmed() == choice.name) {
+        if (optionName(controls[i]).trimmed() == choice.name) {
           byName.push_back(i);
         }
       }
@@ -2291,7 +2325,7 @@ void FomodInstallerDialog::on_screenshotExpand_clicked()
 
     QString temp = QDir::tempPath() + "/" + m_FomodPath + "/" +
                    QDir::fromNativeSeparators(screenshotFileName);
-    carouselImages.push_back(std::pair<QString, QString>(choice->text(), temp));
+    carouselImages.push_back(std::pair<QString, QString>(optionName(choice), temp));
 
     // Focus the screenshot carousel on the user's selected choice (or the first if
     // there are multiple)

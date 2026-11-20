@@ -1,6 +1,8 @@
 #include "rtfPopup.h"
 
+#include <QDesktopServices>
 #include <QEvent>
+#include <QUrl>
 #include <QRegularExpression>
 #include <QTextBrowser>
 #include <QTextDocument>
@@ -24,14 +26,25 @@ RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f)
   // a text browser scrolls and selects as the text needs; 2.5.2 put a label
   // in a scroll area
   auto* browser = new QTextBrowser(this);
-  browser->setOpenExternalLinks(true);
+  // only web links, opened in the browser: a readme could link to a local file
+  // or a program (2.5.2 opened any link)
+  browser->setOpenLinks(false);
+  connect(browser, SIGNAL(anchorClicked(QUrl)), this, SLOT(openLink(QUrl)));
   browser->setHtml(text);
+  RevampedFluent::adaptRichText(browser);
   browser->setAccessibleName(tr("Readme"));
   body()->addWidget(browser, 1);
 
   auto* close = addButton(tr("Close"), true);
   // a string connect: C++/CLI finds no signal for a function pointer
   connect(close, SIGNAL(clicked()), this, SLOT(accept()));
+}
+
+void RtfPopup::openLink(const QUrl& url)
+{
+  if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https")) {
+    QDesktopServices::openUrl(url);
+  }
 }
 
 void RtfPopup::changeEvent(QEvent* event)

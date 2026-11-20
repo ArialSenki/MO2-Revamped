@@ -15247,6 +15247,10 @@ Prüfe die Optionen des Spiels, bevor du spielst.</translation>
       <source>The collection's choices didn't all match. Check these and finish by hand: %1</source>
       <translation>Nicht alle Auswahlen der Sammlung haben gepasst. Prüfe diese und schließe von Hand ab: %1</translation>
     </message>
+    <message>
+      <source>Its ModuleConfig.xml can&apos;t be read: %1</source>
+      <translation>Die ModuleConfig.xml kann nicht gelesen werden: %1</translation>
+    </message>
   </context>
   <context>
     <name>FomodScreenshotDialog</name>
@@ -21059,6 +21063,29 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
     <message>
       <source>The load order the game will get, with each mod&apos;s problems: missing or late dependencies, the Script Extender, conflicts.</source>
       <translation>Die Ladereihenfolge, die das Spiel bekommt, mit den Problemen jeder Mod: fehlende oder zu spät geladene Abhängigkeiten, der Script Extender, Konflikte.</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomod</name>
+    <message>
+      <source>This mod&apos;s installer can&apos;t be used</source>
+      <translation>Der Installer dieser Mod kann nicht verwendet werden</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t run the FOMOD installer that comes with this mod. You can still choose its files and where they go yourself.
+
+%1</source>
+      <translation>MO2 kann den FOMOD-Installer dieser Mod nicht ausführen. Du kannst ihre Dateien und deren Ziel trotzdem selbst wählen.
+
+%1</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Manuell installieren</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
     </message>
   </context>
 </TS>

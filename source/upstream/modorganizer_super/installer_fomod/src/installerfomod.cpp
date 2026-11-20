@@ -4,12 +4,15 @@
 #include "imodinterface.h"
 #include "imodlist.h"
 
+#include "fluentcontentdialog.h"
+
 #include <iinstallationmanager.h>
 #include <log.h>
 #include <report.h>
 #include <utility.h>
 
 #include <QCoreApplication>
+#include <QPushButton>
 #include <QImageReader>
 #include <QStringList>
 #include <QtPlugin>
@@ -272,8 +275,29 @@ InstallerFomod::install(GuessedValue<QString>& modName,
         }
       }
     } catch (const std::exception& e) {
-      reportError(tr("Installation as fomod failed: %1").arg(e.what()));
-      return IPluginInstaller::RESULT_FAILED;
+      // MO2 Revamped: one notice that says what is wrong and offers the way
+      // that still works; 2.5.2 showed "Installation as fomod failed: bad xml"
+      // and then MO2's own "Installation failed"
+      const QString reason = QString::fromUtf8(e.what());
+      log::error("the FOMOD installer of {} can't be used: {}", QString(modName).toStdString(),
+                 reason.toStdString());
+      if (!preset.isEmpty()) {
+        // a collection installs unattended: it reports the failure itself
+        return IPluginInstaller::RESULT_FAILED;
+      }
+      RevampedFluent::ContentDialog notice(
+          parentWidget(), QStringLiteral("revampedFomodUnreadable"),
+          tr("This mod's installer can't be used"),
+          tr("MO2 can't run the FOMOD installer that comes with this mod. You can "
+             "still choose its files and where they go yourself.\n\n%1")
+              .arg(reason));
+      auto* manual = notice.addButton(tr("Install manually"), true);
+      auto* cancel = notice.addButton(tr("Cancel"));
+      QObject::connect(manual, &QPushButton::clicked, &notice, &QDialog::accept);
+      QObject::connect(cancel, &QPushButton::clicked, &notice, &QDialog::reject);
+      manual->setFocus();
+      return notice.exec() == QDialog::Accepted ? IPluginInstaller::RESULT_MANUALREQUESTED
+                                                : IPluginInstaller::RESULT_CANCELED;
     }
   }
   return IPluginInstaller::RESULT_CANCELED;

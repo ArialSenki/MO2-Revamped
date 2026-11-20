@@ -2,6 +2,8 @@ using namespace cli;
 
 #include "fluentcontentdialog.h"
 
+#include <QUrl>
+
 /**
  * @brief An OMOD's readme or a text its script shows, RTF or plain: the
  * window's title as the heading, the text, and Close. MO2 Revamped draws it as
@@ -13,6 +15,10 @@ class RtfPopup : public RevampedFluent::ContentDialog
 
 public:
   RtfPopup(System::String^ rtfText, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+
+private slots:
+  // only web links open, in the browser
+  void openLink(const QUrl& url);
 
 protected:
   // the callers set the title after building it: the heading follows

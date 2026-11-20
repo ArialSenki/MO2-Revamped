@@ -21,7 +21,7 @@ bool XmlReader::getNextElement(QString const& start)
       return true;
 
     case Invalid:
-      throw Exception("bad xml");
+      throw XmlParseError(QStringLiteral("%1 (line %2)").arg(errorString()).arg(lineNumber()));
       return false;
 
     default:
@@ -54,7 +54,7 @@ void XmlReader::finishedElement()
       return;
 
     case Invalid:
-      throw Exception("bad xml");
+      throw XmlParseError(QStringLiteral("%1 (line %2)").arg(errorString()).arg(lineNumber()));
       return;
 
     case StartElement:
