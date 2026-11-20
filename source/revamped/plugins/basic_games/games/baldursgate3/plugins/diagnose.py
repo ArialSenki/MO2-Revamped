@@ -48,7 +48,7 @@ class BG3LoadOrderCheck(mobase.IPluginDiagnose):
         return tr("Baldur's Gate 3 load order check")
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return tr(

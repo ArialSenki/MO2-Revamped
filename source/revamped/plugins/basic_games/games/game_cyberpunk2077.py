@@ -151,12 +151,14 @@ def _file_hash(path: Path) -> str:
 class Cyberpunk2077Game(BasicGame):
     # the plugin's name is its identity: instances keep its settings under it
     Name = "Cyberpunk 2077 Support Plugin"
-    Author = "ArialSenki; based on the work of 6788 and Zash"
+    Author = "MO2 Revamped"
     Version = "3.0.0"
     Description = (
         "Cyberpunk 2077 support for MO2 Revamped: archive, REDmod, RED4ext, Cyber Engine "
-        "Tweaks, redscript and TweakXL mods, load orders and saves."
+        "Tweaks, redscript and TweakXL mods, load orders and saves. Based on the work of "
+        "6788 and Zash."
     )
+    DescriptionContext = "Cyberpunk2077Game"
 
     GameName = "Cyberpunk 2077"
     GameShortName = "cyberpunk2077"

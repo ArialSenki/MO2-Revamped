@@ -243,7 +243,7 @@ class Mo2RevampedInfo(mobase.IPluginTool):
         return self.displayName()
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return _tr("About, credits, component versions, and clearer help for MO2 Revamped.")

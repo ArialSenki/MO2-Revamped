@@ -2122,7 +2122,12 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
 
 class EldenRingMo2Game(BasicGame):
     Name = "Elden Ring MO2 Support"
-    Author = "ArialSenki"
+    Author = "MO2 Revamped"
+    Description = (
+        "Elden Ring support for MO2 Revamped: mod archive layouts, the native mod "
+        "bridge, per-profile saves and startup options."
+    )
+    DescriptionContext = _TR_CONTEXT
     Version = "0.5.0-alpha.97"
     NativeBridgeVersion = "0.5.0-alpha.65"
 
@@ -7223,6 +7228,10 @@ class EldenRingNightreignMo2Game(EldenRingMo2Game):
     with Seamless Co-op), the game is Game/nightreign.exe."""
 
     Name = "Elden Ring Nightreign MO2 Support"
+    Description = (
+        "Elden Ring Nightreign support for MO2 Revamped: mod archive layouts, the "
+        "native mod bridge, per-profile saves and startup options."
+    )
     GameName = "ELDEN RING NIGHTREIGN"
     GameShortName = "nightreign"
     BridgeLogName = "NightreignMO2Bridge"

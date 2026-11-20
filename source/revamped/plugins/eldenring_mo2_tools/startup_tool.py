@@ -192,7 +192,7 @@ class EldenRingMo2StartupTool(mobase.IPluginTool):
         return self.displayName()
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         self._follow_managed_game()

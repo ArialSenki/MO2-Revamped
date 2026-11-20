@@ -47,12 +47,14 @@ _local_app_data = (os.environ.get("LOCALAPPDATA") or "%USERPROFILE%/AppData/Loca
 class BG3Game(BasicGame, mobase.IPluginFileMapper):
     # the plugin's name is its identity: instances keep its settings under it
     Name = PLUGIN_NAME
-    Author = "ArialSenki; based on the work of daescha"
+    Author = "MO2 Revamped"
     Version = "1.0.0"
     Description = (
         "Baldur's Gate 3 support for MO2 Revamped: pak mods and their load order, "
-        "loose files, the Script Extender, native mods and saves."
+        "loose files, the Script Extender, native mods and saves. Based on the plugin "
+        "by daescha."
     )
+    DescriptionContext = "BaldursGate3Game"
     GameName = GAME_NAME
     GameShortName = "baldursgate3"
     GameNexusName = "baldursgate3"

@@ -2062,6 +2062,14 @@ Reinstala el mod para cambiarlo.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring Nightreign support for MO2 Revamped: mod archive layouts, the native mod bridge, per-profile saves and startup options.</source>
+      <translation>Compatibilidad con Elden Ring Nightreign para MO2 Revamped: organización de los archivos de mods, el puente de mods nativos, partidas por perfil y opciones de inicio.</translation>
+    </message>
+    <message>
+      <source>Elden Ring support for MO2 Revamped: mod archive layouts, the native mod bridge, per-profile saves and startup options.</source>
+      <translation>Compatibilidad con Elden Ring para MO2 Revamped: organización de los archivos de mods, el puente de mods nativos, partidas por perfil y opciones de inicio.</translation>
+    </message>
+    <message>
       <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
       <translation>Elden Ring se ejecutó sin el puente de MO2, así que no se usaron los archivos del juego ni las DLL de tus mods. Comprueba que «Forzar carga de bibliotecas» esté activado para este ejecutable en Ejecutables.</translation>
     </message>
@@ -20765,6 +20773,10 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
   <context>
     <name>Cyberpunk2077Game</name>
     <message>
+      <source>Cyberpunk 2077 support for MO2 Revamped: archive, REDmod, RED4ext, Cyber Engine Tweaks, redscript and TweakXL mods, load orders and saves. Based on the work of 6788 and Zash.</source>
+      <translation>Compatibilidad con Cyberpunk 2077 para MO2 Revamped: mods de archivos, REDmod, RED4ext, Cyber Engine Tweaks, redscript y TweakXL, órdenes de carga y partidas. Basado en el trabajo de 6788 y Zash.</translation>
+    </message>
+    <message>
       <source>Cyberpunk 2077 Framework Check</source>
       <translation>Comprobación de frameworks de Cyberpunk 2077</translation>
     </message>
@@ -20907,6 +20919,10 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
   </context>
   <context>
     <name>BaldursGate3Game</name>
+    <message>
+      <source>Baldur&apos;s Gate 3 support for MO2 Revamped: pak mods and their load order, loose files, the Script Extender, native mods and saves. Based on the plugin by daescha.</source>
+      <translation>Compatibilidad con Baldur&apos;s Gate 3 para MO2 Revamped: mods .pak y su orden de carga, archivos sueltos, el Script Extender, mods nativos y partidas. Basado en el plugin de daescha.</translation>
+    </message>
     <message>
       <source>Baldur&apos;s Gate 3</source>
       <translation>Baldur&apos;s Gate 3</translation>

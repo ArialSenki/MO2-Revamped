@@ -2030,6 +2030,14 @@ Installiere die Mod neu, um das zu ändern.</translation>
   <context>
     <name>EldenRingGame</name>
     <message>
+      <source>Elden Ring Nightreign support for MO2 Revamped: mod archive layouts, the native mod bridge, per-profile saves and startup options.</source>
+      <translation>Elden-Ring-Nightreign-Unterstützung für MO2 Revamped: Aufbau der Mod-Archive, die Brücke für native Mods, Spielstände pro Profil und Startoptionen.</translation>
+    </message>
+    <message>
+      <source>Elden Ring support for MO2 Revamped: mod archive layouts, the native mod bridge, per-profile saves and startup options.</source>
+      <translation>Elden-Ring-Unterstützung für MO2 Revamped: Aufbau der Mod-Archive, die Brücke für native Mods, Spielstände pro Profil und Startoptionen.</translation>
+    </message>
+    <message>
       <source>Elden Ring ran without MO2's bridge, so your mods' game files and DLLs were not used. Check that Force load libraries is on for this executable in Modify Executables.</source>
       <translation>Elden Ring lief ohne die Bridge von MO2, daher wurden die Spieldateien und DLLs deiner Mods nicht verwendet. Prüfe, ob „Bibliotheken erzwingen“ für diese Anwendung unter „Programme“ eingeschaltet ist.</translation>
     </message>
@@ -20504,6 +20512,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
   <context>
     <name>Cyberpunk2077Game</name>
     <message>
+      <source>Cyberpunk 2077 support for MO2 Revamped: archive, REDmod, RED4ext, Cyber Engine Tweaks, redscript and TweakXL mods, load orders and saves. Based on the work of 6788 and Zash.</source>
+      <translation>Cyberpunk-2077-Unterstützung für MO2 Revamped: Archiv-, REDmod-, RED4ext-, Cyber-Engine-Tweaks-, redscript- und TweakXL-Mods, Ladereihenfolgen und Spielstände. Basiert auf der Arbeit von 6788 und Zash.</translation>
+    </message>
+    <message>
       <source>Cyberpunk 2077 Framework Check</source>
       <translation>Cyberpunk 2077 Framework-Prüfung</translation>
     </message>
@@ -20646,6 +20658,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
   </context>
   <context>
     <name>BaldursGate3Game</name>
+    <message>
+      <source>Baldur&apos;s Gate 3 support for MO2 Revamped: pak mods and their load order, loose files, the Script Extender, native mods and saves. Based on the plugin by daescha.</source>
+      <translation>Baldur&apos;s-Gate-3-Unterstützung für MO2 Revamped: Pak-Mods und ihre Ladereihenfolge, lose Dateien, der Script Extender, native Mods und Spielstände. Basiert auf dem Plugin von daescha.</translation>
+    </message>
     <message>
       <source>Baldur&apos;s Gate 3</source>
       <translation>Baldur&apos;s Gate 3</translation>

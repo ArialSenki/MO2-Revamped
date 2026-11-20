@@ -115,6 +115,8 @@ def describe(obj, BasicGame) -> dict:
     attributes = {
         n: portable(jsonable(getattr(obj, n)), folders) for n in exposed if hasattr(obj, n)
     }
+    if isinstance(getattr(obj, "DescriptionContext", None), str):
+        attributes["DescriptionContext"] = obj.DescriptionContext
     answers = {g: portable(jsonable(getattr(obj, g)()), folders) for g in STATIC_GETTERS}
     settings = [
         [s.key, s.description, portable(jsonable(s.default_value), folders)]
