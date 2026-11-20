@@ -9,6 +9,8 @@
 
 #include <QDateTime>
 #include <QDir>
+#include <QHash>
+#include <QSet>
 #include <QString>
 #include <QStringEncoder>
 #include <QStringList>
@@ -183,21 +185,19 @@ QStringList GamebryoGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
   }
 
   // Always use filetime loadorder to get the actual load order
+  // MO2 Revamped: each plugin's file time read once, not twice per comparison
+  // of the sort (a lookup of its mod and a file stat each time)
+  QHash<QString, QDateTime> fileTimes;
+  fileTimes.reserve(plugins.size());
+  const QDir dataDir = organizer()->managedGame()->dataDirectory();
+  for (const QString& plugin : plugins) {
+    MOBase::IModInterface* mod = organizer()->modList()->getMod(pluginList->origin(plugin));
+    const QDir dir = mod != nullptr ? QDir(mod->absolutePath()) : dataDir;
+    fileTimes.insert(plugin, QFileInfo(dir.absoluteFilePath(plugin)).lastModified());
+  }
   std::sort(plugins.begin(), plugins.end(),
             [&](const QString& lhs, const QString& rhs) {
-              MOBase::IModInterface* lhm =
-                  organizer()->modList()->getMod(pluginList->origin(lhs));
-              MOBase::IModInterface* rhm =
-                  organizer()->modList()->getMod(pluginList->origin(rhs));
-              QDir lhd = organizer()->managedGame()->dataDirectory();
-              QDir rhd = organizer()->managedGame()->dataDirectory();
-              if (lhm != nullptr)
-                lhd = lhm->absolutePath();
-              if (rhm != nullptr)
-                rhd = rhm->absolutePath();
-              QString lhp = lhd.absoluteFilePath(lhs);
-              QString rhp = rhd.absoluteFilePath(rhs);
-              return QFileInfo(lhp).lastModified() < QFileInfo(rhp).lastModified();
+              return fileTimes.value(lhs) < fileTimes.value(rhs);
             });
 
   // Determine plugin active state by the plugins.txt file.
@@ -217,8 +217,9 @@ QStringList GamebryoGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
     pluginsTxtExists = false;
   }
 
-  QStringList activePlugins;
-  QStringList inactivePlugins;
+  // MO2 Revamped: a set of the case-folded names, not a list scanned for each
+  // plugin
+  QSet<QString> activePlugins;
   if (pluginsTxtExists) {
     while (!file.atEnd()) {
       QByteArray line = file.readLine();
@@ -230,12 +231,12 @@ QStringList GamebryoGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
       }
       if (pluginName.size() > 0) {
         pluginList->setState(pluginName, IPluginList::STATE_ACTIVE);
-        activePlugins.push_back(pluginName);
+        activePlugins.insert(pluginName.toCaseFolded());
       }
     }
 
     for (const auto& pluginName : plugins) {
-      if (!activePlugins.contains(pluginName, Qt::CaseInsensitive)) {
+      if (!activePlugins.contains(pluginName.toCaseFolded())) {
         pluginList->setState(pluginName, IPluginList::STATE_INACTIVE);
       }
     }
