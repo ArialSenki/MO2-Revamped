@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 import os
 
 from PyQt6.QtCore import QCoreApplication, qCritical, qInfo, qWarning
 
-_logger = logging.getLogger("mo2revamped")
+# logging's levels: logging itself is imported only for a message that needs it
+_INFO, _WARNING, _CRITICAL = 20, 30, 50
 
 
 def _safe(qt_function, level):
@@ -20,14 +20,16 @@ def _safe(qt_function, level):
         if text.isascii():
             qt_function(text)
         else:
-            _logger.log(level, text)
+            import logging
+
+            logging.getLogger("mo2revamped").log(level, text)
 
     return log
 
 
-log_info = _safe(qInfo, logging.INFO)
-log_warning = _safe(qWarning, logging.WARNING)
-log_critical = _safe(qCritical, logging.CRITICAL)
+log_info = _safe(qInfo, _INFO)
+log_warning = _safe(qWarning, _WARNING)
+log_critical = _safe(qCritical, _CRITICAL)
 
 # MO2 installs translations/revamped_<language>.qm; the source text is English
 TR_CONTEXT = "Cyberpunk2077Game"

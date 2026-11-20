@@ -19,8 +19,6 @@ License for more details.
 
 from __future__ import annotations
 
-import filecmp
-import hashlib
 import json
 import os
 import re
@@ -40,6 +38,7 @@ from ..basic_features.basic_save_game_info import (
     format_date,
 )
 from ..basic_game import BasicGame
+from .cyberpunk2077.content import CyberpunkModDataContent
 from .cyberpunk2077.layout import CyberpunkModDataChecker
 from .cyberpunk2077.util import (
     local_app_data_folder,
@@ -141,6 +140,8 @@ class CyberpunkSaveGame(BasicGameSaveGame):
 
 
 def _file_hash(path: Path) -> str:
+    import hashlib
+
     try:
         return hashlib.sha256(path.read_bytes()).hexdigest()
     except OSError:
@@ -208,6 +209,8 @@ class Cyberpunk2077Game(BasicGame):
             )
         )
         self._register_feature(CyberpunkModDataChecker(lambda: root_builder_enabled(self._organizer)))
+        # the Content column and filter: archives, REDmod, RED4ext, CET...
+        self._register_feature(CyberpunkModDataContent())
 
         def ui_ready(window: Any) -> None:
             self._window = window
@@ -419,6 +422,8 @@ class Cyberpunk2077Game(BasicGame):
     def _update_archive_list(self) -> None:
         """archive/pc/mod/modlist.txt in Overwrite (never a mod's or the game's
         own file): the game loads the listed archives first, in that order."""
+        import hashlib
+
         path = self._overwrite() / self._archive_list
         names = self._archive_names() if self._get_setting("enforce_archive_load_order") else []
         if len(names) >= 2:
@@ -487,6 +492,8 @@ class Cyberpunk2077Game(BasicGame):
     def _redmod_fingerprint(self, names: list[str], folders: list[Path]) -> str:
         """What a deploy depends on: the REDmods, their order and files, the
         game and REDmod's own version, and whether its output is there."""
+        import hashlib
+
         digest = hashlib.sha256()
         digest.update("\n".join(names).encode("utf-8"))
         for folder in folders:
@@ -626,6 +633,8 @@ class Cyberpunk2077Game(BasicGame):
     def _is_cache_file_updated(self, file: Path, data_path: Path) -> bool:
         """Whether the game's own copy of a cache file differs from the one the
         VFS serves (and from its backup, which redscript makes)."""
+        import filecmp
+
         game_file = data_path / file
         mapped = self._organizer.findFiles(file.parent.as_posix(), file.name)
         if not mapped:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 
 import mobase
+from basic_games.games.cyberpunk2077.content import Content, CyberpunkModDataContent, contents_of
 from basic_games.games.cyberpunk2077.layout import CyberpunkModDataChecker
 from harness import make_tree, tree_paths
 
@@ -171,6 +172,28 @@ class LayoutTest(unittest.TestCase):
         tree = make_tree(["Mod/archive/pc/mod/a.archive", "Other/x.txt"])
         self.assertIs(self.checker.dataLooksValid(tree), INVALID)
         self.assertIs(self.checker.dataLooksValid(tree.find("Mod")), VALID)
+
+
+class ContentTest(unittest.TestCase):
+    def test_contents(self) -> None:
+        self.assertEqual(
+            contents_of(make_tree([
+                "archive/pc/mod/a.archive", "archive/pc/mod/a.archive.xl", "r6/scripts/M/a.reds",
+                "r6/tweaks/M/a.yaml", "bin/x64/plugins/cyber_engine_tweaks/mods/M/init.lua",
+                "red4ext/plugins/P/P.dll", "mods/R/info.json", "mods/R/customSounds/a.wav",
+                "engine/config/platform/pc/a.ini",
+            ])),
+            {Content.ARCHIVE, Content.ARCHIVEXL, Content.REDSCRIPT, Content.TWEAKS, Content.CET,
+             Content.RED4EXT, Content.REDMOD, Content.AUDIO, Content.CONFIG},
+        )
+        self.assertEqual(
+            contents_of(make_tree(["root/red4ext/RED4ext.dll", "root/bin/x64/winmm.dll", "readme.txt"])),
+            {Content.FRAMEWORK},
+        )
+        self.assertEqual(contents_of(make_tree(["readme.txt", "mods/NotRed/x.txt"])), set())
+        feature = CyberpunkModDataContent()
+        self.assertEqual(len(feature.getAllContents()), len(Content))
+        self.assertEqual(feature.getContentsFor(make_tree(["archive/pc/mod/a.archive"])), [int(Content.ARCHIVE)])
 
 
 if __name__ == "__main__":

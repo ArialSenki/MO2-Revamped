@@ -63,6 +63,27 @@ def contains_suffix(tree: mobase.IFileTree | None, suffixes: tuple[str, ...]) ->
     return found
 
 
+def suffixes_in(tree: mobase.IFileTree | None, suffixes: tuple[str, ...]) -> set[str]:
+    """Which of the suffixes the tree's files have, in one walk that stops
+    once all are found."""
+    found: set[str] = set()
+    if tree is None or not _is_dir(tree):
+        return found
+
+    def visit(_path: str, entry: mobase.FileTreeEntry) -> mobase.IFileTree.WalkReturn:
+        if not _is_dir(entry):
+            name = _name(entry)
+            for suffix in suffixes:
+                if name.endswith(suffix):
+                    found.add(suffix)
+            if len(found) == len(suffixes):
+                return mobase.IFileTree.WalkReturn.STOP
+        return mobase.IFileTree.WalkReturn.CONTINUE
+
+    tree.walk(visit)
+    return found
+
+
 def _only_suffix(tree: mobase.IFileTree, suffixes: tuple[str, ...]) -> bool:
     """Whether the tree has files and all of them, documents apart, have one of
     the suffixes."""
