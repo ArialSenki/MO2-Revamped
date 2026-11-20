@@ -1,4 +1,5 @@
 #include "settingsdialogtheme.h"
+#include "quickui.h"
 #include "categoriesdialog.h"
 #include "circularuihelpers.h"
 #include "colortable.h"
@@ -333,6 +334,17 @@ void ThemeSettingsTab::addDisplayCard()
         "Draws text without Windows' coloured edges, which show as a coloured halo on "
         "OLED screens. It applies when Mod Organizer starts again."));
     box->addWidget(m_greyText);
+
+    // MO2 Revamped: the Qt Quick versions of some windows (QuickUi)
+    m_quickUi = new QCheckBox(
+        QObject::tr("Use the new interface (Qt Quick) where available"), card);
+    m_quickUi->setObjectName(QStringLiteral("quickInterfaceBox"));
+    m_quickUi->setChecked(QuickUi::stored());
+    m_quickUi->setToolTip(QObject::tr(
+        "Shows the windows that have a new version (the Instances window, the "
+        "first-run welcome) in it, drawn with Qt Quick. They work the same; they "
+        "use a little more memory. It applies when Mod Organizer starts again."));
+    box->addWidget(m_quickUi);
   }
 
   // how smoothly things move
@@ -479,6 +491,10 @@ void ThemeSettingsTab::updateDisplayAndToolbar()
   }
   if (m_greyText != nullptr && m_greyText->isChecked() != GlobalSettings::greyscaleText()) {
     GlobalSettings::setGreyscaleText(m_greyText->isChecked());
+    restartNeeded = true;
+  }
+  if (m_quickUi != nullptr && m_quickUi->isChecked() != QuickUi::stored()) {
+    QuickUi::setStored(m_quickUi->isChecked());
     restartNeeded = true;
   }
   if (restartNeeded) {
