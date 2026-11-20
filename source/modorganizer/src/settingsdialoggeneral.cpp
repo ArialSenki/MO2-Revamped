@@ -189,6 +189,10 @@ void GeneralSettingsTab::update()
   }
   if (newLanguage != oldLanguage && ui->languageBox->currentIndex() != shownAtOpen) {
     settings().interface().setLanguage(newLanguage);
+    // MO2 Revamped: remembered globally only when the user picks it, so the
+    // instance dialogs and instances without a language of their own (a
+    // linked Nolvus one) use it; opening another instance doesn't change it
+    GlobalSettings::setLanguage(newLanguage);
     emit settings().languageChanged(newLanguage);
   }
 

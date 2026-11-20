@@ -6132,9 +6132,10 @@ void MainWindow::languageChange(const QString& newLanguage)
 {
   m_ToolMenuDirty = true;
 
-  // Also remembered globally so the instance dialogs shown before an
-  // instance is loaded use the same language.
-  GlobalSettings::setLanguage(newLanguage);
+  // MO2 Revamped: not written globally here. This also runs on every start
+  // with the instance's language, so the last instance opened set the global
+  // language, and instances without their own (a linked Nolvus one) followed
+  // it. The Settings dialog stores the user's choice globally instead.
   InstallLanguageTranslators(newLanguage);
   for (const QString& fileName : m_PluginContainer.pluginFileNames()) {
     installTranslator(QFileInfo(fileName).baseName());
