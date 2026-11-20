@@ -21087,5 +21087,9 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <source>Cancel</source>
       <translation>Abbrechen</translation>
     </message>
+    <message>
+      <source>The FOMOD installer stopped: %1</source>
+      <translation>Der FOMOD-Installer wurde angehalten: %1</translation>
+    </message>
   </context>
 </TS>

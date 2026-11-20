@@ -21348,5 +21348,9 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
+    <message>
+      <source>The FOMOD installer stopped: %1</source>
+      <translation>El instalador FOMOD se detuvo: %1</translation>
+    </message>
   </context>
 </TS>

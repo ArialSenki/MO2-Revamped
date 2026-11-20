@@ -13,6 +13,7 @@ uibase's exports stay as they are.
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 #include <QAccessible>
 #include <QColor>
@@ -77,13 +78,19 @@ inline void adaptRichText(QTextEdit* edit)
   const bool darkPage = edit->palette().color(QPalette::Text).lightness() > 127;
   const QColor page   = darkPage ? QColor(32, 32, 32) : QColor(251, 251, 251);
 
-  QTextCursor cursor(document);
-  cursor.beginEditBlock();
+  // what to change is gathered first and applied after: changing a format
+  // while walking the fragments lets Qt merge them under the iterator
+  struct Change
+  {
+    int position;
+    int length;
+    QTextCharFormat format;
+  };
+  std::vector<Change> changes;
+  std::vector<QTextBlock> blocks;
   for (QTextBlock block = document->begin(); block.isValid(); block = block.next()) {
-    QTextBlockFormat blockFormat = block.blockFormat();
-    if (blockFormat.hasProperty(QTextFormat::BackgroundBrush)) {
-      blockFormat.clearBackground();
-      QTextCursor(block).setBlockFormat(blockFormat);
+    if (block.blockFormat().hasProperty(QTextFormat::BackgroundBrush)) {
+      blocks.push_back(block);
     }
     for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
       const QTextFragment fragment = it.fragment();
@@ -91,7 +98,7 @@ inline void adaptRichText(QTextEdit* edit)
         continue;
       }
       QTextCharFormat format = fragment.charFormat();
-      bool changed = false;
+      bool changed           = false;
       if (format.hasProperty(QTextFormat::BackgroundBrush)) {
         format.clearBackground();
         changed = true;
@@ -102,12 +109,24 @@ inline void adaptRichText(QTextEdit* edit)
         changed = true;
       }
       if (changed) {
-        QTextCursor range(document);
-        range.setPosition(fragment.position());
-        range.setPosition(fragment.position() + fragment.length(), QTextCursor::KeepAnchor);
-        range.setCharFormat(format);
+        changes.push_back({fragment.position(), fragment.length(), format});
       }
     }
+  }
+
+  QTextCursor cursor(document);
+  cursor.beginEditBlock();
+  // only formats change, never the text: the positions stay valid
+  for (const QTextBlock& block : blocks) {
+    QTextBlockFormat blockFormat = block.blockFormat();
+    blockFormat.clearBackground();
+    QTextCursor(block).setBlockFormat(blockFormat);
+  }
+  for (const Change& change : changes) {
+    QTextCursor range(document);
+    range.setPosition(change.position);
+    range.setPosition(change.position + change.length, QTextCursor::KeepAnchor);
+    range.setCharFormat(change.format);
   }
   // tables and the page itself can carry a background too
   for (QTextFrame* frame : document->rootFrame()->childFrames()) {

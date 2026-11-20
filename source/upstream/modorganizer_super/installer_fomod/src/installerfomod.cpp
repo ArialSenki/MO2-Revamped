@@ -225,6 +225,9 @@ InstallerFomod::install(GuessedValue<QString>& modName,
 
   auto installerFiles = buildFomodTree(tree);
   if (manager()->extractFiles(installerFiles).size() == installerFiles.size()) {
+    // the notice below is for an installer that can't be read; what goes
+    // wrong once it runs is reported as before
+    bool read = false;
     try {
       std::shared_ptr<const IFileTree> fomodTree = findFomodDirectory(tree);
 
@@ -236,6 +239,7 @@ InstallerFomod::install(GuessedValue<QString>& modName,
           std::bind(&InstallerFomod::fileState, this, std::placeholders::_1),
           parentWidget());
       dialog.initData(m_MOInfo);
+      read = true;
       if (!dialog.getVersion().isEmpty()) {
         version = dialog.getVersion();
       }
@@ -282,7 +286,11 @@ InstallerFomod::install(GuessedValue<QString>& modName,
       log::error("the FOMOD installer of {} can't be used: {}", QString(modName).toStdString(),
                  reason.toStdString());
       if (!preset.isEmpty()) {
-        // a collection installs unattended: it reports the failure itself
+        // a collection installs unattended: it marks the mod as not installed
+        return IPluginInstaller::RESULT_FAILED;
+      }
+      if (read) {
+        reportError(tr("The FOMOD installer stopped: %1").arg(reason));
         return IPluginInstaller::RESULT_FAILED;
       }
       RevampedFluent::ContentDialog notice(

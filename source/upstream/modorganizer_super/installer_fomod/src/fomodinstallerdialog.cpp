@@ -224,6 +224,8 @@ void FomodInstallerDialog::buildUi()
     }
   });
   ui->descriptionText->setFrameShape(QFrame::NoFrame);
+  // the text lines up with the option's name above it
+  ui->descriptionText->document()->setDocumentMargin(0);
   details->addWidget(ui->descriptionText, 2);
   splitter->addWidget(ui->stepsStack);
   splitter->addWidget(ui->details);

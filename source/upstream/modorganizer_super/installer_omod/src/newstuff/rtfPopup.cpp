@@ -40,8 +40,10 @@ RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f)
   connect(close, SIGNAL(clicked()), this, SLOT(accept()));
 }
 
-void RtfPopup::openLink(const QUrl& url)
+void RtfPopup::openLink(const QUrl& link)
 {
+  // the readme's bare www. addresses become links without a scheme
+  const QUrl url = link.scheme().isEmpty() ? QUrl::fromUserInput(link.toString()) : link;
   if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https")) {
     QDesktopServices::openUrl(url);
   }
