@@ -395,11 +395,18 @@ function Copy-RuntimeTree {
     }
 }
 
+# PyQt6's type stubs: only editors read them, never Python (~2.3 MB)
+function Test-PyQtStub {
+    param([string]$RelativePath)
+    return $RelativePath -match '^plugins\\plugin_python\\libs\\PyQt6\\[^\\]+\.pyi$'
+}
+
 function Copy-UpstreamBinaries {
     # uibase, the plugins, plugin_python, archive, lootcli and helper, built
     # from source\upstream; the runtime's copies of them are never staged
     param([string]$DestinationRoot)
     foreach ($relative in $upstreamFiles) {
+        if (Test-PyQtStub -RelativePath $relative) { continue }
         $destination = Join-Path $DestinationRoot $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath (Join-Path $upstreamStageRoot $relative) -Destination $destination -Force
@@ -463,7 +470,12 @@ function Copy-Mo2Translations {
 # the runtime keeps only the antlr4 runtime and chardet it imports
 $pythonPluginPrefixes = @(
     'plugins\installer_wizard\lib\wizard\',
-    'plugins\installer_wizard\lib\bain_wizard_interpreter-'
+    'plugins\installer_wizard\lib\bain_wizard_interpreter-',
+    # PyQt6 is the one built for Qt 6.12 in the upstream stage. The runtime's
+    # folder still has 2.5.2's PyQt 6.7.1 modules the stage doesn't build
+    # (QtBluetooth, QtMultimedia, QtPdf, QAxContainer...): their Qt libraries
+    # aren't shipped, so Python couldn't import them anyway
+    'plugins\plugin_python\libs\PyQt6\'
 )
 
 function Copy-PythonPluginOverlay {
