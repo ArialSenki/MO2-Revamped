@@ -43,7 +43,10 @@ class StubInit(unittest.TestCase):
 
     def entry(self, probe):
         entry = {"class": "EldenRingMo2Game", "answers": {"gameName": "ELDEN RING", "name": "x"},
-                 "attributes": {}, "version": "1.0.0", "settings": [], "overrides": []}
+                 "attributes": {"Name": "Elden Ring MO2 Support", "Author": "x", "Version": "1.0.0",
+                                "GameName": "ELDEN RING", "GameShortName": "eldenring",
+                                "GameBinary": "Game/eldenring.exe", "GameDataPath": "Game"},
+                 "version": "1.0.0", "settings": [], "overrides": []}
         if probe is not None:
             entry["init_probe"] = probe
         return entry
