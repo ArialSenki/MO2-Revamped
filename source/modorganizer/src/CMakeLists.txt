@@ -177,6 +177,7 @@ mo2_add_filter(NAME src/core GROUPS
 	organizercore
 	game_features
 	plugincontainer
+	gamestub
 	apiuseraccount
 	processrunner
 	qdirfiletree

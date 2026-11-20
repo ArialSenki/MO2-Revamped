@@ -66,3 +66,5 @@ set(MO2_UPSTREAM_PROJECTS
 foreach (p ${MO2_UPSTREAM_PROJECTS})
 	add_subdirectory(${S}/${p} ${p})
 endforeach()
+# MO2 Revamped: the native stand-ins of the C++/CLI installers
+add_subdirectory(${S}/installer_dotnet_shim installer_dotnet_shim)

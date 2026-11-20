@@ -59,9 +59,12 @@ $dotNetFiles = @($listed | Where-Object Kind -eq 'dotnet' | ForEach-Object Path)
 # other built files (PyQt6's .pyi stubs and __init__.py): staged and scanned,
 # with no ABI to compare
 $plainFiles = @($listed | Where-Object Kind -eq 'file' | ForEach-Object Path)
-$shippedFiles = $nativeFiles + $dotNetFiles + $plainFiles
+# MO2 Revamped's native stand-ins for the C++/CLI installers: no 2.5.2 binary
+# to compare with; they must not start .NET and may use only uibase's exports
+$shimFiles = @($listed | Where-Object Kind -eq 'shim' | ForEach-Object Path)
+$shippedFiles = $nativeFiles + $dotNetFiles + $plainFiles + $shimFiles
 if ($nativeFiles.Count -eq 0 -or $dotNetFiles.Count -eq 0 -or
-    @($listed | Where-Object { $_.Kind -notin 'native', 'dotnet', 'file' }).Count) {
+    @($listed | Where-Object { $_.Kind -notin 'native', 'dotnet', 'file', 'shim' }).Count) {
     throw 'source\upstream\shipped-files.txt lists no native or no dotnet files, or an unknown kind.'
 }
 
@@ -152,6 +155,18 @@ function Get-BinaryRecord {
     return $record
 }
 
+# where 2.5.2 had the C++/CLI installers and their .NET libraries, which
+# MO2 Revamped keeps in dotnet\ folders (its stand-ins take the old places)
+function Get-ReferencePath([string]$Relative) {
+    if ($Relative.StartsWith('plugins\installer_fomod_csharp\dotnet\', [StringComparison]::OrdinalIgnoreCase)) {
+        return 'plugins\' + $Relative.Substring('plugins\installer_fomod_csharp\dotnet\'.Length)
+    }
+    if ($Relative.StartsWith('plugins\installer_omod\dotnet\', [StringComparison]::OrdinalIgnoreCase)) {
+        return 'plugins\installer_omod\' + $Relative.Substring('plugins\installer_omod\dotnet\'.Length)
+    }
+    return $Relative
+}
+
 if ($WriteAbiReference) {
     $reference = [IO.Path]::GetFullPath($WriteAbiReference).TrimEnd('\')
     New-Item -ItemType Directory -Force -Path $abiRoot | Out-Null
@@ -160,7 +175,7 @@ if ($WriteAbiReference) {
     if (-not $uibaseExports.Count) { throw "uibase.dll in $reference exports nothing" }
     $records = [ordered]@{}
     foreach ($relative in $nativeFiles) {
-        $path = Join-Path $reference $relative
+        $path = Join-Path $reference (Get-ReferencePath $relative)
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Reference binary was not found: $path" }
         $record = Get-BinaryRecord $path
         if ($record.Contains('exports') -and -not $record.exports.Count) { throw "$relative in $reference exports nothing" }
@@ -168,7 +183,7 @@ if ($WriteAbiReference) {
     }
     # the NuGet libraries come out of the packages unchanged
     $hashes = foreach ($relative in $dotNetFiles) {
-        $path = Join-Path $reference $relative
+        $path = Join-Path $reference (Get-ReferencePath $relative)
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Reference file was not found: $path" }
         '{0}  {1}' -f (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant(), $relative.Replace('\', '/')
     }
@@ -438,6 +453,18 @@ if ($problems.Count -eq 0) {
             $missing = @(Get-UibaseImports $path | Where-Object { -not $exportSet.Contains($_) })
             if ($missing.Count) { $problems.Add("$relative imports $($missing.Count) symbols uibase.dll lacks (first: $($missing[0]))") }
         }
+    }
+}
+
+# the stand-ins: native code only, and nothing uibase doesn't export
+if ($problems.Count -eq 0) {
+    foreach ($relative in $shimFiles) {
+        $path = Join-Path $installBin $relative
+        $deps = @(Get-Dependents $path)
+        if ($deps -icontains 'mscoree.dll') { $problems.Add("$relative starts .NET (it imports mscoree.dll)") }
+        if ($deps -inotcontains 'uibase.dll') { $problems.Add("$relative is not a plugin built against uibase") }
+        $missing = @(Get-UibaseImports $path | Where-Object { -not $exportSet.Contains($_) })
+        if ($missing.Count) { $problems.Add("$relative imports $($missing.Count) symbols uibase.dll lacks (first: $($missing[0]))") }
     }
 }
 

@@ -538,7 +538,7 @@
                                                            "com.tannin.ModOrganizer.PluginInstallerSimple/1.0"
                                                        ]
                                     },
-    "plugins/installer_fomod_csharp.dll":  {
+    "plugins/installer_fomod_csharp/dotnet/installer_fomod_csharp.dll":  {
                                                "dependents":  [
                                                                   "api-ms-win-crt-heap-l1-1-0.dll",
                                                                   "api-ms-win-crt-math-l1-1-0.dll",
@@ -763,7 +763,7 @@
                                                      "com.tannin.ModOrganizer.PluginFileMapper/2.0"
                                                  ]
                               },
-    "plugins/installer_omod/installer_omod.dll":  {
+    "plugins/installer_omod/dotnet/installer_omod.dll":  {
                                                       "dependents":  [
                                                                          "api-ms-win-crt-heap-l1-1-0.dll",
                                                                          "api-ms-win-crt-math-l1-1-0.dll",

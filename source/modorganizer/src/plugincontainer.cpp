@@ -1,4 +1,5 @@
 #include "plugincontainer.h"
+#include "gamestub.h"
 #include "iuserinterface.h"
 #include "organizercore.h"
 #include "organizerproxy.h"
@@ -384,6 +385,10 @@ QStringList PluginContainer::pluginFileNames() const
   QStringList result;
   for (QPluginLoader* loader : m_PluginLoaders) {
     result.append(loader->fileName());
+  }
+  // a stand-in's real plugin may still be loaded: its translations too
+  for (const auto& stub : m_GameStubs) {
+    result.append(filepath(stub.get()));
   }
   std::vector<IPluginProxy*> proxyList = bf::at_key<IPluginProxy>(m_Plugins);
   for (IPluginProxy* proxy : proxyList) {
@@ -977,6 +982,18 @@ void PluginContainer::unloadPlugin(MOBase::IPlugin* plugin, QObject* object)
   // Is this a proxied plugin?
   auto* proxy = pluginProxy(plugin);
 
+  // a game stand-in has no loader of its own: it goes with its entry
+  if (auto* stub = qobject_cast<GameStub*>(object)) {
+    m_Requirements.erase(plugin);
+    auto it = std::find_if(m_GameStubs.begin(), m_GameStubs.end(), [stub](auto& s) {
+      return s.get() == stub;
+    });
+    if (it != m_GameStubs.end()) {
+      m_GameStubs.erase(it);
+    }
+    return;
+  }
+
   if (proxy) {
     proxy->unload(filepath(plugin));
   } else {
@@ -1045,6 +1062,7 @@ void PluginContainer::unloadPlugins()
     t.second.clear();
   });
   m_Requirements.clear();
+  m_GameStubs.clear();
 
   while (!m_PluginLoaders.empty()) {
     QPluginLoader* loader = m_PluginLoaders.back();
@@ -1063,8 +1081,9 @@ void PluginContainer::loadPlugins()
   unloadPlugins();
 
   // MO2 Revamped: the instance's game (set by MOApplication before this);
-  // without one, or in developer mode, every plugin loads
-  m_InstanceGame = GlobalSettings::developerMode()
+  // without one, in developer mode, or in the instance window's own container
+  // (no organizer, before any instance is open), every plugin loads
+  m_InstanceGame = (GlobalSettings::developerMode() || m_Organizer == nullptr)
                        ? QString()
                        : qApp->property("revampedInstanceGame").toString();
   readPluginGames();
@@ -1162,12 +1181,12 @@ void PluginContainer::loadPlugins()
 
     QString filepath = iter.filePath();
     if (QLibrary::isLibrary(filepath)) {
-      if (!skippedForInstanceGame(filepath)) {
+      if (!skippedForInstanceGame(filepath) && !registeredAsGameStub(filepath)) {
         loadQtPlugin(filepath);
       }
     } else if (auto p = isQtPluginFolder(filepath)) {
       // by its DLL, the name it is registered with (installer_omod.dll)
-      if (!skippedForInstanceGame(*p)) {
+      if (!skippedForInstanceGame(*p) && !registeredAsGameStub(*p)) {
         loadQtPlugin(*p);
       }
     }
@@ -1279,6 +1298,32 @@ bool PluginContainer::skippedForInstanceGame(const QString& filepath) const
   return true;
 }
 
+bool PluginContainer::registeredAsGameStub(const QString& filepath)
+{
+  if (m_InstanceGame.isEmpty()) {
+    return false;
+  }
+  const QString name     = QFileInfo(filepath).fileName();
+  const QJsonObject e    = m_PluginGames.value(name).toObject();
+  const QJsonObject game = e.value("game").toObject();
+  const QString gameName = game.value("gameName").toString();
+  if (gameName.isEmpty() || gameName.compare(m_InstanceGame, Qt::CaseInsensitive) == 0) {
+    return false;  // not known as a game plugin, or the instance's own
+  }
+  const QJsonObject stamp = fileStamp(filepath);
+  if (e.value("size") != stamp.value("size") || e.value("modified") != stamp.value("modified")) {
+    return false;  // changed since: load it and describe it again
+  }
+  auto stub = std::make_unique<GameStub>(game, filepath);
+  if (registerPlugin(stub.get(), filepath, nullptr) == nullptr) {
+    return false;
+  }
+  log::debug("game plugin \"{}\" for {} not loaded: its DLL loads on first use", name,
+             gameName);
+  m_GameStubs.push_back(std::move(stub));
+  return true;
+}
+
 void PluginContainer::writePluginGames()
 {
   // what each loaded file serves; a file that wasn't loaded keeps its entry
@@ -1287,6 +1332,7 @@ void PluginContainer::writePluginGames()
   std::set<QString> everyGame;
   std::map<QString, QString> paths;
   std::map<QString, QString> masterFile;
+  std::map<QString, QJsonObject> gameInfo;
 
   for (const auto& [plugin, requirements] : m_Requirements) {
     const QString path = filepath(plugin);
@@ -1294,9 +1340,26 @@ void PluginContainer::writePluginGames()
       continue;
     }
     const QString name = QFileInfo(path).fileName();
-    paths[name]        = path;
     QObject* object    = as_qobject(plugin);
-    if (qobject_cast<IPluginGame*>(object) || qobject_cast<IPluginProxy*>(object)) {
+    if (qobject_cast<GameStub*>(object) != nullptr) {
+      continue;  // not loaded: its entry stays as it is
+    }
+    paths[name] = path;
+    if (auto* game = qobject_cast<IPluginGame*>(object)) {
+      everyGame.insert(name);
+      // one game per DLL (a proxy's games are its own business); only once
+      // its init() ran, which a container without an organizer doesn't do
+      if (!pluginProxy(plugin) && m_Organizer != nullptr) {
+        const QJsonObject description = GameStub::describe(game);
+        if (!description.isEmpty() && !gameInfo.count(name)) {
+          gameInfo[name] = description;
+        } else {
+          gameInfo[name] = QJsonObject();  // two games, or not one MO2 can stand in for
+        }
+      }
+      continue;
+    }
+    if (qobject_cast<IPluginProxy*>(object)) {
       everyGame.insert(name);
       continue;
     }
@@ -1351,7 +1414,10 @@ void PluginContainer::writePluginGames()
       }
     }
     entry["games"] = list;
-    files[name]    = entry;
+    if (gameInfo.count(name) && !gameInfo[name].isEmpty()) {
+      entry["game"] = gameInfo[name];
+    }
+    files[name] = entry;
   }
   if (files == m_PluginGames) {
     return;
