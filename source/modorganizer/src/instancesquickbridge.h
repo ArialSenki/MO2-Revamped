@@ -2,6 +2,7 @@
 #define MO2R_INSTANCESQUICKBRIDGE_H
 
 #include <QList>
+#include <functional>
 #include <QObject>
 #include <QPointer>
 #include <QVariantList>
@@ -53,6 +54,9 @@ public:
   Q_INVOKABLE void press(const QString& button);
   Q_INVOKABLE void nolvusPress(int id);
   Q_INVOKABLE void setFilter(const QString& text);
+  // the search box got or lost the keyboard focus: as the Widgets one, it
+  // stays open while it has it
+  Q_INVOKABLE void setSearchFocus(bool focused);
 
 signals:
   void rowsChanged();
@@ -66,9 +70,14 @@ private:
   int m_currentRow   = -1;
   bool m_pending     = false;
   bool m_searchOpen  = false;
+  bool m_searchFocus = false;
   QList<QPointer<QAbstractButton>> m_nolvusButtons;
 
   void sync();
+  // runs an action once the QML event that asked for it is done: an action can
+  // open a menu or a dialog and rebuild the rows, and with them the item whose
+  // mouse handler is still running
+  void later(std::function<void()> action);
   QAbstractButton* button(const QString& name) const;
 };
 

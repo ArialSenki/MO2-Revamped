@@ -12,6 +12,7 @@
 #include <QFontDatabase>
 #include <QHash>
 #include <QJSEngine>
+#include <QPointer>
 #include <QQmlEngine>
 #include <QQmlError>
 #include <QQuickImageProvider>
@@ -44,7 +45,7 @@ public:
 
   QPixmap requestPixmap(const QString& id, QSize* size, const QSize& requested) override
   {
-    const QIcon icon = icons().value(id);
+    const QIcon icon = icons().value(id.section(QLatin1Char('?'), 0, 0));
     const QSize want = requested.isValid() && !requested.isEmpty() ? requested : QSize(32, 32);
     QPixmap pixmap   = icon.isNull() ? QPixmap() : icon.pixmap(want);
     if (pixmap.isNull()) {
@@ -61,11 +62,18 @@ public:
 // one engine for every view: the QML types and the compiled files load once
 QQmlEngine* sharedEngine()
 {
-  static QQmlEngine* engine = [] {
-    auto* e = new QQmlEngine(qApp);
-    e->addImageProvider(QStringLiteral("mo2"), new IconProvider);
-    return e;
-  }();
+  static QPointer<QQmlEngine> engine;
+  static bool made = false;
+  if (!made) {
+    made   = true;
+    engine = new QQmlEngine;
+    engine->addImageProvider(QStringLiteral("mo2"), new IconProvider);
+    // gone before the application is: the engine first, then what it read
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
+      delete engine.data();
+      icons().clear();
+    });
+  }
   return engine;
 }
 
@@ -144,7 +152,11 @@ QQuickWidget* createView(QWidget* parent, const QString& name, const QVariantMap
   auto* fluent = Fluent::instance();
   fluent->refresh();
 
-  auto* view = new QQuickWidget(sharedEngine(), parent);
+  QQmlEngine* engine = sharedEngine();
+  if (engine == nullptr) {
+    return nullptr;
+  }
+  auto* view = new QQuickWidget(engine, parent);
   view->setObjectName(name + QStringLiteral("QuickView"));
   view->setResizeMode(QQuickWidget::SizeRootObjectToView);
   view->setClearColor(fluent->window());
@@ -166,14 +178,15 @@ QQuickWidget* createView(QWidget* parent, const QString& name, const QVariantMap
   return view;
 }
 
-QString iconUrl(const QIcon& icon)
+QString iconUrl(const QIcon& icon, const QString& key)
 {
   if (icon.isNull()) {
     return {};
   }
-  const QString key = QString::number(icon.cacheKey());
   icons().insert(key, icon);
-  return QStringLiteral("image://mo2/") + key;
+  // the icon's own key in the URL: a new icon is a new image to the view, the
+  // same one stays cached
+  return QStringLiteral("image://mo2/%1?%2").arg(key).arg(icon.cacheKey());
 }
 
 Fluent::Fluent(QObject* parent) : QObject(parent)

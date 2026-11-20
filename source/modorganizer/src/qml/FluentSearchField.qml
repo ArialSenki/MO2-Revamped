@@ -9,6 +9,8 @@ Rectangle {
     property alias text: input.text
     property string placeholder
     signal edited(string text)
+    // the box got or lost the keyboard focus
+    signal focusMoved(bool focused)
 
     function focusAndSelect() {
         input.forceActiveFocus()
@@ -47,15 +49,7 @@ Rectangle {
         clip: true
         selectByMouse: true
         onTextEdited: field.edited(text)
-        Keys.onEscapePressed: event => {
-            if (text !== "") {
-                text = ""
-                field.edited("")
-                event.accepted = true
-            } else {
-                event.accepted = false
-            }
-        }
+        onActiveFocusChanged: field.focusMoved(activeFocus)
         Accessible.role: Accessible.EditableText
         Accessible.name: field.placeholder
 
@@ -75,8 +69,8 @@ Rectangle {
         glyph: "\uE711"
         anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
         activeFocusOnTab: false
+        // the text follows the filter, which this empties
         onClicked: {
-            input.text = ""
             field.edited("")
             input.forceActiveFocus()
         }

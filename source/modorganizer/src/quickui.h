@@ -42,9 +42,10 @@ void setStored(bool on);
 QQuickWidget* createView(QWidget* parent, const QString& name,
                          const QVariantMap& properties);
 
-// a URL a QML Image shows the icon with ("image://mo2/<key>"); the icon is kept
-// for the views as long as MO2 runs (a few dozen small icons)
-QString iconUrl(const QIcon& icon);
+// a URL a QML Image shows the icon with ("image://mo2/<key>?<version>"); the
+// icon is kept under the key (one per thing shown, such as an instance), so a
+// new icon for it replaces the old one
+QString iconUrl(const QIcon& icon, const QString& key);
 
 // the theme and motion of the Widgets interface, for the views: the colors of
 // Light and Dark as the style sheets draw them, through the user theme or OLED

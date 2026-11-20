@@ -99,7 +99,11 @@ void InstancesQuickBridge::sync()
     }
     const QStandardItem* item = d->m_model->item(row);
     const bool header         = item->data(FluentPanels::HeaderRole).toBool();
-    const QString icon        = header ? QString() : QuickUi::iconUrl(item->icon());
+    // by instance: the list makes new icons each time it is filled
+    const QString icon =
+        header ? QString()
+               : QuickUi::iconUrl(item->icon(), QStringLiteral("instance/%1")
+                                                    .arg(item->data(IndexRole).toInt()));
     if (row == selectedRow) {
       current    = rows.size();
       headerIcon = icon;
@@ -162,11 +166,10 @@ void InstancesQuickBridge::sync()
     }
   }
 
+  // the search stays open while it has text or the focus (Ctrl+F opens it)
   const QString filterText = d->m_filter->text();
   if (!filterText.isEmpty()) {
     m_searchOpen = true;
-  } else if (!shown(d->m_filter)) {
-    m_searchOpen = false;
   }
 
   QVariantMap state{
@@ -175,7 +178,7 @@ void InstancesQuickBridge::sync()
       {QStringLiteral("grouping"), d->m_view->text()},
       {QStringLiteral("groupingTip"), d->m_view->toolTip()},
       {QStringLiteral("groupingName"), d->m_view->accessibleName()},
-      {QStringLiteral("filterVisible"), shown(d->m_filter) || m_searchOpen},
+      {QStringLiteral("filterVisible"), shown(d->m_filter) || m_searchOpen || m_searchFocus},
       {QStringLiteral("filterText"), filterText},
       {QStringLiteral("filterPlaceholder"), d->m_filter->placeholderText()},
       {QStringLiteral("hasSelection"), d->m_detailsStack->currentIndex() == 1},
@@ -245,10 +248,17 @@ void InstancesQuickBridge::selectRow(int row)
                                       QItemSelectionModel::ClearAndSelect);
 }
 
+void InstancesQuickBridge::later(std::function<void()> action)
+{
+  QMetaObject::invokeMethod(this, std::move(action), Qt::QueuedConnection);
+}
+
 void InstancesQuickBridge::activateRow(int row)
 {
   selectRow(row);
-  m_dialog->openSelectedInstance();
+  later([this] {
+    m_dialog->openSelectedInstance();
+  });
 }
 
 void InstancesQuickBridge::rowMenu(int row, qreal globalX, qreal globalY)
@@ -257,15 +267,24 @@ void InstancesQuickBridge::rowMenu(int row, qreal globalX, qreal globalY)
   if (row < 0 || row >= d->m_model->rowCount()) {
     return;
   }
-  d->showRowMenu(d->m_model->index(row, 0), QPoint(qRound(globalX), qRound(globalY)));
+  const QPoint at(qRound(globalX), qRound(globalY));
+  later([this, row, at] {
+    auto* d = m_dialog;
+    if (row < d->m_model->rowCount()) {
+      d->showRowMenu(d->m_model->index(row, 0), at);
+    }
+  });
 }
 
 void InstancesQuickBridge::viewMenu(qreal globalX, qreal globalY)
 {
-  if (QMenu* menu = m_dialog->m_view->menu()) {
-    // its entries are made on aboutToShow, as for the Widgets button
-    menu->exec(QPoint(qRound(globalX), qRound(globalY)));
-  }
+  const QPoint at(qRound(globalX), qRound(globalY));
+  later([this, at] {
+    if (QMenu* menu = m_dialog->m_view->menu()) {
+      // its entries are made on aboutToShow, as for the Widgets button
+      menu->exec(at);
+    }
+  });
 }
 
 void InstancesQuickBridge::detailAction(const QString& key)
@@ -282,21 +301,37 @@ void InstancesQuickBridge::detailAction(const QString& key)
                                          : nullptr;
   if (row != nullptr && row->action != nullptr) {
     // click() does nothing on a disabled button, as on screen
-    row->action->click();
+    QPointer<QToolButton> action = row->action;
+    later([action] {
+      if (action) {
+        action->click();
+      }
+    });
   }
 }
 
 void InstancesQuickBridge::press(const QString& name)
 {
-  if (QAbstractButton* b = button(name); b != nullptr && shown(b)) {
-    b->click();
+  QPointer<QAbstractButton> b = button(name);
+  if (b && shown(b)) {
+    later([b] {
+      if (b) {
+        b->click();
+      }
+    });
   }
 }
 
 void InstancesQuickBridge::nolvusPress(int id)
 {
+  // the button shown now: the list can be rebuilt before the click runs
   if (id >= 0 && id < m_nolvusButtons.size() && m_nolvusButtons[id]) {
-    m_nolvusButtons[id]->click();
+    QPointer<QAbstractButton> b = m_nolvusButtons[id];
+    later([b] {
+      if (b) {
+        b->click();
+      }
+    });
   }
 }
 
@@ -309,4 +344,14 @@ void InstancesQuickBridge::setFilter(const QString& text)
   if (text.isEmpty()) {
     scheduleSync();
   }
+}
+
+void InstancesQuickBridge::setSearchFocus(bool focused)
+{
+  m_searchFocus = focused;
+  // closes once it has neither text nor the focus, as a short list's search
+  if (!focused && m_dialog->m_filter->text().isEmpty()) {
+    m_searchOpen = false;
+  }
+  scheduleSync();
 }

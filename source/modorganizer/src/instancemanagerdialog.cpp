@@ -607,6 +607,11 @@ bool InstanceManagerDialog::setupQuick()
   }
   layout->addWidget(view);
   view->setFocus();
+  // tall enough for every details row, as the Widgets version, unless the
+  // screen is shorter: then they scroll
+  const QScreen* screen = QGuiApplication::primaryScreen();
+  const int available   = screen != nullptr ? screen->availableGeometry().height() : 1000;
+  view->setMinimumHeight(qMin(800, available - 80));
   return true;
 }
 

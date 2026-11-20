@@ -8,6 +8,8 @@ Rectangle {
 
     property string text
     property string glyph
+    // after the text, such as the chevron of a button with a menu
+    property string trailingGlyph
     property color glyphColor: primary ? Fluent.onAccent : Fluent.text
     property string tip
     property bool primary: false
@@ -53,7 +55,8 @@ Rectangle {
         color: "transparent"
         border.width: 2
         border.color: Fluent.text
-        visible: button.activeFocus
+        visible: button.activeFocus && (button.focusReason === Qt.TabFocusReason ||
+                                        button.focusReason === Qt.BacktabFocusReason)
     }
 
     Row {
@@ -73,6 +76,13 @@ Rectangle {
             color: !button.enabled ? Fluent.disabledText
                  : button.primary ? Fluent.onAccent
                  : (button.down ? Fluent.muted : Fluent.text)
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        FluentGlyph {
+            visible: button.trailingGlyph !== ""
+            text: button.trailingGlyph
+            size: 10
+            color: button.enabled ? Fluent.muted : Fluent.disabledText
             anchors.verticalCenter: parent.verticalCenter
         }
     }

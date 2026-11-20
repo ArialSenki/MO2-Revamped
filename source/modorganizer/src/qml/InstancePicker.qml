@@ -15,13 +15,17 @@ Rectangle {
 
     Keys.onEscapePressed: bridge.press("close")
 
+    // the selected instance in view, as the Widgets list scrolls to it
+    function showCurrent() {
+        if (bridge.currentRow >= 0 && bridge.currentRow < list.count)
+            list.positionViewAtIndex(bridge.currentRow, ListView.Contain)
+    }
+
     Connections {
         target: root.bridge
         function onSearchRequested() { search.focusAndSelect() }
-        function onStateChanged() {
-            if (root.bridge.currentRow >= 0)
-                list.positionViewAtIndex(root.bridge.currentRow, ListView.Contain)
-        }
+        function onStateChanged() { root.showCurrent() }
+        function onRowsChanged() { Qt.callLater(root.showCurrent) }
     }
 
     // ---- the instances --------------------------------------------------
@@ -67,7 +71,8 @@ Rectangle {
                 flat: true
                 horizontalPadding: 10
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                text: root.s.grouping + "  \uE70D"
+                text: root.s.grouping
+                trailingGlyph: "\uE70D"
                 tip: root.s.groupingTip
                 Accessible.name: root.s.groupingName
                 onClicked: {
@@ -85,6 +90,7 @@ Rectangle {
             placeholder: root.s.filterPlaceholder
             text: root.s.filterText
             onEdited: t => root.bridge.setFilter(t)
+            onFocusMoved: f => root.bridge.setSearchFocus(f)
         }
 
         ListView {
@@ -93,6 +99,7 @@ Rectangle {
             clip: true
             model: root.bridge.rows
             activeFocusOnTab: true
+            focus: true
             keyNavigationEnabled: false
             boundsBehavior: Flickable.StopAtBounds
             Accessible.role: Accessible.List
@@ -153,32 +160,6 @@ Rectangle {
                 }
             }
 
-            // the selection slides from row to row, as in Windows 11 lists
-            Rectangle {
-                id: selection
-                parent: list.contentItem
-                visible: root.bridge.currentRow >= 0
-                x: 2
-                width: list.width - 4
-                height: 56
-                y: list.rowY(root.bridge.currentRow) + 2
-                radius: 4
-                color: Fluent.subtleSelected
-                Behavior on y {
-                    enabled: selection.visible
-                    NumberAnimation { duration: Fluent.normal; easing.type: Easing.OutCubic }
-                }
-                Rectangle {
-                    id: pill
-                    width: 3
-                    radius: 1.5
-                    x: 0
-                    height: 16
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: Fluent.accent
-                }
-            }
-
             delegate: Item {
                 id: row
                 required property var modelData
@@ -197,9 +178,19 @@ Rectangle {
                     visible: !row.modelData.header
                     anchors { fill: parent; margins: 2 }
                     radius: 4
-                    color: Fluent.subtleHover
-                    opacity: area.containsMouse && !row.current ? 1 : 0
+                    color: row.current ? Fluent.subtleSelected : Fluent.subtleHover
+                    opacity: row.current || area.containsMouse ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Fluent.fast } }
+
+                    Rectangle {
+                        x: 0
+                        width: 3
+                        radius: 1.5
+                        height: row.current ? 16 : 0
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Fluent.accent
+                        Behavior on height { NumberAnimation { duration: Fluent.normal; easing.type: Easing.OutCubic } }
+                    }
                 }
 
                 FluentText {
@@ -286,28 +277,29 @@ Rectangle {
             Repeater {
                 model: root.s.nolvus
                 delegate: Loader {
+                    id: entry
                     required property var modelData
                     width: nolvus.width
-                    sourceComponent: modelData.kind === "button" ? nolvusButton : nolvusLabel
+                    sourceComponent: entry.modelData.kind === "button" ? nolvusButton : nolvusLabel
                     Component {
                         id: nolvusLabel
                         FluentText {
                             width: nolvus.width
-                            text: modelData.text
+                            text: entry.modelData.text
                             textFormat: Text.StyledText
                             wrapMode: Text.Wrap
                             elide: Text.ElideNone
-                            FluentToolTipArea { anchors.fill: parent; tip: modelData.tip; acceptedButtons: Qt.NoButton }
+                            FluentToolTipArea { anchors.fill: parent; tip: entry.modelData.tip; acceptedButtons: Qt.NoButton }
                         }
                     }
                     Component {
                         id: nolvusButton
                         FluentButton {
                             width: nolvus.width
-                            text: modelData.text
-                            tip: modelData.tip
-                            enabled: modelData.enabled
-                            onClicked: root.bridge.nolvusPress(modelData.id)
+                            text: entry.modelData.text
+                            tip: entry.modelData.tip
+                            enabled: entry.modelData.enabled
+                            onClicked: root.bridge.nolvusPress(entry.modelData.id)
                         }
                     }
                 }
