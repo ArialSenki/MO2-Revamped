@@ -30,9 +30,9 @@ bool runningUnderWine()
       return true;
     }
     // some Wine builds can hide their exports from programs; the prefix still
-    // has Wine's own registry key
+    // has Wine's own machine key (drives, settings), which Windows never has
     HKEY key = nullptr;
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Wine", 0, KEY_READ, &key) ==
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Wine", 0, KEY_READ, &key) ==
         ERROR_SUCCESS) {
       RegCloseKey(key);
       return true;
