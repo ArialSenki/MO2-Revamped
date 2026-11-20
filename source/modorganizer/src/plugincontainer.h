@@ -492,6 +492,11 @@ private:
   void writePluginGames();
   bool skippedForInstanceGame(const QString& filepath) const;
 
+  // MO2 Revamped: the game plugins of other games than the instance's, made
+  // from plugin-games.json without loading their DLLs (gamestub.h)
+  std::vector<std::unique_ptr<class GameStub>> m_GameStubs;
+  bool registeredAsGameStub(const QString& filepath);
+
   std::map<QString, MOBase::IPluginGame*> m_SupportedGames;
   QStringList m_FailedPlugins;
   std::vector<QPluginLoader*> m_PluginLoaders;
