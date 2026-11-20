@@ -4,12 +4,15 @@
 #include "imodinterface.h"
 #include "imodlist.h"
 
+#include "fluentcontentdialog.h"
+
 #include <iinstallationmanager.h>
 #include <log.h>
 #include <report.h>
 #include <utility.h>
 
 #include <QCoreApplication>
+#include <QPushButton>
 #include <QImageReader>
 #include <QStringList>
 #include <QtPlugin>
@@ -63,12 +66,12 @@ QList<PluginSetting> InstallerFomod::settings() const
 {
   QList<PluginSetting> result;
   result.push_back(
-      PluginSetting("prefer", "prefer this over the NCC based plugin", QVariant(true)));
+      PluginSetting("prefer", QCoreApplication::translate("RevampedInstallerSettings", "Try this installer before the C# script installer when an archive has both a ModuleConfig.xml and a script"), QVariant(true)));
   result.push_back(PluginSetting("use_any_file",
-                                 "allow dependencies on any file, not just esp/esm",
+                                 QCoreApplication::translate("RevampedInstallerSettings", "Let a FOMOD's conditions check any file in the game's data, not only plugins (.esp, .esm, .esl)"),
                                  QVariant(false)));
   result.push_back(PluginSetting("see_disabled_mods",
-                                 "treat disabled mods as inactive rather than missing",
+                                 QCoreApplication::translate("RevampedInstallerSettings", "A file in a disabled mod counts as inactive in a FOMOD's conditions, not as missing"),
                                  QVariant(false)));
   return result;
 }
@@ -222,6 +225,9 @@ InstallerFomod::install(GuessedValue<QString>& modName,
 
   auto installerFiles = buildFomodTree(tree);
   if (manager()->extractFiles(installerFiles).size() == installerFiles.size()) {
+    // the notice below is for an installer that can't be read; what goes
+    // wrong once it runs is reported as before
+    bool read = false;
     try {
       std::shared_ptr<const IFileTree> fomodTree = findFomodDirectory(tree);
 
@@ -233,6 +239,7 @@ InstallerFomod::install(GuessedValue<QString>& modName,
           std::bind(&InstallerFomod::fileState, this, std::placeholders::_1),
           parentWidget());
       dialog.initData(m_MOInfo);
+      read = true;
       if (!dialog.getVersion().isEmpty()) {
         version = dialog.getVersion();
       }
@@ -272,8 +279,33 @@ InstallerFomod::install(GuessedValue<QString>& modName,
         }
       }
     } catch (const std::exception& e) {
-      reportError(tr("Installation as fomod failed: %1").arg(e.what()));
-      return IPluginInstaller::RESULT_FAILED;
+      // MO2 Revamped: one notice that says what is wrong and offers the way
+      // that still works; 2.5.2 showed "Installation as fomod failed: bad xml"
+      // and then MO2's own "Installation failed"
+      const QString reason = QString::fromUtf8(e.what());
+      log::error("the FOMOD installer of {} can't be used: {}", QString(modName).toStdString(),
+                 reason.toStdString());
+      if (!preset.isEmpty()) {
+        // a collection installs unattended: it marks the mod as not installed
+        return IPluginInstaller::RESULT_FAILED;
+      }
+      if (read) {
+        reportError(tr("The FOMOD installer stopped: %1").arg(reason));
+        return IPluginInstaller::RESULT_FAILED;
+      }
+      RevampedFluent::ContentDialog notice(
+          parentWidget(), QStringLiteral("revampedFomodUnreadable"),
+          tr("This mod's installer can't be used"),
+          tr("MO2 can't run the FOMOD installer that comes with this mod. You can "
+             "still choose its files and where they go yourself.\n\n%1")
+              .arg(reason));
+      auto* manual = notice.addButton(tr("Install manually"), true);
+      auto* cancel = notice.addButton(tr("Cancel"));
+      QObject::connect(manual, &QPushButton::clicked, &notice, &QDialog::accept);
+      QObject::connect(cancel, &QPushButton::clicked, &notice, &QDialog::reject);
+      manual->setFocus();
+      return notice.exec() == QDialog::Accepted ? IPluginInstaller::RESULT_MANUALREQUESTED
+                                                : IPluginInstaller::RESULT_CANCELED;
     }
   }
   return IPluginInstaller::RESULT_CANCELED;

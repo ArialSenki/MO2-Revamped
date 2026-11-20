@@ -15552,6 +15552,10 @@ Controlla le opzioni del gioco prima di giocare.</translation>
       <source>The collection's choices didn't all match. Check these and finish by hand: %1</source>
       <translation>Non tutte le scelte della collezione corrispondevano. Controlla queste e completa a mano: %1</translation>
     </message>
+    <message>
+      <source>Its ModuleConfig.xml can&apos;t be read: %1</source>
+      <translation>Impossibile leggere il suo ModuleConfig.xml: %1</translation>
+    </message>
   </context>
   <context>
     <name>FomodScreenshotDialog</name>
@@ -21941,6 +21945,182 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
     <message>
       <source>These plugins are required (their [BepInDependency]), and no active mod has them (required plugin: the mods that need it):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install them or turn them on; BepInEx doesn&apos;t load a plugin whose required plugins are missing.</source>
       <translation>Questi plugin sono richiesti (il loro [BepInDependency]) e nessuna mod attiva li contiene (plugin richiesto: le mod che lo richiedono):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installali o attivali; BepInEx non carica un plugin a cui mancano i plugin richiesti.</translation>
+    </message>
+  </context>
+  <context>
+    <name>InstallerFomod</name>
+    <message>
+      <source>This mod&apos;s installer can&apos;t be used</source>
+      <translation>Impossibile usare il programma di installazione di questa mod</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t run the FOMOD installer that comes with this mod. You can still choose its files and where they go yourself.
+
+%1</source>
+      <translation>MO2 non può eseguire il programma di installazione FOMOD di questa mod. Puoi comunque scegliere tu i suoi file e dove vanno.
+
+%1</translation>
+    </message>
+    <message>
+      <source>Install manually</source>
+      <translation>Installa manualmente</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>The FOMOD installer stopped: %1</source>
+      <translation>Il programma di installazione FOMOD si è fermato: %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedCSharpScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Messaggio del programma di installazione</translation>
+    </message>
+    <message>
+      <source>Details</source>
+      <translation>Dettagli</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Interrompi</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Riprova</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignora</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sì</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>No</translation>
+    </message>
+    <message>
+      <source>Choose any of these</source>
+      <translation>Scegli quelle che vuoi</translation>
+    </message>
+    <message>
+      <source>Choose one</source>
+      <translation>Scegline una</translation>
+    </message>
+    <message>
+      <source>Check the options you want.</source>
+      <translation>Spunta le opzioni che vuoi.</translation>
+    </message>
+    <message>
+      <source>Select the option you want.</source>
+      <translation>Seleziona l&apos;opzione che vuoi.</translation>
+    </message>
+    <message>
+      <source>Picture of the option</source>
+      <translation>Immagine dell&apos;opzione</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Descrizione dell&apos;opzione</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedOmodScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Messaggio del programma di installazione</translation>
+    </message>
+    <message>
+      <source>The installer asks for a text</source>
+      <translation>Il programma di installazione chiede un testo</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sì</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>No</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Riprova</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignora</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Interrompi</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedInstallerSettings</name>
+    <message>
+      <source>Try this installer before the C# script installer when an archive has both a ModuleConfig.xml and a script</source>
+      <translation>Provare questo programma di installazione prima di quello degli script C# quando un archivio ha sia un ModuleConfig.xml sia uno script</translation>
+    </message>
+    <message>
+      <source>Let a FOMOD&apos;s conditions check any file in the game&apos;s data, not only plugins (.esp, .esm, .esl)</source>
+      <translation>Le condizioni di un FOMOD possono controllare qualsiasi file dei dati del gioco, non solo i plugin (.esp, .esm, .esl)</translation>
+    </message>
+    <message>
+      <source>A file in a disabled mod counts as inactive in a FOMOD&apos;s conditions, not as missing</source>
+      <translation>Un file di una mod disattivata conta come inattivo nelle condizioni di un FOMOD, non come mancante</translation>
+    </message>
+    <message>
+      <source>Use this installer</source>
+      <translation>Usa questo programma di installazione</translation>
+    </message>
+    <message>
+      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml</source>
+      <translation>Provare questo programma di installazione prima di quello FOMOD XML quando un archivio ha sia uno script sia un ModuleConfig.xml</translation>
+    </message>
+    <message>
+      <source>When a mod is reinstalled from an archive that holds several, choose the same one again without asking</source>
+      <translation>Quando si reinstalla una mod da un archivio che ne contiene diverse, scegliere di nuovo la stessa senza chiedere</translation>
+    </message>
+    <message>
+      <source>Install mods that only hold plugins and their files without showing the Quick Install window</source>
+      <translation>Installare senza mostrare la finestra di installazione rapida le mod che contengono solo plugin e i loro file</translation>
+    </message>
+    <message>
+      <source>Only offer to extract archives for mods made for another edition of the game (an alternate source)</source>
+      <translation>Proporre di estrarre gli archivi solo per le mod fatte per un&apos;altra edizione del gioco (fonte alternativa)</translation>
+    </message>
+    <message>
+      <source>When an archive also has a FOMOD installer, use that one</source>
+      <translation>Se un archivio ha anche un programma di installazione FOMOD, usare quello</translation>
+    </message>
+    <message>
+      <source>When an archive also has an OMOD installer, use that one</source>
+      <translation>Se un archivio ha anche un programma di installazione OMOD, usare quello</translation>
+    </message>
+    <message>
+      <source>The order in which MO2 tries this installer: a higher number goes first</source>
+      <translation>L&apos;ordine in cui MO2 prova questo programma di installazione: un numero più alto viene prima</translation>
     </message>
   </context>
 </TS>

@@ -6107,6 +6107,8 @@ QDialog#FomodInstallerDialog QGroupBox#fomodGroup {
 QDialog#FomodInstallerDialog QTextBrowser#fomodDescription {
     background-color: transparent;
     border: none;
+    /* the text lines up with the option's name above it */
+    padding: 0px;
 }
 /* FOMOD pictures: a dark overlay in both themes */
 QDialog#FomodScreenshotDialog QPushButton#fomodViewerButton {

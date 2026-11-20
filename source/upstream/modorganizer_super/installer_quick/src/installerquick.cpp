@@ -50,7 +50,7 @@ VersionInfo InstallerQuick::version() const
 QList<PluginSetting> InstallerQuick::settings() const
 {
   return {PluginSetting("silent",
-                        "simple plugins will be installed without any user interaction",
+                        QCoreApplication::translate("RevampedInstallerSettings", "Install mods that only hold plugins and their files without showing the Quick Install window"),
                         QVariant(false))};
 }
 

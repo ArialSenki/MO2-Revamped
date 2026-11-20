@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "installerbundle.h"
+#include <QCoreApplication>
 #include "iinstallationmanager.h"
 
 #include <QtPlugin>
@@ -62,8 +63,7 @@ VersionInfo InstallerBundle::version() const
 QList<PluginSetting> InstallerBundle::settings() const
 {
   return {PluginSetting("auto_reinstall",
-                        "when reinstalling from an archive containing multiple mods, "
-                        "automatically select the previously installed",
+                        QCoreApplication::translate("RevampedInstallerSettings", "When a mod is reinstalled from an archive that holds several, choose the same one again without asking"),
                         true)};
 }
 

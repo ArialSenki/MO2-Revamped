@@ -409,6 +409,8 @@ private:
 
   void readInfoXml();
   void readModuleConfigXml();
+  // drops what a failed reading of ModuleConfig.xml built
+  void clearModuleConfig();
 
   void parseInfo(XmlReader& data);
   void parseModuleConfig(XmlReader& data);

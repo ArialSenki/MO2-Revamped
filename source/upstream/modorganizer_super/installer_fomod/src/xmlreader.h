@@ -3,6 +3,15 @@
 
 #include <QXmlStreamReader>
 
+#include <stdexcept>
+
+// the XML can't be read as it is (a wrong encoding, a broken tag): the
+// dialog tries the other encodings before giving up
+struct XmlParseError : std::runtime_error
+{
+  XmlParseError(const QString& message) : std::runtime_error(qUtf8Printable(message)) {}
+};
+
 class XmlReader : public QXmlStreamReader
 {
 public:

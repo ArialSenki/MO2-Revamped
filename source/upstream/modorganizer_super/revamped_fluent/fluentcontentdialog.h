@@ -11,7 +11,12 @@ uibase's exports stay as they are.
 #ifndef REVAMPED_FLUENTCONTENTDIALOG_H
 #define REVAMPED_FLUENTCONTENTDIALOG_H
 
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 #include <QAccessible>
+#include <QColor>
 #include <QCoreApplication>
 #include <QDialog>
 #include <QEvent>
@@ -20,6 +25,11 @@ uibase's exports stay as they are.
 #include <QKeyEvent>
 #include <QLabel>
 #include <QPushButton>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <QTextEdit>
+#include <QTextFrame>
 #include <QVBoxLayout>
 
 namespace RevampedFluent
@@ -35,6 +45,104 @@ inline void setDescription(QWidget* widget, const QString& text)
   widget->setAccessibleDescription(text);
   QAccessibleEvent event(widget, QAccessible::DescriptionChanged);
   QAccessible::updateAccessibility(&event);
+}
+
+inline double luminanceChannel(double v)
+{
+  return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4);
+}
+
+inline double relativeLuminance(const QColor& c)
+{
+  return 0.2126 * luminanceChannel(c.redF()) + 0.7152 * luminanceChannel(c.greenF()) +
+         0.0722 * luminanceChannel(c.blueF());
+}
+
+// WCAG's contrast ratio between two colours (1 to 21)
+inline double contrastRatio(const QColor& a, const QColor& b)
+{
+  const double la = relativeLuminance(a), lb = relativeLuminance(b);
+  return (std::max(la, lb) + 0.05) / (std::min(la, lb) + 0.05);
+}
+
+// A mod's own rich text (a FOMOD option's description, an OMOD readme) keeps
+// its bold, lists, tables and links, but not colours written for a white
+// page: backgrounds go, and a text colour the theme's background makes hard
+// to read gives way to the theme's text colour. Black text on Dark or OLED
+// Black was unreadable.
+inline void adaptRichText(QTextEdit* edit)
+{
+  QTextDocument* document = edit->document();
+  // the themes draw the page with style sheets, which the palette doesn't
+  // show; the theme's text colour says whether the page is dark or light
+  const bool darkPage = edit->palette().color(QPalette::Text).lightness() > 127;
+  const QColor page   = darkPage ? QColor(32, 32, 32) : QColor(251, 251, 251);
+
+  // what to change is gathered first and applied after: changing a format
+  // while walking the fragments lets Qt merge them under the iterator
+  struct Change
+  {
+    int position;
+    int length;
+    QTextCharFormat format;
+  };
+  std::vector<Change> changes;
+  std::vector<QTextBlock> blocks;
+  for (QTextBlock block = document->begin(); block.isValid(); block = block.next()) {
+    if (block.blockFormat().hasProperty(QTextFormat::BackgroundBrush)) {
+      blocks.push_back(block);
+    }
+    for (QTextBlock::iterator it = block.begin(); !it.atEnd(); ++it) {
+      const QTextFragment fragment = it.fragment();
+      if (!fragment.isValid()) {
+        continue;
+      }
+      QTextCharFormat format = fragment.charFormat();
+      bool changed           = false;
+      if (format.hasProperty(QTextFormat::BackgroundBrush)) {
+        format.clearBackground();
+        changed = true;
+      }
+      if (format.hasProperty(QTextFormat::ForegroundBrush) &&
+          contrastRatio(format.foreground().color(), page) < 4.5) {
+        format.clearForeground();
+        changed = true;
+      }
+      if (changed) {
+        changes.push_back({fragment.position(), fragment.length(), format});
+      }
+    }
+  }
+
+  QTextCursor cursor(document);
+  cursor.beginEditBlock();
+  // only formats change, never the text: the positions stay valid
+  for (const QTextBlock& block : blocks) {
+    QTextBlockFormat blockFormat = block.blockFormat();
+    blockFormat.clearBackground();
+    QTextCursor(block).setBlockFormat(blockFormat);
+  }
+  for (const Change& change : changes) {
+    QTextCursor range(document);
+    range.setPosition(change.position);
+    range.setPosition(change.position + change.length, QTextCursor::KeepAnchor);
+    range.setCharFormat(change.format);
+  }
+  // tables and the page itself can carry a background too
+  for (QTextFrame* frame : document->rootFrame()->childFrames()) {
+    QTextFrameFormat frameFormat = frame->frameFormat();
+    if (frameFormat.hasProperty(QTextFormat::BackgroundBrush)) {
+      frameFormat.clearBackground();
+      frame->setFrameFormat(frameFormat);
+    }
+  }
+  QTextFrameFormat rootFormat = document->rootFrame()->frameFormat();
+  if (rootFormat.hasProperty(QTextFormat::BackgroundBrush)) {
+    rootFormat.clearBackground();
+    document->rootFrame()->setFrameFormat(rootFormat);
+  }
+  cursor.endEditBlock();
+  document->setModified(false);
 }
 
 // Enter on a focused button presses that button, as in Windows, not the

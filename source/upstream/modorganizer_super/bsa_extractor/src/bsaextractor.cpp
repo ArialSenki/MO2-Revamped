@@ -80,7 +80,7 @@ VersionInfo BsaExtractor::version() const
 QList<PluginSetting> BsaExtractor::settings() const
 {
   return {
-    PluginSetting("only_alternate_source", "only trigger bsa extraction for alternate game sources", true)
+    PluginSetting("only_alternate_source", QCoreApplication::translate("RevampedInstallerSettings", "Only offer to extract archives for mods made for another edition of the game (an alternate source)"), true)
   };
 }
 

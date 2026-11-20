@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QImageReader>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QScreen>
 
@@ -54,7 +55,26 @@ void ScriptFunctionsHelper::DisplayText(QWidget* parentWidget, const QString& pa
 
 void ScriptFunctionsHelper::InputStringSlot(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText)
 {
-  textOut = QInputDialog::getText(parentWidget, title, title, QLineEdit::Normal, initialText);
+  // MO2 Revamped: a content dialog with the script's question as its title;
+  // 2.5.2 showed QInputDialog with the question twice. Cancel gives back an
+  // empty text, as before.
+  RevampedFluent::ContentDialog dialog(
+      parentWidget, QStringLiteral("omodScriptInput"),
+      title.trimmed().isEmpty()
+          ? QCoreApplication::translate("RevampedOmodScript", "The installer asks for a text")
+          : title);
+  dialog.setMinimumWidth(460);
+  auto* edit = new QLineEdit(initialText, &dialog);
+  edit->setAccessibleName(title);
+  dialog.body()->addWidget(edit);
+  auto* ok     = dialog.addButton(QCoreApplication::translate("RevampedOmodScript", "OK"), true);
+  auto* cancel = dialog.addButton(QCoreApplication::translate("RevampedOmodScript", "Cancel"));
+  // string connects: C++/CLI finds no signal for a function pointer
+  connect(ok, SIGNAL(clicked()), &dialog, SLOT(accept()));
+  connect(cancel, SIGNAL(clicked()), &dialog, SLOT(reject()));
+  edit->selectAll();
+  edit->setFocus();
+  textOut = dialog.exec() == QDialog::Accepted ? edit->text() : QString();
 }
 
 void ScriptFunctionsHelper::DisplayImageSlot(QWidget* parentWidget, const QString& path, const QString& title)
