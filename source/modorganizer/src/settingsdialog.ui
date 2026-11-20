@@ -269,7 +269,7 @@
               <item>
                <widget class="QCheckBox" name="changeGameConfirmation">
                 <property name="text">
-                 <string>Show confirmation when changing instance</string>
+                 <string>Ask before switching instances</string>
                 </property>
                </widget>
               </item>

@@ -12695,6 +12695,10 @@ p, li { white-space: pre-wrap; }
   <context>
     <name>SettingsDialog</name>
     <message>
+      <source>Ask before switching instances</source>
+      <translation>Chiedi prima di cambiare istanza</translation>
+    </message>
+    <message>
       <source>Windows and dialogs</source>
       <translation>Finestre e finestre di dialogo</translation>
     </message>
