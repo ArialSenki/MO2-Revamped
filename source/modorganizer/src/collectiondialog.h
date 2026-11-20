@@ -98,6 +98,8 @@ private:
   QPushButton* m_update = nullptr;
   QPushButton* m_retryFailed = nullptr;
   bool m_built = false;
+  // the first file to get by hand was shown once the rest was done
+  bool m_pointedAtHand = false;
   bool m_inCloseEvent = false;  // reject() from QDialog::closeEvent()
   QTimer m_changeTimer;
   bool m_rowsLocked = false;
@@ -172,6 +174,8 @@ private:
   void updateButtons();
   void updateNeeds();
   void updateSteps();
+  // a file from another site or another game's page: only the user gets it
+  bool needsHand(const CollectionSession::Entry& e) const;
   void updateNotes();
   void requestInfo();
   void onInfo(QVariant userData, QVariant result, int id);
