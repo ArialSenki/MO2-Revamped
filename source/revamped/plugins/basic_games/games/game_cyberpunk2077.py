@@ -226,49 +226,65 @@ class Cyberpunk2077Game(BasicGame):
         return [
             mobase.PluginSetting(
                 "skipStartScreen",
-                'Skips the "Breaching..." start screen on game launch'
-                " (can also skip loading of GOG rewards)",
+                tr(
+                    'Skips the "Breaching..." start screen on game launch'
+                    " (can also skip loading of GOG rewards)"
+                ),
                 False,
             ),
             mobase.PluginSetting(
                 "enforce_archive_load_order",
-                "Write the mod list's order of .archive files to"
-                " <code>archive/pc/mod/modlist.txt</code> (in Overwrite) on each launch;"
-                " turning it off removes the file this plugin wrote",
+                tr(
+                    "Write the mod list's order of .archive files to"
+                    " <code>archive/pc/mod/modlist.txt</code> (in Overwrite) on each launch;"
+                    " turning it off removes the file this plugin wrote"
+                ),
                 False,
             ),
             mobase.PluginSetting(
                 "reverse_archive_load_order",
-                "In <code>modlist.txt</code>, put the mod with the highest priority first."
-                " The game lets the first listed archive win, so this makes MO2's"
-                " priority win as it does for loose files",
+                tr(
+                    "In <code>modlist.txt</code>, put the mod with the highest priority first."
+                    " The game lets the first listed archive win, so this makes MO2's"
+                    " priority win as it does for loose files"
+                ),
                 False,
             ),
             mobase.PluginSetting(
                 "enforce_redmod_load_order",
-                "Enforce the current load order on REDmod deployment",
+                tr(
+                    "Enforce the current load order on REDmod deployment"
+                ),
                 True,
             ),
             mobase.PluginSetting(
                 "reverse_redmod_load_order",
-                "Reverse MO2's order on REDmod deployment"
-                " (the first deployed REDmod wins: highest priority in MO2 first)",
+                tr(
+                    "Reverse MO2's order on REDmod deployment"
+                    " (the first deployed REDmod wins: highest priority in MO2 first)"
+                ),
                 False,
             ),
             mobase.PluginSetting(
                 "auto_deploy_redmod",
-                "Deploy REDmods before the game starts when they changed",
+                tr(
+                    "Deploy REDmods before the game starts when they changed"
+                ),
                 True,
             ),
             mobase.PluginSetting(
                 "clear_cache_after_game_update",
-                'Clears "overwrite/r6/cache" when the game\'s own cache files changed'
-                " (after an update)",
+                tr(
+                    'Clears "overwrite/r6/cache" when the game\'s own cache files changed'
+                    " (after an update)"
+                ),
                 True,
             ),
             mobase.PluginSetting(
                 "configure_RootBuilder",
-                "Configures Root Builder for Cyberpunk once, if it is installed and enabled",
+                tr(
+                    "Configures Root Builder for Cyberpunk once, if it is installed and enabled"
+                ),
                 True,
             ),
         ]

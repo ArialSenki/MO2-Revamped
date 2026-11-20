@@ -20864,6 +20864,38 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
       <source>game folder</source>
       <translation>carpeta del juego</translation>
     </message>
+    <message>
+      <source>Skips the &quot;Breaching...&quot; start screen on game launch (can also skip loading of GOG rewards)</source>
+      <translation>Omite la pantalla de inicio «Breaching...» al lanzar el juego (también puede saltarse la carga de las recompensas de GOG)</translation>
+    </message>
+    <message>
+      <source>Write the mod list&apos;s order of .archive files to &lt;code&gt;archive/pc/mod/modlist.txt&lt;/code&gt; (in Overwrite) on each launch; turning it off removes the file this plugin wrote</source>
+      <translation>Escribe el orden de los archivos .archive de la lista de mods en &lt;code&gt;archive/pc/mod/modlist.txt&lt;/code&gt; (en Overwrite) en cada lanzamiento; al desactivarlo se borra el archivo que escribió este plugin</translation>
+    </message>
+    <message>
+      <source>In &lt;code&gt;modlist.txt&lt;/code&gt;, put the mod with the highest priority first. The game lets the first listed archive win, so this makes MO2&apos;s priority win as it does for loose files</source>
+      <translation>En &lt;code&gt;modlist.txt&lt;/code&gt;, pone primero el mod con más prioridad. El juego hace ganar al primer archive de la lista, así que con esto gana la prioridad de MO2, como con los archivos sueltos</translation>
+    </message>
+    <message>
+      <source>Enforce the current load order on REDmod deployment</source>
+      <translation>Aplica el orden de carga actual al desplegar REDmod</translation>
+    </message>
+    <message>
+      <source>Reverse MO2&apos;s order on REDmod deployment (the first deployed REDmod wins: highest priority in MO2 first)</source>
+      <translation>Invierte el orden de MO2 al desplegar REDmod (gana el primer REDmod desplegado: primero el de más prioridad en MO2)</translation>
+    </message>
+    <message>
+      <source>Deploy REDmods before the game starts when they changed</source>
+      <translation>Despliega los REDmods antes de iniciar el juego cuando han cambiado</translation>
+    </message>
+    <message>
+      <source>Clears &quot;overwrite/r6/cache&quot; when the game&apos;s own cache files changed (after an update)</source>
+      <translation>Vacía «overwrite/r6/cache» cuando cambian los archivos de caché del propio juego (tras una actualización)</translation>
+    </message>
+    <message>
+      <source>Configures Root Builder for Cyberpunk once, if it is installed and enabled</source>
+      <translation>Configura Root Builder para Cyberpunk una vez, si está instalado y activado</translation>
+    </message>
   </context>
   <context>
     <name>BaldursGate3Game</name>
