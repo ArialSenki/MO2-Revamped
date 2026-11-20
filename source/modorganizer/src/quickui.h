@@ -31,6 +31,15 @@ namespace QuickUi
 // MO2 started. MO2R_QUICK=1 or 0 in the environment overrides it (to measure)
 bool enabled();
 
+// called once the application exists, before any window: with Qt Quick on,
+// chooses what Qt Quick draws with in this run. Software by default: these
+// windows are small and mostly still, and a GPU device cost about 110 MB while
+// one was open (D3D11), with a game running beside MO2. Qt keeps that choice
+// for every Qt Quick user, so the web views draw in software too (measured
+// fine, and lighter). MO2R_QUICK_BACKEND=d3d11, opengl or default chooses
+// another, to measure
+void initialize();
+
 // the setting itself, as Settings shows and changes it (applied on restart)
 bool stored();
 void setStored(bool on);
