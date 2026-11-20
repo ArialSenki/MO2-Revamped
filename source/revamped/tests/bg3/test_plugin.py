@@ -245,6 +245,15 @@ class PluginTest(unittest.TestCase):
         self.game._on_finished_run(str(exe), 0)
         self.assertEqual(self.game.launch().dropped_last_run, [UB])
 
+    def test_a_bug_in_the_load_order_doesnt_stop_the_game(self):
+        self.install()
+        self.pak_mod("A", UA)
+        self.game.modsettings_path.write_text("kept", encoding="utf-8")
+        launch = self.game.launch()
+        launch.plan = lambda entries: 1 / 0
+        self.assertTrue(self.run_game())
+        self.assertEqual(self.game.modsettings_path.read_text(encoding="utf-8"), "kept")
+
     def test_crash_check_folder_is_cleared(self):
         self.install()
         marker = self.docs / "ModCrashSanityCheck" / "x.lsx"

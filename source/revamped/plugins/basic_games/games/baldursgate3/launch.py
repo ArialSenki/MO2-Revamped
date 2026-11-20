@@ -130,6 +130,18 @@ class Launch:
     def before_run(self, exec_path: str, force_reparse: bool = False) -> bool:
         if not runs_the_game(exec_path):
             return True
+        try:
+            return self._before_run(force_reparse)
+        except Exception as e:  # noqa: BLE001 - a bug here mustn't stop the game
+            import traceback
+
+            log_warning(
+                "the load order couldn't be made; the game starts with the one it "
+                f"had: {e}\n{traceback.format_exc()}"
+            )
+            return True
+
+    def _before_run(self, force_reparse: bool) -> bool:
         game = self._game
         if force_reparse:
             self.cache.clear()
