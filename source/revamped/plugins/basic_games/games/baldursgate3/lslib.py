@@ -1,24 +1,38 @@
+"""LSLib (Norbyte/lslib): its Divine.exe reads the packages this plugin's own
+reader doesn't know and packs mod workspaces. It is downloaded from GitHub
+only when one of those is needed and the user agrees; nothing is sent
+anywhere before that.
+
+From basic_games' Baldur's Gate 3 plugin (daescha), with MO2 Revamped's
+fixes: timeouts, the release asset found by name, SHA-256 check, extraction
+into a staging folder and the zip-slip guard.
+"""
+
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import re
 import shutil
+import subprocess
 import traceback
-import urllib.request
 import zipfile
 from functools import cached_property
 from pathlib import Path
 
-from PyQt6.QtCore import qDebug, qWarning
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from . import bg3_utils
+from . import dotnet
+from .util import log_debug as qDebug
+from .util import log_warning as qWarning
 
 
 class LSLibRetriever:
     _dotnet_warned = False
 
-    def __init__(self, utils: bg3_utils.BG3Utils):
+    def __init__(self, utils):
+        # utils: tools_dir, main_window, tr(), create_progress_window()
         self._utils = utils
 
     @cached_property
@@ -39,7 +53,7 @@ class LSLibRetriever:
         # it's downloaded (a newer LSLib may want a newer .NET)
         divine = self._utils.tools_dir / "Divine.exe"
         if divine.with_name("Divine.runtimeconfig.json").is_file():
-            return bg3_utils.missing_dotnet_major(divine) is None
+            return dotnet.missing_dotnet_major(divine) is None
         # Divine.exe only runs on the .NET 8 runtime
         roots = (
             os.environ.get("DOTNET_ROOT"),
@@ -63,7 +77,8 @@ class LSLibRetriever:
         msg_box.setText(
             self._utils.tr(
                 "LSLib needs the .NET 8 Runtime (x64), which is not installed.<br>"
-                "The game will start, but your mods won't be in its load order.<br><br>"
+                "The game will start, but the mods that need LSLib won't be in "
+                "its load order.<br><br>"
                 '<a href="https://dotnet.microsoft.com/download/dotnet/8.0">'
                 "Download .NET 8</a>"
             )
@@ -91,7 +106,7 @@ class LSLibRetriever:
         download = msg_box.addButton(
             self._utils.tr("Download"), QMessageBox.ButtonRole.AcceptRole
         )
-        msg_box.addButton(self._utils.tr("Exit"), QMessageBox.ButtonRole.RejectRole)
+        msg_box.addButton(self._utils.tr("Not now"), QMessageBox.ButtonRole.RejectRole)
         msg_box.exec()
         return msg_box.clickedButton() is download
 
@@ -105,7 +120,9 @@ class LSLibRetriever:
     def _has_all_tools(self) -> bool:
         return all(x.is_file() for x in self._needed_lslib_files)
 
-    def download_lslib_if_missing(self, force: bool = False) -> bool:
+    _declined = False
+
+    def download_lslib_if_missing(self, force: bool = False, reason: str = "") -> bool:
         if not self._has_dotnet_8():
             self._warn_missing_dotnet()
             return False
@@ -125,20 +142,22 @@ class LSLibRetriever:
                 )
         # MO2 Revamped: nothing is sent to GitHub before the user agrees (a
         # check the user started is that agreement)
-        if not force and not self._ask(
-            self._utils.tr(
-                "LSLib tools are missing.\nThese are necessary for the plugin to "
-                "create the load order file for BG3.\n\nDownload them from "
-                "GitHub (github.com/Norbyte/lslib)?"
-            )
-        ):
-            self._error(
+        # A start with nothing that needs LSLib never gets here (the paks are
+        # read by the plugin itself); asked once per MO2 session.
+        if not force:
+            if LSLibRetriever._declined:
+                return False
+            if not self._ask(
                 self._utils.tr(
-                    "LSLib tools are required for the proper generation of the "
-                    "modsettings.xml file, file will not be generated"
-                )
-            )
-            return False
+                    "Some of your mods need LSLib's Divine tool, which isn't "
+                    "downloaded yet:\n\n{0}\n\nDownload LSLib from GitHub "
+                    "(github.com/Norbyte/lslib)? Without it, these mods stay out "
+                    "of the load order this time; the others load normally."
+                ).replace("{0}", reason or "")
+            ):
+                LSLibRetriever._declined = True
+                qWarning("LSLib download declined; the mods that need it stay out")
+                return False
         try:
             asset = self._latest_asset()
         except Exception as e:  # noqa: BLE001
@@ -204,6 +223,8 @@ class LSLibRetriever:
         """MO2 Revamped: the release's ExportTool zip, found by name (the first
         asset isn't always it), with a timeout: a network that accepts and
         never answers froze MO2 before the game started."""
+        import urllib.request
+
         request = urllib.request.Request(
             self._api_url, headers={"Accept": "application/vnd.github+json"}
         )
@@ -223,6 +244,8 @@ class LSLibRetriever:
         """MO2 Revamped: in chunks, under another name first, with a cancel
         button and a timeout per read; the SHA-256 GitHub gives for the asset
         is checked when there is one."""
+        import urllib.request
+
         part_path = zip_path.with_name(zip_path.name + ".part")
         progress = self._utils.create_progress_window(
             "Downloading LSLib", 100, cancelable=True
@@ -352,6 +375,67 @@ class LSLibRetriever:
             raise
         finally:
             shutil.rmtree(backup, ignore_errors=True)
+
+
+class Divine:
+    """Divine.exe from the downloaded LSLib, for what lspk can't read."""
+
+    def __init__(self, tools_dir: Path):
+        self.exe = tools_dir / "Divine.exe"
+
+    def available(self) -> bool:
+        return self.exe.is_file()
+
+    def run(self, *args: str) -> subprocess.CompletedProcess[str]:
+        command = [str(self.exe), "-g", "bg3", "-l", "info", *args]
+        result = subprocess.run(
+            command,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=300,
+        )
+        if result.returncode:
+            home = str(Path.home())
+            qWarning(
+                f"{' '.join(command).replace(home, '~')} returned {result.returncode}: "
+                f"{result.stdout.strip()} {result.stderr.strip()}"
+            )
+        return result
+
+    def read(self, pak: Path) -> tuple[list[str], bytes | None]:
+        """The pak's file names and its meta.lsx, for paks.read_pak."""
+        import tempfile
+
+        listing = self.run("-a", "list-package", "-s", str(pak))
+        if listing.returncode:
+            from .paks import DamagedPak
+
+            raise DamagedPak(f"{pak.name}: Divine couldn't list it")
+        names = []
+        for line in listing.stdout.splitlines():
+            name = line.split("	", 1)[0].strip().replace("\\", "/")
+            if name:
+                names.append(name)
+        meta = None
+        if any(n.rsplit("/", 1)[-1].casefold() == "meta.lsx" for n in names):
+            with tempfile.TemporaryDirectory(prefix="mo2-bg3-") as tmp:
+                out = Path(tmp) / "meta.lsx"
+                done = self.run(
+                    "-a", "extract-single-file", "-f", "meta.lsx", "-s", str(pak), "-d", str(out)
+                )
+                if not done.returncode and out.is_file():
+                    meta = out.read_bytes()
+        return names, meta
+
+    def pack(self, folder: Path, pak: Path) -> bool:
+        pak.parent.mkdir(parents=True, exist_ok=True)
+        pak.unlink(missing_ok=True)
+        return self.run("-a", "create-package", "-s", str(folder), "-d", str(pak)).returncode == 0
 
 
 def _safe_member(name: str, *roots: Path) -> Path | None:

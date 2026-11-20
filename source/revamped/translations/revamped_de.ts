@@ -20604,4 +20604,321 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>Spielordner</translation>
     </message>
   </context>
+  <context>
+    <name>BaldursGate3Game</name>
+    <message>
+      <source>Baldur&apos;s Gate 3</source>
+      <translation>Baldur&apos;s Gate 3</translation>
+    </message>
+    <message>
+      <source>Load the native DLL mods (bin/NativeMods) and the Script Extender through the VFS, so Native Mod Loader isn&apos;t needed. With Native Mod Loader installed, it loads its mods itself.</source>
+      <translation>Lädt die nativen DLL-Mods (bin/NativeMods) und den Script Extender über das VFS, sodass Native Mod Loader nicht nötig ist. Ist Native Mod Loader installiert, lädt er seine Mods selbst.</translation>
+    </message>
+    <message>
+      <source>Log a diff of modsettings.lsx before and after the game runs (debug log level).</source>
+      <translation>Protokolliert einen Vergleich von modsettings.lsx vor und nach dem Spiel (Debug-Protokollstufe).</translation>
+    </message>
+    <message>
+      <source>Maximum number of days a folder in overwrite/LevelCache is kept after the game closes. Negative to keep them.</source>
+      <translation>Maximale Anzahl Tage, die ein Ordner in overwrite/LevelCache nach dem Beenden des Spiels behalten wird. Negativ, um sie zu behalten.</translation>
+    </message>
+    <message>
+      <source>Pack mod workspaces (unpacked mods with Mods/&lt;name&gt;/meta.lsx) into paks when the game starts. Needs LSLib.</source>
+      <translation>Packt Mod-Arbeitsbereiche (entpackte Mods mit Mods/&lt;name&gt;/meta.lsx) beim Spielstart in Paks. Benötigt LSLib.</translation>
+    </message>
+    <message>
+      <source>Convert YAMLs to JSONs when the game starts, so Script Extender mods can be configured with YAML files.</source>
+      <translation>Wandelt YAML-Dateien beim Spielstart in JSON um, damit Script-Extender-Mods mit YAML-Dateien konfiguriert werden können.</translation>
+    </message>
+    <message>
+      <source>Keep in the load order the mods enabled outside MO2 (the in-game mod manager, paks put in the documents&apos; Mods folder) while their pak is there.</source>
+      <translation>Behält in der Ladereihenfolge die außerhalb von MO2 aktivierten Mods (Mod-Manager des Spiels, Paks im Mods-Ordner der Dokumente), solange ihr Pak vorhanden ist.</translation>
+    </message>
+    <message>
+      <source>Before the game starts, ask when an active mod needs a mod that isn&apos;t active (the game turns such mods off).</source>
+      <translation>Fragt vor dem Spielstart nach, wenn ein aktiver Mod einen Mod braucht, der nicht aktiv ist (das Spiel schaltet solche Mods ab).</translation>
+    </message>
+    <message>
+      <source>Clear the game&apos;s ModCrashSanityCheck folder before it starts, so a crash doesn&apos;t make the game turn all mods off (as BG3 Mod Manager does).</source>
+      <translation>Leert vor dem Start den Ordner ModCrashSanityCheck des Spiels, damit ein Absturz nicht dazu führt, dass das Spiel alle Mods abschaltet (wie BG3 Mod Manager).</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Abbrechen</translation>
+    </message>
+    <message>
+      <source>BG3 Mod Manager needs the .NET {1} Desktop Runtime, which isn&apos;t installed on this PC, so it will close with an error as it starts.
+
+Install the .NET Desktop Runtime {1} for Windows x64 from {0}, then run BG3 Mod Manager again.</source>
+      <translation>BG3 Mod Manager benötigt die .NET Desktop Runtime {1}, die auf diesem PC nicht installiert ist, und wird daher beim Start mit einem Fehler beendet.
+
+Installiere die .NET Desktop Runtime {1} für Windows x64 von {0} und starte BG3 Mod Manager dann erneut.</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Trotzdem starten</translation>
+    </message>
+    <message>
+      <source>Reading the mods&apos; load order</source>
+      <translation>Ladereihenfolge der Mods wird gelesen</translation>
+    </message>
+    <message>
+      <source>Some mods aren&apos;t in the load order</source>
+      <translation>Einige Mods sind nicht in der Ladereihenfolge</translation>
+    </message>
+    <message>
+      <source>Missing mod dependencies</source>
+      <translation>Fehlende Mod-Abhängigkeiten</translation>
+    </message>
+    <message>
+      <source>BG3 Mod Manager needs .NET {0}</source>
+      <translation>BG3 Mod Manager benötigt .NET {0}</translation>
+    </message>
+    <message>
+      <source>Start the game anyway?</source>
+      <translation>Spiel trotzdem starten?</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• und {0} weitere</translation>
+    </message>
+    <message>
+      <source>needs LSLib</source>
+      <translation>benötigt LSLib</translation>
+    </message>
+    <message>
+      <source>These mods&apos; paks couldn&apos;t be read, so the game won&apos;t load them this time. The other mods load normally. If a mod stays out, reinstall it.</source>
+      <translation>Die Paks dieser Mods konnten nicht gelesen werden, daher lädt das Spiel sie diesmal nicht. Die übrigen Mods werden normal geladen. Bleibt ein Mod draußen, installiere ihn neu.</translation>
+    </message>
+    <message>
+      <source>{0} needs {1}</source>
+      <translation>{0} benötigt {1}</translation>
+    </message>
+    <message>
+      <source>These active mods need mods that aren&apos;t installed or are turned off. The game turns such mods off when it starts:</source>
+      <translation>Diese aktiven Mods benötigen Mods, die nicht installiert oder abgeschaltet sind. Das Spiel schaltet solche Mods beim Start ab:</translation>
+    </message>
+    <message>
+      <source>Pak</source>
+      <translation>Pak</translation>
+    </message>
+    <message>
+      <source>Loose file override mod</source>
+      <translation>Mod mit Überschreibung loser Dateien</translation>
+    </message>
+    <message>
+      <source>Script Extender Files</source>
+      <translation>Script-Extender-Dateien</translation>
+    </message>
+    <message>
+      <source>Native DLL mod</source>
+      <translation>Nativer DLL-Mod</translation>
+    </message>
+    <message>
+      <source>Script Extender</source>
+      <translation>Script Extender</translation>
+    </message>
+    <message>
+      <source>Native Mod Loader</source>
+      <translation>Native Mod Loader</translation>
+    </message>
+    <message>
+      <source>Mod workspace</source>
+      <translation>Mod-Arbeitsbereich</translation>
+    </message>
+    <message>
+      <source>Downloading LSLib</source>
+      <translation>LSLib wird heruntergeladen</translation>
+    </message>
+    <message>
+      <source>Baldur&apos;s Gate 3 Plugin - Missing dependencies</source>
+      <translation>Baldur&apos;s Gate 3 Plugin - Fehlende Abhängigkeiten</translation>
+    </message>
+    <message>
+      <source>LSLib needs the .NET 8 Runtime (x64), which is not installed.&lt;br&gt;The game will start, but the mods that need LSLib won&apos;t be in its load order.&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://dotnet.microsoft.com/download/dotnet/8.0&quot;&gt;Download .NET 8&lt;/a&gt;</source>
+      <translation>LSLib benötigt die .NET 8 Runtime (x64), die nicht installiert ist.&lt;br&gt;Das Spiel startet, aber die Mods, die LSLib benötigen, fehlen in der Ladereihenfolge.&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://dotnet.microsoft.com/download/dotnet/8.0&quot;&gt;.NET 8 herunterladen&lt;/a&gt;</translation>
+    </message>
+    <message>
+      <source>Baldur&apos;s Gate 3 Plugin</source>
+      <translation>Baldur&apos;s Gate 3 Plugin</translation>
+    </message>
+    <message>
+      <source>Download</source>
+      <translation>Herunterladen</translation>
+    </message>
+    <message>
+      <source>Not now</source>
+      <translation>Jetzt nicht</translation>
+    </message>
+    <message>
+      <source>Latest version of LSLib already downloaded!</source>
+      <translation>Die neueste Version von LSLib ist bereits heruntergeladen!</translation>
+    </message>
+    <message>
+      <source>LSLib update available.</source>
+      <translation>Ein LSLib-Update ist verfügbar.</translation>
+    </message>
+    <message>
+      <source>{0} doesn&apos;t hold the LSLib tools this plugin needs (missing: {1}).</source>
+      <translation>{0} enthält nicht die LSLib-Werkzeuge, die dieses Plugin benötigt (fehlend: {1}).</translation>
+    </message>
+    <message>
+      <source>Some of your mods need LSLib&apos;s Divine tool, which isn&apos;t downloaded yet:
+
+{0}
+
+Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods stay out of the load order this time; the others load normally.</source>
+      <translation>Einige deiner Mods benötigen das LSLib-Werkzeug Divine, das noch nicht heruntergeladen ist:
+
+{0}
+
+LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese Mods diesmal außerhalb der Ladereihenfolge; die anderen werden normal geladen.</translation>
+    </message>
+    <message>
+      <source>Couldn&apos;t look up the latest LSLib release:
+{0}</source>
+      <translation>Die neueste LSLib-Version konnte nicht abgefragt werden:
+{0}</translation>
+    </message>
+    <message>
+      <source>Failed to extract LSLib tools:
+{0}</source>
+      <translation>LSLib-Werkzeuge konnten nicht entpackt werden:
+{0}</translation>
+    </message>
+    <message>
+      <source>Failed to download LSLib tools:
+{0}</source>
+      <translation>LSLib-Werkzeuge konnten nicht heruntergeladen werden:
+{0}</translation>
+    </message>
+    <message>
+      <source>Mapping files to documents folder</source>
+      <translation>Dateien werden dem Dokumentenordner zugeordnet</translation>
+    </message>
+    <message>
+      <source>Baldur&apos;s Gate 3 load order check</source>
+      <translation>Ladereihenfolge-Prüfung für Baldur&apos;s Gate 3</translation>
+    </message>
+    <message>
+      <source>Warns when active Baldur&apos;s Gate 3 mods need mods that aren&apos;t active or load after them, need the Script Extender, or were turned off by the game on its last start.</source>
+      <translation>Warnt, wenn aktive Baldur&apos;s-Gate-3-Mods Mods brauchen, die nicht aktiv sind oder nach ihnen geladen werden, den Script Extender brauchen oder beim letzten Start vom Spiel abgeschaltet wurden.</translation>
+    </message>
+    <message>
+      <source>Mods need mods that aren&apos;t active</source>
+      <translation>Mods benötigen Mods, die nicht aktiv sind</translation>
+    </message>
+    <message>
+      <source>Mods load before the mods they need</source>
+      <translation>Mods werden vor den Mods geladen, die sie benötigen</translation>
+    </message>
+    <message>
+      <source>Mods need the Script Extender</source>
+      <translation>Mods benötigen den Script Extender</translation>
+    </message>
+    <message>
+      <source>One mod is installed twice</source>
+      <translation>Ein Mod ist doppelt installiert</translation>
+    </message>
+    <message>
+      <source>Mods that conflict are both active</source>
+      <translation>Miteinander in Konflikt stehende Mods sind beide aktiv</translation>
+    </message>
+    <message>
+      <source>The game turned off mods on its last start</source>
+      <translation>Das Spiel hat beim letzten Start Mods abgeschaltet</translation>
+    </message>
+    <message>
+      <source>Mods need a newer version of a mod</source>
+      <translation>Mods benötigen eine neuere Version eines Mods</translation>
+    </message>
+    <message>
+      <source>MO2 wrote these mods in the load order, and Baldur&apos;s Gate 3 turned them off when it started:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;The game does this when a mod needs a mod that isn&apos;t there, when its version doesn&apos;t match, or after a crash it blames on mods. MO2 writes them again on the next start.</source>
+      <translation>MO2 hat diese Mods in die Ladereihenfolge geschrieben, und Baldur&apos;s Gate 3 hat sie beim Start abgeschaltet:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Das Spiel tut das, wenn ein Mod einen fehlenden Mod braucht, wenn die Version nicht passt oder nach einem Absturz, den es den Mods zuschreibt. MO2 schreibt sie beim nächsten Start erneut.</translation>
+    </message>
+    <message>
+      <source>These active mods need mods that aren&apos;t installed or are turned off (their meta.lsx lists them as dependencies):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install or turn on the mods they need. Without them the game turns these mods off when it starts.</source>
+      <translation>Diese aktiven Mods benötigen Mods, die nicht installiert oder abgeschaltet sind (ihre meta.lsx führt sie als Abhängigkeiten auf):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installiere oder aktiviere die benötigten Mods. Ohne sie schaltet das Spiel diese Mods beim Start ab.</translation>
+    </message>
+    <message>
+      <source>These mods load before a mod they need:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Move the mod they need above them in the mod list (a lower priority loads first).</source>
+      <translation>Diese Mods werden vor einem Mod geladen, den sie benötigen:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Verschiebe den benötigten Mod in der Mod-Liste über sie (eine niedrigere Priorität wird zuerst geladen).</translation>
+    </message>
+    <message>
+      <source>These active mods need the Baldur&apos;s Gate 3 Script Extender, which isn&apos;t installed or is turned off:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install it from &lt;a href=&quot;https://www.nexusmods.com/baldursgate3/mods/2172&quot;&gt;nexusmods.com/baldursgate3/mods/2172&lt;/a&gt; as a mod (its DWrite.dll goes to bin/). Without it these mods don&apos;t work.</source>
+      <translation>Diese aktiven Mods benötigen den Script Extender von Baldur&apos;s Gate 3, der nicht installiert oder abgeschaltet ist:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installiere ihn von &lt;a href=&quot;https://www.nexusmods.com/baldursgate3/mods/2172&quot;&gt;nexusmods.com/baldursgate3/mods/2172&lt;/a&gt; als Mod (seine DWrite.dll kommt nach bin/). Ohne ihn funktionieren diese Mods nicht.</translation>
+    </message>
+    <message>
+      <source>These mods bring the same module (the same UUID), usually two versions of one mod:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Only the one with the higher priority goes in the load order. Turn the other off.</source>
+      <translation>Diese Mods bringen dasselbe Modul mit (dieselbe UUID), meist zwei Versionen eines Mods:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Nur der Mod mit der höheren Priorität kommt in die Ladereihenfolge. Schalte den anderen ab.</translation>
+    </message>
+    <message>
+      <source>These active mods say in their meta.lsx that they conflict:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Turn one of each pair off.</source>
+      <translation>Diese aktiven Mods geben in ihrer meta.lsx an, dass sie in Konflikt stehen:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Schalte jeweils einen der beiden ab.</translation>
+    </message>
+    <message>
+      <source>These mods need a newer version of a mod than the one installed:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Update the mods they need.</source>
+      <translation>Diese Mods benötigen eine neuere Version eines Mods als die installierte:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Aktualisiere die benötigten Mods.</translation>
+    </message>
+    <message>
+      <source>{0} and {1}</source>
+      <translation>{0} und {1}</translation>
+    </message>
+    <message>
+      <source>{0} needs {1} ({2})</source>
+      <translation>{0} benötigt {1} ({2})</translation>
+    </message>
+    <message>
+      <source>{0}: in {1} and {2}; {2}&apos;s is used</source>
+      <translation>{0}: in {1} und {2}; die aus {2} wird verwendet</translation>
+    </message>
+    <message>
+      <source>{0} needs {1} {2}, found {3}</source>
+      <translation>{0} benötigt {1} {2}, gefunden: {3}</translation>
+    </message>
+    <message>
+      <source>Check For LsLib Updates</source>
+      <translation>Nach LSLib-Updates suchen</translation>
+    </message>
+    <message>
+      <source>Look for a new LSLib release on GitHub and offer to download it. Only this tool and a download you agree to contact GitHub.</source>
+      <translation>Sucht auf GitHub nach einer neuen LSLib-Version und bietet den Download an. Nur dieses Werkzeug und ein von dir bestätigter Download kontaktieren GitHub.</translation>
+    </message>
+    <message>
+      <source>Reparse Pak Metadata</source>
+      <translation>Pak-Metadaten neu einlesen</translation>
+    </message>
+    <message>
+      <source>Forget what was read from the mods&apos; paks and read them all again now.</source>
+      <translation>Verwirft die aus den Paks der Mods gelesenen Daten und liest sie jetzt alle neu ein.</translation>
+    </message>
+    <message>
+      <source>Convert JSONS to YAML</source>
+      <translation>JSON in YAML umwandeln</translation>
+    </message>
+    <message>
+      <source>Convert all jsons in active mods to yaml immediately.</source>
+      <translation>Wandelt sofort alle JSON-Dateien in aktiven Mods in YAML um.</translation>
+    </message>
+    <message>
+      <source>Converting all json files to yaml</source>
+      <translation>Alle JSON-Dateien werden in YAML umgewandelt</translation>
+    </message>
+    <message>
+      <source>Reading the mods&apos; paks</source>
+      <translation>Paks der Mods werden gelesen</translation>
+    </message>
+    <message>
+      <source>Saved</source>
+      <translation>Gespeichert</translation>
+    </message>
+    <message>
+      <source>Character</source>
+      <translation>Charakter</translation>
+    </message>
+    <message>
+      <source>level</source>
+      <translation>Stufe</translation>
+    </message>
+  </context>
 </TS>
