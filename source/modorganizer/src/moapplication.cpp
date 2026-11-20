@@ -951,7 +951,7 @@ int MOApplication::run(MOMultiProcess& multiProcess)
           currentTheme == "Light.qss" ? Theme::Light : Theme::Dark;
       const auto selectedChoice = FluentChoices::chooseTheme(
           &mainWindow, tr("MO2 Revamped"), tr("Choose a theme for this instance."),
-          tr("You can change it later in Settings > Theme."), tr("Light"), tr("Dark"),
+          tr("You can change it later in Settings > Appearance."), tr("Light"), tr("Dark"),
           tr("Use this theme"), currentChoice);
       const QString selectedTheme =
           !selectedChoice                ? currentTheme

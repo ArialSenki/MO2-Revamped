@@ -3090,12 +3090,58 @@ void MainWindow::createHelpMenu()
   revampedGuideAction->setObjectName(QStringLiteral("revampedGuideAction"));
   revampedGuideAction->setIcon(FluentIcons::glyph(0xE897));
   revampedGuideAction->setToolTip(
-      tr("Short help on the dashboard, profiles, downloads, collections, themes, "
-         "notices and settings."));
-  connect(revampedGuideAction, &QAction::triggered, this, [this] {
-    RevampedGuide::show(this);
+      tr("First steps, and short help on every part of MO2 Revamped and on this "
+         "game."));
+  // the page about this game's own plugin, when MO2 Revamped has one
+  const QString gameTopic = RevampedGuide::gameTopic(game);
+  // what the guide's buttons ask for, once it has closed
+  const auto guideHandler = [this](const QString& id) {
+    if (id.startsWith(QLatin1String("settings:"))) {
+      // SettingsDialog::exec() starts on that page
+      qApp->setProperty("revampedSettingsStartPage", id.mid(9));
+      on_actionSettings_triggered();
+    } else if (id == QLatin1String("instances")) {
+      on_actionChange_Game_triggered();
+    } else if (id == QLatin1String("install")) {
+      ui->actionInstallMod->trigger();
+    } else if (id == QLatin1String("profiles")) {
+      on_actionAdd_Profile_triggered();
+    } else if (id == QLatin1String("executables")) {
+      on_actionModify_Executables_triggered();
+    } else if (id == QLatin1String("collections")) {
+      browseCollections();
+    } else if (id == QLatin1String("wabbajack")) {
+      browseWabbajackLists();
+    } else if (id == QLatin1String("game-guide")) {
+      showEldenRingGuide();
+    } else if (id == QLatin1String("bugreport")) {
+      if (auto* report = findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"))) {
+        report->trigger();
+      } else {
+        // the report is made by the MO2 Revamped Information plugin
+        QMessageBox::information(
+            this, tr("Create bug report"),
+            tr("The bug report comes from the MO2 Revamped Information plugin, which "
+               "is turned off. Turn it on in Settings > Plugins and restart MO2."));
+      }
+    }
+  };
+  connect(revampedGuideAction, &QAction::triggered, this, [this, guideHandler, gameTopic] {
+    RevampedGuide::show(this, {}, guideHandler, gameTopic);
   });
   menu->addAction(revampedGuideAction);
+
+  if (!gameTopic.isEmpty()) {
+    QAction* gameHelpAction = new QAction(tr("Help for %1").arg(game->gameName()), menu);
+    gameHelpAction->setObjectName(QStringLiteral("revampedGameHelpAction"));
+    gameHelpAction->setIcon(FluentIcons::glyph(0xE7FC));
+    gameHelpAction->setToolTip(
+        tr("What MO2 Revamped does for this game, and its usual problems."));
+    connect(gameHelpAction, &QAction::triggered, this, [this, gameTopic, guideHandler] {
+      RevampedGuide::show(this, gameTopic, guideHandler, gameTopic);
+    });
+    menu->addAction(gameHelpAction);
+  }
 
   if (isEldenRing) {
     QAction* guideAction = new QAction(gameGuideTitle(game), menu);
@@ -3331,6 +3377,7 @@ void MainWindow::showEvent(QShowEvent* event)
     QTimer::singleShot(3000, this, [this] {
       noticeLastCrash();
     });
+    offerFirstSteps();
 
     // notify plugins that the MO2 is ready
     m_PluginContainer.startPlugins(this);
@@ -5857,16 +5904,90 @@ void MainWindow::noticeLastCrash(int tries)
   FluentContentDialog dialog(
       this, QStringLiteral("CrashDumpNoticeDialog"), tr("Mod Organizer crashed"),
       tr("Mod Organizer closed unexpectedly on %1 and saved a crash report:\n%2\n\n"
-         "If it happens again, attach this file (and the logs folder's "
-         "mo_interface.log) when you report the problem.")
+         "If it happens again, create a bug report and attach it, together with "
+         "this file, when you report the problem.")
           .arg(QLocale().toString(newest.lastModified(), QLocale::ShortFormat),
                QDir::toNativeSeparators(newest.absoluteFilePath())));
-  auto* open  = dialog.addButton(tr("Open the folder"), true);
+  // the report is made by the MO2 Revamped Information plugin, when it's on
+  QAction* reportAction =
+      findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"));
+  bool report = false;
+  if (reportAction != nullptr) {
+    auto* create = dialog.addButton(tr("Create bug report"), true);
+    connect(create, &QPushButton::clicked, &dialog, [&dialog, &report] {
+      report = true;
+      dialog.accept();
+    });
+  }
+  auto* open  = dialog.addButton(tr("Open the folder"), reportAction == nullptr);
   auto* close = dialog.addButton(tr("Close"));
   connect(open, &QPushButton::clicked, &dialog, &QDialog::accept);
   connect(close, &QPushButton::clicked, &dialog, &QDialog::reject);
-  if (dialog.exec() == QDialog::Accepted) {
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  if (report) {
+    reportAction->trigger();
+  } else {
     shell::Explore(newest.absoluteFilePath());
+  }
+}
+
+void MainWindow::offerFirstSteps(int ticks, int idle)
+{
+  const QString file = m_OrganizerCore.settings().filename();
+  constexpr auto offeredKey = "Settings/revamped_first_steps_offered";
+  if (file.isEmpty() || QSettings(file, QSettings::IniFormat).value(offeredKey, false).toBool()) {
+    return;
+  }
+  // only an instance nothing was installed in yet
+  if (!QDir(m_OrganizerCore.settings().paths().mods())
+           .entryList(QDir::Dirs | QDir::NoDotAndDotDot)
+           .isEmpty()) {
+    QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+    return;
+  }
+  // a new instance made for a collection or a list is already on its way:
+  // its window is open (openPendingCollection opens it after two idle seconds)
+  if (m_CollectionDialog || m_WabbajackDialog || m_WabbajackBrowser) {
+    QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+    return;
+  }
+  // after the first-start questions, the pending collection and the crash
+  // notice, never over a question: idle twice in a row, as
+  // openPendingCollection checks, so a question that follows another one
+  // isn't overtaken. The first check waits for the crash notice's 3 seconds;
+  // after four minutes of questions it gives up until the next start
+  const auto& settings = m_OrganizerCore.settings();
+  const bool busy = ticks == 0 || QApplication::activeModalWidget() != nullptr ||
+                    !isVisible() || isMinimized() || settings.firstStart() ||
+                    !settings.interface().themeChoicePromptCompleted();
+  const int nowIdle = busy ? 0 : idle + 1;
+  if (nowIdle < 2) {
+    if (ticks < 120) {
+      QTimer::singleShot(ticks == 0 ? 4000 : 2000, this, [this, ticks, nowIdle] {
+        offerFirstSteps(ticks + 1, nowIdle);
+      });
+    }
+    return;
+  }
+  QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+
+  FluentContentDialog dialog(
+      this, QStringLiteral("FirstStepsOfferDialog"), tr("New to MO2 Revamped?"),
+      tr("This instance has no mods yet. The first steps show how to connect your "
+         "Nexus account, install mods or a whole collection, and start the game.\n\n"
+         "The guide is always in the … menu."));
+  auto* show  = dialog.addButton(tr("Show the first steps"), true);
+  auto* later = dialog.addButton(tr("Not now"));
+  connect(show, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(later, &QPushButton::clicked, &dialog, &QDialog::reject);
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  // the guide opens at the first steps, with its buttons working
+  if (auto* guide = findChild<QAction*>(QStringLiteral("revampedGuideAction"))) {
+    guide->trigger();
   }
 }
 
