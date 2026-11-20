@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #define INSTALLER_FOMOD_CSHARP_H
 
 #include "iplugininstallersimple.h"
+#include <QCoreApplication>
 
 class InstallerFomodCSharp : public MOBase::IPluginInstallerSimple
 {
@@ -50,8 +51,8 @@ public:
   virtual QList<MOBase::PluginSetting> settings() const override
   {
     return {
-        MOBase::PluginSetting("enabled", "check to enable this plugin", QVariant(true)),
-        MOBase::PluginSetting("prefer", "prefer this over the NCC based plugin",
+        MOBase::PluginSetting("enabled", QCoreApplication::translate("RevampedInstallerSettings", "Use this installer"), QVariant(true)),
+        MOBase::PluginSetting("prefer", QCoreApplication::translate("RevampedInstallerSettings", "Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml"),
                               QVariant(true))};
   }
 

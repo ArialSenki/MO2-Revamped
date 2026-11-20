@@ -21314,4 +21314,153 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
       <translation>Il programma di installazione FOMOD si è fermato: %1</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedCSharpScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Messaggio del programma di installazione</translation>
+    </message>
+    <message>
+      <source>Details</source>
+      <translation>Dettagli</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Interrompi</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Riprova</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignora</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sì</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>No</translation>
+    </message>
+    <message>
+      <source>Choose any of these</source>
+      <translation>Scegli quelle che vuoi</translation>
+    </message>
+    <message>
+      <source>Choose one</source>
+      <translation>Scegline una</translation>
+    </message>
+    <message>
+      <source>Check the options you want.</source>
+      <translation>Spunta le opzioni che vuoi.</translation>
+    </message>
+    <message>
+      <source>Select the option you want.</source>
+      <translation>Seleziona l&apos;opzione che vuoi.</translation>
+    </message>
+    <message>
+      <source>Picture of the option</source>
+      <translation>Immagine dell&apos;opzione</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Descrizione dell&apos;opzione</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedOmodScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Messaggio del programma di installazione</translation>
+    </message>
+    <message>
+      <source>The installer asks for a text</source>
+      <translation>Il programma di installazione chiede un testo</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sì</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>No</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Riprova</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignora</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Interrompi</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Annulla</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedInstallerSettings</name>
+    <message>
+      <source>Try this installer before the C# script installer when an archive has both a ModuleConfig.xml and a script</source>
+      <translation>Provare questo programma di installazione prima di quello degli script C# quando un archivio ha sia un ModuleConfig.xml sia uno script</translation>
+    </message>
+    <message>
+      <source>Let a FOMOD&apos;s conditions check any file in the game&apos;s data, not only plugins (.esp, .esm, .esl)</source>
+      <translation>Le condizioni di un FOMOD possono controllare qualsiasi file dei dati del gioco, non solo i plugin (.esp, .esm, .esl)</translation>
+    </message>
+    <message>
+      <source>A file in a disabled mod counts as inactive in a FOMOD&apos;s conditions, not as missing</source>
+      <translation>Un file di una mod disattivata conta come inattivo nelle condizioni di un FOMOD, non come mancante</translation>
+    </message>
+    <message>
+      <source>Use this installer</source>
+      <translation>Usa questo programma di installazione</translation>
+    </message>
+    <message>
+      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml</source>
+      <translation>Provare questo programma di installazione prima di quello FOMOD XML quando un archivio ha sia uno script sia un ModuleConfig.xml</translation>
+    </message>
+    <message>
+      <source>When a mod is reinstalled from an archive that holds several, choose the same one again without asking</source>
+      <translation>Quando si reinstalla una mod da un archivio che ne contiene diverse, scegliere di nuovo la stessa senza chiedere</translation>
+    </message>
+    <message>
+      <source>Install mods that only hold plugins and their files without showing the Quick Install window</source>
+      <translation>Installare senza mostrare la finestra di installazione rapida le mod che contengono solo plugin e i loro file</translation>
+    </message>
+    <message>
+      <source>Only offer to extract archives for mods made for another edition of the game (an alternate source)</source>
+      <translation>Proporre di estrarre gli archivi solo per le mod fatte per un&apos;altra edizione del gioco (fonte alternativa)</translation>
+    </message>
+    <message>
+      <source>When an archive also has a FOMOD installer, use that one</source>
+      <translation>Se un archivio ha anche un programma di installazione FOMOD, usare quello</translation>
+    </message>
+    <message>
+      <source>When an archive also has an OMOD installer, use that one</source>
+      <translation>Se un archivio ha anche un programma di installazione OMOD, usare quello</translation>
+    </message>
+    <message>
+      <source>The order in which MO2 tries this installer: a higher number goes first</source>
+      <translation>L&apos;ordine in cui MO2 prova questo programma di installazione: un numero più alto viene prima</translation>
+    </message>
+  </context>
 </TS>

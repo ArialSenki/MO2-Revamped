@@ -21068,4 +21068,153 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
       <translation>O instalador FOMOD parou: %1</translation>
     </message>
   </context>
+  <context>
+    <name>RevampedCSharpScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Mensagem do instalador</translation>
+    </message>
+    <message>
+      <source>Details</source>
+      <translation>Detalhes</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Anular</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Tentar de novo</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignorar</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sim</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>Não</translation>
+    </message>
+    <message>
+      <source>Choose any of these</source>
+      <translation>Escolha quantas quiser</translation>
+    </message>
+    <message>
+      <source>Choose one</source>
+      <translation>Escolha uma</translation>
+    </message>
+    <message>
+      <source>Check the options you want.</source>
+      <translation>Marque as opções que quiser.</translation>
+    </message>
+    <message>
+      <source>Select the option you want.</source>
+      <translation>Selecione a opção que quiser.</translation>
+    </message>
+    <message>
+      <source>Picture of the option</source>
+      <translation>Imagem da opção</translation>
+    </message>
+    <message>
+      <source>Option description</source>
+      <translation>Descrição da opção</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedOmodScript</name>
+    <message>
+      <source>Message from the installer</source>
+      <translation>Mensagem do instalador</translation>
+    </message>
+    <message>
+      <source>The installer asks for a text</source>
+      <translation>O instalador pede um texto</translation>
+    </message>
+    <message>
+      <source>Yes</source>
+      <translation>Sim</translation>
+    </message>
+    <message>
+      <source>No</source>
+      <translation>Não</translation>
+    </message>
+    <message>
+      <source>OK</source>
+      <translation>OK</translation>
+    </message>
+    <message>
+      <source>Retry</source>
+      <translation>Tentar de novo</translation>
+    </message>
+    <message>
+      <source>Ignore</source>
+      <translation>Ignorar</translation>
+    </message>
+    <message>
+      <source>Abort</source>
+      <translation>Anular</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <translation>Cancelar</translation>
+    </message>
+  </context>
+  <context>
+    <name>RevampedInstallerSettings</name>
+    <message>
+      <source>Try this installer before the C# script installer when an archive has both a ModuleConfig.xml and a script</source>
+      <translation>Tentar este instalador antes do de scripts C# quando um arquivo tem um ModuleConfig.xml e um script</translation>
+    </message>
+    <message>
+      <source>Let a FOMOD&apos;s conditions check any file in the game&apos;s data, not only plugins (.esp, .esm, .esl)</source>
+      <translation>As condições de um FOMOD podem verificar qualquer arquivo dos dados do jogo, não só plugins (.esp, .esm, .esl)</translation>
+    </message>
+    <message>
+      <source>A file in a disabled mod counts as inactive in a FOMOD&apos;s conditions, not as missing</source>
+      <translation>Um arquivo de um mod desativado conta como inativo nas condições de um FOMOD, não como ausente</translation>
+    </message>
+    <message>
+      <source>Use this installer</source>
+      <translation>Usar este instalador</translation>
+    </message>
+    <message>
+      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml</source>
+      <translation>Tentar este instalador antes do FOMOD XML quando um arquivo tem um script e um ModuleConfig.xml</translation>
+    </message>
+    <message>
+      <source>When a mod is reinstalled from an archive that holds several, choose the same one again without asking</source>
+      <translation>Ao reinstalar um mod de um arquivo que traz vários, escolher o mesmo de novo sem perguntar</translation>
+    </message>
+    <message>
+      <source>Install mods that only hold plugins and their files without showing the Quick Install window</source>
+      <translation>Instalar sem mostrar a janela de instalação rápida os mods que só trazem plugins e seus arquivos</translation>
+    </message>
+    <message>
+      <source>Only offer to extract archives for mods made for another edition of the game (an alternate source)</source>
+      <translation>Oferecer extrair os arquivos só em mods feitos para outra edição do jogo (fonte alternativa)</translation>
+    </message>
+    <message>
+      <source>When an archive also has a FOMOD installer, use that one</source>
+      <translation>Se um arquivo também tem um instalador FOMOD, usar esse</translation>
+    </message>
+    <message>
+      <source>When an archive also has an OMOD installer, use that one</source>
+      <translation>Se um arquivo também tem um instalador OMOD, usar esse</translation>
+    </message>
+    <message>
+      <source>The order in which MO2 tries this installer: a higher number goes first</source>
+      <translation>A ordem em que o MO2 tenta este instalador: um número maior vem primeiro</translation>
+    </message>
+  </context>
 </TS>

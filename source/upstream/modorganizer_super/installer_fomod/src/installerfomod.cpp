@@ -66,12 +66,12 @@ QList<PluginSetting> InstallerFomod::settings() const
 {
   QList<PluginSetting> result;
   result.push_back(
-      PluginSetting("prefer", "prefer this over the NCC based plugin", QVariant(true)));
+      PluginSetting("prefer", QCoreApplication::translate("RevampedInstallerSettings", "Try this installer before the C# script installer when an archive has both a ModuleConfig.xml and a script"), QVariant(true)));
   result.push_back(PluginSetting("use_any_file",
-                                 "allow dependencies on any file, not just esp/esm",
+                                 QCoreApplication::translate("RevampedInstallerSettings", "Let a FOMOD's conditions check any file in the game's data, not only plugins (.esp, .esm, .esl)"),
                                  QVariant(false)));
   result.push_back(PluginSetting("see_disabled_mods",
-                                 "treat disabled mods as inactive rather than missing",
+                                 QCoreApplication::translate("RevampedInstallerSettings", "A file in a disabled mod counts as inactive in a FOMOD's conditions, not as missing"),
                                  QVariant(false)));
   return result;
 }

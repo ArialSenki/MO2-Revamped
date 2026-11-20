@@ -61,20 +61,28 @@ class WizardInstaller(mobase.IPluginInstallerSimple):
         return self._organizer.pluginSetting(self.name(), "enabled")
 
     def settings(self):
+        # MO2 Revamped: descriptions that say what each setting does, translated
+        def text(value: str) -> str:
+            return QApplication.translate("RevampedInstallerSettings", value)
+
         return [
-            mobase.PluginSetting("enabled", "check to enable this plugin", True),
+            mobase.PluginSetting("enabled", text("Use this installer"), True),
             mobase.PluginSetting(
                 "prefer_fomod",
-                "prefer FOMOD installer over this one when possible",
+                text("When an archive also has a FOMOD installer, use that one"),
                 True,
             ),
             mobase.PluginSetting(
                 "prefer_omod",
-                "prefer OMOD installer over this one when possible",
+                text("When an archive also has an OMOD installer, use that one"),
                 False,
             ),
             # above FOMOD?
-            mobase.PluginSetting("priority", "priority of this installer", 120),
+            mobase.PluginSetting(
+                "priority",
+                text("The order in which MO2 tries this installer: a higher number goes first"),
+                120,
+            ),
         ]
 
     # method for IPluginInstallerSimple
