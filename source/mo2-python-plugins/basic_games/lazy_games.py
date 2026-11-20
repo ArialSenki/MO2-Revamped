@@ -23,6 +23,7 @@ import hashlib
 import importlib
 import json
 import os
+import sys
 from typing import Any
 
 import mobase
@@ -127,7 +128,16 @@ class ManifestGame(BasicGame):
         # the real init() registers what the game needs once it is managed;
         # this one isn't
         self._stub_organizer = organizer
-        return BasicGame.init(self, organizer)
+        result = BasicGame.init(self, organizer)
+        # a game whose init() also has work in other games' instances (Elden
+        # Ring puts back Steam saves an earlier launch hid) names a cheap
+        # check: when it says so, the real plugin is loaded and its init() runs
+        if _init_probe_says_so(self._manifest_entry.get("init_probe")):
+            try:
+                self._real()
+            except Exception as error:
+                print(f"{self._manifest_class}: its init() failed: {error}", file=sys.stderr)
+        return result
 
     def setGamePath(self, path) -> None:
         # MO2 sets every game's path when it detects them, at each start: the
@@ -160,6 +170,20 @@ class ManifestGame(BasicGame):
                 real.setGameVariant(self._stub_variant)
             self._real_game = real
         return self._real_game
+
+
+def _init_probe_says_so(probe: Any) -> bool:
+    """"module:function" (module relative to basic_games), called with no
+    arguments; False when there is none or it fails."""
+    if not isinstance(probe, str) or ":" not in probe:
+        return False
+    module_name, function = probe.split(":", 1)
+    try:
+        return bool(getattr(importlib.import_module(module_name, __package__), function)())
+    except Exception as error:
+        print(f"basic_games: the init check {probe} failed: {error}", file=sys.stderr)
+        # unsure: the real init() decides
+        return True
 
 
 def _forward(name: str):

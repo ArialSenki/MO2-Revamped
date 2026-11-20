@@ -2237,6 +2237,11 @@ class EldenRingMo2Game(BasicGame):
     # what Steam Cloud syncs of this game, and the game's own copy of it
     SteamCloudSaves = ("ER0000.sl2", "ER0000.sl2.bak")
 
+    # in other games' instances basic_games gives MO2 a stub of this plugin
+    # (lazy_games.py): it runs this check, and init() below when the check
+    # finds hidden Steam saves to put back
+    ManifestInitProbe = ".games.eldenring.recovery_probe:pending"
+
     def init(self, organizer: mobase.IOrganizer) -> bool:
         if not super().init(organizer):
             return False
