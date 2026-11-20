@@ -283,7 +283,9 @@ class Cyberpunk2077Game(BasicGame):
         return str(self._organizer.persistent(self.name(), key, "") or "")
 
     def _set_state(self, key: str, value: str) -> None:
-        self._organizer.setPersistent(self.name(), key, value, True)
+        # written only on a change: MO2 saves the instance's settings for it
+        if self._get_state(key) != value:
+            self._organizer.setPersistent(self.name(), key, value, True)
 
     # IPluginGame
 
