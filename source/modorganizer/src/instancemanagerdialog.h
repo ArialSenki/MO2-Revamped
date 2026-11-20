@@ -9,10 +9,12 @@
 #include <vector>
 
 class Instance;
+class InstancesQuickBridge;
 class PluginContainer;
 class QLabel;
 class QLineEdit;
 class QListView;
+class QModelIndex;
 class QPoint;
 class QPushButton;
 class QStandardItemModel;
@@ -27,6 +29,8 @@ class QVBoxLayout;
 class InstanceManagerDialog : public QDialog
 {
   Q_OBJECT
+  // MO2 Revamped: the Qt Quick version reads and clicks the controls
+  friend class InstancesQuickBridge;
 
 public:
   explicit InstanceManagerDialog(PluginContainer& pc, QWidget* parent = nullptr);
@@ -134,6 +138,10 @@ private:
   {
     QLabel* value       = nullptr;
     QToolButton* action = nullptr;
+    // what the row shows, for the Qt Quick version
+    QString title;
+    char16_t glyph       = 0;
+    char16_t actionGlyph = 0;
   };
 
   PluginContainer& m_pc;
@@ -199,6 +207,18 @@ private:
   // shows the actions for the instance under the mouse
   //
   void showListMenu(const QPoint& pos);
+
+  // the same for a row of the list, at a position on the screen
+  void showRowMenu(const QModelIndex& index, const QPoint& globalPos);
+
+  // MO2 Revamped: the Qt Quick version of the window (QuickUi), when it is on.
+  // The controls above are made either way and do the work; with Qt Quick they
+  // stay in an unshown widget and the view shows them
+  InstancesQuickBridge* m_quick = nullptr;
+  QWidget* m_headless           = nullptr;
+  bool setupQuick();
+  // tells the view that what the controls show changed
+  void quickChanged();
 
   // shows the actions for one of the user's groups (rename, remove) at the
   // given screen position

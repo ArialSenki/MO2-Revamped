@@ -7,7 +7,30 @@ mo2_configure_executable(organizer
 	EXTRA_TRANSLATIONS ${MO2_SUPER_PATH}/game_gamebryo/src ${MO2_UIBASE_PATH}/src
 	PRIVATE_DEPENDS
 		uibase githubpp bsatk esptk archive usvfs lootcli boost::program_options
-		DirectXTex libbsarch zlib Qt::WebEngineWidgets Qt::WebSockets)
+		DirectXTex libbsarch zlib Qt::WebEngineWidgets Qt::WebSockets
+		Qt::Qml Qt::Quick Qt::QuickWidgets)
+
+# MO2 Revamped: the Qt Quick versions of some windows (quickui.h). The QML is
+# compiled into the executable by qmlcachegen; it imports only QtQuick, which
+# the release already ships (uibase and the web view need it)
+find_package(Qt6 REQUIRED COMPONENTS Qml Quick QuickWidgets)
+qt_policy(SET QTP0001 NEW)
+qt_add_qml_module(organizer
+	URI MO2Revamped
+	VERSION 1.0
+	RESOURCE_PREFIX /qt/qml
+	NO_PLUGIN
+	QML_FILES
+		qml/FluentText.qml
+		qml/FluentGlyph.qml
+		qml/FluentButton.qml
+		qml/FluentIconButton.qml
+		qml/FluentSearchField.qml
+		qml/FluentScrollBar.qml
+		qml/FluentToolTipArea.qml
+		qml/InstancePicker.qml
+		qml/ThemeChoice.qml
+)
 
 # Keep user-specific source paths out of Release binaries. MSVC 19.30+ requires
 # deterministic compilation for /pathmap to affect __FILE__ strings.

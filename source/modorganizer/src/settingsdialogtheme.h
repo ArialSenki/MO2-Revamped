@@ -26,6 +26,7 @@ private:
 
   QComboBox* m_scaleBox     = nullptr;
   QCheckBox* m_greyText     = nullptr;
+  QCheckBox* m_quickUi      = nullptr;
   QComboBox* m_animationBox = nullptr;
 };
 

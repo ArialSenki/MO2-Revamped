@@ -1,4 +1,6 @@
 #include "fluentchoices.h"
+#include "quickui.h"
+#include "themechoicequick.h"
 #include "revampedtheme.h"
 #include "fluentdialogs.h"
 #include "fluenticons.h"
@@ -434,6 +436,31 @@ std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
                                  const QString& acceptLabel,
                                  Theme current)
 {
+  // MO2 Revamped: the Qt Quick version, when it is on (QuickUi)
+  if (QuickUi::enabled()) {
+    QVariantList themes;
+    for (const auto& [theme, label] :
+         {std::pair{Theme::Light, lightLabel}, std::pair{Theme::Dark, darkLabel}}) {
+      const auto c = themeColors(theme);
+      themes.push_back(QVariantMap{{QStringLiteral("name"), label},
+                                   {QStringLiteral("background"), c.background},
+                                   {QStringLiteral("card"), c.card},
+                                   {QStringLiteral("line"), c.line},
+                                   {QStringLiteral("text"), c.text},
+                                   {QStringLiteral("muted"), c.muted},
+                                   {QStringLiteral("accent"), c.accent},
+                                   {QStringLiteral("onAccent"), c.onAccent}});
+    }
+    std::optional<int> chosen;
+    if (QuickUi::chooseTheme(parent, windowTitle, heading, description, acceptLabel, themes,
+                             current == Theme::Light ? 0 : 1, chosen)) {
+      if (!chosen) {
+        return std::nullopt;
+      }
+      return *chosen == 0 ? Theme::Light : Theme::Dark;
+    }
+  }
+
   FluentContentDialog dialog(parent, QStringLiteral("ThemeChoiceDialog"), heading,
                              description);
   dialog.setWindowTitle(windowTitle);

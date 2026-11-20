@@ -11,6 +11,8 @@
 #include "instancemanager.h"
 #include "nolvustransfer.h"
 #include "plugincontainer.h"
+#include "instancesquickbridge.h"
+#include "quickui.h"
 #include "settings.h"
 #include "shared/appconfig.h"
 #include "shared/util.h"
@@ -46,6 +48,7 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QPlainTextEdit>
+#include <QQuickWidget>
 #include <QSaveFile>
 #include <QScrollArea>
 #include <QShortcut>
@@ -61,6 +64,14 @@ namespace
 {
 // Windows device names (CON, NUL, COM1...) can't be folders, in any case and
 // with any extension; fixDirectoryName() only catches the exact upper case
+// hidden on purpose: the Qt Quick version never shows the controls, so
+// isHidden() would be true for every one of them there
+bool hiddenOnPurpose(const QWidget* w)
+{
+  return w->testAttribute(Qt::WA_WState_ExplicitShowHide) &&
+         w->testAttribute(Qt::WA_WState_Hidden);
+}
+
 bool isReservedDeviceName(const QString& name)
 {
   QString stem = name.section(QLatin1Char('.'), 0, 0).trimmed().toUpper();
@@ -472,6 +483,9 @@ InstanceManagerDialog::InstanceManagerDialog(PluginContainer& pc, QWidget* paren
                    .toString())
 {
   setupUi();
+  if (m_headless != nullptr) {
+    setupQuick();
+  }
 
   updateInstances();
   updateList();
@@ -489,7 +503,16 @@ void InstanceManagerDialog::setupUi()
   setMinimumSize(880, 560);
   resize(1000, 680);
 
-  auto* layout = new QVBoxLayout(this);
+  // MO2 Revamped: with Qt Quick on, the controls go in a widget that is never
+  // shown (see setupQuick())
+  QWidget* host = this;
+  if (QuickUi::enabled()) {
+    m_headless = new QWidget(this);
+    m_headless->setObjectName(QStringLiteral("instanceControls"));
+    m_headless->hide();
+    host = m_headless;
+  }
+  auto* layout = new QVBoxLayout(host);
   layout->setContentsMargins(16, 16, 16, 12);
   layout->setSpacing(10);
 
@@ -540,7 +563,7 @@ void InstanceManagerDialog::setupUi()
   auto when = [](QWidget* button, void (InstanceManagerDialog::*slot)(),
                  InstanceManagerDialog* self) {
     return [button, slot, self] {
-      if (button->isEnabled() && !button->isHidden()) {
+      if (button->isEnabled() && !hiddenOnPurpose(button)) {
         (self->*slot)();
       }
     };
@@ -553,6 +576,10 @@ void InstanceManagerDialog::setupUi()
   shortcut(QKeySequence(Qt::CTRL | Qt::Key_N),
            when(m_new, &InstanceManagerDialog::createNew, this));
   shortcut(QKeySequence::Find, [this] {
+    if (m_quick != nullptr) {
+      m_quick->openSearch();
+      return;
+    }
     m_filter->setVisible(true);
     m_filter->setFocus();
     m_filter->selectAll();
@@ -560,6 +587,39 @@ void InstanceManagerDialog::setupUi()
   connect(m_switch, &QPushButton::clicked, this,
           &InstanceManagerDialog::openSelectedInstance);
   connect(close, &QPushButton::clicked, this, &QDialog::close);
+}
+
+bool InstanceManagerDialog::setupQuick()
+{
+  m_quick    = new InstancesQuickBridge(this);
+  auto* view = QuickUi::createView(this, QStringLiteral("InstancePicker"),
+                                   {{QStringLiteral("bridge"), QVariant::fromValue(m_quick)}});
+  auto* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+  if (view == nullptr) {
+    // the Widgets version after all
+    delete m_quick;
+    m_quick = nullptr;
+    layout->addWidget(m_headless);
+    m_headless->show();
+    m_headless = nullptr;
+    return false;
+  }
+  layout->addWidget(view);
+  view->setFocus();
+  // tall enough for every details row, as the Widgets version, unless the
+  // screen is shorter: then they scroll
+  const QScreen* screen = QGuiApplication::primaryScreen();
+  const int available   = screen != nullptr ? screen->availableGeometry().height() : 1000;
+  view->setMinimumHeight(qMin(800, available - 80));
+  return true;
+}
+
+void InstanceManagerDialog::quickChanged()
+{
+  if (m_quick != nullptr) {
+    m_quick->scheduleSync();
+  }
 }
 
 QWidget* InstanceManagerDialog::createListCard()
@@ -825,19 +885,26 @@ InstanceManagerDialog::addDetailRow(QWidget* parent, char16_t glyph, const QStri
   // opens it when there is something to open
   const auto shared = FluentPanels::addDetailRow(parent, glyph, title, tip, actionGlyph);
   DetailRow row;
-  row.value  = shared.value;
-  row.action = shared.action;
+  row.value       = shared.value;
+  row.action      = shared.action;
+  row.title       = title;
+  row.glyph       = glyph;
+  row.actionGlyph = tip.isEmpty() ? 0 : actionGlyph;
   return row;
 }
 
 void InstanceManagerDialog::showListMenu(const QPoint& pos)
 {
-  const QModelIndex index = m_list->indexAt(pos);
+  showRowMenu(m_list->indexAt(pos), m_list->viewport()->mapToGlobal(pos));
+}
+
+void InstanceManagerDialog::showRowMenu(const QModelIndex& index, const QPoint& globalPos)
+{
   if (!index.isValid()) {
     return;
   }
   if (index.data(HeaderRole).toBool()) {
-    showGroupMenu(index.data(GroupRole).toString(), m_list->viewport()->mapToGlobal(pos));
+    showGroupMenu(index.data(GroupRole).toString(), globalPos);
     return;
   }
   select(static_cast<std::size_t>(index.data(IndexRole).toInt()));
@@ -857,7 +924,7 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
                        : text + QLatin1Char('	') + keys.toString(QKeySequence::NativeText);
     auto* action = menu.addAction(FluentIcons::glyph(glyph), label, this, slot);
     action->setEnabled(twin == nullptr || twin->isEnabled());
-    action->setVisible(twin == nullptr || !twin->isHidden());
+    action->setVisible(twin == nullptr || !hiddenOnPurpose(twin));
     return action;
   };
   add(PlayGlyph, m_switch->text(), m_switch, &InstanceManagerDialog::openSelectedInstance,
@@ -911,7 +978,7 @@ void InstanceManagerDialog::showListMenu(const QPoint& pos)
       QKeySequence(Qt::Key_Delete));
 
   FluentIcons::apply(&menu);
-  menu.exec(m_list->viewport()->mapToGlobal(pos));
+  menu.exec(globalPos);
 }
 
 void InstanceManagerDialog::showEvent(QShowEvent* e)
@@ -1098,6 +1165,7 @@ void InstanceManagerDialog::updateNolvus()
   }
 
   m_nolvusCard->setVisible(!m_nolvus.empty() || !interrupted.empty());
+  quickChanged();
 }
 
 void InstanceManagerDialog::openNolvus(std::size_t index)
@@ -1481,6 +1549,7 @@ void InstanceManagerDialog::applyFilter()
     anyShown |= textMatch;
   }
   closeHeading();
+  quickChanged();
 }
 
 void InstanceManagerDialog::select(std::size_t i)
@@ -2302,6 +2371,7 @@ void InstanceManagerDialog::fillData(const Instance& ii)
                                 : (m_restartOnSelect ? tr("Switch to this instance")
                                                      : tr("Open")));
   m_switch->setEnabled(!alreadyOpen && hasPlugin);
+  quickChanged();
 }
 
 void InstanceManagerDialog::startSizeScan(const Instance& ii)
@@ -2362,6 +2432,7 @@ void InstanceManagerDialog::startSizeScan(const Instance& ii)
                                    .arg(localizedByteSize(sizes[1]))
                                    .arg(localizedByteSize(sizes[2]));
           static_cast<ElidedLabel*>(self->m_sizeRow.value)->setFullText(text);
+          self->quickChanged();
         },
         Qt::QueuedConnection);
   });
@@ -2529,6 +2600,7 @@ void InstanceManagerDialog::clearData()
           : tr("No instances yet. Create one with New instance."));
   m_detailsStack->setCurrentIndex(0);
   setButtonsEnabled(false);
+  quickChanged();
 }
 
 void InstanceManagerDialog::setButtonsEnabled(bool b)

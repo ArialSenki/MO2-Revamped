@@ -11963,6 +11963,14 @@ Exemplos:
       <translation>Suavizar o texto em cinza (telas OLED)</translation>
     </message>
     <message>
+      <source>Use the new interface (Qt Quick) where available</source>
+      <translation>Usar a nova interface (Qt Quick) onde houver</translation>
+    </message>
+    <message>
+      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Mostra nela as janelas que têm uma versão nova (a janela de instâncias e a pergunta do tema de uma instância nova), desenhadas com Qt Quick. Funcionam do mesmo jeito e usam um pouco mais de memória. Vale quando o Mod Organizer abrir de novo.</translation>
+    </message>
+    <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
       <translation>Desenha o texto sem as bordas coloridas do Windows, que nas telas OLED aparecem como um halo colorido. Vale quando o Mod Organizer abrir de novo.</translation>
     </message>

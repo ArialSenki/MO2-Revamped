@@ -12328,6 +12328,14 @@ Exemple :
       <translation>Lisser le texte en gris (écrans OLED)</translation>
     </message>
     <message>
+      <source>Use the new interface (Qt Quick) where available</source>
+      <translation>Utiliser la nouvelle interface (Qt Quick) quand elle existe</translation>
+    </message>
+    <message>
+      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Affiche avec elle les fenêtres qui ont une nouvelle version (la fenêtre des instances et la question du thème d&apos;une nouvelle instance), dessinées avec Qt Quick. Elles fonctionnent de la même façon et utilisent un peu plus de mémoire. S&apos;applique au prochain démarrage de Mod Organizer.</translation>
+    </message>
+    <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
       <translation>Affiche le texte sans les bords colorés de Windows, qui forment un halo de couleur sur les écrans OLED. S'applique au prochain démarrage de Mod Organizer.</translation>
     </message>

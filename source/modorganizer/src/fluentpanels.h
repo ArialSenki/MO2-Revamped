@@ -45,6 +45,7 @@ public:
   using QLabel::QLabel;
 
   void setFullText(const QString& text);
+  const QString& fullText() const { return m_full; }
 
   // where the text is cut (in the middle by default)
   void setElideMode(Qt::TextElideMode mode)
