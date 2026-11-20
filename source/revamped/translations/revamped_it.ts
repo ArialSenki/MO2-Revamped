@@ -8381,6 +8381,20 @@ La guida è sempre nel menu ….</translation>
       <source>Show the first steps</source>
       <translation>Mostra i primi passi</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, together with this file, when you report the problem.</source>
+      <translation>Mod Organizer si è chiuso inaspettatamente il %1 e ha salvato un rapporto del crash:
+%2
+
+Se succede di nuovo, crea una segnalazione di errore e allegala, insieme a questo file, quando segnali il problema.</translation>
+    </message>
+    <message>
+      <source>The bug report comes from the MO2 Revamped Information plugin, which is turned off. Turn it on in Settings &gt; Plugins and restart MO2.</source>
+      <translation>La segnalazione di errore viene dal plugin MO2 Revamped Information, che è disattivato. Attivalo in Impostazioni &gt; Plugin e riavvia MO2.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -19687,6 +19701,10 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
     <message>
       <source>Open the guide</source>
       <translation>Apri la guida</translation>
+    </message>
+    <message>
+      <source>The game loads .archive files by name. To use the mod order instead, turn on the Cyberpunk 2077 plugin's &lt;b&gt;enforce_archive_load_order&lt;/b&gt; and &lt;b&gt;reverse_archive_load_order&lt;/b&gt; in Settings &amp;gt; Plugins: then the mod lower in the list wins. Tools &amp;gt; &lt;b&gt;Archive conflicts&lt;/b&gt; shows which .archive wins where two mods change the same files.</source>
+      <translation>Il gioco carica i file .archive per nome. Per usare l'ordine delle mod, attiva &lt;b&gt;enforce_archive_load_order&lt;/b&gt; e &lt;b&gt;reverse_archive_load_order&lt;/b&gt; del plugin di Cyberpunk 2077 in Impostazioni &amp;gt; Plugin: così vince la mod più in basso nell'elenco. Strumenti &amp;gt; &lt;b&gt;Conflitti di archive&lt;/b&gt; mostra quale .archive vince dove due mod cambiano gli stessi file.</translation>
     </message>
 </context>
 <context>

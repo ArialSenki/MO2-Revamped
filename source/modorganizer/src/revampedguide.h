@@ -37,8 +37,10 @@ inline const QString SettingsTopic = QStringLiteral("settings");
 
 // shows the guide as a modal window at the given topic (the first one when
 // empty or unknown); without an action handler the buttons that need the
-// main window are left out
-void show(QWidget* parent, const QString& topic = {}, const Action& action = {});
+// main window are left out. Of the game pages, only game's is shown (a
+// gameTopic(); none when empty)
+void show(QWidget* parent, const QString& topic = {}, const Action& action = {},
+          const QString& game = {});
 
 // the topic about the given game's own plugin, or empty when MO2 Revamped
 // has none for it

@@ -8005,6 +8005,20 @@ O guia fica sempre no menu ….</translation>
       <source>Show the first steps</source>
       <translation>Ver os primeiros passos</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, together with this file, when you report the problem.</source>
+      <translation>O Mod Organizer fechou inesperadamente em %1 e salvou um relatório do travamento:
+%2
+
+Se acontecer de novo, crie um relatório de erro e anexe-o, junto com este arquivo, ao relatar o problema.</translation>
+    </message>
+    <message>
+      <source>The bug report comes from the MO2 Revamped Information plugin, which is turned off. Turn it on in Settings &gt; Plugins and restart MO2.</source>
+      <translation>O relatório de erro vem do plugin MO2 Revamped Information, que está desativado. Ative-o em Configurações &gt; Plugins e reinicie o MO2.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -19441,6 +19455,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     <message>
       <source>Open the guide</source>
       <translation>Abrir o guia</translation>
+    </message>
+    <message>
+      <source>The game loads .archive files by name. To use the mod order instead, turn on the Cyberpunk 2077 plugin's &lt;b&gt;enforce_archive_load_order&lt;/b&gt; and &lt;b&gt;reverse_archive_load_order&lt;/b&gt; in Settings &amp;gt; Plugins: then the mod lower in the list wins. Tools &amp;gt; &lt;b&gt;Archive conflicts&lt;/b&gt; shows which .archive wins where two mods change the same files.</source>
+      <translation>O jogo carrega os arquivos .archive pelo nome. Para usar a ordem dos mods, ative &lt;b&gt;enforce_archive_load_order&lt;/b&gt; e &lt;b&gt;reverse_archive_load_order&lt;/b&gt; do plugin do Cyberpunk 2077 em Configurações &amp;gt; Plugins: aí vence o mod mais abaixo na lista. Ferramentas &amp;gt; &lt;b&gt;Conflitos de archives&lt;/b&gt; mostra qual .archive vence onde dois mods mudam os mesmos arquivos.</translation>
     </message>
 </context>
 <context>

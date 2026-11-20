@@ -3092,8 +3092,10 @@ void MainWindow::createHelpMenu()
   revampedGuideAction->setToolTip(
       tr("First steps, and short help on every part of MO2 Revamped and on this "
          "game."));
+  // the page about this game's own plugin, when MO2 Revamped has one
+  const QString gameTopic = RevampedGuide::gameTopic(game);
   // what the guide's buttons ask for, once it has closed
-  const auto guideAction = [this](const QString& id) {
+  const auto guideHandler = [this](const QString& id) {
     if (id.startsWith(QLatin1String("settings:"))) {
       // SettingsDialog::exec() starts on that page
       qApp->setProperty("revampedSettingsStartPage", id.mid(9));
@@ -3115,24 +3117,28 @@ void MainWindow::createHelpMenu()
     } else if (id == QLatin1String("bugreport")) {
       if (auto* report = findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"))) {
         report->trigger();
+      } else {
+        // the report is made by the MO2 Revamped Information plugin
+        QMessageBox::information(
+            this, tr("Create bug report"),
+            tr("The bug report comes from the MO2 Revamped Information plugin, which "
+               "is turned off. Turn it on in Settings > Plugins and restart MO2."));
       }
     }
   };
-  connect(revampedGuideAction, &QAction::triggered, this, [this, guideAction] {
-    RevampedGuide::show(this, {}, guideAction);
+  connect(revampedGuideAction, &QAction::triggered, this, [this, guideHandler, gameTopic] {
+    RevampedGuide::show(this, {}, guideHandler, gameTopic);
   });
   menu->addAction(revampedGuideAction);
 
-  // the page about this game's own plugin, when MO2 Revamped has one
-  const QString gameTopic = RevampedGuide::gameTopic(game);
   if (!gameTopic.isEmpty()) {
     QAction* gameHelpAction = new QAction(tr("Help for %1").arg(game->gameName()), menu);
     gameHelpAction->setObjectName(QStringLiteral("revampedGameHelpAction"));
     gameHelpAction->setIcon(FluentIcons::glyph(0xE7FC));
     gameHelpAction->setToolTip(
         tr("What MO2 Revamped does for this game, and its usual problems."));
-    connect(gameHelpAction, &QAction::triggered, this, [this, gameTopic, guideAction] {
-      RevampedGuide::show(this, gameTopic, guideAction);
+    connect(gameHelpAction, &QAction::triggered, this, [this, gameTopic, guideHandler] {
+      RevampedGuide::show(this, gameTopic, guideHandler, gameTopic);
     });
     menu->addAction(gameHelpAction);
   }
@@ -5898,8 +5904,8 @@ void MainWindow::noticeLastCrash(int tries)
   FluentContentDialog dialog(
       this, QStringLiteral("CrashDumpNoticeDialog"), tr("Mod Organizer crashed"),
       tr("Mod Organizer closed unexpectedly on %1 and saved a crash report:\n%2\n\n"
-         "If it happens again, create a bug report and attach it, with this "
-         "file, when you report the problem.")
+         "If it happens again, create a bug report and attach it, together with "
+         "this file, when you report the problem.")
           .arg(QLocale().toString(newest.lastModified(), QLocale::ShortFormat),
                QDir::toNativeSeparators(newest.absoluteFilePath())));
   // the report is made by the MO2 Revamped Information plugin, when it's on
@@ -5927,7 +5933,7 @@ void MainWindow::noticeLastCrash(int tries)
   }
 }
 
-void MainWindow::offerFirstSteps(int tries)
+void MainWindow::offerFirstSteps(int ticks, int idle)
 {
   const QString file = m_OrganizerCore.settings().filename();
   constexpr auto offeredKey = "Settings/revamped_first_steps_offered";
@@ -5941,12 +5947,26 @@ void MainWindow::offerFirstSteps(int tries)
     QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
     return;
   }
-  // after the first-start dialogs and the crash notice, never over a question
-  if (tries == 0 || QApplication::activeModalWidget() != nullptr || !isVisible() ||
-      isMinimized()) {
-    if (tries < 60) {
-      QTimer::singleShot(tries == 0 ? 4000 : 2000, this, [this, tries] {
-        offerFirstSteps(tries + 1);
+  // a new instance made for a collection or a list is already on its way:
+  // its window is open (openPendingCollection opens it after two idle seconds)
+  if (m_CollectionDialog || m_WabbajackDialog || m_WabbajackBrowser) {
+    QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+    return;
+  }
+  // after the first-start questions, the pending collection and the crash
+  // notice, never over a question: idle twice in a row, as
+  // openPendingCollection checks, so a question that follows another one
+  // isn't overtaken. The first check waits for the crash notice's 3 seconds;
+  // after four minutes of questions it gives up until the next start
+  const auto& settings = m_OrganizerCore.settings();
+  const bool busy = ticks == 0 || QApplication::activeModalWidget() != nullptr ||
+                    !isVisible() || isMinimized() || settings.firstStart() ||
+                    !settings.interface().themeChoicePromptCompleted();
+  const int nowIdle = busy ? 0 : idle + 1;
+  if (nowIdle < 2) {
+    if (ticks < 120) {
+      QTimer::singleShot(ticks == 0 ? 4000 : 2000, this, [this, ticks, nowIdle] {
+        offerFirstSteps(ticks + 1, nowIdle);
       });
     }
     return;

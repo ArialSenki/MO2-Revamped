@@ -421,10 +421,12 @@ std::vector<Topic> topics()
        QStringLiteral("Cyberpunk 2077"),
        Text::tr("What MO2 Revamped does for this game, and its usual problems."),
        {{0xE8FD, Text::tr("Archive order"),
-         Text::tr("MO2 writes the game's archive/pc/mod/modlist.txt from the mod "
-                  "order, so the mod lower in the list wins. Tools &gt; <b>Archive "
-                  "conflicts</b> shows which .archive wins where two mods change the "
-                  "same files.")},
+         Text::tr("The game loads .archive files by name. To use the mod order "
+                  "instead, turn on the Cyberpunk 2077 plugin's "
+                  "<b>enforce_archive_load_order</b> and <b>reverse_archive_load_order</b> "
+                  "in Settings &gt; Plugins: then the mod lower in the list wins. Tools "
+                  "&gt; <b>Archive conflicts</b> shows which .archive wins where two "
+                  "mods change the same files.")},
         {0xE895, Text::tr("REDmod"),
          Text::tr("Changed REDmods are deployed before the game starts. <b>Cyberpunk "
                   "2077 - skip REDmod deploy</b> starts without it and <b>Manually "
@@ -580,7 +582,7 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
     const bool link = entry.action.startsWith(QLatin1String("url:"));
     if (!entry.button.isEmpty() && (link || withActions)) {
       auto* button = new QPushButton(entry.button, row);
-      button->setObjectName(QStringLiteral("revampedGuideAction"));
+      button->setObjectName(QStringLiteral("revampedGuideRowButton"));
       button->setAutoDefault(false);
       button->setCursor(Qt::PointingHandCursor);
       button->setIcon(FluentIcons::glyph(link ? 0xE8A7 : 0xE76C));
@@ -656,7 +658,8 @@ QString gameTopic(const MOBase::IPluginGame* game)
   return {};
 }
 
-void show(QWidget* parent, const QString& topic, const Action& action)
+void show(QWidget* parent, const QString& topic, const Action& action,
+          const QString& game)
 {
   QDialog dialog(parent);
   dialog.setObjectName(QStringLiteral("RevampedGuideDialog"));
@@ -697,6 +700,10 @@ void show(QWidget* parent, const QString& topic, const Action& action)
   QStringList words;
   int startIndex = 0;
   for (const Topic& entry : all) {
+    // of the game pages, only the instance's own game's
+    if (entry.id.startsWith(QLatin1String("game-")) && entry.id != game) {
+      continue;
+    }
     if (entry.id == start) {
       startIndex = tabs->count();
     }

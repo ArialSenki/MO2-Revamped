@@ -8013,6 +8013,20 @@ Die Anleitung ist immer im Menü ….</translation>
       <source>Show the first steps</source>
       <translation>Erste Schritte zeigen</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, together with this file, when you report the problem.</source>
+      <translation>Mod Organizer wurde am %1 unerwartet beendet und hat einen Absturzbericht gespeichert:
+%2
+
+Wenn es wieder passiert, erstelle einen Fehlerbericht und hänge ihn zusammen mit dieser Datei an, wenn du das Problem meldest.</translation>
+    </message>
+    <message>
+      <source>The bug report comes from the MO2 Revamped Information plugin, which is turned off. Turn it on in Settings &gt; Plugins and restart MO2.</source>
+      <translation>Der Fehlerbericht kommt vom Plugin MO2 Revamped Information, das ausgeschaltet ist. Schalte es unter Einstellungen &gt; Plugins ein und starte MO2 neu.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
@@ -19465,6 +19479,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
     <message>
       <source>Open the guide</source>
       <translation>Anleitung öffnen</translation>
+    </message>
+    <message>
+      <source>The game loads .archive files by name. To use the mod order instead, turn on the Cyberpunk 2077 plugin's &lt;b&gt;enforce_archive_load_order&lt;/b&gt; and &lt;b&gt;reverse_archive_load_order&lt;/b&gt; in Settings &amp;gt; Plugins: then the mod lower in the list wins. Tools &amp;gt; &lt;b&gt;Archive conflicts&lt;/b&gt; shows which .archive wins where two mods change the same files.</source>
+      <translation>Das Spiel lädt .archive-Dateien nach Namen. Um stattdessen die Mod-Reihenfolge zu nutzen, schalte im Cyberpunk-2077-Plugin &lt;b&gt;enforce_archive_load_order&lt;/b&gt; und &lt;b&gt;reverse_archive_load_order&lt;/b&gt; unter Einstellungen &amp;gt; Plugins ein: dann gewinnt der Mod weiter unten in der Liste. Werkzeuge &amp;gt; &lt;b&gt;Archive-Konflikte&lt;/b&gt; zeigt, welches .archive gewinnt, wo zwei Mods dieselben Dateien ändern.</translation>
     </message>
 </context>
 <context>
