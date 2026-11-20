@@ -3371,6 +3371,7 @@ void MainWindow::showEvent(QShowEvent* event)
     QTimer::singleShot(3000, this, [this] {
       noticeLastCrash();
     });
+    offerFirstSteps();
 
     // notify plugins that the MO2 is ready
     m_PluginContainer.startPlugins(this);
@@ -5923,6 +5924,50 @@ void MainWindow::noticeLastCrash(int tries)
     reportAction->trigger();
   } else {
     shell::Explore(newest.absoluteFilePath());
+  }
+}
+
+void MainWindow::offerFirstSteps(int tries)
+{
+  const QString file = m_OrganizerCore.settings().filename();
+  constexpr auto offeredKey = "Settings/revamped_first_steps_offered";
+  if (file.isEmpty() || QSettings(file, QSettings::IniFormat).value(offeredKey, false).toBool()) {
+    return;
+  }
+  // only an instance nothing was installed in yet
+  if (!QDir(m_OrganizerCore.settings().paths().mods())
+           .entryList(QDir::Dirs | QDir::NoDotAndDotDot)
+           .isEmpty()) {
+    QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+    return;
+  }
+  // after the first-start dialogs and the crash notice, never over a question
+  if (tries == 0 || QApplication::activeModalWidget() != nullptr || !isVisible() ||
+      isMinimized()) {
+    if (tries < 60) {
+      QTimer::singleShot(tries == 0 ? 4000 : 2000, this, [this, tries] {
+        offerFirstSteps(tries + 1);
+      });
+    }
+    return;
+  }
+  QSettings(file, QSettings::IniFormat).setValue(offeredKey, true);
+
+  FluentContentDialog dialog(
+      this, QStringLiteral("FirstStepsOfferDialog"), tr("New to MO2 Revamped?"),
+      tr("This instance has no mods yet. The first steps show how to connect your "
+         "Nexus account, install mods or a whole collection, and start the game.\n\n"
+         "The guide is always in the … menu."));
+  auto* show  = dialog.addButton(tr("Show the first steps"), true);
+  auto* later = dialog.addButton(tr("Not now"));
+  connect(show, &QPushButton::clicked, &dialog, &QDialog::accept);
+  connect(later, &QPushButton::clicked, &dialog, &QDialog::reject);
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  // the guide opens at the first steps, with its buttons working
+  if (auto* guide = findChild<QAction*>(QStringLiteral("revampedGuideAction"))) {
+    guide->trigger();
   }
 }
 

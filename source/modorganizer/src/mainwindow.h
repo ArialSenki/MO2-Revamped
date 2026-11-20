@@ -276,6 +276,8 @@ private:
   void openPendingCollection(int idleChecks = 0);
   // MO2 Revamped: tells the user once about a crash dump the last run left
   void noticeLastCrash(int tries = 0);
+  // a new instance without mods: offers the guide's first steps, once
+  void offerFirstSteps(int tries = 0);
   bool selectProfileByName(const QString& name);
 
   QMenu* createPopupMenu() override;

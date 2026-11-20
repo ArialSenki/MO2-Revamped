@@ -8201,6 +8201,22 @@ Si cela se reproduit, crée un rapport de bug et joins-le, avec ce fichier, en s
       <source>What MO2 Revamped does for this game, and its usual problems.</source>
       <translation>Ce que MO2 Revamped fait pour ce jeu, et ses problèmes courants.</translation>
     </message>
+    <message>
+      <source>New to MO2 Revamped?</source>
+      <translation>Nouveau sur MO2 Revamped ?</translation>
+    </message>
+    <message>
+      <source>This instance has no mods yet. The first steps show how to connect your Nexus account, install mods or a whole collection, and start the game.
+
+The guide is always in the … menu.</source>
+      <translation>Cette instance n'a encore aucun mod. Les premiers pas montrent comment connecter ton compte Nexus, installer des mods ou toute une collection, et lancer le jeu.
+
+Le guide est toujours dans le menu ….</translation>
+    </message>
+    <message>
+      <source>Show the first steps</source>
+      <translation>Voir les premiers pas</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
