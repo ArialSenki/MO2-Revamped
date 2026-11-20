@@ -20405,4 +20405,59 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <translation>Fechar</translation>
     </message>
 </context>
+  <context>
+    <name>Cyberpunk2077Game</name>
+    <message>
+      <source>Cyberpunk 2077 Framework Check</source>
+      <translation>Verificação de frameworks do Cyberpunk 2077</translation>
+    </message>
+    <message>
+      <source>Warns when active Cyberpunk 2077 mods need a framework (RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware...) or the REDmod DLC that isn&apos;t installed.</source>
+      <translation>Avisa quando mods ativos do Cyberpunk 2077 precisam de um framework (RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware...) ou do DLC REDmod que não está instalado.</translation>
+    </message>
+    <message>
+      <source>REDmod mods need the REDmod DLC</source>
+      <translation>Mods REDmod precisam do DLC REDmod</translation>
+    </message>
+    <message>
+      <source>REDmod files deployed outside MO2</source>
+      <translation>Arquivos do REDmod implantados fora do MO2</translation>
+    </message>
+    <message>
+      <source>Missing framework: {0}</source>
+      <translation>Framework ausente: {0}</translation>
+    </message>
+    <message>
+      <source>These active mods are REDmods, which the game loads only with the free REDmod DLC (its tools/redmod folder isn&apos;t in the game folder):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install the REDmod DLC from your store&apos;s DLC list (Steam, GOG or Epic). Until then MO2 starts the game without deploying them.</source>
+      <translation>Estes mods ativos são REDmods, que o jogo só carrega com o DLC gratuito REDmod (a pasta tools/redmod dele não está na pasta do jogo):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Instale o DLC REDmod pela lista de DLCs da sua loja (Steam, GOG ou Epic). Até lá, o MO2 inicia o jogo sem implantá-los.</translation>
+    </message>
+    <message>
+      <source>The game folder has REDmod files deployed by something else than MO2 (r6/cache/modded), and no REDmod is active in MO2. The game loads them when started with -modded, so mods MO2 doesn&apos;t manage can still change the game.&lt;br&gt;&lt;br&gt;If you only use MO2, remove them by verifying the game files in your store, or start “Cyberpunk 2077 - skip REDmod deploy”, which starts the game without -modded.</source>
+      <translation>A pasta do jogo tem arquivos do REDmod implantados por algo que não é o MO2 (r6/cache/modded), e nenhum REDmod está ativo no MO2. O jogo os carrega quando iniciado com -modded, então mods que o MO2 não gerencia ainda podem alterar o jogo.&lt;br&gt;&lt;br&gt;Se você usa só o MO2, remova-os verificando os arquivos do jogo na sua loja, ou inicie “Cyberpunk 2077 - skip REDmod deploy”, que inicia o jogo sem -modded.</translation>
+    </message>
+    <message>
+      <source>These active mods need {0}, which isn&apos;t installed or is turned off in the mod list:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Install {0} from &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt; or turn it on. Without it these mods don&apos;t work, and some stop the game from starting.</source>
+      <translation>Estes mods ativos precisam de {0}, que não está instalado ou está desativado na lista de mods:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Instale {0} de &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt; ou ative-o. Sem ele estes mods não funcionam, e alguns impedem o jogo de iniciar.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• e mais {0}</translation>
+    </message>
+    <message>
+      <source>REDmod deployment couldn&apos;t start: {0}</source>
+      <translation>A implantação do REDmod não pôde começar: {0}</translation>
+    </message>
+    <message>
+      <source>REDmod deployment failed (exit code {0}). Its log is {1} in the game folder.</source>
+      <translation>A implantação do REDmod falhou (código de saída {0}). O log dela é {1}, na pasta do jogo.</translation>
+    </message>
+    <message>
+      <source>Cyberpunk 2077</source>
+      <translation>Cyberpunk 2077</translation>
+    </message>
+    <message>
+      <source>Start the game anyway, without the REDmods&apos; latest changes?</source>
+      <translation>Iniciar o jogo mesmo assim, sem as últimas alterações dos REDmods?</translation>
+    </message>
+  </context>
 </TS>
