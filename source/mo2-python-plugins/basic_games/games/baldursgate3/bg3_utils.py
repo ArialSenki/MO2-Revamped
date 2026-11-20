@@ -6,7 +6,6 @@ import time
 import shutil
 import typing
 from pathlib import Path
-from xml.sax.saxutils import escape
 
 from PyQt6.QtCore import (
     QCoreApplication,
@@ -64,8 +63,10 @@ def get_node_string(
 ) -> str:
     # MO2 Revamped: the values as XML wants them ("Tattoo & Makeup" broke the
     # file the game reads)
+    # html.escape without quote= is xml.sax.saxutils.escape (& < >), whose
+    # import pulled in urllib, http and email at every MO2 start
     folder, md5, name, publish_handle, uuid, version64 = (
-        escape(str(v), {'"': "&quot;"})
+        html.escape(str(v), quote=False).replace('"', "&quot;")
         for v in (folder, md5, name, publish_handle, uuid, version64)
     )
     return f"""
@@ -105,10 +106,20 @@ class BG3Utils:
     def __init__(self, name: str):
         self.main_window = None
         self._name = name
-        from . import lslib_retriever, pak_parser
 
-        self.lslib_retriever = lslib_retriever.LSLibRetriever(self)
-        self._pak_parser = pak_parser.BG3PakParser(self)
+    # MO2 Revamped: made the first time a BG3 instance needs them, not when
+    # MO2 loads the plugin in every instance
+    @functools.cached_property
+    def lslib_retriever(self):
+        from .lslib_retriever import LSLibRetriever
+
+        return LSLibRetriever(self)
+
+    @functools.cached_property
+    def _pak_parser(self):
+        from .pak_parser import BG3PakParser
+
+        return BG3PakParser(self)
 
     def init(self, organizer: mobase.IOrganizer):
         self._organizer = organizer

@@ -10,13 +10,10 @@ from typing import Dict, List, Optional, Sequence, Union, cast
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication
 
-from wizard.runner import WizardRunnerState
-
 import mobase
 
-from .dialog import WizardInstallerDialog
-from .runner import make_interpreter
-from .utils import make_ini_tweaks, merge_ini_tweaks
+# MO2 Revamped: the wizard interpreter, antlr4 and the dialog (~50 ms) are
+# imported by install(); recognising an archive only needs wizard.txt
 
 
 class WizardInstaller(mobase.IPluginInstallerSimple):
@@ -271,6 +268,12 @@ class WizardInstaller(mobase.IPluginInstallerSimple):
         wizard = base.find("wizard.txt")
         if wizard is None:
             return mobase.InstallResult.NOT_ATTEMPTED
+
+        from wizard.runner import WizardRunnerState
+
+        from .dialog import WizardInstallerDialog
+        from .runner import make_interpreter
+        from .utils import make_ini_tweaks, merge_ini_tweaks
 
         to_extract = self._getEntriesToExtract(tree)
 
