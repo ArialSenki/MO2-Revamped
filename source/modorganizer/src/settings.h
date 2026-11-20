@@ -789,6 +789,13 @@ public:
   //
   static Settings& instance();
 
+  // MO2 Revamped: a preference of this instance kept in its ini under
+  // iniKey ("Settings/..."), which older builds kept in the global settings
+  // under globalKey for every instance at once: the first instance that reads
+  // it takes the old value over, and the global one is removed
+  QVariant instanceValue(const QString& iniKey, const QString& globalKey);
+  void setInstanceValue(const QString& iniKey, const QVariant& value);
+
   // returns null if there is no global Settings instance
   //
   static Settings* maybeInstance();

@@ -5913,7 +5913,10 @@ void MainWindow::browseCollections()
 void MainWindow::browseWabbajackLists()
 {
   // the lists' files go next to the lists' downloads
-  QString downloads = GlobalSettings::value(QStringLiteral("Wabbajack/downloadsFolder")).toString();
+  QString downloads = m_OrganizerCore.settings()
+                          .instanceValue(QStringLiteral("Settings/wabbajack_downloads_folder"),
+                                         QStringLiteral("Wabbajack/downloadsFolder"))
+                          .toString();
   if (downloads.isEmpty() && m_OrganizerCore.downloadManager() != nullptr) {
     downloads = m_OrganizerCore.downloadManager()->getOutputDirectory();
   }

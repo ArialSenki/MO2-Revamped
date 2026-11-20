@@ -2569,6 +2569,27 @@ QString GlobalSettings::directory()
   return QFileInfo(globalSettingsPath()).absolutePath();
 }
 
+QVariant Settings::instanceValue(const QString& iniKey, const QString& globalKey)
+{
+  QVariant value = m_Settings.value(iniKey);
+  if (!value.isValid()) {
+    const QVariant old = GlobalSettings::value(globalKey);
+    if (old.isValid()) {
+      m_Settings.setValue(iniKey, old);
+      value = old;
+    }
+  }
+  if (GlobalSettings::value(globalKey).isValid()) {
+    GlobalSettings::remove(globalKey);
+  }
+  return value;
+}
+
+void Settings::setInstanceValue(const QString& iniKey, const QVariant& value)
+{
+  m_Settings.setValue(iniKey, value);
+}
+
 QVariant GlobalSettings::value(const QString& key, const QVariant& defaultValue)
 {
   return settings().value(key, defaultValue);

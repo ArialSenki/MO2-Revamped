@@ -121,6 +121,8 @@ bool makeFolderName(QString& name)
 }
 
 const char* TargetSetting       = "Collections/installTarget";
+// the instance's own (TargetSetting kept it for every instance)
+const char* TargetInstanceSetting = "Settings/collections_install_target";
 const char* AutoDownloadSetting = "Collections/autoDownload";
 const char* CategorySeparatorsSetting = "Collections/categorySeparators";
 
@@ -488,13 +490,13 @@ void CollectionSession::setTarget(Target t)
     return;
   }
   m_target = t;
-  GlobalSettings::setValue(TargetSetting, targetToString(t));
+  Settings::instance().setInstanceValue(TargetInstanceSetting, targetToString(t));
   saveState();
 }
 
 CollectionSession::Target CollectionSession::lastTarget()
 {
-  return targetFromString(GlobalSettings::value(TargetSetting).toString())
+  return targetFromString(Settings::instance().instanceValue(TargetInstanceSetting, TargetSetting).toString())
       .value_or(Target::NewInstance);
 }
 

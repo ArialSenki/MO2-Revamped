@@ -63,6 +63,8 @@ constexpr qint64 CacheSeconds = 3600;
 constexpr char UnofficialSetting[] = "Wabbajack/showUnofficialLists";
 constexpr char NsfwSetting[]       = "Wabbajack/showNsfwLists";
 constexpr char GameSetting[]       = "Wabbajack/browserGame";
+// the instance's own (GameSetting kept it for every instance)
+constexpr char GameInstanceSetting[] = "Settings/wabbajack_browser_game";
 
 constexpr int EntryRole = Qt::UserRole + 1;
 constexpr int SortRole  = Qt::UserRole + 2;
@@ -335,7 +337,7 @@ void ListBrowser::setupUi()
 
   connect(m_search, &QLineEdit::textChanged, this, &ListBrowser::fillList);
   connect(m_game, &QComboBox::activated, this, [this] {
-    GlobalSettings::setValue(GameSetting, m_game->currentData().toString());
+    Settings::instance().setInstanceValue(GameInstanceSetting, m_game->currentData().toString());
     fillList();
   });
   connect(m_unofficial, &QCheckBox::toggled, this, [this](bool on) {
@@ -551,7 +553,7 @@ void ListBrowser::fillGames()
   // the games of the lists shown, the one MO2 manages first chosen
   QString current = m_game->currentData().toString();
   if (m_game->count() == 0) {
-    current = GlobalSettings::value(GameSetting).toString();
+    current = Settings::instance().instanceValue(GameInstanceSetting, GameSetting).toString();
     if (current.isEmpty() && m_managed != nullptr) {
       for (const Entry& e : m_entries) {
         if (findGamePlugin(e.game, m_games) == m_managed) {

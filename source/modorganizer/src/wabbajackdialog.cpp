@@ -68,6 +68,9 @@ namespace
 {
 
 constexpr char FolderSetting[] = "Wabbajack/downloadsFolder";
+// the instance's own, in its ini (FolderSetting is where older builds kept it
+// for every instance)
+constexpr char FolderInstanceSetting[] = "Settings/wabbajack_downloads_folder";
 constexpr char FileSetting[]   = "Wabbajack/lastListFolder";
 constexpr char ResumeSetting[] = "Wabbajack/resumeList";
 constexpr char WatchSetting[]  = "Wabbajack/watchFolder";
@@ -547,7 +550,7 @@ QFrame* WabbajackDialog::createArchives()
   m_folder->setToolTip(tr("Where the list's archives are looked for. A folder used by "
                           "Wabbajack or by another list can be used again: archives are "
                           "recognised by their hash."));
-  QString folder = GlobalSettings::value(FolderSetting).toString();
+  QString folder = m_core.settings().instanceValue(FolderInstanceSetting, FolderSetting).toString();
   if (folder.isEmpty() && m_core.downloadManager() != nullptr) {
     folder = m_core.downloadManager()->getOutputDirectory();
   }
@@ -615,7 +618,7 @@ QFrame* WabbajackDialog::createArchives()
     }
     const QString folder = QDir::fromNativeSeparators(m_folder->text().trimmed());
     if (m_queue->setFolder(folder)) {
-      GlobalSettings::setValue(FolderSetting, folder);
+      m_core.settings().setInstanceValue(FolderInstanceSetting, folder);
     } else {
       m_folder->setText(QDir::toNativeSeparators(m_queue->folder()));
     }
