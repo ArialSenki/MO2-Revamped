@@ -11,8 +11,10 @@
 
 namespace
 {
-// the same on every side, and the panels' corner
-constexpr qreal Inset  = 8;
+// the frame runs this far outside the list, in the gap between the list and
+// its panel's border, the same on every side; its corners are the panels'
+constexpr int Outside  = 5;
+constexpr qreal Inset  = 1;
 constexpr qreal Radius = 8;
 
 // a logical length on whole device pixels, so lines stay sharp at 125% or 150%
@@ -37,16 +39,18 @@ QColor inkOn(const QColor& fill)
 
 DropHintOverlay::DropHintOverlay(QAbstractScrollArea* view, const QString& text,
                                  const QIcon& icon)
-    : QWidget(view), m_view(view), m_text(text), m_icon(icon)
+    : QWidget(view->window()), m_view(view), m_text(text), m_icon(icon)
 {
-  // a sibling over the viewport, not its child: a child is moved along when
-  // the list scrolls (a drag near the edge scrolls it), and slides off.
-  // the drag and the drop go on to the viewport under it
+  // around the whole list, header and scroll bars included, so the frame
+  // never runs through a row or the column titles. A child of the window: a
+  // child of the viewport is moved along when the list scrolls (a drag near
+  // the edge scrolls it), and the list itself would clip the frame outside
+  // it. The drag and the drop go on to the list under it
   setAttribute(Qt::WA_TransparentForMouseEvents);
   setAttribute(Qt::WA_NoSystemBackground);
   setFocusPolicy(Qt::NoFocus);
-  view->viewport()->installEventFilter(this);
-  followViewport();
+  view->installEventFilter(this);
+  followView();
   hide();
 }
 
@@ -65,7 +69,7 @@ DropHintOverlay* DropHintOverlay::forView(QPointer<DropHintOverlay>& slot,
 
 void DropHintOverlay::showHint()
 {
-  followViewport();
+  followView();
   if (isVisible()) {
     return;
   }
@@ -78,22 +82,36 @@ void DropHintOverlay::hideHint()
   hide();
 }
 
-void DropHintOverlay::followViewport()
+void DropHintOverlay::followView()
 {
-  // only the rows: not the header, the scroll bars or the view's frame
-  if (m_view != nullptr && geometry() != m_view->viewport()->geometry()) {
-    setGeometry(m_view->viewport()->geometry());
+  if (m_view == nullptr || parentWidget() == nullptr) {
+    return;
+  }
+  // the part of the list that shows (its panel may clip it), in the window
+  QWidget* top = parentWidget();
+  QRect shown(m_view->mapTo(top, QPoint(0, 0)), m_view->size());
+  for (QWidget* w = m_view->parentWidget(); w != nullptr && w != top;
+       w = w->parentWidget()) {
+    shown &= QRect(w->mapTo(top, QPoint(0, 0)), w->size());
+  }
+  const QRect wanted = shown.adjusted(-Outside, -Outside, Outside, Outside);
+  if (geometry() != wanted) {
+    setGeometry(wanted);
   }
 }
 
 bool DropHintOverlay::eventFilter(QObject* watched, QEvent* event)
 {
-  if (m_view != nullptr && watched == m_view->viewport()) {
+  if (m_view != nullptr && watched == m_view) {
     switch (event->type()) {
     case QEvent::Resize:
     case QEvent::Move:
     case QEvent::Show:
-      followViewport();
+      followView();
+      break;
+    case QEvent::Hide:
+      // the downloads' tab changed while dragging
+      hide();
       break;
     default:
       break;
