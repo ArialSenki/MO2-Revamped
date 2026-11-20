@@ -2639,12 +2639,22 @@ void inspect_loaded_mods() {
       if (entry.hModule == g_module) {
         continue;
       }
+      // the module's whole path: the snapshot's szExePath stops at 259
+      // characters, and an initializer must match the path MO2 gave
+      std::wstring module_path(32768, L'\0');
+      const DWORD module_path_length = GetModuleFileNameW(
+          entry.hModule, module_path.data(), static_cast<DWORD>(module_path.size()));
+      if (module_path_length > 0 && module_path_length < module_path.size()) {
+        module_path.resize(module_path_length);
+      } else {
+        module_path = entry.szExePath;
+      }
       // what MO2 asked for by path counts wherever the mods folder is and
       // whatever it is called; the folder names only sort out the rest.
       // was_seen last: its table only has room for these
       NativeInitializerRequest* request =
-          find_native_initializer(entry.szExePath);
-      if ((request == nullptr && !has_managed_dll_path_segment(entry.szExePath)) ||
+          find_native_initializer(module_path.c_str());
+      if ((request == nullptr && !has_managed_dll_path_segment(module_path.c_str())) ||
           was_seen(entry.hModule)) {
         continue;
       }
@@ -2659,11 +2669,11 @@ void inspect_loaded_mods() {
           FreeLibrary(held);
         }
         log_line("MO2-managed DLL was unloaded before it could be inspected:",
-                 entry.szExePath);
+                 module_path.c_str());
         continue;
       }
 
-      log_line("Found MO2-managed DLL:", entry.szExePath);
+      log_line("Found MO2-managed DLL:", module_path.c_str());
       if (request != nullptr) {
         request->module = entry.hModule;
         if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
@@ -2676,7 +2686,7 @@ void inspect_loaded_mods() {
             InterlockedExchange(&request->started, 0);
             FreeLibrary(held);
             log_line("Could not start Revamped native initializer thread:",
-                     entry.szExePath);
+                     module_path.c_str());
           }
         } else {
           FreeLibrary(held);
@@ -3628,7 +3638,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.67.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.68.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
