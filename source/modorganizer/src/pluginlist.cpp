@@ -51,6 +51,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QSortFilterProxyModel>
+#include <QElapsedTimer>
 #include <QTimer>
 #include <QString>
 #include <QtDebug>
@@ -213,6 +214,10 @@ void PluginList::refresh(const QString& profileName,
                          const QString& lockedOrderFile, bool force)
 {
   TimeThis tt("PluginList::refresh()");
+  // MO2 Revamped: where a refresh spends its time, in one debug line
+  QElapsedTimer stage;
+  stage.start();
+  qint64 tScan = 0, tHeaders = 0, tRows = 0, tGame = 0, tRelations = 0, tMasters = 0;
 
   const auto* gamePlugin = m_Organizer.managedGame();
   if (gamePlugin == nullptr) {
@@ -302,6 +307,7 @@ void PluginList::refresh(const QString& profileName,
   // MO2 Revamped: the archives sorted by their lower-case name, so a plugin's
   // ("Name*.bsa") are found by a binary search, not by comparing every plugin
   // with every archive
+  tScan = stage.restart();
   std::vector<std::pair<QString, QString>> archivesByName;  // lower case, as it is
   archivesByName.reserve(archiveCandidates.size());
   for (const QString& archive : archiveCandidates) {
@@ -340,14 +346,18 @@ void PluginList::refresh(const QString& profileName,
   std::vector<uint64_t> sizes(newPlugins.size());
   for (size_t i = 0; i < newPlugins.size(); ++i) {
     const FILETIME time = (*newPlugins[i].entry)->getFileTime();
-    sizes[i]            = sizeOf(newPlugins[i]);
-    auto cached         = m_HeaderCache.find(newPlugins[i].fullPath);
+    // MO2 Revamped: the size only when the structure knows it; asking the
+    // disk for it cost a stat per plugin on every refresh (~0.15-0.25 s for
+    // Nolvus' 3,400 plugins), and the write time already tells a changed file
+    const uint64_t known = (*newPlugins[i].entry)->getFileSize();
+    auto cached          = m_HeaderCache.find(newPlugins[i].fullPath);
     if (cached != m_HeaderCache.end() &&
         CompareFileTime(&cached->second.time, &time) == 0 &&
-        cached->second.size == sizes[i] &&
+        (known == MOShared::FileEntry::NoFileSize || cached->second.size == known) &&
         cached->second.mediumSupported == mediumPluginsAreSupported) {
       newPlugins[i].header = cached->second.header;
     } else {
+      sizes[i] = sizeOf(newPlugins[i]);
       unread.push_back(i);
     }
   }
@@ -363,6 +373,7 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  tHeaders = stage.restart();
   for (const NewPlugin& plugin : newPlugins) {
     const QString& filename     = *plugin.filename;
     const FileEntryPtr& current = *plugin.entry;
@@ -439,15 +450,19 @@ void PluginList::refresh(const QString& profileName,
   // functions in GamePlugins will use the IPluginList interface of this, so
   // indices need to work. priority will be off however
   updateIndices();
+  tRows = stage.restart();
 
   if (gamePlugins) {
     gamePlugins->readPluginLists(m_Organizer.managedGameOrganizer()->pluginList());
   }
+  tGame = stage.restart();
 
   fixPrimaryPlugins();
   fixPluginRelationships();
+  tRelations = stage.restart();
 
   testMasters();
+  tMasters = stage.restart();
 
   updateIndices();
 
@@ -470,6 +485,10 @@ void PluginList::refresh(const QString& profileName,
                            columnCount() - 1));
   }
 
+  log::debug("plugin list refresh: files {} ms, headers {} ms, rows {} ms, game's "
+             "lists {} ms, relationships {} ms, masters {} ms, rest {} ms ({} plugins)",
+             tScan, tHeaders, tRows, tGame, tRelations, tMasters, stage.elapsed(),
+             m_ESPs.size());
   m_Refreshed();
 }
 
