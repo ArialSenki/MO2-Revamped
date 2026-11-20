@@ -347,7 +347,11 @@ QImage GamebryoSaveGame::FileWrapper::readImage(unsigned long width,
   }
   QScopedArrayPointer<unsigned char> buffer(new unsigned char[width * height * bpp]);
   read(buffer.data(), width * height * bpp);
-  QImage image(buffer.data(), width, height,
+  // MO2 Revamped: the rows are packed (width * bpp bytes each); without the
+  // stride Qt reads them as 4-byte aligned, which skews an RGB picture whose
+  // width * 3 isn't a multiple of 4
+  QImage image(buffer.data(), static_cast<int>(width), static_cast<int>(height),
+               static_cast<qsizetype>(width) * bpp,
                alpha ? QImage::Format_RGBA8888_Premultiplied : QImage::Format_RGB888);
 
   // We need to copy the image here because QImage does not make a copy of the

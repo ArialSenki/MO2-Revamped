@@ -270,11 +270,28 @@ void PluginList::refresh(const QString& profileName,
     if (current.get() == nullptr) {
       continue;
     }
-    const QString& filename = ToQString(current->getName());
+    QString filename = ToQString(current->getName());
 
     if (filename.endsWith(".esp", Qt::CaseInsensitive) ||
         filename.endsWith(".esm", Qt::CaseInsensitive) ||
         filename.endsWith(".esl", Qt::CaseInsensitive)) {
+      // MO2 Revamped: a plugin that several mods carry has the spelling of
+      // whichever mod the refresh's threads registered first, so with two
+      // spellings (Name.esl, name.esl) plugins.txt changed between refreshes.
+      // The winning mod's own file decides; only plugins with alternatives
+      // are looked up.
+      if (!current->getAlternatives().empty()) {
+        WIN32_FIND_DATAW data;
+        const std::wstring path = current->getFullPath();
+        HANDLE find = ::FindFirstFileW(path.c_str(), &data);
+        if (find != INVALID_HANDLE_VALUE) {
+          ::FindClose(find);
+          const QString onDisk = QString::fromWCharArray(data.cFileName);
+          if (onDisk.compare(filename, Qt::CaseInsensitive) == 0) {
+            filename = onDisk;
+          }
+        }
+      }
       availablePlugins.insert(std::make_pair(filename, current));
     } else if (filename.endsWith(".bsa", Qt::CaseInsensitive) ||
                filename.endsWith(".ba2", Qt::CaseInsensitive)) {
