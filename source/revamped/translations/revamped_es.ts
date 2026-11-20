@@ -17031,6 +17031,26 @@ Pantalla de inicio de %2.</translation>
       <source>&lt;p&gt;Fallout4Custom.ini has sTestFile lines. While they are there, the game ignores the plugin list MO2 writes, so turning plugins on or off in MO2 does nothing.&lt;/p&gt;&lt;p&gt;Remove the sTestFile lines from Fallout4Custom.ini (in the profile's folder if the profile has its own INI files, otherwise in Documents\My Games\Fallout4) and start the game again.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Fallout4Custom.ini tiene líneas sTestFile. Mientras sigan ahí, el juego ignora la lista de plugins que escribe MO2, así que activar o desactivar plugins en MO2 no hace nada.&lt;/p&gt;&lt;p&gt;Quita las líneas sTestFile de Fallout4Custom.ini (en la carpeta del perfil si el perfil tiene sus propios INI; si no, en Documents\My Games\Fallout4) y vuelve a abrir el juego.&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Warn when F4SE doesn&apos;t match the game version or the Address Library is missing</source>
+      <translation>Avisar si F4SE no corresponde a la versión del juego o falta Address Library</translation>
+    </message>
+    <message>
+      <source>F4SE doesn&apos;t match the game version</source>
+      <translation>F4SE no corresponde a la versión del juego</translation>
+    </message>
+    <message>
+      <source>Address Library for F4SE Plugins is missing</source>
+      <translation>Falta Address Library for F4SE Plugins</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The game folder has F4SE&apos;s loader, but not %1, the F4SE runtime for this game version (%2). Started through F4SE, the game won&apos;t run, or will run without F4SE and its plugins.&lt;/p&gt;&lt;p&gt;Install the F4SE build for this game version from its official site into the game folder, or change the game back to the version that matches your F4SE.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;La carpeta del juego tiene el cargador de F4SE, pero no %1, el F4SE para esta versión del juego (%2). Al arrancarlo con F4SE, el juego no se abrirá, o se abrirá sin F4SE ni sus plugins.&lt;/p&gt;&lt;p&gt;Instala en la carpeta del juego la versión de F4SE para esta versión del juego, desde su web oficial, o vuelve a la versión del juego que corresponde a tu F4SE.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Some active mods have F4SE plugins, but no mod has %1, the Address Library for this game version (%2). Most F4SE plugins need it, and without it they don&apos;t load or the game closes at start.&lt;/p&gt;&lt;p&gt;Install &quot;Address Library for F4SE Plugins&quot; from Nexus (the file for your game version) and activate it.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Algunos mods activos tienen plugins de F4SE, pero ningún mod tiene %1, la Address Library para esta versión del juego (%2). La mayoría de plugins de F4SE la necesitan: sin ella no cargan o el juego se cierra al arrancar.&lt;/p&gt;&lt;p&gt;Instala «Address Library for F4SE Plugins» desde Nexus (el archivo para tu versión del juego) y actívalo.&lt;/p&gt;</translation>
+    </message>
   </context>
   <context>
     <name>GameFallout4VR</name>
@@ -17127,6 +17147,26 @@ Pantalla de inicio de %2.</translation>
     <message>
       <source>Accept downloads from the Enderal and Enderal Special Edition sections of Nexus</source>
       <translation>Aceptar descargas de las secciones de Enderal y Enderal Special Edition de Nexus</translation>
+    </message>
+    <message>
+      <source>Warn when SKSE doesn&apos;t match the game version or the Address Library is missing</source>
+      <translation>Avisar si SKSE no corresponde a la versión del juego o falta Address Library</translation>
+    </message>
+    <message>
+      <source>SKSE doesn&apos;t match the game version</source>
+      <translation>SKSE no corresponde a la versión del juego</translation>
+    </message>
+    <message>
+      <source>Address Library for SKSE Plugins is missing</source>
+      <translation>Falta Address Library for SKSE Plugins</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;The game folder has SKSE&apos;s loader, but not %1, the SKSE runtime for this game version (%2). Started through SKSE, the game won&apos;t run, or will run without SKSE and its plugins.&lt;/p&gt;&lt;p&gt;Install the SKSE build for this game version from its official site into the game folder, or change the game back to the version that matches your SKSE.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;La carpeta del juego tiene el cargador de SKSE, pero no %1, el SKSE para esta versión del juego (%2). Al arrancarlo con SKSE, el juego no se abrirá, o se abrirá sin SKSE ni sus plugins.&lt;/p&gt;&lt;p&gt;Instala en la carpeta del juego la versión de SKSE para esta versión del juego, desde su web oficial, o vuelve a la versión del juego que corresponde a tu SKSE.&lt;/p&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;p&gt;Some active mods have SKSE plugins, but no mod has %1, the Address Library for this game version (%2). Most SKSE plugins need it, and without it they don&apos;t load or the game closes at start.&lt;/p&gt;&lt;p&gt;Install &quot;Address Library for SKSE Plugins&quot; from Nexus (the file for your game version) and activate it.&lt;/p&gt;</source>
+      <translation>&lt;p&gt;Algunos mods activos tienen plugins de SKSE, pero ningún mod tiene %1, la Address Library para esta versión del juego (%2). La mayoría de plugins de SKSE la necesitan: sin ella no cargan o el juego se cierra al arrancar.&lt;/p&gt;&lt;p&gt;Instala «Address Library for SKSE Plugins» desde Nexus (el archivo para tu versión del juego) y actívalo.&lt;/p&gt;</translation>
     </message>
   </context>
   <context>

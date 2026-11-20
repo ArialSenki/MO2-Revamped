@@ -2,13 +2,15 @@
 #define _GAMESKYRIMSE_H
 
 #include "gamegamebryo.h"
+#include "iplugindiagnose.h"
 
 #include <QObject>
 #include <QtGlobal>
 
-class GameSkyrimSE : public GameGamebryo
+class GameSkyrimSE : public GameGamebryo, public MOBase::IPluginDiagnose
 {
   Q_OBJECT
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginGame MOBase::IPluginDiagnose)
 
   Q_PLUGIN_METADATA(IID "com.soundcontactstudio.GameSkyrimSE")
 
@@ -52,6 +54,15 @@ public:  // IPlugin interface
   virtual QList<MOBase::PluginSetting> settings() const override;
   virtual MappingType mappings() const override;
 
+public:  // IPluginDiagnose interface
+  // MO2 Revamped: SKSE that doesn't match the game, and a missing Address
+  // Library
+  virtual std::vector<unsigned int> activeProblems() const override;
+  virtual QString shortDescription(unsigned int key) const override;
+  virtual QString fullDescription(unsigned int key) const override;
+  virtual bool hasGuidedFix(unsigned int) const override { return false; }
+  virtual void startGuidedFix(unsigned int) const override {}
+
 protected:
   std::shared_ptr<const GamebryoSaveGame> makeSaveGame(QString filePath) const override;
   QString savegameExtension() const override;
@@ -67,6 +78,10 @@ protected:
   void setVariant(QString variant);
 
   virtual QString identifyGamePath() const override;
+
+private:
+  static const unsigned int PROBLEM_SCRIPT_EXTENDER_VERSION = 1;
+  static const unsigned int PROBLEM_ADDRESS_LIBRARY         = 2;
 };
 
 #endif  // _GAMESKYRIMSE_H

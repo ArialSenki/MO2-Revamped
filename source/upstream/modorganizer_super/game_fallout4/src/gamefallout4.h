@@ -70,6 +70,9 @@ private:
 
 private:
   static const unsigned int PROBLEM_TEST_FILE = 1;
+  // MO2 Revamped
+  static const unsigned int PROBLEM_SCRIPT_EXTENDER_VERSION = 2;
+  static const unsigned int PROBLEM_ADDRESS_LIBRARY         = 3;
 };
 
 #endif  // GAMEFallout4_H

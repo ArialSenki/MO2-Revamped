@@ -11,6 +11,7 @@
 #include "savegameinfo.h"
 #include "scopeguard.h"
 #include "scriptextender.h"
+#include "igamefeatures.h"
 #include "utility.h"
 #include "vdf_parser.h"
 
@@ -562,4 +563,64 @@ QStringList GameGamebryo::cachedFileLines(const QString& path) const
     }
     return lines;
   });
+}
+
+QString GameGamebryo::gameVersionJoined(int parts, const QString& separator) const
+{
+  const QString exe = gameDirectory().absoluteFilePath(binaryName());
+  // read again when the exe changes (a game update)
+  const QStringList version = cachedFromFile(exe, [this] {
+    return QStringList{gameVersion()};
+  });
+  QStringList numbers = version.value(0).split('.', Qt::SkipEmptyParts);
+  if (numbers.isEmpty() || version.value(0).startsWith(FALLBACK_GAME_VERSION)) {
+    return {};
+  }
+  while (numbers.size() < parts) {
+    numbers.append("0");
+  }
+  return numbers.mid(0, parts).join(separator);
+}
+
+bool GameGamebryo::scriptExtenderRuntimeMissing(const QString& runtimePrefix,
+                                                QString* expected) const
+{
+  if (m_Organizer == nullptr) {
+    return false;
+  }
+  auto extender = m_Organizer->gameFeatures()->gameFeature<MOBase::ScriptExtender>();
+  if (extender == nullptr || !extender->isInstalled()) {
+    return false;
+  }
+  const QString version = gameVersionJoined(3, "_");
+  if (version.isEmpty()) {
+    return false;
+  }
+  const QString runtime = runtimePrefix + version + ".dll";
+  if (expected != nullptr) {
+    *expected = runtime;
+  }
+  return !gameDirectory().exists(runtime);
+}
+
+bool GameGamebryo::addressLibraryMissing(const QString& pluginsDir,
+                                         QString* expected) const
+{
+  if (m_Organizer == nullptr) {
+    return false;
+  }
+  const QString version = gameVersionJoined(4, "-");
+  if (version.isEmpty()) {
+    return false;
+  }
+  if (m_Organizer->findFiles(pluginsDir, QStringList{"*.dll"}).isEmpty()) {
+    return false;
+  }
+  // "versionlib-" is the Anniversary Edition's, "version-" the older one's
+  const QStringList names = {"versionlib-" + version + ".bin",
+                             "version-" + version + ".bin"};
+  if (expected != nullptr) {
+    *expected = pluginsDir + "/" + names.first();
+  }
+  return m_Organizer->findFiles(pluginsDir, names).isEmpty();
 }

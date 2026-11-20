@@ -116,7 +116,11 @@ MOBase::VersionInfo GameFallout4::version() const
 
 QList<PluginSetting> GameFallout4::settings() const
 {
-  return QList<PluginSetting>();
+  // MO2 Revamped
+  return {PluginSetting("script_extender_checks",
+                        tr("Warn when F4SE doesn't match the game version or the "
+                           "Address Library is missing"),
+                        QVariant(true))};
 }
 
 MappingType GameFallout4::mappings() const
@@ -299,6 +303,16 @@ std::vector<unsigned int> GameFallout4::activeProblems() const
   if (m_Organizer->managedGame() == this) {
     if (testFilePresent())
       result.push_back(PROBLEM_TEST_FILE);
+    // MO2 Revamped: script extender checks (setting "script_extender_checks")
+    if (m_Organizer->pluginSetting(name(), "script_extender_checks").toBool()) {
+      QString ignored;
+      if (scriptExtenderRuntimeMissing("f4se_", &ignored)) {
+        result.push_back(PROBLEM_SCRIPT_EXTENDER_VERSION);
+      }
+      if (addressLibraryMissing("F4SE/Plugins", &ignored)) {
+        result.push_back(PROBLEM_ADDRESS_LIBRARY);
+      }
+    }
   }
   return result;
 }
@@ -330,6 +344,10 @@ QString GameFallout4::shortDescription(unsigned int key) const
   switch (key) {
   case PROBLEM_TEST_FILE:
     return tr("sTestFile lines in Fallout4Custom.ini");
+  case PROBLEM_SCRIPT_EXTENDER_VERSION:
+    return tr("F4SE doesn't match the game version");
+  case PROBLEM_ADDRESS_LIBRARY:
+    return tr("Address Library for F4SE Plugins is missing");
   }
   return "";
 }
@@ -344,6 +362,27 @@ QString GameFallout4::fullDescription(unsigned int key) const
               "<p>Remove the sTestFile lines from Fallout4Custom.ini (in the profile's "
               "folder if the profile has its own INI files, otherwise in "
               "Documents\\My Games\\Fallout4) and start the game again.</p>");
+  }
+  case PROBLEM_SCRIPT_EXTENDER_VERSION: {
+    QString expected;
+    scriptExtenderRuntimeMissing("f4se_", &expected);
+    return tr("<p>The game folder has F4SE's loader, but not %1, the F4SE runtime for "
+              "this game version (%2). Started through F4SE, the game won't run, or "
+              "will run without F4SE and its plugins.</p>"
+              "<p>Install the F4SE build for this game version from its official site "
+              "into the game folder, or change the game back to the version that "
+              "matches your F4SE.</p>")
+        .arg(expected, gameVersion());
+  }
+  case PROBLEM_ADDRESS_LIBRARY: {
+    QString expected;
+    addressLibraryMissing("F4SE/Plugins", &expected);
+    return tr("<p>Some active mods have F4SE plugins, but no mod has %1, the Address "
+              "Library for this game version (%2). Most F4SE plugins need it, and "
+              "without it they don't load or the game closes at start.</p>"
+              "<p>Install \"Address Library for F4SE Plugins\" from Nexus (the file for "
+              "your game version) and activate it.</p>")
+        .arg(expected, gameVersion());
   }
   }
   return "";

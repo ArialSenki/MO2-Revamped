@@ -153,6 +153,23 @@ protected:
   QStringList cachedFromFile(const QString& path,
                              const std::function<QStringList()>& compute) const;
 
+  // MO2 Revamped: the first `parts` numbers of the game exe's version joined
+  // by `separator` ("1_6_1170"), empty if the version can't be read; kept
+  // until the exe changes
+  QString gameVersionJoined(int parts, const QString& separator) const;
+
+  // MO2 Revamped: the script extender's loader is in the game folder but not
+  // its runtime for this game version (prefix + version + ".dll", the name
+  // the loader looks for), so the game would start without it. The expected
+  // name goes to *expected.
+  bool scriptExtenderRuntimeMissing(const QString& runtimePrefix,
+                                    QString* expected) const;
+
+  // MO2 Revamped: script extender plugins (DLLs in pluginsDir, in the virtual
+  // Data folder) but no Address Library file for this game version, which
+  // most of them need. The expected name goes to *expected.
+  bool addressLibraryMissing(const QString& pluginsDir, QString* expected) const;
+
 protected:
   // to access organizer for game features, avoid having to pass it to all saves since
   // we already pass the game

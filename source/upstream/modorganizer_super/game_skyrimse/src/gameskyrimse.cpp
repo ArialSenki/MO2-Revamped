@@ -208,7 +208,12 @@ QList<PluginSetting> GameSkyrimSE::settings() const
   return {PluginSetting("enderal_downloads",
                         tr("Accept downloads from the Enderal and Enderal Special Edition "
                            "sections of Nexus"),
-                        QVariant(false))};
+                        QVariant(false)),
+          // MO2 Revamped
+          PluginSetting("script_extender_checks",
+                        tr("Warn when SKSE doesn't match the game version or the "
+                           "Address Library is missing"),
+                        QVariant(true))};
 }
 
 void GameSkyrimSE::initializeProfile(const QDir& path, ProfileSettings settings) const
@@ -347,4 +352,58 @@ MappingType GameSkyrimSE::mappings() const
   }
 
   return result;
+}
+
+// MO2 Revamped: script extender checks (setting "script_extender_checks")
+std::vector<unsigned int> GameSkyrimSE::activeProblems() const
+{
+  std::vector<unsigned int> result;
+  if (m_Organizer->managedGame() != this ||
+      !m_Organizer->pluginSetting(name(), "script_extender_checks").toBool()) {
+    return result;
+  }
+  QString ignored;
+  if (scriptExtenderRuntimeMissing("skse64_", &ignored)) {
+    result.push_back(PROBLEM_SCRIPT_EXTENDER_VERSION);
+  }
+  if (addressLibraryMissing("SKSE/Plugins", &ignored)) {
+    result.push_back(PROBLEM_ADDRESS_LIBRARY);
+  }
+  return result;
+}
+
+QString GameSkyrimSE::shortDescription(unsigned int key) const
+{
+  switch (key) {
+  case PROBLEM_SCRIPT_EXTENDER_VERSION:
+    return tr("SKSE doesn't match the game version");
+  case PROBLEM_ADDRESS_LIBRARY:
+    return tr("Address Library for SKSE Plugins is missing");
+  }
+  return "";
+}
+
+QString GameSkyrimSE::fullDescription(unsigned int key) const
+{
+  QString expected;
+  switch (key) {
+  case PROBLEM_SCRIPT_EXTENDER_VERSION:
+    scriptExtenderRuntimeMissing("skse64_", &expected);
+    return tr("<p>The game folder has SKSE's loader, but not %1, the SKSE runtime for "
+              "this game version (%2). Started through SKSE, the game won't run, or "
+              "will run without SKSE and its plugins.</p>"
+              "<p>Install the SKSE build for this game version from its official site "
+              "into the game folder, or change the game back to the version that "
+              "matches your SKSE.</p>")
+        .arg(expected, gameVersion());
+  case PROBLEM_ADDRESS_LIBRARY:
+    addressLibraryMissing("SKSE/Plugins", &expected);
+    return tr("<p>Some active mods have SKSE plugins, but no mod has %1, the Address "
+              "Library for this game version (%2). Most SKSE plugins need it, and "
+              "without it they don't load or the game closes at start.</p>"
+              "<p>Install \"Address Library for SKSE Plugins\" from Nexus (the file for "
+              "your game version) and activate it.</p>")
+        .arg(expected, gameVersion());
+  }
+  return "";
 }
