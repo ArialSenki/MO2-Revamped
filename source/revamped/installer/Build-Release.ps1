@@ -25,7 +25,10 @@ param(
     # runtime comes from it (Copy-QtRuntime.ps1), not from the runtime folder
     [Parameter(Mandatory = $true)]
     [string]$QtRuntimeDirectory,
-    [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+    # a CPython 3.12 that compiles the Python plugins to the bundled
+    # interpreter's bytecode (its magic number is checked against pythoncore.zip)
+    [string]$PythonExecutable = (Join-Path $env:ProgramFiles 'Python312\python.exe')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -57,7 +60,7 @@ if (Test-Path -LiteralPath $organizerPath -PathType Leaf) {
     Remove-Variable organizerText
 }
 
-foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $qtRuntimeRoot, $CscPath)) {
+foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $qtRuntimeRoot, $CscPath, $PythonExecutable)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
         -not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Required build input was not found: $path"
@@ -395,11 +398,18 @@ function Copy-RuntimeTree {
     }
 }
 
+# PyQt6's type stubs: only editors read them, never Python (~2.3 MB)
+function Test-PyQtStub {
+    param([string]$RelativePath)
+    return $RelativePath -match '^plugins\\plugin_python\\libs\\PyQt6\\[^\\]+\.pyi$'
+}
+
 function Copy-UpstreamBinaries {
     # uibase, the plugins, plugin_python, archive, lootcli and helper, built
     # from source\upstream; the runtime's copies of them are never staged
     param([string]$DestinationRoot)
     foreach ($relative in $upstreamFiles) {
+        if (Test-PyQtStub -RelativePath $relative) { continue }
         $destination = Join-Path $DestinationRoot $relative
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath (Join-Path $upstreamStageRoot $relative) -Destination $destination -Force
@@ -463,7 +473,12 @@ function Copy-Mo2Translations {
 # the runtime keeps only the antlr4 runtime and chardet it imports
 $pythonPluginPrefixes = @(
     'plugins\installer_wizard\lib\wizard\',
-    'plugins\installer_wizard\lib\bain_wizard_interpreter-'
+    'plugins\installer_wizard\lib\bain_wizard_interpreter-',
+    # PyQt6 is the one built for Qt 6.12 in the upstream stage. The runtime's
+    # folder still has 2.5.2's PyQt 6.7.1 modules the stage doesn't build
+    # (QtBluetooth, QtMultimedia, QtPdf, QAxContainer...): their Qt libraries
+    # aren't shipped, so Python couldn't import them anyway
+    'plugins\plugin_python\libs\PyQt6\'
 )
 
 function Copy-PythonPluginOverlay {
@@ -515,12 +530,16 @@ function Copy-RevampedSources {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
-    $saveIsolationSource = Join-Path $pluginSource 'eldenring_mo2_save_isolation.py'
-    $saveIsolationStage = Join-Path $pluginDestination 'eldenring_mo2_save_isolation.py'
-    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
-    $saveIsolationStageHash = (Get-FileHash -LiteralPath $saveIsolationStage -Algorithm SHA256).Hash
-    if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
-        throw 'The Complete stage does not contain the maintained Save Isolation source.'
+    # the save isolation plugin file and the code it loads in Elden Ring
+    # and Nightreign instances (eldenring_mo2_tools)
+    foreach ($saveIsolationFile in @('eldenring_mo2_save_isolation.py', 'eldenring_mo2_tools\save_isolation.py')) {
+        $saveIsolationSource = Join-Path $pluginSource $saveIsolationFile
+        $saveIsolationStage = Join-Path $pluginDestination $saveIsolationFile
+        $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+        $saveIsolationStageHash = (Get-FileHash -LiteralPath $saveIsolationStage -Algorithm SHA256).Hash
+        if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
+            throw 'The Complete stage does not contain the maintained Save Isolation source.'
+        }
     }
     # these replace the runtime's baseline copies
     foreach ($overlaid in @('Form43Checker.py', 'installer_wizard\dialog.py')) {
@@ -799,7 +818,7 @@ function Copy-EldenRingPlugins {
     param([string]$SourceRoot, [string]$DestinationRoot)
     $sourcePlugins = Join-Path $SourceRoot 'plugins'
     $targetPlugins = Join-Path $DestinationRoot 'plugins'
-    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'installer_wizard', 'plugin_python')
+    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'eldenring_mo2_tools', 'installer_wizard', 'plugin_python')
     $allowedRootFiles = @(
         'DDSPreview.py', 'diagnose_basic.dll', 'eldenring_mo2_native_profile_tool.py',
         'eldenring_mo2_save_isolation.py', 'eldenring_mo2_startup_tool.py',
@@ -832,16 +851,20 @@ function Copy-EldenRingPlugins {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
-    $saveIsolationSource = Join-Path $sourcePlugins 'eldenring_mo2_save_isolation.py'
-    $saveIsolationTarget = Join-Path $targetPlugins 'eldenring_mo2_save_isolation.py'
-    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
-    $saveIsolationTargetHash = (Get-FileHash -LiteralPath $saveIsolationTarget -Algorithm SHA256).Hash
-    if ($saveIsolationSourceHash -ine $saveIsolationTargetHash) {
-        throw 'The Isolated stage does not match Complete for Save Isolation.'
+    foreach ($saveIsolationFile in @('eldenring_mo2_save_isolation.py', 'eldenring_mo2_tools\save_isolation.py')) {
+        $saveIsolationSource = Join-Path $sourcePlugins $saveIsolationFile
+        $saveIsolationTarget = Join-Path $targetPlugins $saveIsolationFile
+        $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+        $saveIsolationTargetHash = (Get-FileHash -LiteralPath $saveIsolationTarget -Algorithm SHA256).Hash
+        if ($saveIsolationSourceHash -ine $saveIsolationTargetHash) {
+            throw 'The Isolated stage does not match Complete for Save Isolation.'
+        }
     }
     foreach ($required in @(
         'eldenring_mo2_native_profile_tool.py', 'eldenring_mo2_save_isolation.py',
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
+        'eldenring_mo2_tools\save_isolation.py', 'eldenring_mo2_tools\native_profile_tool.py',
+        'eldenring_mo2_tools\startup_tool.py', 'eldenring_mo2_tools\stub.py',
         'basic_games\games\game_eldenring_mo2.py',
         'data\revamped_fluent.py', 'installer_wizard\dialog.py',
         'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
@@ -911,6 +934,53 @@ function Test-IsolatedCoreParity {
         if ($completeHash -ine $isolatedHash) {
             throw "Complete and Isolated plugin versions differ at '$relative'."
         }
+    }
+}
+
+# The Python plugins as the bytecode plugin_python loads (optimization level 2,
+# checked-hash .pyc in __pycache__), so the first start after installing or
+# updating doesn't compile them, nor every start in a folder Python can't
+# write to. Only the Complete stage is compiled; Copy-CompiledPythonPlugins
+# gives Isolated the same files for the plugins it has.
+function Compile-PythonPlugins {
+    param([string]$StageRoot)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $core = [IO.Compression.ZipFile]::OpenRead((Join-Path $StageRoot 'plugins\plugin_python\libs\pythoncore.zip'))
+    try {
+        $entry = @($core.Entries | Where-Object { $_.FullName -like '*.pyc' })[0]
+        if (-not $entry) { throw 'pythoncore.zip has no .pyc to read the bundled bytecode version from.' }
+        $header = New-Object byte[] 4
+        $stream = $entry.Open()
+        try { if ($stream.Read($header, 0, 4) -ne 4) { throw 'pythoncore.zip has a damaged .pyc.' } } finally { $stream.Dispose() }
+    } finally { $core.Dispose() }
+    $magic = ([BitConverter]::ToString($header)).Replace('-', '').ToLowerInvariant()
+    & $PythonExecutable -I (Join-Path $PSScriptRoot 'compile_python_plugins.py') $StageRoot $magic
+    if ($LASTEXITCODE -ne 0) { throw "Compiling the Python plugins in $StageRoot failed." }
+}
+
+# basic_games' manifest (make_basic_games_manifest.py): with it, MO2 imports
+# only the instance's game module and makes the other games from the manifest
+function Write-BasicGamesManifest {
+    param([string]$StageRoot)
+    & $PythonExecutable -I (Join-Path $PSScriptRoot 'make_basic_games_manifest.py') $StageRoot
+    if ($LASTEXITCODE -ne 0) { throw "Writing the basic_games manifest in $StageRoot failed." }
+    if (-not (Test-Path -LiteralPath (Join-Path $StageRoot 'plugins\basic_games\games\manifest.json') -PathType Leaf)) {
+        throw 'The basic_games manifest was not written.'
+    }
+}
+
+function Copy-CompiledPythonPlugins {
+    param([string]$SourceRoot, [string]$DestinationRoot)
+    foreach ($file in Get-ChildItem -LiteralPath (Join-Path $DestinationRoot 'plugins') -File -Recurse -Filter '*.py') {
+        $relative = $file.FullName.Substring($DestinationRoot.Length).TrimStart('\')
+        # the single-file plugins have none (see compile_python_plugins.py)
+        if ($file.DirectoryName -ieq (Join-Path $DestinationRoot 'plugins')) { continue }
+        $cache = Join-Path (Split-Path $relative) ('__pycache__\' + $file.BaseName + '.cpython-312.opt-2.pyc')
+        $compiled = Join-Path $SourceRoot $cache
+        if (-not (Test-Path -LiteralPath $compiled -PathType Leaf)) { throw "The Complete stage has no compiled $relative." }
+        $destination = Join-Path $DestinationRoot $cache
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath $compiled -Destination $destination -Force
     }
 }
 
@@ -1104,10 +1174,13 @@ New-Item -ItemType Directory -Force -Path (Join-Path $fullStage 'borderless') | 
 Copy-Item -LiteralPath $borderlessDll -Destination (Join-Path $fullStage 'borderless\mo2r_borderless.dll') -Force
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
+Write-BasicGamesManifest -StageRoot $fullStage
+Compile-PythonPlugins -StageRoot $fullStage
 
 New-Item -ItemType Directory -Force -Path $isolatedStage | Out-Null
 Copy-RuntimeTree -SourceRoot $fullStage -DestinationRoot $isolatedStage -SkipPlugins
 Copy-EldenRingPlugins -SourceRoot $fullStage -DestinationRoot $isolatedStage
+Copy-CompiledPythonPlugins -SourceRoot $fullStage -DestinationRoot $isolatedStage
 foreach ($rootFile in @('ModOrganizer.exe', 'MO2-Revamped.ini', 'MO2-Revamped.install')) {
     Copy-Item -LiteralPath (Join-Path $fullStage $rootFile) -Destination (Join-Path $isolatedStage $rootFile) -Force
 }

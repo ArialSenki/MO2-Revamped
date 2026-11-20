@@ -9,8 +9,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from urllib import parse
 
-import psutil
-
 
 class OriginWatcher:
     """
@@ -38,11 +36,15 @@ class OriginWatcher:
         """
         Kills the Origin application
         """
+        import psutil  # MO2 Revamped: ~40 ms, only for the Origin games
+
         for proc in psutil.process_iter():
             if proc.name().lower() == "origin.exe":
                 proc.kill()
 
     def _workerFunc(self) -> None:
+        import psutil
+
         gameAliveCount = 300  # Large number to allow Origin and the game to launch
         while self.worker_alive:
             gameAlive = False
