@@ -588,6 +588,9 @@ namespace CSharp {
       auto* description = new QPlainTextEdit(page);
       description->setReadOnly(true);
       description->setFrameShape(QFrame::NoFrame);
+      // text on the card, not a field: nothing here can be typed into
+      description->setStyleSheet(QStringLiteral("QPlainTextEdit { background: transparent; border: none; padding: 0px; }"));
+      description->document()->setDocumentMargin(0);
       description->setPlainText(to_qstring(opt->Desc));
       description->setAccessibleName(scriptText("Option description"));
       pageLayout->addWidget(description, 1);
