@@ -6500,7 +6500,11 @@ Elles continueront à chercher dans l'ancien dossier sans rien trouver tant que 
       <source>You need to select an instance before trying to download mods.</source>
       <translation>Vous devez choisir une instance avant de télécharger des mods.</translation>
     </message>
-  </context>
+    <message>
+      <source>You can change it later in Settings &gt; Appearance.</source>
+      <translation>Vous pourrez le modifier plus tard dans Paramètres &gt; Apparence.</translation>
+    </message>
+</context>
   <context>
     <name>MainWindow</name>
     <message>
@@ -8184,6 +8188,18 @@ If it happens again, create a bug report and attach it, with this file, when you
 %2
 
 Si cela se reproduit, crée un rapport de bug et joins-le, avec ce fichier, en signalant le problème.</translation>
+    </message>
+    <message>
+      <source>First steps, and short help on every part of MO2 Revamped and on this game.</source>
+      <translation>Premiers pas, et une aide courte sur chaque partie de MO2 Revamped et sur ce jeu.</translation>
+    </message>
+    <message>
+      <source>Help for %1</source>
+      <translation>Aide pour %1</translation>
+    </message>
+    <message>
+      <source>What MO2 Revamped does for this game, and its usual problems.</source>
+      <translation>Ce que MO2 Revamped fait pour ce jeu, et ses problèmes courants.</translation>
     </message>
 </context>
   <context>
@@ -13401,7 +13417,15 @@ Choisissez le niveau de détail que MO2 écrit dans ModOrganizer.log. Info est r
       <source>Every profile uses the mods folder. Mods missing from the new folder, or named differently there, will be turned off in all profiles, and this can't be undone. Change it?</source>
       <translation>Tous les profils utilisent le dossier des mods. Les mods absents du nouveau dossier, ou nommés autrement, seront désactivés dans tous les profils, sans retour possible. Le changer ?</translation>
     </message>
-  </context>
+    <message>
+      <source>Help</source>
+      <translation>Aide</translation>
+    </message>
+    <message>
+      <source>What this page's settings do, in the MO2 Revamped guide.</source>
+      <translation>Ce que font les paramètres de cette page, dans le guide de MO2 Revamped.</translation>
+    </message>
+</context>
   <context>
     <name>StatusBar</name>
     <message>
@@ -19169,6 +19193,426 @@ Si MO2 Revamped est installé dans un dossier protégé comme Program Files, lan
     <message>
       <source>MO2's log. Errors and warnings here help to find a problem; Create bug report in the … menu saves them without your private data.</source>
       <translation>Le journal de MO2. Ses erreurs et avertissements aident à trouver un problème ; Créer un rapport de bug, dans le menu …, les enregistre sans tes données privées.</translation>
+    </message>
+    <message>
+      <source>Open this page</source>
+      <translation>Ouvrir cette page</translation>
+    </message>
+    <message>
+      <source>Start the game from MO2</source>
+      <translation>Lance le jeu depuis MO2</translation>
+    </message>
+    <message>
+      <source>Choose the program in the top bar and press &lt;b&gt;Run&lt;/b&gt;. Started from %1, the game doesn't see the mods.</source>
+      <translation>Choisis le programme dans la barre du haut et appuie sur &lt;b&gt;Lancer&lt;/b&gt;. Lancé depuis %1, le jeu ne voit pas les mods.</translation>
+    </message>
+    <message>
+      <source>First steps</source>
+      <translation>Premiers pas</translation>
+    </message>
+    <message>
+      <source>From a new instance to the game with mods, in six steps.</source>
+      <translation>D'une nouvelle instance au jeu avec des mods, en six étapes.</translation>
+    </message>
+    <message>
+      <source>1. Create an instance</source>
+      <translation>1. Créer une instance</translation>
+    </message>
+    <message>
+      <source>An instance is one game's setup: its mods, downloads and profiles. &lt;b&gt;Manage instances…&lt;/b&gt; on the command bar creates one: choose &lt;b&gt;Global (recommended)&lt;/b&gt;, the game, its edition and a name.</source>
+      <translation>Une instance est la configuration d'un jeu : ses mods, ses téléchargements et ses profils. &lt;b&gt;Gérer les instances…&lt;/b&gt;, dans la barre de commandes, en crée une : choisis &lt;b&gt;Globale (recommandé)&lt;/b&gt;, le jeu, son édition et un nom.</translation>
+    </message>
+    <message>
+      <source>Manage instances</source>
+      <translation>Gérer les instances</translation>
+    </message>
+    <message>
+      <source>2. Connect your Nexus account</source>
+      <translation>2. Connecter ton compte Nexus</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; Nexus &amp;gt; &lt;b&gt;Connect to Nexus&lt;/b&gt; links your account in the browser; &lt;b&gt;Enter API key manually&lt;/b&gt; works too. Then the &lt;b&gt;Mod manager download&lt;/b&gt; buttons on Nexus send files to MO2.</source>
+      <translation>Paramètres &amp;gt; Nexus &amp;gt; &lt;b&gt;Se connecter à Nexus&lt;/b&gt; relie ton compte dans le navigateur ; &lt;b&gt;Entrez la clé API manuellement&lt;/b&gt; fonctionne aussi. Ensuite, les boutons &lt;b&gt;Mod manager download&lt;/b&gt; de Nexus envoient les fichiers à MO2.</translation>
+    </message>
+    <message>
+      <source>Open Settings &gt; Nexus</source>
+      <translation>Ouvrir Paramètres &gt; Nexus</translation>
+    </message>
+    <message>
+      <source>3. Install mods</source>
+      <translation>3. Installer des mods</translation>
+    </message>
+    <message>
+      <source>Double-click an archive in &lt;b&gt;Downloads&lt;/b&gt; to install it, or use &lt;b&gt;Install&lt;/b&gt; (Ctrl+M) for one on your PC. Tick a mod in the list to turn it on; a mod lower in the list wins a conflict.</source>
+      <translation>Double-clique sur une archive dans &lt;b&gt;Téléchargements&lt;/b&gt; pour l'installer, ou utilise &lt;b&gt;Installer&lt;/b&gt; (Ctrl+M) pour une archive de ton PC. Coche un mod dans la liste pour l'activer ; le mod le plus bas dans la liste gagne un conflit.</translation>
+    </message>
+    <message>
+      <source>Install a mod</source>
+      <translation>Installer un mod</translation>
+    </message>
+    <message>
+      <source>4. Or a whole collection or list</source>
+      <translation>4. Ou toute une collection ou liste</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;Nexus collections&lt;/b&gt; installs a Nexus collection, and Tools &amp;gt; &lt;b&gt;Wabbajack lists&lt;/b&gt; a Wabbajack list in an instance of its own. Both download, install and order everything for you.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;Collections Nexus&lt;/b&gt; installe une collection Nexus, et Outils &amp;gt; &lt;b&gt;Listes Wabbajack&lt;/b&gt; une liste Wabbajack dans une instance à part. Les deux téléchargent, installent et ordonnent tout pour toi.</translation>
+    </message>
+    <message>
+      <source>Browse collections</source>
+      <translation>Parcourir les collections</translation>
+    </message>
+    <message>
+      <source>5. Start the game</source>
+      <translation>5. Lancer le jeu</translation>
+    </message>
+    <message>
+      <source>Choose the game in the top bar and press &lt;b&gt;Run&lt;/b&gt;. Always start it from MO2: started from Steam or its launcher, it doesn't see the mods. When a script extender is installed, MO2 offers to use it.</source>
+      <translation>Choisis le jeu dans la barre du haut et appuie sur &lt;b&gt;Lancer&lt;/b&gt;. Lance-le toujours depuis MO2 : depuis Steam ou son lanceur, il ne voit pas les mods. Si un extenseur de scripts est installé, MO2 propose de l'utiliser.</translation>
+    </message>
+    <message>
+      <source>Executables</source>
+      <translation>Exécutables</translation>
+    </message>
+    <message>
+      <source>6. If something goes wrong</source>
+      <translation>6. Si quelque chose ne va pas</translation>
+    </message>
+    <message>
+      <source>The bell on the command bar lists the problems MO2 found. Create a bug report to share the logs without your private data.</source>
+      <translation>La cloche de la barre de commandes liste les problèmes trouvés par MO2. Crée un rapport de bug pour partager les journaux sans tes données privées.</translation>
+    </message>
+    <message>
+      <source>Wabbajack lists</source>
+      <translation>Listes Wabbajack</translation>
+    </message>
+    <message>
+      <source>Install a Wabbajack list in an instance of its own.</source>
+      <translation>Installer une liste Wabbajack dans une instance à part.</translation>
+    </message>
+    <message>
+      <source>Find a list</source>
+      <translation>Trouver une liste</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;Wabbajack lists&lt;/b&gt; &amp;gt; &lt;b&gt;Browse Wabbajack lists…&lt;/b&gt; shows Wabbajack's gallery by game. &lt;b&gt;Open a Wabbajack list…&lt;/b&gt; takes a .wabbajack file you already have.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;Listes Wabbajack&lt;/b&gt; &amp;gt; &lt;b&gt;Parcourir les listes Wabbajack…&lt;/b&gt; affiche la galerie de Wabbajack par jeu. &lt;b&gt;Ouvrir une liste Wabbajack…&lt;/b&gt; prend un fichier .wabbajack que tu as déjà.</translation>
+    </message>
+    <message>
+      <source>Browse Wabbajack lists</source>
+      <translation>Parcourir les listes Wabbajack</translation>
+    </message>
+    <message>
+      <source>Download the archives</source>
+      <translation>Télécharger les archives</translation>
+    </message>
+    <message>
+      <source>The list window shows &lt;b&gt;What it needs&lt;/b&gt; and each archive with its status. &lt;b&gt;Download&lt;/b&gt; fetches them and &lt;b&gt;Check by hash&lt;/b&gt; verifies those already in the downloads folder. Without Premium, each Nexus file is one click on its page.</source>
+      <translation>La fenêtre de la liste montre &lt;b&gt;Ce qu'il lui faut&lt;/b&gt; et chaque archive avec son état. &lt;b&gt;Télécharger&lt;/b&gt; les récupère et &lt;b&gt;Vérifier par hash&lt;/b&gt; contrôle celles déjà dans le dossier des téléchargements. Sans Premium, chaque fichier Nexus est un clic sur sa page.</translation>
+    </message>
+    <message>
+      <source>Install the list</source>
+      <translation>Installer la liste</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Install&lt;/b&gt; puts the list in a new instance: give it a name and an empty install folder that isn't the game's folder, the downloads folder or a drive's root.</source>
+      <translation>&lt;b&gt;Installer&lt;/b&gt; met la liste dans une nouvelle instance : donne-lui un nom et un dossier d'installation vide qui ne soit ni le dossier du jeu, ni celui des téléchargements, ni la racine d'un lecteur.</translation>
+    </message>
+    <message>
+      <source>Manual steps</source>
+      <translation>Étapes manuelles</translation>
+    </message>
+    <message>
+      <source>Some lists leave files for the game folder. &lt;b&gt;Manual steps of this list…&lt;/b&gt;, in the same menu, copies them, backs up what they replace and runs their patchers when you ask.</source>
+      <translation>Certaines listes laissent des fichiers pour le dossier du jeu. &lt;b&gt;Étapes manuelles de cette liste…&lt;/b&gt;, dans le même menu, les copie, sauvegarde ce qu'ils remplacent et lance leurs patchers quand tu le demandes.</translation>
+    </message>
+    <message>
+      <source>Common problems</source>
+      <translation>Problèmes courants</translation>
+    </message>
+    <message>
+      <source>A list needs its game installed and a lot of free space; MO2 says how much before it starts. When Nexus's request limit is reached, continue later: nothing is lost. A file gone from its server has to be found by hand.</source>
+      <translation>Une liste a besoin de son jeu installé et de beaucoup d'espace libre ; MO2 indique combien avant de commencer. Si la limite de requêtes de Nexus est atteinte, reprends plus tard : rien n'est perdu. Un fichier qui n'est plus sur son serveur doit être trouvé à la main.</translation>
+    </message>
+    <message>
+      <source>Appearance</source>
+      <translation>Apparence</translation>
+    </message>
+    <message>
+      <source>The theme, the size of the interface, animations and the toolbar.</source>
+      <translation>Le thème, la taille de l'interface, les animations et la barre d'outils.</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; &lt;b&gt;Appearance&lt;/b&gt; &amp;gt; &lt;b&gt;Interface theme&lt;/b&gt;: Light, Dark or &lt;b&gt;OLED Black&lt;/b&gt;, a Dark with pure black for OLED screens. Your own themes show with their base, such as "Ember (on Dark)".</source>
+      <translation>Paramètres &amp;gt; &lt;b&gt;Apparence&lt;/b&gt; &amp;gt; &lt;b&gt;Thème de l'interface&lt;/b&gt; : Clair, Sombre ou &lt;b&gt;Noir OLED&lt;/b&gt;, un Sombre au noir pur pour les écrans OLED. Tes thèmes apparaissent avec leur base, comme "Ember (sur Sombre)".</translation>
+    </message>
+    <message>
+      <source>Animations</source>
+      <translation>Animations</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Off&lt;/b&gt; shows every change at once. &lt;b&gt;Saver (30 Hz)&lt;/b&gt; and &lt;b&gt;Standard (60 Hz)&lt;/b&gt; animate tabs, switches, menus, the log panel and the Run button; &lt;b&gt;Monitor&lt;/b&gt; follows the screen's refresh rate, up to 240 Hz, using a little more CPU while something moves. It applies when you press OK.</source>
+      <translation>&lt;b&gt;Désactivée&lt;/b&gt; affiche chaque changement d'un coup. &lt;b&gt;Économie (30 Hz)&lt;/b&gt; et &lt;b&gt;Standard (60 Hz)&lt;/b&gt; animent les onglets, interrupteurs, menus, le panneau du journal et le bouton Lancer ; &lt;b&gt;Monitor&lt;/b&gt; suit la fréquence de l'écran, jusqu'à 240 Hz, avec un peu plus de CPU pendant qu'un élément bouge. S'applique quand tu appuies sur OK.</translation>
+    </message>
+    <message>
+      <source>Size and text</source>
+      <translation>Taille et texte</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Interface size&lt;/b&gt; scales every window. &lt;b&gt;Smooth text in grey (OLED screens)&lt;/b&gt; avoids colored edges on letters. Both apply when MO2 starts again.</source>
+      <translation>&lt;b&gt;Taille de l'interface&lt;/b&gt; agrandit toutes les fenêtres. &lt;b&gt;Lisser le texte en gris (écrans OLED)&lt;/b&gt; évite les bords colorés sur les lettres. Les deux s'appliquent au prochain démarrage de MO2.</translation>
+    </message>
+    <message>
+      <source>Toolbar and panels</source>
+      <translation>Barre d'outils et panneaux</translation>
+    </message>
+    <message>
+      <source>The toolbar's icon size and button style (icons, text or both), and whether the status bar and the log panel show.</source>
+      <translation>La taille des icônes et le style des boutons de la barre d'outils (icônes, texte ou les deux), et l'affichage de la barre d'état et du panneau du journal.</translation>
+    </message>
+    <message>
+      <source>Language, notices, the download list, updates, profile defaults, and windows and dialogs.</source>
+      <translation>Langue, notifications, liste des téléchargements, mises à jour, valeurs par défaut des profils, et fenêtres et dialogues.</translation>
+    </message>
+    <message>
+      <source>The theme (Light, Dark, OLED Black or your own), the interface size, animations, the toolbar and the highlight colors.</source>
+      <translation>Le thème (Clair, Sombre, Noir OLED ou le tien), la taille de l'interface, les animations, la barre d'outils et les couleurs de surbrillance.</translation>
+    </message>
+    <message>
+      <source>The parts of MO2 that support games, install mods and add tools.</source>
+      <translation>Les parties de MO2 qui prennent en charge les jeux, installent les mods et ajoutent des outils.</translation>
+    </message>
+    <message>
+      <source>Installed plugins</source>
+      <translation>Plugins installés</translation>
+    </message>
+    <message>
+      <source>Settings &amp;gt; &lt;b&gt;Plugins&lt;/b&gt; lists MO2's plugins by kind: games, installers, tools, previews and checks. Choose one to see its author, version and description.</source>
+      <translation>Paramètres &amp;gt; &lt;b&gt;Plugins&lt;/b&gt; liste les plugins de MO2 par type : jeux, installateurs, outils, aperçus et vérifications. Choisis-en un pour voir son auteur, sa version et sa description.</translation>
+    </message>
+    <message>
+      <source>Turn a plugin off</source>
+      <translation>Désactiver un plugin</translation>
+    </message>
+    <message>
+      <source>Clear &lt;b&gt;Enable plugin&lt;/b&gt; to turn one off; MO2 asks first when others need it. The &lt;b&gt;Plugin blacklist&lt;/b&gt; skips a plugin's file when MO2 starts.</source>
+      <translation>Décoche &lt;b&gt;Activer le plugin&lt;/b&gt; pour le désactiver ; MO2 demande d'abord si d'autres en ont besoin. La &lt;b&gt;Liste noire des plugins&lt;/b&gt; ignore le fichier d'un plugin au démarrage de MO2.</translation>
+    </message>
+    <message>
+      <source>Plugin options</source>
+      <translation>Options du plugin</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Plugin-specific options&lt;/b&gt; lists a plugin's settings; double-click a value to change it.</source>
+      <translation>&lt;b&gt;Options propres au plugin&lt;/b&gt; liste ses réglages ; double-clique sur une valeur pour la changer.</translation>
+    </message>
+    <message>
+      <source>Other games' plugins</source>
+      <translation>Plugins des autres jeux</translation>
+    </message>
+    <message>
+      <source>A plugin made for one game, such as the FNIS and OMOD tools or the Elden Ring tools, isn't loaded in other games' instances, so menus stay short and MO2 starts faster. Developer mode loads them all.</source>
+      <translation>Un plugin fait pour un jeu, comme les outils FNIS et OMOD ou ceux d'Elden Ring, n'est pas chargé dans les instances des autres jeux : les menus restent courts et MO2 démarre plus vite. Le mode développeur les charge tous.</translation>
+    </message>
+    <message>
+      <source>Game support wiki</source>
+      <translation>Wiki d'aide du jeu</translation>
+    </message>
+    <message>
+      <source>When a game's plugin names a modding wiki, &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Game support wiki&lt;/b&gt; opens it.</source>
+      <translation>Quand le plugin d'un jeu indique un wiki de modding, &lt;b&gt;…&lt;/b&gt; &amp;gt; &lt;b&gt;Wiki d'aide du jeu&lt;/b&gt; l'ouvre.</translation>
+    </message>
+    <message>
+      <source>Open the issue tracker</source>
+      <translation>Ouvrir le suivi des problèmes</translation>
+    </message>
+    <message>
+      <source>What MO2 Revamped does for this game, and its usual problems.</source>
+      <translation>Ce que MO2 Revamped fait pour ce jeu, et ses problèmes courants.</translation>
+    </message>
+    <message>
+      <source>Archive order</source>
+      <translation>Ordre des archives</translation>
+    </message>
+    <message>
+      <source>MO2 writes the game's archive/pc/mod/modlist.txt from the mod order, so the mod lower in the list wins. Tools &amp;gt; &lt;b&gt;Archive conflicts&lt;/b&gt; shows which .archive wins where two mods change the same files.</source>
+      <translation>MO2 écrit le archive/pc/mod/modlist.txt du jeu d'après l'ordre des mods : le mod le plus bas dans la liste gagne. Outils &amp;gt; &lt;b&gt;Conflits d'archives&lt;/b&gt; montre quel .archive gagne là où deux mods changent les mêmes fichiers.</translation>
+    </message>
+    <message>
+      <source>REDmod</source>
+      <translation>REDmod</translation>
+    </message>
+    <message>
+      <source>Changed REDmods are deployed before the game starts. &lt;b&gt;Cyberpunk 2077 - skip REDmod deploy&lt;/b&gt; starts without it and &lt;b&gt;Manually deploy REDmod&lt;/b&gt; runs it alone. REDmods need the free REDmod DLC.</source>
+      <translation>Les REDmods modifiés sont déployés avant le lancement du jeu. &lt;b&gt;Cyberpunk 2077 - skip REDmod deploy&lt;/b&gt; lance sans le faire et &lt;b&gt;Manually deploy REDmod&lt;/b&gt; le fait seul. Les REDmods ont besoin du DLC gratuit REDmod.</translation>
+    </message>
+    <message>
+      <source>Frameworks</source>
+      <translation>Frameworks</translation>
+    </message>
+    <message>
+      <source>Most mods need RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL or Codeware. A notification names a missing one.</source>
+      <translation>La plupart des mods ont besoin de RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL ou Codeware. Une notification nomme celui qui manque.</translation>
+    </message>
+    <message>
+      <source>Scripts that don't compile</source>
+      <translation>Scripts qui ne compilent pas</translation>
+    </message>
+    <message>
+      <source>When redscript can't compile the mods' scripts, the notification names the mods. The full log is r6/logs/redscript_rCURRENT.log in Overwrite. Update or turn off the mods it names.</source>
+      <translation>Quand redscript ne peut pas compiler les scripts des mods, la notification nomme les mods. Le journal complet est r6/logs/redscript_rCURRENT.log dans Overwrite. Mets à jour ou désactive les mods nommés.</translation>
+    </message>
+    <message>
+      <source>Modding wiki</source>
+      <translation>Wiki de modding</translation>
+    </message>
+    <message>
+      <source>The Cyberpunk 2077 modding community's wiki.</source>
+      <translation>Le wiki de la communauté de modding de Cyberpunk 2077.</translation>
+    </message>
+    <message>
+      <source>Open</source>
+      <translation>Ouvrir</translation>
+    </message>
+    <message>
+      <source>Load order</source>
+      <translation>Ordre de chargement</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;BG3 Tools&lt;/b&gt; &amp;gt; &lt;b&gt;Load Order&lt;/b&gt; lists the modules with their problems. &lt;b&gt;Move needed mods up&lt;/b&gt; puts every mod after the ones it needs.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;BG3 Tools&lt;/b&gt; &amp;gt; &lt;b&gt;Load Order&lt;/b&gt; liste les modules avec leurs problèmes. &lt;b&gt;Monter les mods requis&lt;/b&gt; place chaque mod après ceux dont il a besoin.</translation>
+    </message>
+    <message>
+      <source>Checks before starting</source>
+      <translation>Vérifications avant le lancement</translation>
+    </message>
+    <message>
+      <source>MO2 warns when mods need mods that aren't active, load before what they need, need the Script Extender, are installed twice or conflict, and when the game turned mods off on its last start.</source>
+      <translation>MO2 prévient quand des mods ont besoin de mods inactifs, se chargent avant ce dont ils ont besoin, ont besoin du Script Extender, sont installés deux fois ou sont en conflit, et quand le jeu a désactivé des mods à son dernier lancement.</translation>
+    </message>
+    <message>
+      <source>LSLib and .NET</source>
+      <translation>LSLib et .NET</translation>
+    </message>
+    <message>
+      <source>Reading .pak files needs LSLib, downloaded from GitHub when you agree, and the .NET 8 Runtime (x64). &lt;b&gt;Check For LsLib Updates&lt;/b&gt; in BG3 Tools downloads it again.</source>
+      <translation>Lire les fichiers .pak demande LSLib, téléchargé depuis GitHub si tu acceptes, et le .NET 8 Runtime (x64). &lt;b&gt;Check For LsLib Updates&lt;/b&gt; dans BG3 Tools le télécharge à nouveau.</translation>
+    </message>
+    <message>
+      <source>Each profile keeps its own modsettings.lsx; MO2 shows it to the game in PlayerProfiles/Public.</source>
+      <translation>Chaque profil garde son propre modsettings.lsx ; MO2 le montre au jeu dans PlayerProfiles/Public.</translation>
+    </message>
+    <message>
+      <source>The Baldur's Gate 3 modding community's wiki.</source>
+      <translation>Le wiki de la communauté de modding de Baldur's Gate 3.</translation>
+    </message>
+    <message>
+      <source>Bethesda games</source>
+      <translation>Jeux Bethesda</translation>
+    </message>
+    <message>
+      <source>Skyrim, Fallout, Oblivion, Morrowind and Starfield: what MO2 does for them, and their usual problems.</source>
+      <translation>Skyrim, Fallout, Oblivion, Morrowind et Starfield : ce que MO2 fait pour eux, et leurs problèmes courants.</translation>
+    </message>
+    <message>
+      <source>Plugin order</source>
+      <translation>Ordre des plugins</translation>
+    </message>
+    <message>
+      <source>The &lt;b&gt;Plugins&lt;/b&gt; tab sets the order of the .esp, .esm and .esl files. &lt;b&gt;Sort&lt;/b&gt; uses LOOT; for New Vegas and TTW it's off unless you allow it, as most of their guides advise against it.</source>
+      <translation>L'onglet &lt;b&gt;Plugins&lt;/b&gt; fixe l'ordre des fichiers .esp, .esm et .esl. &lt;b&gt;Trier&lt;/b&gt; utilise LOOT ; pour New Vegas et TTW, il est désactivé sauf si tu l'autorises, car la plupart de leurs guides le déconseillent.</translation>
+    </message>
+    <message>
+      <source>Script extender</source>
+      <translation>Extenseur de scripts</translation>
+    </message>
+    <message>
+      <source>Install SKSE, F4SE or xNVSE as a mod with its loader in a &lt;b&gt;Root&lt;/b&gt; folder, then start the game with it. For Skyrim SE and Fallout 4, MO2 checks that it matches the game version and that Address Library is installed.</source>
+      <translation>Installe SKSE, F4SE ou xNVSE comme un mod avec son lanceur dans un dossier &lt;b&gt;Root&lt;/b&gt;, puis lance le jeu avec. Pour Skyrim SE et Fallout 4, MO2 vérifie qu'il correspond à la version du jeu et qu'Address Library est installé.</translation>
+    </message>
+    <message>
+      <source>Script extender plugins</source>
+      <translation>Plugins de l'extenseur de scripts</translation>
+    </message>
+    <message>
+      <source>When some don't load, a notification says which and why, such as an Address Library update or a missing DLL.</source>
+      <translation>Quand certains ne se chargent pas, une notification dit lesquels et pourquoi, comme une mise à jour d'Address Library ou une DLL manquante.</translation>
+    </message>
+    <message>
+      <source>Loose files and archives</source>
+      <translation>Fichiers libres et archives</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;Automatic archive invalidation&lt;/b&gt;, in each profile, makes the game load loose files over the ones in its archives.</source>
+      <translation>&lt;b&gt;Invalidation automatique des archives&lt;/b&gt;, dans chaque profil, fait charger au jeu les fichiers libres par-dessus ceux de ses archives.</translation>
+    </message>
+    <message>
+      <source>DLC and Creation Club</source>
+      <translation>DLC et Creation Club</translation>
+    </message>
+    <message>
+      <source>They show in the mod list as "Creation Club: name"; order their plugins in the Plugins tab. Starfield also warns about active ESP plugins and sTestFile lines in StarfieldCustom.ini.</source>
+      <translation>Ils apparaissent dans la liste des mods comme "Creation Club : nom" ; ordonne leurs plugins dans l'onglet Plugins. Starfield prévient aussi des plugins ESP actifs et des lignes sTestFile dans StarfieldCustom.ini.</translation>
+    </message>
+    <message>
+      <source>Programs</source>
+      <translation>Programmes</translation>
+    </message>
+    <message>
+      <source>Add the script extender, LOOT, xEdit or other tools as programs, so they also see the mods.</source>
+      <translation>Ajoute l'extenseur de scripts, LOOT, xEdit ou d'autres outils comme programmes, pour qu'ils voient aussi les mods.</translation>
+    </message>
+    <message>
+      <source>Native DLLs</source>
+      <translation>DLL natives</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;Native DLL profile&lt;/b&gt; lists the DLLs of the enabled mods and their load order, for each profile.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;Profil des DLL natives&lt;/b&gt; liste les DLL des mods activés et leur ordre de chargement, pour chaque profil.</translation>
+    </message>
+    <message>
+      <source>Saves</source>
+      <translation>Sauvegardes</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;Save isolation&lt;/b&gt; keeps saves per profile, shares them in the instance, or uses the global Steam save.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;Isolation des sauvegardes&lt;/b&gt; sépare les sauvegardes par profil, les partage dans l'instance ou utilise la sauvegarde Steam globale.</translation>
+    </message>
+    <message>
+      <source>Startup options</source>
+      <translation>Options de démarrage</translation>
+    </message>
+    <message>
+      <source>Tools &amp;gt; &lt;b&gt;Startup options&lt;/b&gt; skips the intro logos, speeds up the start (BootBoost) or starts the game minimized.</source>
+      <translation>Outils &amp;gt; &lt;b&gt;Options de démarrage&lt;/b&gt; passe les logos d'intro, accélère le démarrage (BootBoost) ou lance le jeu réduit.</translation>
+    </message>
+    <message>
+      <source>Online play</source>
+      <translation>Jeu en ligne</translation>
+    </message>
+    <message>
+      <source>MO2 doesn't change Easy Anti-Cheat or the online mode. Keep modded files and saves for offline play.</source>
+      <translation>MO2 ne change ni Easy Anti-Cheat ni le mode en ligne. Garde les fichiers et sauvegardes moddés pour le jeu hors ligne.</translation>
+    </message>
+    <message>
+      <source>When the game doesn't start</source>
+      <translation>Quand le jeu ne démarre pas</translation>
+    </message>
+    <message>
+      <source>If it closes right after starting, or runs without MO2's bridge, check that &lt;b&gt;Force load libraries&lt;/b&gt; is on for its program, and read &lt;b&gt;Open last bridge log&lt;/b&gt; in Startup options.</source>
+      <translation>S'il se ferme juste après le lancement, ou tourne sans le pont de MO2, vérifie que &lt;b&gt;Forcer le chargement de bibliothèques&lt;/b&gt; est activé pour son programme, et lis &lt;b&gt;Ouvrir le dernier journal du pont&lt;/b&gt; dans les Options de démarrage.</translation>
+    </message>
+    <message>
+      <source>The full guide</source>
+      <translation>Le guide complet</translation>
+    </message>
+    <message>
+      <source>Profiles, archive layouts, native DLLs and saves, in detail.</source>
+      <translation>Profils, structure des archives, DLL natives et sauvegardes, en détail.</translation>
+    </message>
+    <message>
+      <source>Open the guide</source>
+      <translation>Ouvrir le guide</translation>
     </message>
 </context>
 <context>

@@ -3090,12 +3090,52 @@ void MainWindow::createHelpMenu()
   revampedGuideAction->setObjectName(QStringLiteral("revampedGuideAction"));
   revampedGuideAction->setIcon(FluentIcons::glyph(0xE897));
   revampedGuideAction->setToolTip(
-      tr("Short help on the dashboard, profiles, downloads, collections, themes, "
-         "notices and settings."));
-  connect(revampedGuideAction, &QAction::triggered, this, [this] {
-    RevampedGuide::show(this);
+      tr("First steps, and short help on every part of MO2 Revamped and on this "
+         "game."));
+  // what the guide's buttons ask for, once it has closed
+  const auto guideAction = [this](const QString& id) {
+    if (id.startsWith(QLatin1String("settings:"))) {
+      // SettingsDialog::exec() starts on that page
+      qApp->setProperty("revampedSettingsStartPage", id.mid(9));
+      on_actionSettings_triggered();
+    } else if (id == QLatin1String("instances")) {
+      on_actionChange_Game_triggered();
+    } else if (id == QLatin1String("install")) {
+      ui->actionInstallMod->trigger();
+    } else if (id == QLatin1String("profiles")) {
+      on_actionAdd_Profile_triggered();
+    } else if (id == QLatin1String("executables")) {
+      on_actionModify_Executables_triggered();
+    } else if (id == QLatin1String("collections")) {
+      browseCollections();
+    } else if (id == QLatin1String("wabbajack")) {
+      browseWabbajackLists();
+    } else if (id == QLatin1String("game-guide")) {
+      showEldenRingGuide();
+    } else if (id == QLatin1String("bugreport")) {
+      if (auto* report = findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"))) {
+        report->trigger();
+      }
+    }
+  };
+  connect(revampedGuideAction, &QAction::triggered, this, [this, guideAction] {
+    RevampedGuide::show(this, {}, guideAction);
   });
   menu->addAction(revampedGuideAction);
+
+  // the page about this game's own plugin, when MO2 Revamped has one
+  const QString gameTopic = RevampedGuide::gameTopic(game);
+  if (!gameTopic.isEmpty()) {
+    QAction* gameHelpAction = new QAction(tr("Help for %1").arg(game->gameName()), menu);
+    gameHelpAction->setObjectName(QStringLiteral("revampedGameHelpAction"));
+    gameHelpAction->setIcon(FluentIcons::glyph(0xE7FC));
+    gameHelpAction->setToolTip(
+        tr("What MO2 Revamped does for this game, and its usual problems."));
+    connect(gameHelpAction, &QAction::triggered, this, [this, gameTopic, guideAction] {
+      RevampedGuide::show(this, gameTopic, guideAction);
+    });
+    menu->addAction(gameHelpAction);
+  }
 
   if (isEldenRing) {
     QAction* guideAction = new QAction(gameGuideTitle(game), menu);

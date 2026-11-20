@@ -1,8 +1,12 @@
 #include "revampedguide.h"
 
+#include "fluenticons.h"
 #include "fluentnavigation.h"
 #include "fluentpanels.h"
 #include "ui_mainwindow.h"
+
+#include <iplugingame.h>
+#include <utility.h>
 
 #include <QAction>
 #include <QCoreApplication>
@@ -17,6 +21,7 @@
 #include <QTabWidget>
 #include <QTextDocumentFragment>
 #include <QToolBar>
+#include <QUrl>
 #include <QVBoxLayout>
 
 #include <vector>
@@ -38,20 +43,77 @@ struct Row
   char16_t glyph;
   QString title;
   QString text;
+  // an optional button: its label and what it does ("url:<address>" opens
+  // the browser, anything else goes to the window that opened the guide)
+  QString button = {};
+  QString action = {};
 };
 
 struct Topic
 {
+  QString id;
   char16_t glyph;
   QString name;
   QString subtitle;
   std::vector<Row> rows;
 };
 
+// a Settings row's button that opens that page of Settings
+Row settingsRow(char16_t glyph, const QString& title, const QString& text,
+                const QString& page)
+{
+  return {glyph, title, text, Text::tr("Open this page"),
+          QStringLiteral("settings:") + page};
+}
+
+// the start of the rows every game page ends with
+Row runFromMo2(const QString& launchers)
+{
+  return {0xE768, Text::tr("Start the game from MO2"),
+          Text::tr("Choose the program in the top bar and press <b>Run</b>. Started "
+                   "from %1, the game doesn't see the mods.")
+              .arg(launchers)};
+}
+
 std::vector<Topic> topics()
 {
   return {
-      {0xE80F,
+      {FirstSteps,
+       0xE7C1,
+       Text::tr("First steps"),
+       Text::tr("From a new instance to the game with mods, in six steps."),
+       {{0xE8B7, Text::tr("1. Create an instance"),
+         Text::tr("An instance is one game's setup: its mods, downloads and profiles. "
+                  "<b>Manage instances…</b> on the command bar creates one: choose "
+                  "<b>Global (recommended)</b>, the game, its edition and a name."),
+         Text::tr("Manage instances"), QStringLiteral("instances")},
+        {0xE774, Text::tr("2. Connect your Nexus account"),
+         Text::tr("Settings &gt; Nexus &gt; <b>Connect to Nexus</b> links your account "
+                  "in the browser; <b>Enter API key manually</b> works too. Then the "
+                  "<b>Mod manager download</b> buttons on Nexus send files to MO2."),
+         Text::tr("Open Settings > Nexus"), QStringLiteral("settings:nexusTab")},
+        {0xE896, Text::tr("3. Install mods"),
+         Text::tr("Double-click an archive in <b>Downloads</b> to install it, or use "
+                  "<b>Install</b> (Ctrl+M) for one on your PC. Tick a mod in the list "
+                  "to turn it on; a mod lower in the list wins a conflict."),
+         Text::tr("Install a mod"), QStringLiteral("install")},
+        {0xE8F1, Text::tr("4. Or a whole collection or list"),
+         Text::tr("Tools &gt; <b>Nexus collections</b> installs a Nexus collection, and "
+                  "Tools &gt; <b>Wabbajack lists</b> a Wabbajack list in an instance of "
+                  "its own. Both download, install and order everything for you."),
+         Text::tr("Browse collections"), QStringLiteral("collections")},
+        {0xE768, Text::tr("5. Start the game"),
+         Text::tr("Choose the game in the top bar and press <b>Run</b>. Always start it "
+                  "from MO2: started from Steam or its launcher, it doesn't see the "
+                  "mods. When a script extender is installed, MO2 offers to use it."),
+         Text::tr("Executables"), QStringLiteral("executables")},
+        {0xEBE8, Text::tr("6. If something goes wrong"),
+         Text::tr("The bell on the command bar lists the problems MO2 found. Create a "
+                  "bug report to share the logs without your private data."),
+         Text::tr("Create bug report"), QStringLiteral("bugreport")}}},
+
+      {QStringLiteral("getting-around"),
+       0xE80F,
        Text::tr("Getting around"),
        Text::tr("The parts of the main window and how to move between them."),
        {{0xE7FC, Text::tr("Top bar"),
@@ -84,13 +146,15 @@ std::vector<Topic> topics()
          Text::tr("Choose <b>…</b> &gt; <b>Help on the interface</b>, then click any "
                   "part of the window to read what it does.")}}},
 
-      {0xE77B,
+      {QStringLiteral("profiles"),
+       0xE77B,
        Text::tr("Profiles"),
        Text::tr("Each profile keeps its own mod list and plugin order."),
        {{0xE77B, Text::tr("Manage profiles"),
          Text::tr("<b>Profiles</b> (Ctrl+P) creates, duplicates, renames and deletes "
                   "profiles, and <b>Use this profile</b> switches to one. The top bar "
-                  "switches profiles too.")},
+                  "switches profiles too."),
+         Text::tr("Profiles"), QStringLiteral("profiles")},
         {0xE8F7, Text::tr("Profile options"),
          Text::tr("<b>Profile-specific saves</b> and <b>Profile-specific game INI "
                   "files</b> keep saves and game settings apart for each profile. "
@@ -102,7 +166,8 @@ std::vector<Topic> topics()
          Text::tr("A profile can't be renamed or deleted while it is the current one "
                   "or while the game runs.")}}},
 
-      {0xE896,
+      {QStringLiteral("downloads"),
+       0xE896,
        Text::tr("Downloads"),
        Text::tr("The archives you download from Nexus or add yourself."),
        {{0xE896, Text::tr("Downloads tab"),
@@ -121,7 +186,8 @@ std::vector<Topic> topics()
          Text::tr("Settings &gt; General &gt; <b>Download list</b> can hide archives "
                   "once they are installed and make the list compact.")}}},
 
-      {0xE8B7,
+      {QStringLiteral("root"),
+       0xE8B7,
        Text::tr("Root folder"),
        Text::tr("Files that go next to the game's program instead of its data folder."),
        {{0xE8B7, Text::tr("What it is"),
@@ -139,13 +205,15 @@ std::vector<Topic> topics()
          Text::tr("If the Root Builder plugin is installed and on, it stays in charge "
                   "of the Root folders.")}}},
 
-      {0xE8F1,
+      {QStringLiteral("collections"),
+       0xE8F1,
        Text::tr("Nexus collections"),
        Text::tr("Install a whole Nexus collection in one go."),
        {{0xE721, Text::tr("Find a collection"),
          Text::tr("In <b>Tools</b> or <b>Nexus</b>: <b>Browse collections…</b> to "
                   "search, or <b>Download a Nexus collection…</b> for a link. A "
-                  "collection link from the browser opens it too.")},
+                  "collection link from the browser opens it too."),
+         Text::tr("Browse collections"), QStringLiteral("collections")},
         {0xE8F1, Text::tr("Collection window"),
          Text::tr("Shows <b>What it needs</b>, the author's notes and the mods. "
                   "<b>Install into</b> chooses the current profile, a new profile or a "
@@ -166,12 +234,57 @@ std::vector<Topic> topics()
                   "time. An unfinished collection is offered again later. Notices wait "
                   "while it installs.")}}},
 
-      {0xE790,
-       Text::tr("Themes"),
-       Text::tr("Light, Dark, or a theme of your own."),
-       {{0xE790, Text::tr("Choose a theme"),
-         Text::tr("Settings &gt; <b>Theme</b> &gt; <b>Interface theme</b>. Your own "
-                  "themes show with their base, such as \"Ember (on Dark)\".")},
+      {QStringLiteral("wabbajack"),
+       0xE7B8,
+       Text::tr("Wabbajack lists"),
+       Text::tr("Install a Wabbajack list in an instance of its own."),
+       {{0xE721, Text::tr("Find a list"),
+         Text::tr("Tools &gt; <b>Wabbajack lists</b> &gt; <b>Browse Wabbajack "
+                  "lists…</b> shows Wabbajack's gallery by game. <b>Open a Wabbajack "
+                  "list…</b> takes a .wabbajack file you already have."),
+         Text::tr("Browse Wabbajack lists"), QStringLiteral("wabbajack")},
+        {0xE896, Text::tr("Download the archives"),
+         Text::tr("The list window shows <b>What it needs</b> and each archive with its "
+                  "status. <b>Download</b> fetches them and <b>Check by hash</b> "
+                  "verifies those already in the downloads folder. Without Premium, "
+                  "each Nexus file is one click on its page.")},
+        {0xE8B7, Text::tr("Install the list"),
+         Text::tr("<b>Install</b> puts the list in a new instance: give it a name and "
+                  "an empty install folder that isn't the game's folder, the downloads "
+                  "folder or a drive's root.")},
+        {0xE9D5, Text::tr("Manual steps"),
+         Text::tr("Some lists leave files for the game folder. <b>Manual steps of this "
+                  "list…</b>, in the same menu, copies them, backs up what they replace "
+                  "and runs their patchers when you ask.")},
+        {0xE7BA, Text::tr("Common problems"),
+         Text::tr("A list needs its game installed and a lot of free space; MO2 says "
+                  "how much before it starts. When Nexus's request limit is reached, "
+                  "continue later: nothing is lost. A file gone from its server has "
+                  "to be found by hand.")}}},
+
+      {QStringLiteral("appearance"),
+       0xE790,
+       Text::tr("Appearance"),
+       Text::tr("The theme, the size of the interface, animations and the toolbar."),
+       {settingsRow(0xE790, Text::tr("Choose a theme"),
+                    Text::tr("Settings &gt; <b>Appearance</b> &gt; <b>Interface "
+                             "theme</b>: Light, Dark or <b>OLED Black</b>, a Dark with "
+                             "pure black for OLED screens. Your own themes show with "
+                             "their base, such as \"Ember (on Dark)\"."),
+                    QStringLiteral("themeTab")),
+        {0xE916, Text::tr("Animations"),
+         Text::tr("<b>Off</b> shows every change at once. <b>Saver (30 Hz)</b> and "
+                  "<b>Standard (60 Hz)</b> animate tabs, switches, menus, the log panel "
+                  "and the Run button; <b>Monitor</b> follows the screen's refresh "
+                  "rate, up to 240 Hz, using a little more CPU while something moves. "
+                  "It applies when you press OK.")},
+        {0xE8D3, Text::tr("Size and text"),
+         Text::tr("<b>Interface size</b> scales every window. <b>Smooth text in grey "
+                  "(OLED screens)</b> avoids colored edges on letters. Both apply when "
+                  "MO2 starts again.")},
+        {0xE700, Text::tr("Toolbar and panels"),
+         Text::tr("The toolbar's icon size and button style (icons, text or both), "
+                  "and whether the status bar and the log panel show.")},
         {0xE70F, Text::tr("Theme editor"),
          Text::tr("<b>New theme...</b> asks for a name, a base (Light or Dark) and six "
                   "colors, and the window shows them as you pick. <b>Save</b> keeps "
@@ -188,48 +301,87 @@ std::vector<Topic> topics()
          Text::tr("<b>Mod and plugin highlight colors</b> sets the conflict colors; "
                   "<b>Restore default colors</b> brings them back.")}}},
 
-      {0xEA8F,
+      {QStringLiteral("notices"),
+       0xEA8F,
        Text::tr("Notices"),
        Text::tr("Short messages at the bottom of the window, and the notification bell."),
        {{0xE8BD, Text::tr("Notices"),
          Text::tr("Small cards such as \"Installation successful\" rise at the bottom "
                   "and fade on their own. Hover over one to keep it, click it to close "
                   "it. A repeated notice shows a counter instead of a new card.")},
-        {0xE767, Text::tr("Sound only"),
-         Text::tr("Settings &gt; General: <b>Notices: sound only, without the card</b> "
-                  "plays Windows' notification sound instead. The notices are still in "
-                  "MO2's log, and questions and errors still show.")},
+        settingsRow(0xE767, Text::tr("Sound only"),
+                    Text::tr("Settings &gt; General: <b>Notices: sound only, without the "
+                             "card</b> plays Windows' notification sound instead. The "
+                             "notices are still in MO2's log, and questions and errors "
+                             "still show."),
+                    QStringLiteral("generalTab")),
         {0xEA8F, Text::tr("Notifications"),
          Text::tr("The bell on the command bar lists problems that plugins found, such "
                   "as a missing script extender. A dot on the bell means there is "
                   "something to read; <b>Fix it</b> solves a problem when it can.")}}},
 
-      {0xE713,
+      {SettingsTopic,
+       0xE713,
        Text::tr("Settings"),
        Text::tr("What each page of Settings (Ctrl+S) holds."),
-       {{0xE713, Text::tr("General"),
-         Text::tr("Language, interface size, notices, the download list, updates, "
-                  "profile defaults and the toolbar.")},
-        {0xE790, Text::tr("Theme"),
-         Text::tr("The interface theme, your own themes and the highlight colors.")},
-        {0xE8FD, Text::tr("Mod list"),
-         Text::tr("How the mod list shows mods, separators and conflicts, and how "
-                  "installing and dragging behave.")},
-        {0xE8B7, Text::tr("Paths"),
-         Text::tr("Where this instance keeps its downloads, mods, profiles, caches and "
-                  "Overwrite.")},
-        {0xE774, Text::tr("Nexus"),
-         Text::tr("Connect your Nexus account, see its API use and choose the download "
-                  "servers.")},
-        {0xEA86, Text::tr("Plugins"),
-         Text::tr("Turn MO2's plugins on or off and change their options.")},
-        {0xE90F, Text::tr("Workarounds"),
-         Text::tr("Steam, network and virtual file system settings for problem "
-                  "cases.")},
-        {0xE9D9, Text::tr("Diagnostics"),
-         Text::tr("How much MO2 logs, crash dumps, and where the logs are.")}}},
+       {settingsRow(0xE713, Text::tr("General"),
+                    Text::tr("Language, notices, the download list, updates, profile "
+                             "defaults, and windows and dialogs."),
+                    QStringLiteral("generalTab")),
+        settingsRow(0xE790, Text::tr("Appearance"),
+                    Text::tr("The theme (Light, Dark, OLED Black or your own), the "
+                             "interface size, animations, the toolbar and the "
+                             "highlight colors."),
+                    QStringLiteral("themeTab")),
+        settingsRow(0xE8FD, Text::tr("Mod list"),
+                    Text::tr("How the mod list shows mods, separators and conflicts, "
+                             "and how installing and dragging behave."),
+                    QStringLiteral("uiTab")),
+        settingsRow(0xE8B7, Text::tr("Paths"),
+                    Text::tr("Where this instance keeps its downloads, mods, profiles, "
+                             "caches and Overwrite."),
+                    QStringLiteral("pathsTab")),
+        settingsRow(0xE774, Text::tr("Nexus"),
+                    Text::tr("Connect your Nexus account, see its API use and choose "
+                             "the download servers."),
+                    QStringLiteral("nexusTab")),
+        settingsRow(0xEA86, Text::tr("Plugins"),
+                    Text::tr("Turn MO2's plugins on or off and change their options."),
+                    QStringLiteral("pluginsTab")),
+        settingsRow(0xE90F, Text::tr("Workarounds"),
+                    Text::tr("Steam, network and virtual file system settings for "
+                             "problem cases."),
+                    QStringLiteral("workaroundTab")),
+        settingsRow(0xE9D9, Text::tr("Diagnostics"),
+                    Text::tr("How much MO2 logs, crash dumps, and where the logs are."),
+                    QStringLiteral("diagnosticsTab"))}},
 
-      {0xEC7A,
+      {QStringLiteral("plugins"),
+       0xEA86,
+       Text::tr("Plugins"),
+       Text::tr("The parts of MO2 that support games, install mods and add tools."),
+       {settingsRow(0xEA86, Text::tr("Installed plugins"),
+                    Text::tr("Settings &gt; <b>Plugins</b> lists MO2's plugins by "
+                             "kind: games, installers, tools, previews and checks. "
+                             "Choose one to see its author, version and description."),
+                    QStringLiteral("pluginsTab")),
+        {0xE711, Text::tr("Turn a plugin off"),
+         Text::tr("Clear <b>Enable plugin</b> to turn one off; MO2 asks first when "
+                  "others need it. The <b>Plugin blacklist</b> skips a plugin's file "
+                  "when MO2 starts.")},
+        {0xE70F, Text::tr("Plugin options"),
+         Text::tr("<b>Plugin-specific options</b> lists a plugin's settings; "
+                  "double-click a value to change it.")},
+        {0xE74C, Text::tr("Other games' plugins"),
+         Text::tr("A plugin made for one game, such as the FNIS and OMOD tools or the "
+                  "Elden Ring tools, isn't loaded in other games' instances, so menus "
+                  "stay short and MO2 starts faster. Developer mode loads them all.")},
+        {0xE8A5, Text::tr("Game support wiki"),
+         Text::tr("When a game's plugin names a modding wiki, <b>…</b> &gt; <b>Game "
+                  "support wiki</b> opens it.")}}},
+
+      {QStringLiteral("developer"),
+       0xEC7A,
        Text::tr("Developer mode"),
        Text::tr("Features in testing, for those who want to try them."),
        {{0xEC7A, Text::tr("Turn it on"),
@@ -243,27 +395,136 @@ std::vector<Topic> topics()
          Text::tr("Clear <b>Developer mode</b> on that page. The page is gone the next "
                   "time Settings opens.")}}},
 
-      {0xE897,
+      {QStringLiteral("help"),
+       0xE897,
        Text::tr("Getting help"),
        Text::tr("When something goes wrong."),
        {{0xEBE8, Text::tr("Create bug report"),
          Text::tr("<b>…</b> &gt; <b>Create bug report</b> shows a report with the logs "
                   "and versions, without your user name, PC name, e-mail or Nexus "
-                  "keys. Save it as a ZIP or copy its summary.")},
+                  "keys. Save it as a ZIP or copy its summary."),
+         Text::tr("Create bug report"), QStringLiteral("bugreport")},
         {0xE7BA, Text::tr("Report a problem"),
          Text::tr("Opens the MO2 Revamped issue tracker on GitHub. Attach the report "
-                  "ZIP to your issue.")},
+                  "ZIP to your issue."),
+         Text::tr("Open the issue tracker"),
+         QStringLiteral("url:https://github.com/ArialSenki/MO2-Revamped/issues")},
         {0xE9D9, Text::tr("Log panel"),
          Text::tr("<b>…</b> &gt; <b>Log panel</b> shows MO2's log at the bottom of the "
                   "window.")},
         {0xE8A5, Text::tr("Documentation"),
          Text::tr("The Mod Organizer 2 documentation still covers everything MO2 "
                   "Revamped keeps.")}}},
+
+      {QStringLiteral("game-cyberpunk"),
+       0xE7FC,
+       QStringLiteral("Cyberpunk 2077"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xE8FD, Text::tr("Archive order"),
+         Text::tr("MO2 writes the game's archive/pc/mod/modlist.txt from the mod "
+                  "order, so the mod lower in the list wins. Tools &gt; <b>Archive "
+                  "conflicts</b> shows which .archive wins where two mods change the "
+                  "same files.")},
+        {0xE895, Text::tr("REDmod"),
+         Text::tr("Changed REDmods are deployed before the game starts. <b>Cyberpunk "
+                  "2077 - skip REDmod deploy</b> starts without it and <b>Manually "
+                  "deploy REDmod</b> runs it alone. REDmods need the free REDmod DLC.")},
+        {0xE74C, Text::tr("Frameworks"),
+         Text::tr("Most mods need RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, "
+                  "TweakXL or Codeware. A notification names a missing one.")},
+        {0xE7BA, Text::tr("Scripts that don't compile"),
+         Text::tr("When redscript can't compile the mods' scripts, the notification "
+                  "names the mods. The full log is r6/logs/redscript_rCURRENT.log in "
+                  "Overwrite. Update or turn off the mods it names.")},
+        runFromMo2(QStringLiteral("Steam, GOG")),
+        {0xE8A5, Text::tr("Modding wiki"),
+         Text::tr("The Cyberpunk 2077 modding community's wiki."), Text::tr("Open"),
+         QStringLiteral("url:https://wiki.redmodding.org/cyberpunk-2077-modding")}}},
+
+      {QStringLiteral("game-bg3"),
+       0xE7FC,
+       QStringLiteral("Baldur's Gate 3"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xE8FD, Text::tr("Load order"),
+         Text::tr("Tools &gt; <b>BG3 Tools</b> &gt; <b>Load Order</b> lists the "
+                  "modules with their problems. <b>Move needed mods up</b> puts every "
+                  "mod after the ones it needs.")},
+        {0xE9D5, Text::tr("Checks before starting"),
+         Text::tr("MO2 warns when mods need mods that aren't active, load before what "
+                  "they need, need the Script Extender, are installed twice or "
+                  "conflict, and when the game turned mods off on its last start.")},
+        {0xE896, Text::tr("LSLib and .NET"),
+         Text::tr("Reading .pak files needs LSLib, downloaded from GitHub when you "
+                  "agree, and the .NET 8 Runtime (x64). <b>Check For LsLib Updates</b> "
+                  "in BG3 Tools downloads it again.")},
+        {0xE77B, Text::tr("Profiles"),
+         Text::tr("Each profile keeps its own modsettings.lsx; MO2 shows it to the "
+                  "game in PlayerProfiles/Public.")},
+        runFromMo2(QStringLiteral("Steam, GOG, Larian Launcher")),
+        {0xE8A5, Text::tr("Modding wiki"),
+         Text::tr("The Baldur's Gate 3 modding community's wiki."), Text::tr("Open"),
+         QStringLiteral("url:https://wiki.bg3.community")}}},
+
+      {QStringLiteral("game-bethesda"),
+       0xE7FC,
+       Text::tr("Bethesda games"),
+       Text::tr("Skyrim, Fallout, Oblivion, Morrowind and Starfield: what MO2 does for "
+                "them, and their usual problems."),
+       {{0xE8FD, Text::tr("Plugin order"),
+         Text::tr("The <b>Plugins</b> tab sets the order of the .esp, .esm and .esl "
+                  "files. <b>Sort</b> uses LOOT; for New Vegas and TTW it's off unless "
+                  "you allow it, as most of their guides advise against it.")},
+        {0xE756, Text::tr("Script extender"),
+         Text::tr("Install SKSE, F4SE or xNVSE as a mod with its loader in a "
+                  "<b>Root</b> folder, then start the game with it. For Skyrim SE and "
+                  "Fallout 4, MO2 checks that it matches the game version and that "
+                  "Address Library is installed.")},
+        {0xE7BA, Text::tr("Script extender plugins"),
+         Text::tr("When some don't load, a notification says which and why, such as "
+                  "an Address Library update or a missing DLL.")},
+        {0xE8B9, Text::tr("Loose files and archives"),
+         Text::tr("<b>Automatic archive invalidation</b>, in each profile, makes the "
+                  "game load loose files over the ones in its archives.")},
+        {0xE7B8, Text::tr("DLC and Creation Club"),
+         Text::tr("They show in the mod list as \"Creation Club: name\"; order their "
+                  "plugins in the Plugins tab. Starfield also warns about active ESP "
+                  "plugins and sTestFile lines in StarfieldCustom.ini.")},
+        runFromMo2(QStringLiteral("Steam")),
+        {0xE768, Text::tr("Programs"),
+         Text::tr("Add the script extender, LOOT, xEdit or other tools as programs, so "
+                  "they also see the mods."),
+         Text::tr("Executables"), QStringLiteral("executables")}}},
+
+      {QStringLiteral("game-eldenring"),
+       0xE7FC,
+       QStringLiteral("Elden Ring · Nightreign"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xEA86, Text::tr("Native DLLs"),
+         Text::tr("Tools &gt; <b>Native DLL profile</b> lists the DLLs of the enabled "
+                  "mods and their load order, for each profile.")},
+        {0xE77B, Text::tr("Saves"),
+         Text::tr("Tools &gt; <b>Save isolation</b> keeps saves per profile, shares "
+                  "them in the instance, or uses the global Steam save.")},
+        {0xE768, Text::tr("Startup options"),
+         Text::tr("Tools &gt; <b>Startup options</b> skips the intro logos, speeds up "
+                  "the start (BootBoost) or starts the game minimized.")},
+        {0xE72E, Text::tr("Online play"),
+         Text::tr("MO2 doesn't change Easy Anti-Cheat or the online mode. Keep modded "
+                  "files and saves for offline play.")},
+        {0xE7BA, Text::tr("When the game doesn't start"),
+         Text::tr("If it closes right after starting, or runs without MO2's bridge, "
+                  "check that <b>Force load libraries</b> is on for its program, and "
+                  "read <b>Open last bridge log</b> in Startup options.")},
+        {0xE82D, Text::tr("The full guide"),
+         Text::tr("Profiles, archive layouts, native DLLs and saves, in detail."),
+         Text::tr("Open the guide"), QStringLiteral("game-guide")}}},
   };
 }
 
-// one page: its heading and a card with a Settings row per entry
-QWidget* makePage(const Topic& topic, QWidget* parent)
+// one page: its heading and a card with a Settings row per entry; a row's
+// button records its action and closes the guide (links open at once)
+QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
+                  const std::function<void(const QString&)>& onAction)
 {
   auto* scroll = new QScrollArea(parent);
   scroll->setObjectName(QStringLiteral("instanceDetailsScroll"));
@@ -315,6 +576,22 @@ QWidget* makePage(const Topic& topic, QWidget* parent)
     texts->addWidget(rowTitle);
     texts->addWidget(text);
     rowLayout->addLayout(texts, 1);
+
+    const bool link = entry.action.startsWith(QLatin1String("url:"));
+    if (!entry.button.isEmpty() && (link || withActions)) {
+      auto* button = new QPushButton(entry.button, row);
+      button->setObjectName(QStringLiteral("revampedGuideAction"));
+      button->setAutoDefault(false);
+      button->setCursor(Qt::PointingHandCursor);
+      button->setIcon(FluentIcons::glyph(link ? 0xE8A7 : 0xE76C));
+      // screen readers hear what the button does and for which row
+      button->setAccessibleName(entry.button + QStringLiteral(": ") + entry.title);
+      const QString action = entry.action;
+      QObject::connect(button, &QPushButton::clicked, button, [action, onAction] {
+        onAction(action);
+      });
+      rowLayout->addWidget(button, 0, Qt::AlignVCenter);
+    }
     rows->addWidget(row);
   }
   layout->addWidget(card);
@@ -333,16 +610,60 @@ QString searchText(const Topic& topic)
   return parts.join(QLatin1Char('\n'));
 }
 
+// the Settings page a topic is about, for the Help button of Settings
+QString topicForSettingsPage(const QString& page)
+{
+  if (page == QLatin1String("themeTab")) {
+    return QStringLiteral("appearance");
+  }
+  if (page == QLatin1String("pluginsTab")) {
+    return QStringLiteral("plugins");
+  }
+  if (page == QLatin1String("developerTab")) {
+    return QStringLiteral("developer");
+  }
+  return SettingsTopic;
+}
+
 }  // namespace
 
-void show(QWidget* parent)
+QString gameTopic(const MOBase::IPluginGame* game)
+{
+  if (game == nullptr) {
+    return {};
+  }
+  const QString name = game->gameShortName().toLower();
+  if (name == QLatin1String("cyberpunk2077")) {
+    return QStringLiteral("game-cyberpunk");
+  }
+  if (name == QLatin1String("baldursgate3")) {
+    return QStringLiteral("game-bg3");
+  }
+  if (name == QLatin1String("eldenring") || name == QLatin1String("nightreign")) {
+    return QStringLiteral("game-eldenring");
+  }
+  static const QStringList bethesda{
+      QStringLiteral("skyrimse"),   QStringLiteral("skyrim"),
+      QStringLiteral("skyrimvr"),   QStringLiteral("fallout4"),
+      QStringLiteral("fallout4vr"), QStringLiteral("fallout3"),
+      QStringLiteral("falloutnv"),  QStringLiteral("ttw"),
+      QStringLiteral("oblivion"),   QStringLiteral("morrowind"),
+      QStringLiteral("starfield"),  QStringLiteral("enderal"),
+      QStringLiteral("enderalse"),  QStringLiteral("nehrim")};
+  if (bethesda.contains(name)) {
+    return QStringLiteral("game-bethesda");
+  }
+  return {};
+}
+
+void show(QWidget* parent, const QString& topic, const Action& action)
 {
   QDialog dialog(parent);
   dialog.setObjectName(QStringLiteral("RevampedGuideDialog"));
   dialog.setWindowTitle(Text::tr("MO2 Revamped guide"));
   dialog.setWindowFlag(Qt::WindowContextHelpButtonHint, false);
-  dialog.setMinimumSize(820, 540);
-  dialog.resize(960, 660);
+  dialog.setMinimumSize(860, 560);
+  dialog.resize(1000, 720);
 
   // no right margin: the pages scroll at the window's edge
   auto* layout = new QVBoxLayout(&dialog);
@@ -353,14 +674,37 @@ void show(QWidget* parent)
   tabs->setObjectName(QStringLiteral("revampedGuideTabs"));
   layout->addWidget(tabs, 1);
 
+  // a button's action runs once the guide is closed, so the window it opens
+  // isn't stacked over the guide; links open at once
+  QString chosen;
+  const auto onAction = [&dialog, &chosen](const QString& id) {
+    if (id.startsWith(QLatin1String("url:"))) {
+      MOBase::shell::Open(QUrl(id.mid(4)));
+      return;
+    }
+    chosen = id;
+    dialog.accept();
+  };
+
+  // a topic named as a Settings page ("settings:<page>") is that page's topic
+  QString start = topic;
+  if (start.startsWith(QLatin1String("settings:"))) {
+    start = topicForSettingsPage(start.mid(9));
+  }
+
   const std::vector<Topic> all = topics();
   QList<char16_t> glyphs;
   QStringList words;
-  for (const Topic& topic : all) {
-    tabs->addTab(makePage(topic, tabs), topic.name);
-    glyphs << topic.glyph;
-    words << searchText(topic);
+  int startIndex = 0;
+  for (const Topic& entry : all) {
+    if (entry.id == start) {
+      startIndex = tabs->count();
+    }
+    tabs->addTab(makePage(entry, tabs, static_cast<bool>(action), onAction), entry.name);
+    glyphs << entry.glyph;
+    words << searchText(entry);
   }
+  tabs->setCurrentIndex(startIndex);
   FluentNavigation::attach(tabs, glyphs);
 
   // the search above the pages dims the topics that don't mention it
@@ -393,6 +737,10 @@ void show(QWidget* parent)
 
   search->setFocus();
   dialog.exec();
+
+  if (!chosen.isEmpty() && action) {
+    action(chosen);
+  }
 }
 
 void applyWhatsThis(Ui::MainWindow* ui)

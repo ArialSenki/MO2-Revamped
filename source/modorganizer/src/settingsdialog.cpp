@@ -32,6 +32,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settingsdialogplugins.h"
 #include "settingsdialogtheme.h"
 #include "settingsdialogworkarounds.h"
+#include "revampedguide.h"
 #include "plugincontainer.h"
 #include "shared/appconfig.h"
 #include "ui_settingsdialog.h"
@@ -44,7 +45,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <moddatacontent.h>
 #include <iplugingame.h>
 
+#include <QApplication>
 #include <QColor>
+#include <QPushButton>
 #include <QComboBox>
 #include <QFrame>
 #include <QPalette>
@@ -114,6 +117,17 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
       }
     }
   }
+  // Help opens the guide at the page being shown
+  QPushButton* help = ui->buttonBox->addButton(tr("Help"), QDialogButtonBox::HelpRole);
+  help->setObjectName(QStringLiteral("settingsHelpButton"));
+  help->setAutoDefault(false);
+  help->setToolTip(tr("What this page's settings do, in the MO2 Revamped guide."));
+  connect(ui->buttonBox, &QDialogButtonBox::helpRequested, this, [this] {
+    QWidget* page = ui->tabWidget->currentWidget();
+    RevampedGuide::show(this, QStringLiteral("settings:") +
+                                  (page != nullptr ? page->objectName() : QString()));
+  });
+
   // the pages scroll at the window's edge; OK and Cancel keep their margin
   if (QLayout* root = layout()) {
     QMargins margins = root->contentsMargins();
@@ -307,6 +321,17 @@ int SettingsDialog::exec()
   GeometrySaver gs(m_settings, this);
 
   m_settings.widgets().restoreIndex(ui->tabWidget);
+  // the guide's "Open this page" buttons name the page to start on
+  const QString startPage = qApp->property("revampedSettingsStartPage").toString();
+  if (!startPage.isEmpty()) {
+    qApp->setProperty("revampedSettingsStartPage", QVariant());
+    for (int i = 0; i < ui->tabWidget->count(); ++i) {
+      if (ui->tabWidget->widget(i)->objectName() == startPage) {
+        ui->tabWidget->setCurrentIndex(i);
+        break;
+      }
+    }
+  }
   perf.lap("restore");
 
   auto ret = TutorableDialog::exec();
