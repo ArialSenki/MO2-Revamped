@@ -8011,6 +8011,16 @@ Si vuelve a pasar, adjunta este archivo (y el mo_interface.log de la carpeta log
       <source>Drop to add to Downloads</source>
       <translation>Suelta para añadir a Descargas</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, with this file, when you report the problem.</source>
+      <translation>Mod Organizer se cerró inesperadamente el %1 y guardó un informe del fallo:
+%2
+
+Si vuelve a pasar, crea un informe de errores y adjúntalo, junto con este archivo, al informar del problema.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

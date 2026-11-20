@@ -8339,6 +8339,16 @@ Se succede di nuovo, allega questo file (e il mo_interface.log della cartella lo
       <source>Drop to add to Downloads</source>
       <translation>Rilascia per aggiungere ai download</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, with this file, when you report the problem.</source>
+      <translation>Mod Organizer si è chiuso inaspettatamente il %1 e ha salvato un rapporto del crash:
+%2
+
+Se succede di nuovo, crea una segnalazione di errore e allegala, insieme a questo file, quando segnali il problema.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>

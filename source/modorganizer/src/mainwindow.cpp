@@ -5857,15 +5857,31 @@ void MainWindow::noticeLastCrash(int tries)
   FluentContentDialog dialog(
       this, QStringLiteral("CrashDumpNoticeDialog"), tr("Mod Organizer crashed"),
       tr("Mod Organizer closed unexpectedly on %1 and saved a crash report:\n%2\n\n"
-         "If it happens again, attach this file (and the logs folder's "
-         "mo_interface.log) when you report the problem.")
+         "If it happens again, create a bug report and attach it, with this "
+         "file, when you report the problem.")
           .arg(QLocale().toString(newest.lastModified(), QLocale::ShortFormat),
                QDir::toNativeSeparators(newest.absoluteFilePath())));
-  auto* open  = dialog.addButton(tr("Open the folder"), true);
+  // the report is made by the MO2 Revamped Information plugin, when it's on
+  QAction* reportAction =
+      findChild<QAction*>(QStringLiteral("mo2RevampedDiagnosticsAction"));
+  bool report = false;
+  if (reportAction != nullptr) {
+    auto* create = dialog.addButton(tr("Create bug report"), true);
+    connect(create, &QPushButton::clicked, &dialog, [&dialog, &report] {
+      report = true;
+      dialog.accept();
+    });
+  }
+  auto* open  = dialog.addButton(tr("Open the folder"), reportAction == nullptr);
   auto* close = dialog.addButton(tr("Close"));
   connect(open, &QPushButton::clicked, &dialog, &QDialog::accept);
   connect(close, &QPushButton::clicked, &dialog, &QDialog::reject);
-  if (dialog.exec() == QDialog::Accepted) {
+  if (dialog.exec() != QDialog::Accepted) {
+    return;
+  }
+  if (report) {
+    reportAction->trigger();
+  } else {
     shell::Explore(newest.absoluteFilePath());
   }
 }

@@ -8175,6 +8175,16 @@ Si cela se reproduit, joignez ce fichier (et le mo_interface.log du dossier logs
       <source>Drop to add to Downloads</source>
       <translation>Déposez pour ajouter aux téléchargements</translation>
     </message>
+    <message>
+      <source>Mod Organizer closed unexpectedly on %1 and saved a crash report:
+%2
+
+If it happens again, create a bug report and attach it, with this file, when you report the problem.</source>
+      <translation>Mod Organizer s'est fermé de façon inattendue le %1 et a enregistré un rapport de plantage :
+%2
+
+Si cela se reproduit, crée un rapport de bug et joins-le, avec ce fichier, en signalant le problème.</translation>
+    </message>
 </context>
   <context>
     <name>Mo2RevampedInfo</name>
