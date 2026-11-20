@@ -76,9 +76,12 @@ namespace Mo2RevampedSetup
                     : (Environment.Is64BitProcess
                         ? Environment.SystemDirectory
                         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Sysnative"));
-                string[] names = architecture == "x86"
-                    ? new string[] { "vcruntime140.dll", "msvcp140.dll" }
-                    : new string[] { "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll" };
+                // every one MO2, usvfs and the plugins import: a partial copy
+                // from an old winetricks run doesn't count
+                List<string> names = new List<string> {
+                    "vcruntime140.dll", "msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll",
+                    "msvcp140_atomic_wait.dll", "vcomp140.dll", "concrt140.dll" };
+                if (architecture != "x86") names.Add("vcruntime140_1.dll");
                 Version oldest = null;
                 foreach (string name in names)
                 {
@@ -146,7 +149,10 @@ namespace Mo2RevampedSetup
         public static string Ensure(bool needX86, Action<string> report, out bool restartNeeded)
         {
             string result = EnsureInstalled(needX86, report, out restartNeeded);
-            if (WineHost.IsRunning) PreferMicrosoftDllsUnderWine();
+            // only with a current runtime: an older Microsoft DLL left by a
+            // game would otherwise be loaded instead of Wine's newer one
+            if (WineHost.IsRunning && result == null && IsCurrent("x64") && (!needX86 || IsCurrent("x86")))
+                PreferMicrosoftDllsUnderWine();
             return result;
         }
 

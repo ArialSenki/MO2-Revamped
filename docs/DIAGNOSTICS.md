@@ -23,7 +23,8 @@ reports from there often had no file at all: MO2 had stopped before its normal
 log starts. Set `MO2_REVAMPED_DIAGNOSTICS=0` to turn them off. If the folder
 beside `ModOrganizer.exe` can't be written, the files go to `%TEMP%` as
 `ModOrganizer-startup_diagnostics.log` and `ModOrganizer-memory_diagnostics.log`.
-Each file starts over once it passes 1 MiB.
+Once a file passes 1 MiB, it is renamed to `<name>.old`, replacing any older
+one, and a new file starts.
 
 If not even `startup_diagnostics.log` appears, MO2 stopped before its first
 line of code, almost always because Windows (or Wine) could not load a DLL it

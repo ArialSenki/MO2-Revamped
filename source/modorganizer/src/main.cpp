@@ -191,6 +191,43 @@ void appendModuleDetails(char* buffer, size_t capacity, size_t& length,
                  address - reinterpret_cast<uintptr_t>(module));
 }
 
+// MO2 Revamped: on by itself under Wine, the logs grow with every start. Past
+// 1 MiB the log becomes <name>.old (replacing an older one) and a new one
+// starts: the run that made it big stays there to be sent
+void rotateDiagnosticLog(const wchar_t* path) noexcept
+{
+  WIN32_FILE_ATTRIBUTE_DATA data = {};
+  if (path == nullptr || path[0] == L'\0' ||
+      !GetFileAttributesExW(path, GetFileExInfoStandard, &data) ||
+      (data.nFileSizeHigh == 0 && data.nFileSizeLow <= 1024 * 1024)) {
+    return;
+  }
+  wchar_t old[kDiagnosticPathCapacity + 8] = {};
+  size_t length = 0;
+  while (path[length] != L'\0' && length < kDiagnosticPathCapacity) {
+    old[length] = path[length];
+    ++length;
+  }
+  const wchar_t suffix[] = L".old";
+  CopyMemory(old + length, suffix, sizeof(suffix));
+  MoveFileExW(path, old, MOVEFILE_REPLACE_EXISTING);
+}
+
+void rotateTemporaryDiagnosticLog(const wchar_t* fileName) noexcept
+{
+  wchar_t path[kDiagnosticPathCapacity] = {};
+  const DWORD length = GetTempPathW(static_cast<DWORD>(std::size(path)), path);
+  size_t nameLength  = 0;
+  while (fileName[nameLength] != L'\0') {
+    ++nameLength;
+  }
+  if (length == 0 || length + nameLength + 1 >= std::size(path)) {
+    return;
+  }
+  CopyMemory(path + length, fileName, (nameLength + 1) * sizeof(wchar_t));
+  rotateDiagnosticLog(path);
+}
+
 void prepareMemoryDiagnosticPath() noexcept
 {
   wchar_t executablePath[kDiagnosticPathCapacity] = {};
@@ -233,15 +270,10 @@ void prepareMemoryDiagnosticPath() noexcept
   CopyMemory(g_startupDiagnosticPath + currentLength, startupLogFile,
              sizeof(startupLogFile));
 
-  // MO2 Revamped: on by itself under Wine, the logs grow with every start;
-  // past 1 MiB they start over
-  for (const wchar_t* path : {g_memoryDiagnosticPath, g_startupDiagnosticPath}) {
-    WIN32_FILE_ATTRIBUTE_DATA data = {};
-    if (GetFileAttributesExW(path, GetFileExInfoStandard, &data) &&
-        (data.nFileSizeHigh != 0 || data.nFileSizeLow > 1024 * 1024)) {
-      DeleteFileW(path);
-    }
-  }
+  rotateDiagnosticLog(g_memoryDiagnosticPath);
+  rotateDiagnosticLog(g_startupDiagnosticPath);
+  rotateTemporaryDiagnosticLog(L"ModOrganizer-memory_diagnostics.log");
+  rotateTemporaryDiagnosticLog(L"ModOrganizer-startup_diagnostics.log");
 }
 
 HANDLE openMemoryDiagnosticLog() noexcept

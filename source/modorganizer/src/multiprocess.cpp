@@ -204,7 +204,8 @@ void MOMultiProcess::sendMessage(const QString& message)
     // MO2 Revamped: Wine and Proton have no Windows accounts to keep apart
     // (every program of a prefix runs as the same Linux user); if a Wine
     // version can't report a pipe's owner, links mustn't be refused for it
-    if (owner != ServerOwner::ThisUser && env::runningUnderWine()) {
+    // (an owner that is another account is still refused)
+    if (owner == ServerOwner::Unknown && env::runningUnderWine()) {
       MOBase::log::debug("under Wine: the pipe's owner isn't checked");
     } else if (owner != ServerOwner::ThisUser) {
       socket.abort();
