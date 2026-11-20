@@ -7,6 +7,7 @@ class OrganizerCore;
 class IUserInterface;
 
 #include <QFile>
+#include <QJsonObject>
 #include <QPluginLoader>
 #include <QtPlugin>
 #include <iplugindiagnose.h>
@@ -480,6 +481,16 @@ private:
   AccessPluginMap m_AccessPlugins;
 
   std::map<MOBase::IPlugin*, PluginRequirements> m_Requirements;
+
+  // MO2 Revamped: which games each file in plugins/ serves (plugin-games.json),
+  // so that the files of other games' tools, installers, checks and previews
+  // aren't loaded in this instance; see skippedForInstanceGame()
+  QJsonObject m_PluginGames;
+  QString m_InstanceGame;
+  QString pluginGamesPath(bool fallback) const;
+  void readPluginGames();
+  void writePluginGames();
+  bool skippedForInstanceGame(const QString& filepath) const;
 
   std::map<QString, MOBase::IPluginGame*> m_SupportedGames;
   QStringList m_FailedPlugins;

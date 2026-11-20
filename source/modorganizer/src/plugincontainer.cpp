@@ -7,6 +7,11 @@
 #include <QAction>
 #include <QCoreApplication>
 #include <QDirIterator>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QSaveFile>
+#include <QCryptographicHash>
+#include <pluginrequirements.h>
 #include <QMessageBox>
 #include <QToolButton>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
@@ -589,6 +594,9 @@ IPlugin* PluginContainer::registerPlugin(QObject* plugin, const QString& filepat
           proxy->pluginList(QCoreApplication::applicationDirPath() + "/" +
                             ToQString(AppConfig::pluginPath()));
       for (const QString& filepath : filepaths) {
+        if (skippedForInstanceGame(filepath)) {
+          continue;
+        }
         loadProxied(filepath, proxy);
       }
       return proxy;
@@ -1054,6 +1062,13 @@ void PluginContainer::loadPlugins()
 
   unloadPlugins();
 
+  // MO2 Revamped: the instance's game (set by MOApplication before this);
+  // without one, or in developer mode, every plugin loads
+  m_InstanceGame = GlobalSettings::developerMode()
+                       ? QString()
+                       : qApp->property("revampedInstanceGame").toString();
+  readPluginGames();
+
   for (QObject* plugin : QPluginLoader::staticInstances()) {
     registerPlugin(plugin, "", nullptr);
   }
@@ -1147,9 +1162,14 @@ void PluginContainer::loadPlugins()
 
     QString filepath = iter.filePath();
     if (QLibrary::isLibrary(filepath)) {
-      loadQtPlugin(filepath);
+      if (!skippedForInstanceGame(filepath)) {
+        loadQtPlugin(filepath);
+      }
     } else if (auto p = isQtPluginFolder(filepath)) {
-      loadQtPlugin(*p);
+      // by its DLL, the name it is registered with (installer_omod.dll)
+      if (!skippedForInstanceGame(*p)) {
+        loadQtPlugin(*p);
+      }
     }
   }
 
@@ -1171,12 +1191,187 @@ void PluginContainer::loadPlugins()
     loadCheck.flush();
   }
 
+  writePluginGames();
+
   bf::at_key<IPluginDiagnose>(m_Plugins).push_back(this);
 
   if (m_Organizer) {
     bf::at_key<IPluginDiagnose>(m_Plugins).push_back(m_Organizer);
     m_Organizer->connectPlugins(this);
   }
+}
+
+// MO2 Revamped: plugin-games.json, beside the plugins, or in the global
+// settings' folder (keyed by this installation) when that folder can't be
+// written. MO2 writes it itself after loading the plugins, from each file's
+// requirements(), so it can't go out of step with them: an entry holds the
+// game names of the file's GameDependencyRequirement (an empty list when the
+// file serves every game: a game plugin, a proxy, any other requirement or
+// none) and the file's size and time, which must still match for the entry
+// to count.
+QString PluginContainer::pluginGamesPath(bool fallback) const
+{
+  const QString plugins =
+      QDir::cleanPath(qApp->applicationDirPath() + "/" + ToQString(AppConfig::pluginPath()));
+  if (!fallback) {
+    return plugins + "/plugin-games.json";
+  }
+  const QByteArray key =
+      QCryptographicHash::hash(plugins.toLower().toUtf8(), QCryptographicHash::Sha1).toHex();
+  return GlobalSettings::directory() + "/plugin-games-" + QString::fromLatin1(key.left(12)) +
+         ".json";
+}
+
+namespace
+{
+QJsonObject fileStamp(const QString& filepath)
+{
+  QFileInfo info(filepath);
+  if (info.isDir()) {
+    // a Python package: its __init__.py says what it is
+    info = QFileInfo(QDir(filepath).filePath("__init__.py"));
+  }
+  QJsonObject stamp;
+  stamp["size"]     = static_cast<qint64>(info.size());
+  stamp["modified"] = info.lastModified().toMSecsSinceEpoch();
+  return stamp;
+}
+}  // namespace
+
+void PluginContainer::readPluginGames()
+{
+  m_PluginGames = {};
+  for (bool fallback : {false, true}) {
+    QFile file(pluginGamesPath(fallback));
+    if (file.open(QIODevice::ReadOnly)) {
+      const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+      if (doc.isObject() && doc.object().value("format").toInt() == 1) {
+        m_PluginGames = doc.object().value("files").toObject();
+        return;
+      }
+    }
+  }
+}
+
+bool PluginContainer::skippedForInstanceGame(const QString& filepath) const
+{
+  if (m_InstanceGame.isEmpty()) {
+    return false;
+  }
+  const QString name  = QFileInfo(filepath).fileName();
+  const QJsonObject e = m_PluginGames.value(name).toObject();
+  const QJsonArray games = e.value("games").toArray();
+  if (games.isEmpty()) {
+    return false;  // unknown, or for every game
+  }
+  const QJsonObject stamp = fileStamp(filepath);
+  if (e.value("size") != stamp.value("size") || e.value("modified") != stamp.value("modified")) {
+    return false;  // changed since: load it and look again
+  }
+  QStringList names;
+  for (const auto& g : games) {
+    if (g.toString().compare(m_InstanceGame, Qt::CaseInsensitive) == 0) {
+      return false;
+    }
+    names.append(g.toString());
+  }
+  log::debug("plugin \"{}\" not loaded: only for {}", name, names.join(", "));
+  return true;
+}
+
+void PluginContainer::writePluginGames()
+{
+  // what each loaded file serves; a file that wasn't loaded keeps its entry
+  // while it is still there
+  std::map<QString, QSet<QString>> games;
+  std::set<QString> everyGame;
+  std::map<QString, QString> paths;
+  std::map<QString, QString> masterFile;
+
+  for (const auto& [plugin, requirements] : m_Requirements) {
+    const QString path = filepath(plugin);
+    if (path.isEmpty()) {
+      continue;
+    }
+    const QString name = QFileInfo(path).fileName();
+    paths[name]        = path;
+    QObject* object    = as_qobject(plugin);
+    if (qobject_cast<IPluginGame*>(object) || qobject_cast<IPluginProxy*>(object)) {
+      everyGame.insert(name);
+      continue;
+    }
+    if (IPlugin* master = requirements.master(); master && master != plugin) {
+      // a master's children go where it goes
+      masterFile[name] = QFileInfo(filepath(master)).fileName();
+      continue;
+    }
+    const auto reqs = plugin->requirements();
+    bool forAll     = reqs.empty();
+    for (const auto& r : reqs) {
+      if (auto* game = dynamic_cast<const GameDependencyRequirement*>(r.get())) {
+        for (const QString& g : game->gameNames()) {
+          games[name].insert(g);
+        }
+      } else {
+        forAll = true;
+      }
+    }
+    if (forAll) {
+      everyGame.insert(name);
+    }
+  }
+  for (const auto& [child, master] : masterFile) {
+    if (everyGame.count(master) || !games.count(master)) {
+      everyGame.insert(child);
+    } else {
+      games[child].unite(games[master]);
+    }
+  }
+
+  const QDir pluginsDir(QDir::cleanPath(qApp->applicationDirPath() + "/" +
+                                        ToQString(AppConfig::pluginPath())));
+  QJsonObject files;
+  for (auto it = m_PluginGames.begin(); it != m_PluginGames.end(); ++it) {
+    const QString relative = it.value().toObject().value("path").toString();
+    if (!paths.count(it.key()) && !relative.isEmpty() &&
+        QFileInfo::exists(pluginsDir.filePath(relative))) {
+      files[it.key()] = it.value();
+    }
+  }
+  for (const auto& [name, path] : paths) {
+    QJsonObject entry = fileStamp(path);
+    // where it is (installer_omod.dll is in its own folder)
+    entry["path"] = pluginsDir.relativeFilePath(path);
+    QJsonArray list;
+    if (!everyGame.count(name) && games.count(name)) {
+      QStringList sorted = games[name].values();
+      sorted.sort(Qt::CaseInsensitive);
+      for (const QString& g : sorted) {
+        list.append(g);
+      }
+    }
+    entry["games"] = list;
+    files[name]    = entry;
+  }
+  if (files == m_PluginGames) {
+    return;
+  }
+  m_PluginGames = files;
+
+  QJsonObject root;
+  root["format"] = 1;
+  root["files"]  = files;
+  const QByteArray data = QJsonDocument(root).toJson(QJsonDocument::Indented);
+  for (bool fallback : {false, true}) {
+    QSaveFile file(pluginGamesPath(fallback));
+    if (file.open(QIODevice::WriteOnly) && file.write(data) == data.size() && file.commit()) {
+      if (!fallback) {
+        QFile::remove(pluginGamesPath(true));
+      }
+      return;
+    }
+  }
+  log::debug("plugin-games.json could not be written");
 }
 
 std::vector<unsigned int> PluginContainer::activeProblems() const
