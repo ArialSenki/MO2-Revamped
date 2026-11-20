@@ -14,6 +14,7 @@
 #include <lz4.h>
 #include <zlib.h>
 
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -146,16 +147,24 @@ void GamebryoSaveGame::FileWrapper::setPluginStringFormat(StringFormat type)
 void GamebryoSaveGame::FileWrapper::readQDataStream(QDataStream& data, void* buff,
                                                     std::size_t length)
 {
-  int read    = data.readRawData(static_cast<char*>(buff), static_cast<int>(length));
-  bool result = true;
-  if (read != length && m_CompressionType == 1) {
-    bool result = readNextChunk();
-    if (result) {
-      read += data.readRawData(static_cast<char*>(buff) + read,
-                               static_cast<int>(length - read));
-    }
+  // MO2 Revamped: after more data is decoded the stream is a new one, so it is
+  // read through m_Data, not the old reference (readNextChunk() had freed it);
+  // a failed chunk is no longer hidden by a shadowed result
+  QDataStream* stream = &data;
+  int read = stream->readRawData(static_cast<char*>(buff), static_cast<int>(length));
+  if (read < 0) {
+    read = 0;
   }
-  if (read != length || !result) {
+  while (static_cast<std::size_t>(read) != length && moreCompressedData()) {
+    stream         = m_Data;
+    const int more = stream->readRawData(static_cast<char*>(buff) + read,
+                                         static_cast<int>(length - read));
+    if (more <= 0) {
+      break;
+    }
+    read += more;
+  }
+  if (static_cast<std::size_t>(read) != length) {
     throw std::runtime_error("unexpected end of file");
   }
 }
@@ -170,17 +179,67 @@ void GamebryoSaveGame::FileWrapper::readQDataStream(QDataStream& data, T& value)
 void GamebryoSaveGame::FileWrapper::skipQDataStream(QDataStream& data,
                                                     std::size_t length)
 {
-  int skip    = data.skipRawData(static_cast<int>(length));
-  bool result = true;
-  if (skip != length && m_CompressionType == 1) {
-    result = readNextChunk();
-    if (result) {
-      skip += data.skipRawData(static_cast<int>(length - skip));
-    }
+  QDataStream* stream = &data;
+  int skip            = stream->skipRawData(static_cast<int>(length));
+  if (skip < 0) {
+    skip = 0;
   }
-  if (skip != length || !result) {
+  while (static_cast<std::size_t>(skip) != length && moreCompressedData()) {
+    stream         = m_Data;
+    const int more = stream->skipRawData(static_cast<int>(length - skip));
+    if (more <= 0) {
+      break;
+    }
+    skip += more;
+  }
+  if (static_cast<std::size_t>(skip) != length) {
     throw std::runtime_error("unexpected end of file");
   }
+}
+
+bool GamebryoSaveGame::FileWrapper::moreCompressedData()
+{
+  if (m_CompressionType == 1) {
+    return readNextChunk();
+  } else if (m_CompressionType == 2) {
+    return expandLz4();
+  }
+  return false;
+}
+
+bool GamebryoSaveGame::FileWrapper::expandLz4()
+{
+  if (m_Lz4Complete || m_Data == nullptr) {
+    return false;
+  }
+  m_Lz4Complete = true;
+
+  const qint64 position = m_Data->device()->pos();
+
+  QByteArray compressed;
+  compressed.resize(m_Lz4CompressedSize);
+  if (!m_File.seek(m_Lz4Offset) ||
+      m_File.read(compressed.data(), m_Lz4CompressedSize) != m_Lz4CompressedSize) {
+    return false;
+  }
+  QByteArray decompressed;
+  decompressed.resize(m_Lz4FullSize);
+  const int decoded = LZ4_decompress_safe_partial(
+      compressed.constData(), decompressed.data(), static_cast<int>(m_Lz4CompressedSize),
+      static_cast<int>(m_Lz4FullSize), static_cast<int>(m_Lz4FullSize));
+  if (decoded <= position) {
+    return false;
+  }
+  decompressed.truncate(decoded);
+
+  delete m_Data;
+  m_Data = new QDataStream(decompressed);
+  return m_Data->device()->seek(position);
+}
+
+GamebryoSaveGame::FileWrapper::~FileWrapper()
+{
+  delete m_Data;
 }
 
 template <>
@@ -278,6 +337,14 @@ QImage GamebryoSaveGame::FileWrapper::readImage(unsigned long width,
                                                 bool alpha)
 {
   int bpp = alpha ? 4 : 3;
+  // MO2 Revamped: a damaged header can't ask for gigabytes (the screenshots
+  // are a few hundred KB; 8K by 8K is far above any)
+  if (width == 0 || height == 0) {
+    return QImage();
+  }
+  if (width > 8192 || height > 8192) {
+    throw std::runtime_error("invalid screenshot size");
+  }
   QScopedArrayPointer<unsigned char> buffer(new unsigned char[width * height * bpp]);
   read(buffer.data(), width * height * bpp);
   QImage image(buffer.data(), width, height,
@@ -303,8 +370,11 @@ void GamebryoSaveGame::FileWrapper::closeCompressedData()
   } else if (m_CompressionType == 1 || m_CompressionType == 2) {
     m_NextChunk        = 0;
     m_UncompressedSize = 0;
-    m_Data->device()->close();
-    delete m_Data;
+    if (m_Data != nullptr) {
+      m_Data->device()->close();
+      delete m_Data;
+      m_Data = nullptr;
+    }
   } else
     MOBase::log::warn("Please create an issue on the MO github labeled \"Found unknown "
                       "Compressed\" with your savefile attached");
@@ -330,14 +400,37 @@ bool GamebryoSaveGame::FileWrapper::openCompressedData(int bytesToIgnore)
     read(uncompressedSize);
     uint32_t compressedSize;
     read(compressedSize);
+
+    // MO2 Revamped: the fields MO2 reads (the plugin lists, a few hundred KB
+    // at most even with 4,000 plugins) are at the start of the body, which is
+    // tens of MB with a big load order. Only its first MB is decoded, from a
+    // little more than a MB read; expandLz4() decodes the rest if a read
+    // needs it. The whole body used to be read and decoded for every save.
+    constexpr uint32_t prefixTarget = 1024 * 1024;
+    m_Lz4Offset         = m_File.pos();
+    m_Lz4CompressedSize = compressedSize;
+    m_Lz4FullSize       = uncompressedSize;
+
+    const uint32_t target = std::min(uncompressedSize, prefixTarget);
+    // LZ4 grows data by under 0.4%, so this input holds the first `target`
+    // bytes of output
+    const uint32_t inputSize = static_cast<uint32_t>(
+        std::min<uint64_t>(compressedSize, uint64_t(target) + target / 64 + 64 * 1024));
+    m_Lz4Complete = (inputSize == compressedSize && target == uncompressedSize);
+
     QByteArray compressed;
-    compressed.resize(compressedSize);
-    read(compressed.data(), compressedSize);
+    compressed.resize(inputSize);
+    read(compressed.data(), inputSize);
     QByteArray decompressed;
-    decompressed.resize(uncompressedSize);
-    LZ4_decompress_safe_partial(compressed.data(), decompressed.data(), compressedSize,
-                                uncompressedSize, uncompressedSize);
+    decompressed.resize(target);
+    int decoded = LZ4_decompress_safe_partial(
+        compressed.constData(), decompressed.data(), static_cast<int>(inputSize),
+        static_cast<int>(target), static_cast<int>(target));
     compressed.clear();
+    if (decoded < 0) {
+      decoded = 0;
+    }
+    decompressed.truncate(decoded);
 
     m_Data = new QDataStream(decompressed);
     skipQDataStream(*m_Data, bytesToIgnore);
@@ -357,8 +450,11 @@ bool GamebryoSaveGame::FileWrapper::readNextChunk()
   std::unique_ptr<char[]> inBuffer  = std::make_unique<char[]>(CHUNK);
   std::unique_ptr<char[]> outBuffer = std::make_unique<char[]>(CHUNK);
   QByteArray finalData;
-  m_Data->device()->close();
-  delete m_Data;
+  if (m_Data != nullptr) {
+    m_Data->device()->close();
+    delete m_Data;
+    m_Data = nullptr;
+  }
   z_stream stream{};
   try {
     stream.zalloc   = Z_NULL;

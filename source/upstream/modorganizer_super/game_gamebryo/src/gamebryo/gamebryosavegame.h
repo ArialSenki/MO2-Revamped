@@ -88,6 +88,9 @@ protected:
      *
      **/
     FileWrapper(QString const& filepath, QString const& expected);
+    ~FileWrapper();
+    FileWrapper(const FileWrapper&)            = delete;
+    FileWrapper& operator=(const FileWrapper&) = delete;
 
     /** Set this for save games that have a marker at the end of each
      * field. Specifically fallout
@@ -187,8 +190,23 @@ protected:
     bool m_HasFieldMarkers;
     StringType m_PluginString;
     StringFormat m_PluginStringFormat;
-    QDataStream* m_Data;
+    QDataStream* m_Data        = nullptr;
     uint16_t m_CompressionType = 0;
+
+    // MO2 Revamped: an LZ4 body (Skyrim SE) is decoded only as far as the
+    // header fields need (the plugin lists are at its start); the rest only
+    // if a read goes past that
+    qint64 m_Lz4Offset           = 0;
+    uint32_t m_Lz4CompressedSize = 0;
+    uint32_t m_Lz4FullSize       = 0;
+    bool m_Lz4Complete           = true;
+
+    // decodes the whole LZ4 body, keeping the read position; false if it
+    // already was or can't be
+    bool expandLz4();
+
+    // the data stream ran out: the next zlib chunk, or the rest of the LZ4 body
+    bool moreCompressedData();
 
   private:
     template <typename T>
