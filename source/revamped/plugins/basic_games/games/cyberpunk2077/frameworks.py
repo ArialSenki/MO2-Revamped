@@ -49,7 +49,9 @@ REDMOD_BINARY = "tools/redmod/bin/redMod.exe"
 PREFIXES = ("", "root/")
 
 _CODEWARE_IMPORT = re.compile(rb"^\s*import\s+Codeware\b", re.MULTILINE)
-_CODEWARE_READ_LIMIT = 512 * 1024  # bytes read of one script
+# bytes read of one script: redscript puts its imports at the top of a file,
+# before any declaration
+_CODEWARE_READ_LIMIT = 8 * 1024
 _CODEWARE_FILE_LIMIT = 4000  # scripts read in all
 
 
@@ -132,7 +134,8 @@ def reds_files(tree: mobase.IFileTree) -> list[str]:
 
 def imports_codeware(mod_path: Path, files: Iterable[str], budget: list[int]) -> bool:
     """Whether one of the mod's scripts imports Codeware. budget[0] is the
-    number of scripts that may still be read."""
+    number of scripts that may still be read. Reads files only (no mobase),
+    so it can run outside the main thread."""
     for relative in files:
         if budget[0] <= 0:
             return False
@@ -144,6 +147,33 @@ def imports_codeware(mod_path: Path, files: Iterable[str], budget: list[int]) ->
         except OSError:
             continue
     return False
+
+
+@dataclass(frozen=True)
+class CodewareCandidate:
+    """A mod with redscript files, which may import Codeware."""
+
+    name: str
+    path: Path
+    files: tuple[str, ...]
+
+    @property
+    def key(self) -> tuple:
+        return (self.name, str(self.path), self.files)
+
+
+def codeware_candidates(mods: list["ModFiles"]) -> list[CodewareCandidate]:
+    return [
+        CodewareCandidate(mod.name, mod.path, tuple(files))
+        for mod in mods
+        if (files := reds_files(mod.tree))
+    ]
+
+
+def scan_codeware(candidates: Iterable[CodewareCandidate]) -> dict[tuple, bool]:
+    """Which candidates import Codeware, by their key."""
+    budget = [_CODEWARE_FILE_LIMIT]
+    return {c.key: imports_codeware(c.path, c.files, budget) for c in candidates}
 
 
 @dataclass
@@ -165,8 +195,15 @@ class ModFiles:
     tree: mobase.IFileTree
 
 
-def analyze(mods: list[ModFiles], virtual_tree: mobase.IFileTree | None, game_dir: Path | None) -> Report:
-    """mods: the active mods, in priority order."""
+def analyze(
+    mods: list[ModFiles],
+    virtual_tree: mobase.IFileTree | None,
+    game_dir: Path | None,
+    codeware_users=None,
+) -> Report:
+    """mods: the active mods, in priority order. codeware_users: given the
+    candidates, the names of those that import Codeware (as far as known);
+    by default their scripts are read here."""
     provided: set[str] = set()
     if virtual_tree is not None:
         provided |= provided_by_tree(virtual_tree)
@@ -187,11 +224,14 @@ def analyze(mods: list[ModFiles], virtual_tree: mobase.IFileTree | None, game_di
 
     report = Report()
     if "codeware" not in provided:
-        budget = [_CODEWARE_FILE_LIMIT]
-        for mod in mods:
-            files = reds_files(mod.tree)
-            if files and imports_codeware(mod.path, files, budget):
-                needs.setdefault("codeware", []).append(mod.name)
+        candidates = codeware_candidates(mods)
+        if codeware_users is None:
+            found = scan_codeware(candidates)
+            users = [c.name for c in candidates if found[c.key]]
+        else:
+            users = list(codeware_users(candidates))
+        if users:
+            needs["codeware"] = users
     for framework in FRAMEWORKS:
         users = needs.get(framework.key)
         if users and framework.key not in provided:
