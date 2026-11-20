@@ -20643,8 +20643,8 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>Baldur&apos;s Gate 3</translation>
     </message>
     <message>
-      <source>Load the native DLL mods (bin/NativeMods) and the Script Extender through the VFS, so Native Mod Loader isn&apos;t needed. With Native Mod Loader installed, it loads its mods itself.</source>
-      <translation>Lädt die nativen DLL-Mods (bin/NativeMods) und den Script Extender über das VFS, sodass Native Mod Loader nicht nötig ist. Ist Native Mod Loader installiert, lädt er seine Mods selbst.</translation>
+      <source>Force load all dlls detected in active mods. Removes the need for &apos;Native Mod Loader&apos; and similar mods.</source>
+      <translation>Lädt alle DLLs aktiver Mods zwangsweise. Damit wird &apos;Native Mod Loader&apos; oder Ähnliches nicht benötigt.</translation>
     </message>
     <message>
       <source>Log a diff of modsettings.lsx before and after the game runs (debug log level).</source>

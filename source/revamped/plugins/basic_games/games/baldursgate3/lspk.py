@@ -205,7 +205,10 @@ class Package:
             return data
         if method == _METHOD_ZLIB:
             try:
-                out = zlib.decompress(data)
+                # never more than the entry says it holds (a crafted pak
+                # could unpack to gigabytes)
+                inflater = zlib.decompressobj()
+                out = inflater.decompress(data, entry.size + 1)
             except zlib.error as e:
                 raise Damaged("bad zlib data") from e
             if len(out) != entry.size:

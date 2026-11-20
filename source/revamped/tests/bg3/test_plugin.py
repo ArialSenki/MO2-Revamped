@@ -47,7 +47,7 @@ class FakeProgress:
         pass
 
 
-class PluginTest(unittest.TestCase):
+class PluginBase(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = Path(tempfile.mkdtemp(prefix="bg3-test-"))
         self.organizer = FakeOrganizer(self.tmp / "instance")
@@ -86,6 +86,8 @@ class PluginTest(unittest.TestCase):
     def written(self) -> list[str]:
         return [m["name"] for m in modsettings.read(self.game.modsettings_path).modules]
 
+
+class PluginTest(PluginBase):
     # identity
 
     def test_identity_is_basic_games(self):

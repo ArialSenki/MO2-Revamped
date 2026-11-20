@@ -81,7 +81,25 @@ class BG3LoadOrderCheck(mobase.IPluginDiagnose):
         game = self._game()
         self._plan = game.launch().quick_plan() if game is not None and game.isInstalled() else None
         self._fresh = True
+        if game is not None and game.isInstalled() and game.launch().read_in_background():
+            self._poll_later()
         return self._plan
+
+    def _poll_later(self) -> None:
+        from PyQt6.QtCore import QTimer
+
+        QTimer.singleShot(300, self._poll)
+
+    def _poll(self) -> None:
+        game = self._game()
+        if game is None:
+            return
+        background = game.launch()._background
+        if background is not None and background.is_alive():
+            self._poll_later()
+            return
+        # the new paks are in the cache now: the list again
+        self._changed()
 
     def activeProblems(self) -> list[int]:
         plan = self._current()

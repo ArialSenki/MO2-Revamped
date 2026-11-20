@@ -111,10 +111,11 @@ class LSLibRetriever:
         return msg_box.clickedButton() is download
 
     def _local_archives(self) -> list[Path]:
+        """The ExportTool zips here, oldest version first (by number:
+        v1.9.0 is older than v1.10.0)."""
         return sorted(
-            p
-            for p in self._utils.tools_dir.glob("*.zip")
-            if self._asset_re.fullmatch(p.name)
+            (p for p in self._utils.tools_dir.glob("*.zip") if self._asset_re.fullmatch(p.name)),
+            key=lambda p: _version_key(p.name),
         )
 
     def _has_all_tools(self) -> bool:
@@ -253,9 +254,18 @@ class LSLibRetriever:
         digest = str(asset.get("digest") or "")
         sha = hashlib.sha256()
         try:
-            with urllib.request.urlopen(
-                asset["browser_download_url"], timeout=self._timeout
-            ) as response, open(part_path, "wb") as out:
+            url = str(asset["browser_download_url"])
+            if not _trusted_url(url):
+                raise OSError(f"not a GitHub download: {url}")
+            if not digest.lower().startswith("sha256:"):
+                # GitHub gives every release asset's SHA-256: without it the
+                # file can't be checked, so it isn't used
+                raise OSError("GitHub gave no SHA-256 for the file; it isn't downloaded")
+            with urllib.request.urlopen(url, timeout=self._timeout) as response, open(
+                part_path, "wb"
+            ) as out:
+                if not _trusted_url(response.geturl()):
+                    raise OSError(f"redirected away from GitHub: {response.geturl()}")
                 total = int(response.headers.get("Content-Length") or 0)
                 done = 0
                 while True:
@@ -273,9 +283,7 @@ class LSLibRetriever:
                         return False
             if total and done != total:
                 raise OSError(f"download cut at {done} of {total} bytes")
-            if digest.lower().startswith("sha256:") and (
-                sha.hexdigest() != digest.split(":", 1)[1].strip().lower()
-            ):
+            if sha.hexdigest() != digest.split(":", 1)[1].strip().lower():
                 raise OSError("the downloaded file doesn't match GitHub's SHA-256")
             os.replace(part_path, zip_path)
             return True
@@ -436,6 +444,26 @@ class Divine:
         pak.parent.mkdir(parents=True, exist_ok=True)
         pak.unlink(missing_ok=True)
         return self.run("-a", "create-package", "-s", str(folder), "-d", str(pak)).returncode == 0
+
+
+_TRUSTED_HOSTS = {
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com",
+}
+
+
+def _trusted_url(url: str) -> bool:
+    """An https URL on GitHub or the hosts it serves release files from."""
+    from urllib.parse import urlsplit
+
+    parts = urlsplit(url)
+    return parts.scheme == "https" and (parts.hostname or "").casefold() in _TRUSTED_HOSTS
+
+
+def _version_key(name: str) -> tuple[int, ...]:
+    match = re.search(r"v(\d+(?:\.\d+)*)", name, re.IGNORECASE)
+    return tuple(int(n) for n in match[1].split(".")) if match else ()
 
 
 def _safe_member(name: str, *roots: Path) -> Path | None:
