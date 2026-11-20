@@ -65,9 +65,17 @@ void CreationGamePlugins::writePluginList(const IPluginList* pluginList,
   ManagedMods.subtract(DLCSet);
   PrimaryPlugins.append(QList<QString>(ManagedMods.begin(), ManagedMods.end()));
 
+  // MO2 Revamped: looked up in a set of case-folded names, as the
+  // case-insensitive compare matches them (the Creation Club ones make the list
+  // long in Skyrim SE)
+  QSet<QString> primarySet;
+  for (const QString& name : PrimaryPlugins) {
+    primarySet.insert(name.toCaseFolded());
+  }
+
   // TODO: do not write plugins in OFFICIAL_FILES container
   for (const QString& pluginName : plugins) {
-    if (!PrimaryPlugins.contains(pluginName, Qt::CaseInsensitive)) {
+    if (!primarySet.contains(pluginName.toCaseFolded())) {
       if (pluginList->state(pluginName) == IPluginList::STATE_ACTIVE) {
         auto result = encoder.encode(pluginName);
         if (encoder.hasError()) {
@@ -132,7 +140,23 @@ QStringList CreationGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
     return loadOrder;
   }
 
-  QStringList pluginsFound;
+  // MO2 Revamped: names looked up in sets of their case-folded form, as the
+  // case-insensitive compare matches them, not by scanning a list for each line
+  // and each plugin (quadratic: seconds with thousands of plugins)
+  QSet<QString> primarySet;
+  for (const QString& name : primaryPlugins) {
+    primarySet.insert(name.toCaseFolded());
+  }
+  QSet<QString> inLoadOrder = primarySet;
+  QSet<QString> pluginsFound;
+  const auto addToLoadOrder = [&](const QString& name) {
+    const QString key = name.toCaseFolded();
+    pluginsFound.insert(key);
+    if (!inLoadOrder.contains(key)) {
+      inLoadOrder.insert(key);
+      loadOrder.append(name);
+    }
+  };
   while (!file.atEnd()) {
     QByteArray line = file.readLine();
     QString pluginName;
@@ -141,28 +165,22 @@ QStringList CreationGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
       pluginName =
           QStringDecoder(QStringConverter::Encoding::System).decode(line.trimmed());
     }
-    if (!primaryPlugins.contains(pluginName, Qt::CaseInsensitive)) {
+    if (!primarySet.contains(pluginName.toCaseFolded())) {
       if (pluginName.startsWith('*')) {
         pluginName.remove(0, 1);
         if (pluginName.size() > 0) {
           pluginList->setState(pluginName, IPluginList::STATE_ACTIVE);
-          pluginsFound.append(pluginName);
-          if (!loadOrder.contains(pluginName, Qt::CaseInsensitive)) {
-            loadOrder.append(pluginName);
-          }
+          addToLoadOrder(pluginName);
         }
       } else {
         if (pluginName.size() > 0) {
           pluginList->setState(pluginName, IPluginList::STATE_INACTIVE);
-          pluginsFound.append(pluginName);
-          if (!loadOrder.contains(pluginName, Qt::CaseInsensitive)) {
-            loadOrder.append(pluginName);
-          }
+          addToLoadOrder(pluginName);
         }
       }
     } else {
       pluginName.remove(0, 1);
-      pluginsFound.append(pluginName);
+      pluginsFound.insert(pluginName.toCaseFolded());
     }
   }
 
@@ -170,7 +188,7 @@ QStringList CreationGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
 
   // set all plugins not found inactive
   for (const auto& pluginName : plugins) {
-    if (!pluginsFound.contains(pluginName, Qt::CaseInsensitive)) {
+    if (!pluginsFound.contains(pluginName.toCaseFolded())) {
       pluginList->setState(pluginName, IPluginList::STATE_INACTIVE);
     }
   }
