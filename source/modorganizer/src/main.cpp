@@ -64,8 +64,15 @@ void configureDiagnosticsFromEnvironment() noexcept
   wchar_t value[2] = {};
   const DWORD length = GetEnvironmentVariableW(
       L"MO2_REVAMPED_DIAGNOSTICS", value, static_cast<DWORD>(std::size(value)));
-  InterlockedExchange(&g_revampedDiagnosticsEnabled,
-                      length == 1 && value[0] == L'1' ? 1 : 0);
+  bool enabled = length == 1 && value[0] == L'1';
+  // MO2 Revamped: under Wine and Proton (Linux, Steam Deck) on unless set to 0.
+  // Reports from there often had no file at all: MO2 had stopped before its
+  // log, which only starts once an instance is open. logs\startup_diagnostics.log
+  // next to ModOrganizer.exe (or in %TEMP%) then says how far it got
+  if (!enabled && !(length == 1 && value[0] == L'0') && env::runningUnderWine()) {
+    enabled = true;
+  }
+  InterlockedExchange(&g_revampedDiagnosticsEnabled, enabled ? 1 : 0);
 }
 
 void appendText(char* buffer, size_t capacity, size_t& length,
@@ -225,6 +232,16 @@ void prepareMemoryDiagnosticPath() noexcept
              currentLength * sizeof(wchar_t));
   CopyMemory(g_startupDiagnosticPath + currentLength, startupLogFile,
              sizeof(startupLogFile));
+
+  // MO2 Revamped: on by itself under Wine, the logs grow with every start;
+  // past 1 MiB they start over
+  for (const wchar_t* path : {g_memoryDiagnosticPath, g_startupDiagnosticPath}) {
+    WIN32_FILE_ATTRIBUTE_DATA data = {};
+    if (GetFileAttributesExW(path, GetFileExInfoStandard, &data) &&
+        (data.nFileSizeHigh != 0 || data.nFileSizeLow > 1024 * 1024)) {
+      DeleteFileW(path);
+    }
+  }
 }
 
 HANDLE openMemoryDiagnosticLog() noexcept
