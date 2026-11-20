@@ -2502,6 +2502,8 @@ MainWindow::~MainWindow()
     m_OrganizerCore.setUserInterface(nullptr);
 
     delete ui;
+    // this still filters the application's events while the children go
+    ui = nullptr;
   } catch (std::exception& e) {
     QMessageBox::critical(
         nullptr, tr("Crash on exit"),
@@ -3529,6 +3531,36 @@ void MainWindow::cleanup()
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
 {
+  // MO2 Revamped: the downloads list's drags, only watched (this filters the
+  // whole application): the hint shows as soon as one with archives from
+  // Explorer is over the list, whichever widget the drag is routed to, and
+  // goes with the drag
+  const QEvent::Type type = event->type();
+  if ((type == QEvent::DragEnter || type == QEvent::DragMove ||
+       type == QEvent::DragLeave || type == QEvent::Drop) &&
+      ui != nullptr &&
+      (object == ui->downloadView || object == ui->downloadView->viewport())) {
+    switch (type) {
+    case QEvent::DragEnter:
+    case QEvent::DragMove: {
+      auto* drag   = static_cast<QDragMoveEvent*>(event);
+      bool anyLocal = false;
+      m_dragHasArchives = droppableArchives(drag->mimeData(), &anyLocal) && anyLocal;
+      updateDownloadsDropHint(static_cast<QWidget*>(object)->mapToGlobal(
+          drag->position().toPoint()));
+      break;
+    }
+    case QEvent::DragLeave:
+    case QEvent::Drop:
+      if (m_downloadsDropHint != nullptr) {
+        m_downloadsDropHint->hideHint();
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
   if (event->type() == QEvent::StatusTip && object != this) {
     QMainWindow::event(event);
     return true;
@@ -8150,35 +8182,42 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event)
     return;
   }
 
-  QMimeData const* data = event->mimeData();
-  if (data == nullptr || !data->hasUrls()) {
-    return;
-  }
-
-  const QStringList extensions =
-      m_OrganizerCore.installationManager()->getSupportedExtensions();
   bool anyLocal = false;
-  for (const QUrl& url : data->urls()) {
-    if (!url.isLocalFile()) {
-      continue;
-    }
-    anyLocal = true;
-    const QFileInfo info(url.toLocalFile());
-    if (!info.isFile() || !extensions.contains(info.suffix(), Qt::CaseInsensitive)) {
-      return;
-    }
+  if (!droppableArchives(event->mimeData(), &anyLocal)) {
+    return;
   }
   // a web link only means something to the downloads (it starts a download)
   if (anyLocal || ui->downloadView->isVisible()) {
     event->accept();
     m_dragHasArchives = anyLocal;
-    updateDownloadsDropHint(event->position().toPoint());
+    updateDownloadsDropHint(mapToGlobal(event->position().toPoint()));
   }
+}
+
+bool MainWindow::droppableArchives(const QMimeData* data, bool* anyLocal) const
+{
+  *anyLocal = false;
+  if (data == nullptr || !data->hasUrls()) {
+    return false;
+  }
+  const QStringList extensions =
+      m_OrganizerCore.installationManager()->getSupportedExtensions();
+  for (const QUrl& url : data->urls()) {
+    if (!url.isLocalFile()) {
+      continue;
+    }
+    *anyLocal = true;
+    const QFileInfo info(url.toLocalFile());
+    if (!info.isFile() || !extensions.contains(info.suffix(), Qt::CaseInsensitive)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void MainWindow::dragMoveEvent(QDragMoveEvent* event)
 {
-  updateDownloadsDropHint(event->position().toPoint());
+  updateDownloadsDropHint(mapToGlobal(event->position().toPoint()));
   QMainWindow::dragMoveEvent(event);
 }
 
@@ -8192,12 +8231,13 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
   QMainWindow::dragLeaveEvent(event);
 }
 
-void MainWindow::updateDownloadsDropHint(const QPoint& pos)
+void MainWindow::updateDownloadsDropHint(const QPoint& globalPos)
 {
-  QWidget* at = childAt(pos);
-  const bool over = m_dragHasArchives && ui->downloadView->isVisible() &&
-                    at != nullptr &&
-                    (at == ui->downloadView || ui->downloadView->isAncestorOf(at));
+  // by where the list is, not by the widget under the point: that depends on
+  // which widget the drag went to, and the hints over the lists are widgets too
+  const QPoint local = ui->downloadView->mapFromGlobal(globalPos);
+  const bool over    = m_dragHasArchives && ui->downloadView->isVisible() &&
+                    ui->downloadView->rect().contains(local);
   if (over) {
     if (auto* hint = DropHintOverlay::forView(m_downloadsDropHint, ui->downloadView,
                                               tr("Drop to add to Downloads"),

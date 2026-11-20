@@ -335,7 +335,10 @@ private:
   // archives from Explorer are dragged there (see drophint.h)
   QPointer<class DropHintOverlay> m_downloadsDropHint;
   bool m_dragHasArchives = false;
-  void updateDownloadsDropHint(const QPoint& pos);
+  void updateDownloadsDropHint(const QPoint& globalPos);
+  // all the dragged local files are archives an installer takes; anyLocal
+  // says whether there is one (web links aren't)
+  bool droppableArchives(const class QMimeData* data, bool* anyLocal) const;
 
   void toggleRevampedEndorseState();
 

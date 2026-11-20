@@ -1,5 +1,7 @@
 #include "drophint.h"
 #include <QAbstractScrollArea>
+#include <QApplication>
+#include <QList>
 #include <QEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -35,6 +37,35 @@ QColor inkOn(const QColor& fill)
   const qreal onWhite = 1.05 / (l + 0.05);
   return onBlack >= onWhite ? QColor(Qt::black) : QColor(Qt::white);
 }
+
+// every hint there is: a drag leaving any widget, or dropped, hides them all
+// at once. Qt tells only the widget the drag was at, which may not be the one
+// that showed a hint (a fast move out of the window, Escape); the widget the
+// drag goes to next shows its own again in the same go, so nothing flickers
+QList<QPointer<DropHintOverlay>>& hints()
+{
+  static QList<QPointer<DropHintOverlay>> list;
+  return list;
+}
+
+class HideOnDragEnd : public QObject
+{
+public:
+  using QObject::QObject;
+
+protected:
+  bool eventFilter(QObject*, QEvent* event) override
+  {
+    if (event->type() == QEvent::DragLeave || event->type() == QEvent::Drop) {
+      for (const auto& hint : hints()) {
+        if (hint != nullptr && hint->isVisible()) {
+          hint->hideHint();
+        }
+      }
+    }
+    return false;
+  }
+};
 }  // namespace
 
 DropHintOverlay::DropHintOverlay(QAbstractScrollArea* view, const QString& text,
@@ -52,6 +83,14 @@ DropHintOverlay::DropHintOverlay(QAbstractScrollArea* view, const QString& text,
   view->installEventFilter(this);
   followView();
   hide();
+
+  static HideOnDragEnd* reaper = nullptr;
+  if (reaper == nullptr && qApp != nullptr) {
+    reaper = new HideOnDragEnd(qApp);
+    qApp->installEventFilter(reaper);
+  }
+  hints().removeAll(nullptr);
+  hints().append(this);
 }
 
 DropHintOverlay* DropHintOverlay::forView(QPointer<DropHintOverlay>& slot,
