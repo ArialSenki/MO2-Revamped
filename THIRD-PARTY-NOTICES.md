@@ -1,4 +1,4 @@
-﻿# Third-party notices
+# Third-party notices
 
 MO2 Revamped combines Mod Organizer 2 with separately licensed components and
 dependencies. Their original copyright statements and license terms remain in
