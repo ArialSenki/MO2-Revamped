@@ -25,7 +25,10 @@ param(
     # runtime comes from it (Copy-QtRuntime.ps1), not from the runtime folder
     [Parameter(Mandatory = $true)]
     [string]$QtRuntimeDirectory,
-    [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    [string]$CscPath = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+    # a CPython 3.12 that compiles the Python plugins to the bundled
+    # interpreter's bytecode (its magic number is checked against pythoncore.zip)
+    [string]$PythonExecutable = (Join-Path $env:ProgramFiles 'Python312\python.exe')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -57,7 +60,7 @@ if (Test-Path -LiteralPath $organizerPath -PathType Leaf) {
     Remove-Variable organizerText
 }
 
-foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $qtRuntimeRoot, $CscPath)) {
+foreach ($path in @($runtimeRoot, $organizerPath, $nxmHandlerPath, $ZigPath, $openSslRuntimeRoot, $pythonRuntimeRoot, $qtRuntimeRoot, $CscPath, $PythonExecutable)) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf) -and
         -not (Test-Path -LiteralPath $path -PathType Container)) {
         throw "Required build input was not found: $path"
@@ -926,6 +929,40 @@ function Test-IsolatedCoreParity {
     }
 }
 
+# The Python plugins as the bytecode plugin_python loads (optimization level 2,
+# checked-hash .pyc in __pycache__), so the first start after installing or
+# updating doesn't compile them, nor every start in a folder Python can't
+# write to. Only the Complete stage is compiled; Copy-CompiledPythonPlugins
+# gives Isolated the same files for the plugins it has.
+function Compile-PythonPlugins {
+    param([string]$StageRoot)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $core = [IO.Compression.ZipFile]::OpenRead((Join-Path $StageRoot 'plugins\plugin_python\libs\pythoncore.zip'))
+    try {
+        $entry = @($core.Entries | Where-Object { $_.FullName -like '*.pyc' })[0]
+        if (-not $entry) { throw 'pythoncore.zip has no .pyc to read the bundled bytecode version from.' }
+        $header = New-Object byte[] 4
+        $stream = $entry.Open()
+        try { if ($stream.Read($header, 0, 4) -ne 4) { throw 'pythoncore.zip has a damaged .pyc.' } } finally { $stream.Dispose() }
+    } finally { $core.Dispose() }
+    $magic = ([BitConverter]::ToString($header)).Replace('-', '').ToLowerInvariant()
+    & $PythonExecutable -I (Join-Path $PSScriptRoot 'compile_python_plugins.py') $StageRoot $magic
+    if ($LASTEXITCODE -ne 0) { throw "Compiling the Python plugins in $StageRoot failed." }
+}
+
+function Copy-CompiledPythonPlugins {
+    param([string]$SourceRoot, [string]$DestinationRoot)
+    foreach ($file in Get-ChildItem -LiteralPath (Join-Path $DestinationRoot 'plugins') -File -Recurse -Filter '*.py') {
+        $relative = $file.FullName.Substring($DestinationRoot.Length).TrimStart('\')
+        $cache = Join-Path (Split-Path $relative) ('__pycache__\' + $file.BaseName + '.cpython-312.opt-2.pyc')
+        $compiled = Join-Path $SourceRoot $cache
+        if (-not (Test-Path -LiteralPath $compiled -PathType Leaf)) { throw "The Complete stage has no compiled $relative." }
+        $destination = Join-Path $DestinationRoot $cache
+        New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
+        Copy-Item -LiteralPath $compiled -Destination $destination -Force
+    }
+}
+
 # The installed licenses\ folder: the runtime input brings MO2's own licence
 # files, and the repository's licenses\ adds and updates what MO2 Revamped
 # ships (the bridge's and the me3 compatibility DLL's components among them).
@@ -1116,10 +1153,12 @@ New-Item -ItemType Directory -Force -Path (Join-Path $fullStage 'borderless') | 
 Copy-Item -LiteralPath $borderlessDll -Destination (Join-Path $fullStage 'borderless\mo2r_borderless.dll') -Force
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
+Compile-PythonPlugins -StageRoot $fullStage
 
 New-Item -ItemType Directory -Force -Path $isolatedStage | Out-Null
 Copy-RuntimeTree -SourceRoot $fullStage -DestinationRoot $isolatedStage -SkipPlugins
 Copy-EldenRingPlugins -SourceRoot $fullStage -DestinationRoot $isolatedStage
+Copy-CompiledPythonPlugins -SourceRoot $fullStage -DestinationRoot $isolatedStage
 foreach ($rootFile in @('ModOrganizer.exe', 'MO2-Revamped.ini', 'MO2-Revamped.install')) {
     Copy-Item -LiteralPath (Join-Path $fullStage $rootFile) -Destination (Join-Path $isolatedStage $rootFile) -Force
 }
