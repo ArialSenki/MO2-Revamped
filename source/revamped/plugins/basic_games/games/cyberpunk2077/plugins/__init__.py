@@ -203,5 +203,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
 
 
 def createPlugins() -> list[mobase.IPlugin]:
-    return [CyberpunkFrameworkCheck()]
+    from .archive_conflicts import ArchiveConflictsTool
+
+    return [CyberpunkFrameworkCheck(), ArchiveConflictsTool()]
 

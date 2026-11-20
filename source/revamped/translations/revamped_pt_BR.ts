@@ -20491,5 +20491,53 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <source>Start the game anyway, without the REDmods&apos; latest changes?</source>
       <translation>Iniciar o jogo mesmo assim, sem as últimas alterações dos REDmods?</translation>
     </message>
+    <message>
+      <source>Cyberpunk 2077 Archive Conflicts</source>
+      <translation>Conflitos de archives do Cyberpunk 2077</translation>
+    </message>
+    <message>
+      <source>Shows which .archive wins where two mods&apos; archives hold the same game files.</source>
+      <translation>Mostra qual .archive vence quando os archives de dois mods têm os mesmos arquivos do jogo.</translation>
+    </message>
+    <message>
+      <source>Archive conflicts</source>
+      <translation>Conflitos de archives</translation>
+    </message>
+    <message>
+      <source>The game loads the archives listed in modlist.txt first, in its order, then the rest alphabetically.</source>
+      <translation>O jogo carrega primeiro os archives listados no modlist.txt, na ordem dele, e depois o resto em ordem alfabética.</translation>
+    </message>
+    <message>
+      <source>Without modlist.txt the game loads the archives alphabetically by file name.</source>
+      <translation>Sem modlist.txt o jogo carrega os archives em ordem alfabética do nome do arquivo.</translation>
+    </message>
+    <message>
+      <source>{0} archives, {1} pairs share game files. Where two do, the archive loaded first wins. {2}</source>
+      <translation>{0} archives; {1} pares compartilham arquivos do jogo. Quando dois compartilham, vence o archive carregado primeiro. {2}</translation>
+    </message>
+    <message>
+      <source>{0} archives could not be read.</source>
+      <translation>Não foi possível ler {0} archives.</translation>
+    </message>
+    <message>
+      <source>Wins</source>
+      <translation>Vence</translation>
+    </message>
+    <message>
+      <source>Mod</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Loses</source>
+      <translation>Perde</translation>
+    </message>
+    <message>
+      <source>Files</source>
+      <translation>Arquivos</translation>
+    </message>
+    <message>
+      <source>game folder</source>
+      <translation>pasta do jogo</translation>
+    </message>
   </context>
 </TS>

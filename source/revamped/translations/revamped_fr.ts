@@ -20679,5 +20679,53 @@ Si MO2 Revamped est installé dans un dossier protégé comme Program Files, lan
       <source>Start the game anyway, without the REDmods&apos; latest changes?</source>
       <translation>Lancer le jeu quand même, sans les dernières modifications des REDmods ?</translation>
     </message>
+    <message>
+      <source>Cyberpunk 2077 Archive Conflicts</source>
+      <translation>Conflits d&apos;archives de Cyberpunk 2077</translation>
+    </message>
+    <message>
+      <source>Shows which .archive wins where two mods&apos; archives hold the same game files.</source>
+      <translation>Montre quel .archive l&apos;emporte quand les archives de deux mods contiennent les mêmes fichiers du jeu.</translation>
+    </message>
+    <message>
+      <source>Archive conflicts</source>
+      <translation>Conflits d&apos;archives</translation>
+    </message>
+    <message>
+      <source>The game loads the archives listed in modlist.txt first, in its order, then the rest alphabetically.</source>
+      <translation>Le jeu charge d&apos;abord les archives listées dans modlist.txt, dans leur ordre, puis les autres par ordre alphabétique.</translation>
+    </message>
+    <message>
+      <source>Without modlist.txt the game loads the archives alphabetically by file name.</source>
+      <translation>Sans modlist.txt, le jeu charge les archives par ordre alphabétique du nom de fichier.</translation>
+    </message>
+    <message>
+      <source>{0} archives, {1} pairs share game files. Where two do, the archive loaded first wins. {2}</source>
+      <translation>{0} archives ; {1} paires partagent des fichiers du jeu. Quand deux les partagent, l&apos;archive chargée en premier l&apos;emporte. {2}</translation>
+    </message>
+    <message>
+      <source>{0} archives could not be read.</source>
+      <translation>{0} archives n&apos;ont pas pu être lues.</translation>
+    </message>
+    <message>
+      <source>Wins</source>
+      <translation>Gagne</translation>
+    </message>
+    <message>
+      <source>Mod</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Loses</source>
+      <translation>Perd</translation>
+    </message>
+    <message>
+      <source>Files</source>
+      <translation>Fichiers</translation>
+    </message>
+    <message>
+      <source>game folder</source>
+      <translation>dossier du jeu</translation>
+    </message>
   </context>
 </TS>
