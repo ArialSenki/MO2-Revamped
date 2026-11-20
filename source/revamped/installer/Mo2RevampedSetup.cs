@@ -774,7 +774,6 @@ namespace Mo2RevampedSetup
 
             Report(worker, 1, InstallerText.T("Comprobando los componentes del paquete…"));
             PayloadBundle payload = ValidatePayload(manifest, worker, eldenRingOnly);
-            if (WineHost.IsRunning) AddWineRuntimeBesideMo2(manifest, payload);
             try
             {
             List<CopyEntry> dataCopies = request.Mode == SetupMode.Migrate ? EnumerateMigrationFiles(request) : new List<CopyEntry>();
@@ -799,6 +798,7 @@ namespace Mo2RevampedSetup
             if (earlierState != null && earlierState.Files != null)
                 foreach (InstallFileState earlier in earlierState.Files)
                     if (!String.IsNullOrEmpty(earlier.Path) && !earlierFiles.ContainsKey(earlier.Path)) earlierFiles.Add(earlier.Path, earlier);
+            if (WineHost.IsRunning) AddWineRuntimeCopies(manifest, payload, target, earlierFiles);
             HashSet<string> payloadPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (PayloadFile file in manifest.Files)
             {
@@ -1766,6 +1766,10 @@ namespace Mo2RevampedSetup
                     if (manifest == null || manifest.Files == null) continue;
                     foreach (PayloadFile file in manifest.Files)
                         if (!String.IsNullOrEmpty(file.Path)) paths.Add(file.Path.Replace('\\', '/'));
+                    // the copies a setup under Wine made of vcruntime-wine\
+                    if (WineHost.IsRunning)
+                        foreach (KeyValuePair<string, PayloadFile> copy in WineRuntimeCopies(manifest))
+                            paths.Add(copy.Key.Replace('\\', '/'));
                 }
                 catch { }
             }
@@ -3002,37 +3006,64 @@ namespace Mo2RevampedSetup
         }
 
         // Wine and Proton: the payload's vcruntime-wine\ DLLs (Microsoft's Visual
-        // C++ runtime) are also installed beside ModOrganizer.exe, where Wine
-        // loads them instead of its own versions, which lack functions MO2
-        // uses; a prefix without Microsoft's runtime then still runs MO2. As
-        // payload files of this installation they are backed up, restored,
-        // updated and uninstalled like the others. On Windows the folder stays
-        // inert and MO2 uses the installed runtime, which may be newer
+        // C++ runtime, 64-bit) are also installed beside ModOrganizer.exe and
+        // in dlls\ (beside QtWebEngineProcess.exe), where Wine loads them
+        // instead of its own versions, which lack functions MO2 uses: a prefix
+        // without Microsoft's runtime then still runs MO2. As payload files of
+        // this installation they are backed up, restored, updated and
+        // uninstalled like the others. A DLL of that name the user put there
+        // is left alone. On Windows the folder stays inert and MO2 uses the
+        // installed runtime, which may be newer
         private const string WineRuntimeFolder = "vcruntime-wine\\";
 
-        private static void AddWineRuntimeBesideMo2(PayloadManifest manifest, PayloadBundle payload)
+        // the root and dlls\ paths the vcruntime-wine\ files go to under Wine
+        private static List<KeyValuePair<string, PayloadFile>> WineRuntimeCopies(PayloadManifest manifest)
         {
-            List<PayloadFile> copies = new List<PayloadFile>();
-            HashSet<string> paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (PayloadFile file in manifest.Files) paths.Add(file.Path);
+            List<KeyValuePair<string, PayloadFile>> copies = new List<KeyValuePair<string, PayloadFile>>();
+            if (manifest == null || manifest.Files == null) return copies;
             foreach (PayloadFile file in manifest.Files)
             {
-                if (!file.Path.StartsWith(WineRuntimeFolder, StringComparison.OrdinalIgnoreCase)) continue;
+                if (String.IsNullOrEmpty(file.Path) || !file.Path.StartsWith(WineRuntimeFolder, StringComparison.OrdinalIgnoreCase)) continue;
                 string name = file.Path.Substring(WineRuntimeFolder.Length);
-                if (name.Length == 0 || name.IndexOf('\\') >= 0 ||
-                    !name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || paths.Contains(name)) continue;
-                copies.Add(new PayloadFile { Path = name, Length = file.Length, Sha256 = file.Sha256 });
-                payload.Entries[name] = payload.Entries[file.Path];
-                paths.Add(name);
+                if (name.Length == 0 || name.IndexOf('\\') >= 0 || !name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) continue;
+                copies.Add(new KeyValuePair<string, PayloadFile>(name, file));
+                copies.Add(new KeyValuePair<string, PayloadFile>("dlls\\" + name, file));
             }
-            foreach (PayloadFile copy in copies)
+            return copies;
+        }
+
+        private static void AddWineRuntimeCopies(PayloadManifest manifest, PayloadBundle payload, string target,
+            Dictionary<string, InstallFileState> earlierFiles)
+        {
+            HashSet<string> paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (PayloadFile file in manifest.Files) paths.Add(file.Path);
+            List<PayloadFile> added = new List<PayloadFile>();
+            List<string> kept = new List<string>();
+            foreach (KeyValuePair<string, PayloadFile> copy in WineRuntimeCopies(manifest))
             {
-                manifest.Files.Add(copy);
-                manifest.TotalBytes += copy.Length;
+                if (paths.Contains(copy.Key)) continue;
+                // only a file this setup installed before is replaced: the
+                // update logic would otherwise lose the user's own copy once
+                // its backup is pruned
+                InstallFileState earlier;
+                if (File.Exists(SafeCombine(target, copy.Key)) &&
+                    !(earlierFiles.TryGetValue(copy.Key, out earlier) &&
+                      (!earlier.ExistedBefore || earlier.OwnedByRevamped) && !earlier.IsUserData))
+                {
+                    kept.Add(copy.Key);
+                    continue;
+                }
+                added.Add(new PayloadFile { Path = copy.Key, Length = copy.Value.Length, Sha256 = copy.Value.Sha256 });
+                payload.Entries[copy.Key] = payload.Entries[copy.Value.Path];
+                paths.Add(copy.Key);
             }
-            SetupDiagnostics.Info(copies.Count == 0
-                ? "Under Wine, but the package has no Visual C++ runtime to put beside MO2."
-                : "Under Wine: Microsoft's Visual C++ runtime goes beside ModOrganizer.exe (" + copies.Count + " DLLs).");
+            foreach (PayloadFile file in added)
+            {
+                manifest.Files.Add(file);
+                manifest.TotalBytes += file.Length;
+            }
+            SetupDiagnostics.Info("Under Wine: Microsoft's Visual C++ runtime goes beside ModOrganizer.exe and in dlls\\ (" +
+                added.Count + " files)" + (kept.Count == 0 ? "." : "; kept the user's own " + String.Join(", ", kept.ToArray()) + "."));
         }
 
         private static void WriteZipEntry(ZipArchiveEntry entry, string destination)
