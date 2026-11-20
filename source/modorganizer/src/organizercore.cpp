@@ -1884,6 +1884,19 @@ void OrganizerCore::refreshBSAList()
   }
 }
 
+void OrganizerCore::refreshListsAfterToggle(bool pluginsRebuilt)
+{
+  if (!pluginsRebuilt) {
+    refreshLists();
+  } else if ((m_CurrentProfile != nullptr) && m_DirectoryStructure->isPopulated()) {
+    // what the second rebuild told the view and the plugins: the plugins
+    // enabled with the mod (their signals were blocked), masters and indexes
+    m_PluginList.notifyStatesChanged();
+    // the archives of the mods just added to the structure
+    refreshBSAList();
+  }
+}
+
 void OrganizerCore::refreshLists()
 {
   if ((m_CurrentProfile != nullptr) && m_DirectoryStructure->isPopulated()) {
@@ -2393,7 +2406,9 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
   try {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
-    if (m_CurrentProfile->modEnabled(index)) {
+    const unsigned int rebuildsBefore = m_ESPListRebuilds;
+    const bool enabled                = m_CurrentProfile->modEnabled(index);
+    if (enabled) {
       updateModInDirectoryStructure(index, modInfo);
     } else {
       updateModActiveState(index, false);
@@ -2410,7 +2425,10 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
     syncOriginPriorities({index});
 
-    refreshLists();
+    // MO2 Revamped: enabling already rebuilt the plugin list from the updated
+    // structure (and activated the mod's plugins); a second rebuild cost as
+    // much as the first, ~0.3-0.7 s with a list of thousands of plugins
+    refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore);
     clearCaches({index});
     m_ModList.notifyModStateChanged({index});
 
@@ -2428,6 +2446,7 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
   }
 
   try {
+    const unsigned int rebuildsBefore = m_ESPListRebuilds;
     QMap<unsigned int, ModInfo::Ptr> modsToEnable;
     QMap<unsigned int, ModInfo::Ptr> modsToDisable;
     std::vector<unsigned int> vindices;
@@ -2459,7 +2478,10 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 
     syncOriginPriorities(vindices);
 
-    refreshLists();
+    // only enabled ones: a mod disabled after the rebuild above still has to
+    // leave the plugin list
+    refreshListsAfterToggle(modsToDisable.isEmpty() &&
+                            m_ESPListRebuilds != rebuildsBefore);
     clearCaches(vindices);
     m_ModList.notifyModStateChanged(index);
 

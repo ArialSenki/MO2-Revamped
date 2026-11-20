@@ -213,6 +213,11 @@ public:
 
   void refreshLoadOrder();
 
+  // MO2 Revamped: what a rebuild tells the view and the plugins after plugin
+  // states changed with the list's signals blocked: masters, indexes, the
+  // rows and the refreshed callbacks
+  void notifyStatesChanged();
+
   void disconnectSlots();
 
 public:

@@ -498,6 +498,9 @@ public slots:
   void savePluginList();
 
   void refreshLists();
+  // after mods were enabled or disabled: the plugin list is only rebuilt when
+  // enabling them didn't already rebuild it
+  void refreshListsAfterToggle(bool pluginsRebuilt);
 
   ModInfo::Ptr installDownload(int downloadIndex, int priority = -1);
   // MO2 Revamped: several downloads or archives, one after another. Each one's

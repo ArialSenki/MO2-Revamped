@@ -473,6 +473,17 @@ void PluginList::refresh(const QString& profileName,
   m_Refreshed();
 }
 
+void PluginList::notifyStatesChanged()
+{
+  testMasters();
+  updateIndices();
+  if (!m_ESPs.empty()) {
+    emit dataChanged(index(0, 0),
+                     index(static_cast<int>(m_ESPs.size()) - 1, columnCount() - 1));
+  }
+  m_Refreshed();
+}
+
 void PluginList::fixPrimaryPlugins()
 {
   if (!m_Organizer.settings().game().forceEnableCoreFiles()) {
