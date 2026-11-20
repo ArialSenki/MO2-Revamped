@@ -183,9 +183,15 @@ QuestionBoxMemory::queryImpl(QWidget* parent, const QString& windowName,
                              QDialogButtonBox::StandardButtons buttons,
                              QDialogButtonBox::StandardButton defaultButton)
 {
-  QMutexLocker locker(&g_mutex);
-
-  const auto button = getMemory(windowName, (fileName ? *fileName : ""));
+  // MO2 Revamped: the lock covers reading and saving the remembered answers,
+  // not the question itself. 2.5.2 held it while the dialog was open, so a
+  // second question asked meanwhile (another install ending under the open
+  // one) locked the main thread for good: MO2 froze.
+  Button button = NoButton;
+  {
+    QMutexLocker locker(&g_mutex);
+    button = getMemory(windowName, (fileName ? *fileName : ""));
+  }
   if (button != NoButton) {
     log::debug("{}: not asking because user always wants response {}",
                windowName + (fileName ? QString("/") + *fileName : ""),
@@ -217,6 +223,7 @@ void QuestionBoxMemory::setWindowMemory(const QString& windowName, Button b)
 {
   log::debug("remembering choice {} for window {}", buttonToString(b), windowName);
 
+  QMutexLocker locker(&g_mutex);
   g_setWindow(windowName, b);
 }
 
@@ -226,6 +233,7 @@ void QuestionBoxMemory::setFileMemory(const QString& windowName,
   log::debug("remembering choice {} for file {}", buttonToString(b),
              windowName + "/" + filename);
 
+  QMutexLocker locker(&g_mutex);
   g_setFile(windowName, filename, b);
 }
 
