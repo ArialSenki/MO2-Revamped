@@ -32,6 +32,7 @@
 #include <winreg.h>
 #include <winver.h>
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -158,52 +159,39 @@ QString GameGamebryo::getLauncherName() const
 
 WORD GameGamebryo::getArch(QString const& program) const
 {
-  WORD arch = 0;
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(this->gameDirectory().absoluteFilePath(program))
-          .toStdWString();
-
-  WIN32_FIND_DATAW FindFileData;
-  HANDLE hFind = ::FindFirstFileW(app_name.c_str(), &FindFileData);
-
-  // exit if the binary was not found
-  if (hFind == INVALID_HANDLE_VALUE)
-    return arch;
-
-  HANDLE hFile            = INVALID_HANDLE_VALUE;
-  HANDLE hMapping         = INVALID_HANDLE_VALUE;
-  LPVOID addrHeader       = nullptr;
-  PIMAGE_NT_HEADERS peHdr = nullptr;
-
-  hFile = CreateFileW(app_name.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-                      OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-  if (hFile == INVALID_HANDLE_VALUE)
-    goto cleanup;
-
-  hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY | SEC_IMAGE, 0, 0,
-                                program.toStdWString().c_str());
-  if (hMapping == INVALID_HANDLE_VALUE)
-    goto cleanup;
-
-  addrHeader = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-  if (addrHeader == NULL)
-    goto cleanup;  // couldn't memory map the file
-
-  peHdr = ImageNtHeader(addrHeader);
-  if (peHdr == NULL)
-    goto cleanup;  // couldn't read the header
-
-  arch = peHdr->FileHeader.Machine;
-
-cleanup:  // release all of our handles
-  FindClose(hFind);
-  if (hFile != INVALID_HANDLE_VALUE)
-    CloseHandle(hFile);
-  if (hMapping != INVALID_HANDLE_VALUE)
-    CloseHandle(hMapping);
-  return arch;
+  // MO2 Revamped: the machine field read from the PE headers (the first few
+  // KB), not by mapping the whole exe as an image under a global name
+  QFile file(this->gameDirectory().absoluteFilePath(program));
+  if (!file.open(QIODevice::ReadOnly)) {
+    return 0;
+  }
+  const QByteArray head = file.read(4096);
+  if (head.size() < static_cast<int>(sizeof(IMAGE_DOS_HEADER))) {
+    return 0;
+  }
+  IMAGE_DOS_HEADER dos;
+  std::memcpy(&dos, head.constData(), sizeof(dos));
+  if (dos.e_magic != IMAGE_DOS_SIGNATURE || dos.e_lfanew < 0) {
+    return 0;
+  }
+  const qint64 ntOffset = dos.e_lfanew;
+  QByteArray nt;
+  if (ntOffset + qint64(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER)) <= head.size()) {
+    nt = head.mid(ntOffset, sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER));
+  } else if (file.seek(ntOffset)) {
+    nt = file.read(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER));
+  }
+  if (nt.size() < static_cast<int>(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER))) {
+    return 0;
+  }
+  DWORD signature;
+  std::memcpy(&signature, nt.constData(), sizeof(signature));
+  if (signature != IMAGE_NT_SIGNATURE) {
+    return 0;
+  }
+  IMAGE_FILE_HEADER fileHeader;
+  std::memcpy(&fileHeader, nt.constData() + sizeof(DWORD), sizeof(fileHeader));
+  return fileHeader.Machine;
 }
 
 QFileInfo GameGamebryo::findInGameFolder(const QString& relativePath) const
