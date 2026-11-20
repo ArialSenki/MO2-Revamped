@@ -380,11 +380,11 @@ class Mo2RevampedInfo(mobase.IPluginTool):
                 r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.76",
             ),
             "saves": read(
-                "eldenring_mo2_save_isolation.py",
+                "eldenring_mo2_tools/save_isolation.py",
                 r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"alpha.{n}", "alpha.84",
             ),
             "startup": read(
-                "eldenring_mo2_startup_tool.py",
+                "eldenring_mo2_tools/startup_tool.py",
                 r"VersionInfo\(0, 5, 0, (\d+)\)", lambda n: f"0.5.0.{n}", "0.5.0.64",
             ),
             "mo2": "2.5.2",

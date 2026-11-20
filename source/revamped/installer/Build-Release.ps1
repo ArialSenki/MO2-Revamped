@@ -530,12 +530,16 @@ function Copy-RevampedSources {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
-    $saveIsolationSource = Join-Path $pluginSource 'eldenring_mo2_save_isolation.py'
-    $saveIsolationStage = Join-Path $pluginDestination 'eldenring_mo2_save_isolation.py'
-    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
-    $saveIsolationStageHash = (Get-FileHash -LiteralPath $saveIsolationStage -Algorithm SHA256).Hash
-    if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
-        throw 'The Complete stage does not contain the maintained Save Isolation source.'
+    # the save isolation plugin file and the code it loads in Elden Ring
+    # and Nightreign instances (eldenring_mo2_tools)
+    foreach ($saveIsolationFile in @('eldenring_mo2_save_isolation.py', 'eldenring_mo2_tools\save_isolation.py')) {
+        $saveIsolationSource = Join-Path $pluginSource $saveIsolationFile
+        $saveIsolationStage = Join-Path $pluginDestination $saveIsolationFile
+        $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+        $saveIsolationStageHash = (Get-FileHash -LiteralPath $saveIsolationStage -Algorithm SHA256).Hash
+        if ($saveIsolationSourceHash -ine $saveIsolationStageHash) {
+            throw 'The Complete stage does not contain the maintained Save Isolation source.'
+        }
     }
     # these replace the runtime's baseline copies
     foreach ($overlaid in @('Form43Checker.py', 'installer_wizard\dialog.py')) {
@@ -814,7 +818,7 @@ function Copy-EldenRingPlugins {
     param([string]$SourceRoot, [string]$DestinationRoot)
     $sourcePlugins = Join-Path $SourceRoot 'plugins'
     $targetPlugins = Join-Path $DestinationRoot 'plugins'
-    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'installer_wizard', 'plugin_python')
+    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'eldenring_mo2_tools', 'installer_wizard', 'plugin_python')
     $allowedRootFiles = @(
         'DDSPreview.py', 'diagnose_basic.dll', 'eldenring_mo2_native_profile_tool.py',
         'eldenring_mo2_save_isolation.py', 'eldenring_mo2_startup_tool.py',
@@ -847,16 +851,20 @@ function Copy-EldenRingPlugins {
         New-Item -ItemType Directory -Force -Path ([IO.Path]::GetDirectoryName($destination)) | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
     }
-    $saveIsolationSource = Join-Path $sourcePlugins 'eldenring_mo2_save_isolation.py'
-    $saveIsolationTarget = Join-Path $targetPlugins 'eldenring_mo2_save_isolation.py'
-    $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
-    $saveIsolationTargetHash = (Get-FileHash -LiteralPath $saveIsolationTarget -Algorithm SHA256).Hash
-    if ($saveIsolationSourceHash -ine $saveIsolationTargetHash) {
-        throw 'The Isolated stage does not match Complete for Save Isolation.'
+    foreach ($saveIsolationFile in @('eldenring_mo2_save_isolation.py', 'eldenring_mo2_tools\save_isolation.py')) {
+        $saveIsolationSource = Join-Path $sourcePlugins $saveIsolationFile
+        $saveIsolationTarget = Join-Path $targetPlugins $saveIsolationFile
+        $saveIsolationSourceHash = (Get-FileHash -LiteralPath $saveIsolationSource -Algorithm SHA256).Hash
+        $saveIsolationTargetHash = (Get-FileHash -LiteralPath $saveIsolationTarget -Algorithm SHA256).Hash
+        if ($saveIsolationSourceHash -ine $saveIsolationTargetHash) {
+            throw 'The Isolated stage does not match Complete for Save Isolation.'
+        }
     }
     foreach ($required in @(
         'eldenring_mo2_native_profile_tool.py', 'eldenring_mo2_save_isolation.py',
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
+        'eldenring_mo2_tools\save_isolation.py', 'eldenring_mo2_tools\native_profile_tool.py',
+        'eldenring_mo2_tools\startup_tool.py', 'eldenring_mo2_tools\stub.py',
         'basic_games\games\game_eldenring_mo2.py',
         'data\revamped_fluent.py', 'installer_wizard\dialog.py',
         'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
