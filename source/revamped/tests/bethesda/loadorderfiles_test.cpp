@@ -1,7 +1,7 @@
 // MO2 Revamped: the golden contract for plugins.txt and loadorder.txt (not shipped).
 // From each golden case's order and active states, the framework must write
 // exactly the bytes the current MO2 plugins wrote.
-//   loadorderfiles_test <golden folder>
+//   loadorderfiles_test <golden folder>   (golden/skyrimse: the cases are Skyrim SE's)
 #include "loadorderfiles.h"
 
 #include <cstdio>
