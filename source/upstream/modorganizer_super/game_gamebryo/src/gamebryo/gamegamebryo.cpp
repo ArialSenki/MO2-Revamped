@@ -520,3 +520,46 @@ void GameGamebryo::registerFeature(std::shared_ptr<MOBase::GameFeature> feature)
   // priority does not matter, this is a game plugin so will get lowest priority in MO2
   m_Organizer->gameFeatures()->registerFeature(this, feature, 0, true);
 }
+
+QStringList GameGamebryo::cachedFromFile(const QString& path,
+                                         const std::function<QStringList()>& compute) const
+{
+  const QFileInfo info(path);
+  const bool exists      = info.exists();
+  const qint64 size      = exists ? info.size() : -1;
+  const QDateTime mtime  = exists ? info.lastModified() : QDateTime();
+  const QString key      = path.toCaseFolded();
+
+  {
+    std::scoped_lock lock(m_FileCacheMutex);
+    auto it = m_FileCache.find(key);
+    if (it != m_FileCache.end() && it->second.exists == exists &&
+        it->second.size == size && it->second.modified == mtime) {
+      return it->second.value;
+    }
+  }
+
+  QStringList value = compute();
+
+  std::scoped_lock lock(m_FileCacheMutex);
+  m_FileCache[key] = FileCacheEntry{exists, size, mtime, value};
+  return value;
+}
+
+QStringList GameGamebryo::cachedFileLines(const QString& path) const
+{
+  return cachedFromFile(path, [&path] {
+    QStringList lines;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      return lines;
+    }
+    while (!file.atEnd()) {
+      const QByteArray line = file.readLine().trimmed();
+      if (!line.isEmpty() && line.at(0) != '#') {
+        lines.append(QString::fromUtf8(line));
+      }
+    }
+    return lines;
+  });
+}

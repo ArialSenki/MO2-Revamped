@@ -19,7 +19,12 @@ class UnmanagedMods;
 #include <dbghelp.h>
 #include <ipluginfilemapper.h>
 #include <iplugingame.h>
+#include <QDateTime>
+#include <QStringList>
+#include <functional>
+#include <map>
 #include <memory>
+#include <mutex>
 
 #include "gamebryosavegame.h"
 #include "igamefeatures.h"
@@ -137,6 +142,17 @@ protected:
 protected:
   void registerFeature(std::shared_ptr<MOBase::GameFeature> feature);
 
+  // MO2 Revamped: the trimmed, non-empty, non-comment lines of a small text
+  // file (Skyrim.ccc, Fallout4.ccc), read again only when its size or time
+  // changes. primaryPlugins() runs many times per refresh, and each call used
+  // to open and read the file.
+  QStringList cachedFileLines(const QString& path) const;
+
+  // MO2 Revamped: a value computed from a file (the sTestFile entries of an
+  // INI), kept until the file's size or time changes
+  QStringList cachedFromFile(const QString& path,
+                             const std::function<QStringList()>& compute) const;
+
 protected:
   // to access organizer for game features, avoid having to pass it to all saves since
   // we already pass the game
@@ -146,6 +162,17 @@ protected:
   QString m_MyGamesPath;
   QString m_GameVariant;
   MOBase::IOrganizer* m_Organizer;
+
+private:
+  struct FileCacheEntry
+  {
+    bool exists = false;
+    qint64 size = -1;
+    QDateTime modified;
+    QStringList value;
+  };
+  mutable std::mutex m_FileCacheMutex;
+  mutable std::map<QString, FileCacheEntry> m_FileCache;
 };
 
 #endif  // GAMEGAMEBRYO_H

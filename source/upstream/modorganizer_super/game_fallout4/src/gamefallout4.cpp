@@ -20,6 +20,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QList>
+#include <QSet>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -174,14 +175,19 @@ QString GameFallout4::steamAPPId() const
 
 QStringList GameFallout4::testFilePlugins() const
 {
-  QStringList plugins;
-  if (m_Organizer != nullptr && m_Organizer->profile() != nullptr) {
-    QString customIni(
-        m_Organizer->profile()->absoluteIniFilePath("Fallout4Custom.ini"));
+  if (m_Organizer == nullptr || m_Organizer->profile() == nullptr) {
+    return {};
+  }
+  // MO2 Revamped: the ten sTestFile entries were read from the INI (ten opens
+  // of the file) twice per primaryPlugins() call; now once per change of it
+  const QString customIni =
+      m_Organizer->profile()->absoluteIniFilePath("Fallout4Custom.ini");
+  return cachedFromFile(customIni, [&customIni] {
+    QStringList plugins;
     if (QFile(customIni).exists()) {
       for (int i = 1; i <= 10; ++i) {
         QString setting("sTestFile");
-        setting += std::to_string(i);
+        setting += QString::number(i);
         WCHAR value[MAX_PATH];
         DWORD length = ::GetPrivateProfileStringW(
             L"General", setting.toStdWString().c_str(), L"", value, MAX_PATH,
@@ -193,8 +199,8 @@ QStringList GameFallout4::testFilePlugins() const
         }
       }
     }
-  }
-  return plugins;
+    return plugins;
+  });
 }
 
 QStringList GameFallout4::primaryPlugins() const
@@ -247,28 +253,16 @@ QStringList GameFallout4::DLCPlugins() const
 
 QStringList GameFallout4::CCPlugins() const
 {
-  QStringList plugins = {};
-  QFile file(gameDirectory().absoluteFilePath("Fallout4.ccc"));
-  if (file.open(QIODevice::ReadOnly)) {
-    ON_BLOCK_EXIT([&file]() {
-      file.close();
-    });
-
-    if (file.size() == 0) {
-      return plugins;
-    }
-    while (!file.atEnd()) {
-      QByteArray line = file.readLine().trimmed();
-      QString modName;
-      if ((line.size() > 0) && (line.at(0) != '#')) {
-        modName = QString::fromUtf8(line.constData()).toLower();
-      }
-
-      if (modName.size() > 0) {
-        if (!plugins.contains(modName, Qt::CaseInsensitive)) {
-          plugins.append(modName);
-        }
-      }
+  // MO2 Revamped: Fallout4.ccc read again only when it changes
+  // (primaryPlugins() runs many times per refresh); lower case, as before
+  QStringList plugins;
+  QSet<QString> pluginsLookup;
+  for (const QString& line :
+       cachedFileLines(gameDirectory().absoluteFilePath("Fallout4.ccc"))) {
+    const QString modName = line.toLower();
+    if (!pluginsLookup.contains(modName)) {
+      pluginsLookup.insert(modName);
+      plugins.append(modName);
     }
   }
   return plugins;

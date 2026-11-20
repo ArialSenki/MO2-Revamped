@@ -21,6 +21,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QList>
+#include <QSet>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -292,18 +293,17 @@ QStringList GameSkyrimSE::DLCPlugins() const
 
 QStringList GameSkyrimSE::CCPlugins() const
 {
+  // MO2 Revamped: Skyrim.ccc read again only when it changes (primaryPlugins()
+  // runs many times per refresh)
   QStringList plugins;
-  std::set<QString> pluginsLookup;
-
-  const QString path = gameDirectory().filePath("Skyrim.ccc");
-
-  MOBase::forEachLineInFile(path, [&](QString s) {
+  QSet<QString> pluginsLookup;
+  for (const QString& s : cachedFileLines(gameDirectory().filePath("Skyrim.ccc"))) {
     const auto lc = s.toLower();
     if (!pluginsLookup.contains(lc)) {
       pluginsLookup.insert(lc);
-      plugins.append(std::move(s));
+      plugins.append(s);
     }
-  });
+  }
 
   return plugins;
 }
