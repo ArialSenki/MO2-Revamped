@@ -28,6 +28,7 @@ from .util import (
 )
 
 LISTED = 15
+CRASH_CHECKS_KEPT = 10
 
 
 def _listing(lines: list[str]) -> str:
@@ -40,6 +41,8 @@ def _listing(lines: list[str]) -> str:
 class Launch:
     def __init__(self, game) -> None:
         self._game = game
+        self.unread: list[Path] = []
+        self._background: Worker | None = None
         self.cache = PakCache(game.plugin_data_path / "pak_cache.json")
         self.last_plan: Plan | None = None
         self.written_uuids: list[str] = []
@@ -298,26 +301,40 @@ class Launch:
             pass
 
     def clear_crash_check(self) -> None:
-        """The game's ModCrashSanityCheck folder: when it's there at start, the
-        game blames the last crash on the mods and turns them off (Patch 8).
-        BG3 Mod Manager and the Script Extender clear it the same way."""
+        """The game's ModCrashSanityCheck folder: when it holds something at
+        start, the game blames the last crash on the mods and turns them all
+        off (Patch 8). BG3 Mod Manager and the Script Extender clear it too.
+        Here what it holds is moved, not deleted, to the plugin's
+        crash-checks folder (the last CRASH_CHECKS_KEPT), so a crash can
+        still be looked into."""
         game = self._game
         if not game.setting("clear_mod_crash_check"):
             return
-        for folder in (
-            game.overwrite_path / "ModCrashSanityCheck",
-            Path(game.documentsDirectory().absolutePath()) / "ModCrashSanityCheck",
+        kept = game.plugin_data_path / "crash-checks"
+        for where, folder in (
+            ("overwrite", game.overwrite_path / "ModCrashSanityCheck"),
+            ("documents", Path(game.documentsDirectory().absolutePath()) / "ModCrashSanityCheck"),
         ):
-            if folder.is_dir():
-                try:
-                    for child in list(folder.iterdir()):
-                        if child.is_dir():
-                            shutil.rmtree(child, ignore_errors=True)
-                        else:
-                            child.unlink(missing_ok=True)
-                    log_debug(f"cleared {folder}")
-                except OSError as e:
-                    log_warning(f"couldn't clear {folder}: {e}")
+            try:
+                children = list(folder.iterdir()) if folder.is_dir() else []
+            except OSError:
+                children = []
+            if not children:
+                continue
+            target = _free_name(kept / f"{time.strftime('%Y%m%d-%H%M%S')}-{where}")
+            try:
+                target.mkdir(parents=True, exist_ok=True)
+                for child in children:
+                    shutil.move(str(child), str(target / child.name))
+                log_info(f"moved the game's crash check ({folder}) to {target}")
+            except OSError as e:
+                log_warning(f"couldn't move {folder} aside: {e}")
+        try:
+            old = sorted(p for p in kept.iterdir() if p.is_dir())
+        except OSError:
+            old = []
+        for stale in old[:-CRASH_CHECKS_KEPT]:
+            shutil.rmtree(stale, ignore_errors=True)
 
     # ---------------------------------------------------------- after a run
 
@@ -377,13 +394,20 @@ class Launch:
         moved: dict[str, str] = {}
         try:
             log_dir.mkdir(parents=True, exist_ok=True)
-            found = list(overwrite.rglob("*.log")) + list(overwrite.rglob("*log.txt"))
+            # *.log and log.txt only (changelog.txt or catalog.txt are a
+            # mod's files, not the game's logs)
+            found = [
+                p
+                for p in overwrite.rglob("*")
+                if p.is_file() and (p.suffix.casefold() == ".log" or p.name.casefold() == "log.txt")
+            ]
         except OSError:
             return
         for path in found:
-            dest = log_dir / path.name
-            if path.name == "log.txt":
-                dest = log_dir / f"{path.parent.name}-{path.name}"
+            name = path.name
+            if name.casefold() == "log.txt":
+                name = f"{path.parent.name}-{name}"
+            dest = _free_name(log_dir / name)
             try:
                 path.replace(dest)
                 moved[str(path)] = str(dest)
@@ -406,11 +430,28 @@ class Launch:
 
     # ---------------------------------------------------- the problem list
 
+    def read_in_background(self) -> bool:
+        """Starts reading the paks quick_plan didn't know, in a worker
+        thread. Returns whether a read is running (the caller checks again
+        later and refreshes the problem list when it's done)."""
+        if self._background is not None and self._background.is_alive():
+            return True
+        self._background = None
+        if not self.unread:
+            return False
+        paks, self.unread = list(self.unread), []
+        self._background = Worker(lambda: _read_paks(self.cache, paks))
+        self._background.start()
+        return True
+
     def quick_plan(self) -> Plan | None:
-        """The load order as it would be now, for MO2's problem list: paks
-        read without Divine, no window. None if it can't be worked out."""
+        """The load order as it would be now, for MO2's problem list, from
+        what the cache knows: no pak is read on the interface's thread (a big
+        list with a cold cache froze MO2). The paks it doesn't know yet are
+        in unread, for read_in_background. None if it can't be worked out."""
         try:
-            entries = loadorder.read_mods(self._active(), self.cache, None)
+            entries = loadorder.read_mods(self._active(), self.cache, None, cached_only=True)
+            self.unread = [p for e in entries for p in e.unread]
             plan = self.plan(entries)
         except Exception as e:  # noqa: BLE001 - never break MO2's problem list
             log_warning(f"Baldur's Gate 3 load order check failed: {e}")
@@ -418,6 +459,25 @@ class Launch:
         finally:
             self.cache.save()
         return plan
+
+
+def _read_paks(cache: PakCache, paks: list[Path]) -> None:
+    for pak in paks:
+        try:
+            cache.info(pak, None)
+        except Exception:  # noqa: BLE001 - read again when the game starts
+            pass
+    cache.save()
+
+
+def _free_name(path: Path) -> Path:
+    """path, or path with -1, -2... before its suffix if it's taken: a file
+    never replaces another."""
+    candidate, n = path, 0
+    while candidate.exists():
+        n += 1
+        candidate = path.with_name(f"{path.stem}-{n}{path.suffix}")
+    return candidate
 
 
 def check_dotnet_before_run(game, exec_path: str) -> bool:

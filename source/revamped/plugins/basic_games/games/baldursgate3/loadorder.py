@@ -65,6 +65,7 @@ class ModEntry:
         self.failed: list[tuple[str, str]] = []  # (pak, why)
         self.needs_lslib: list[str] = []
         self.workspaces: list[Path] = []
+        self.unread: list[Path] = []  # not in the cache yet (cached_only)
 
 
 def is_workspace(folder: Path) -> bool:
@@ -91,6 +92,7 @@ def read_mods(
     autobuild: bool = False,
     canceled: Callable[[], bool] = lambda: False,
     progress: Callable[[int], None] = lambda done: None,
+    cached_only: bool = False,
 ) -> list[ModEntry]:
     """Reads the active mods' paks (cached ones cost a stat each). Raises
     Canceled between paks if canceled() says so; the cache keeps what was
@@ -106,8 +108,13 @@ def read_mods(
                 raise Canceled()
             if is_part(pak):
                 continue
+            if cached_only:
+                known = cache.get(pak) or cache.stale(pak)
+                if known is None:
+                    entry.unread.append(pak)
+                    continue
             try:
-                info = cache.info(pak, divine)
+                info = known if cached_only else cache.info(pak, divine)
             except NeedsLSLib:
                 entry.needs_lslib.append(pak.name)
                 info = cache.stale(pak)
