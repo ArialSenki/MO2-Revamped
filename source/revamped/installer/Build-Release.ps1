@@ -965,6 +965,8 @@ function Copy-CompiledPythonPlugins {
     param([string]$SourceRoot, [string]$DestinationRoot)
     foreach ($file in Get-ChildItem -LiteralPath (Join-Path $DestinationRoot 'plugins') -File -Recurse -Filter '*.py') {
         $relative = $file.FullName.Substring($DestinationRoot.Length).TrimStart('\')
+        # the single-file plugins have none (see compile_python_plugins.py)
+        if ($file.DirectoryName -ieq (Join-Path $DestinationRoot 'plugins')) { continue }
         $cache = Join-Path (Split-Path $relative) ('__pycache__\' + $file.BaseName + '.cpython-312.opt-2.pyc')
         $compiled = Join-Path $SourceRoot $cache
         if (-not (Test-Path -LiteralPath $compiled -PathType Leaf)) { throw "The Complete stage has no compiled $relative." }

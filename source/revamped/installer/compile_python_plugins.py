@@ -35,6 +35,10 @@ def main() -> int:
     compiled, failed = 0, []
     for root, dirs, files in os.walk(plugins):
         dirs[:] = sorted(d for d in dirs if d != "__pycache__")
+        # plugin_python evaluates the single-file plugins (plugins/*.py) from
+        # their source every time; only what is imported reads a .pyc
+        if os.path.normcase(root) == os.path.normcase(plugins):
+            continue
         for name in sorted(files):
             if not name.endswith(".py"):
                 continue
