@@ -27,7 +27,7 @@ def setup_mobase() -> None:
     sys.path.append(str(RUNTIME / "plugins/basic_games/lib"))
 
 
-def stage_plugins() -> Path:
+def stage_plugins(keep: tuple[str, ...] = ("game_cyberpunk2077.py",)) -> Path:
     """basic_games as the installer stages it: MO2's plugin, then MO2
     Revamped's files over it. Returns the folder to put on sys.path."""
     stage = Path(tempfile.mkdtemp(prefix="cp77-plugins-"))
@@ -46,7 +46,7 @@ def stage_plugins() -> Path:
     # the games the tests don't need, so the package imports fast
     games = stage / "basic_games/games"
     for file in games.glob("game_*.py"):
-        if file.name != "game_cyberpunk2077.py":
+        if file.name not in keep:
             file.unlink()
     return stage
 

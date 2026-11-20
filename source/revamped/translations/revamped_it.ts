@@ -21283,4 +21283,43 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
       <translation>L&apos;ordine di caricamento che riceverà il gioco, con i problemi di ogni mod: dipendenze mancanti o caricate tardi, Script Extender, conflitti.</translation>
     </message>
   </context>
+  <context>
+    <name>Witcher3Game</name>
+    <message>
+      <source>The Witcher 3: Wild Hunt support for MO2 Revamped: mods, DLC folders, settings menus and DLLs from one mod, script conflicts for Script Merger, the next-gen menu lists and saves. Based on the work of Holt59.</source>
+      <translation>Supporto a The Witcher 3: Wild Hunt per MO2 Revamped: mod, cartelle DLC, menu delle impostazioni e DLL da una stessa mod, conflitti di script per Script Merger, gli elenchi dei menu della versione next-gen e i salvataggi. Basato sul lavoro di Holt59.</translation>
+    </message>
+    <message>
+      <source>Map each mod&apos;s root folder to the game folder, where the game looks for DLC folders, settings menus and DLLs (not used when Root Builder does it)</source>
+      <translation>Fa comparire la cartella root di ogni mod nella cartella del gioco, dove il gioco cerca le cartelle DLC, i menu delle impostazioni e le DLL (non usato se lo fa Root Builder)</translation>
+    </message>
+    <message>
+      <source>The Witcher 3 Mod Check</source>
+      <translation>Controllo delle mod di The Witcher 3</translation>
+    </message>
+    <message>
+      <source>Warns about scripts two Witcher 3 mods change (Script Merger can combine them) and about menus the next-gen game won&apos;t load.</source>
+      <translation>Avvisa degli script che due mod di Witcher 3 modificano (Script Merger può unirli) e dei menu che la versione next-gen non caricherà.</translation>
+    </message>
+    <message>
+      <source>Menus the next-gen game won&apos;t load</source>
+      <translation>Menu che la versione next-gen non caricherà</translation>
+    </message>
+    <message>
+      <source>Mods change the same scripts</source>
+      <translation>Più mod modificano gli stessi script</translation>
+    </message>
+    <message>
+      <source>The next-gen version of the game loads a mod&apos;s settings menu only when bin/config/r4game/user_config_matrix/pc/dx11filelist.txt or dx12filelist.txt lists it, and these menus aren&apos;t listed:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Add a line “name.xml;” for each to both files (in a mod of their own, so the game&apos;s files stay as they are), or install the mods&apos; versions made for the next-gen game.</source>
+      <translation>La versione next-gen del gioco carica il menu delle impostazioni di una mod solo se bin/config/r4game/user_config_matrix/pc/dx11filelist.txt o dx12filelist.txt lo elenca, e questi menu non ci sono:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Aggiungi una riga «nome.xml;» per ciascuno in entrambi i file (in una mod a parte, così i file del gioco restano come sono) oppure installa le versioni delle mod fatte per la next-gen.</translation>
+    </message>
+    <message>
+      <source>These scripts are changed by more than one mod. The game uses only one copy of each, so the other mod&apos;s changes are lost or the game stops with a script error:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Run Script Merger (WitcherScriptMerger) from MO2 to combine them into mod0000_MergedFiles, and keep its output as a mod. Run it again after adding, removing or updating these mods.</source>
+      <translation>Questi script sono modificati da più di una mod. Il gioco usa una sola copia di ciascuno, quindi le modifiche dell&apos;altra mod si perdono o il gioco si ferma con un errore di script:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Avvia Script Merger (WitcherScriptMerger) da MO2 per unirli in mod0000_MergedFiles e tieni il risultato come mod. Avvialo di nuovo dopo aver aggiunto, rimosso o aggiornato queste mod.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• e altri {0}</translation>
+    </message>
+  </context>
 </TS>

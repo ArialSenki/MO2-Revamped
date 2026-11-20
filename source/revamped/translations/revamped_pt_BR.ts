@@ -21037,4 +21037,43 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
       <translation>A ordem de carregamento que o jogo vai receber, com os problemas de cada mod: dependências ausentes ou que carregam tarde, o Script Extender e conflitos.</translation>
     </message>
   </context>
+  <context>
+    <name>Witcher3Game</name>
+    <message>
+      <source>The Witcher 3: Wild Hunt support for MO2 Revamped: mods, DLC folders, settings menus and DLLs from one mod, script conflicts for Script Merger, the next-gen menu lists and saves. Based on the work of Holt59.</source>
+      <translation>Suporte a The Witcher 3: Wild Hunt no MO2 Revamped: mods, pastas DLC, menus de configuração e DLLs a partir de um mesmo mod, conflitos de scripts para o Script Merger, as listas de menus da versão next-gen e os saves. Baseado no trabalho de Holt59.</translation>
+    </message>
+    <message>
+      <source>Map each mod&apos;s root folder to the game folder, where the game looks for DLC folders, settings menus and DLLs (not used when Root Builder does it)</source>
+      <translation>Faz a pasta root de cada mod aparecer na pasta do jogo, onde o jogo procura as pastas DLC, os menus de configuração e as DLLs (não usado quando o Root Builder faz isso)</translation>
+    </message>
+    <message>
+      <source>The Witcher 3 Mod Check</source>
+      <translation>Verificação de mods do The Witcher 3</translation>
+    </message>
+    <message>
+      <source>Warns about scripts two Witcher 3 mods change (Script Merger can combine them) and about menus the next-gen game won&apos;t load.</source>
+      <translation>Avisa sobre scripts que dois mods do Witcher 3 alteram (o Script Merger pode combiná-los) e sobre menus que a versão next-gen não vai carregar.</translation>
+    </message>
+    <message>
+      <source>Menus the next-gen game won&apos;t load</source>
+      <translation>Menus que a versão next-gen não vai carregar</translation>
+    </message>
+    <message>
+      <source>Mods change the same scripts</source>
+      <translation>Mods alteram os mesmos scripts</translation>
+    </message>
+    <message>
+      <source>The next-gen version of the game loads a mod&apos;s settings menu only when bin/config/r4game/user_config_matrix/pc/dx11filelist.txt or dx12filelist.txt lists it, and these menus aren&apos;t listed:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Add a line “name.xml;” for each to both files (in a mod of their own, so the game&apos;s files stay as they are), or install the mods&apos; versions made for the next-gen game.</source>
+      <translation>A versão next-gen do jogo só carrega o menu de configurações de um mod quando bin/config/r4game/user_config_matrix/pc/dx11filelist.txt ou dx12filelist.txt o lista, e estes menus não estão listados:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Adicione uma linha “nome.xml;” para cada um nos dois arquivos (em um mod separado, para que os arquivos do jogo fiquem como estão) ou instale as versões dos mods feitas para a next-gen.</translation>
+    </message>
+    <message>
+      <source>These scripts are changed by more than one mod. The game uses only one copy of each, so the other mod&apos;s changes are lost or the game stops with a script error:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Run Script Merger (WitcherScriptMerger) from MO2 to combine them into mod0000_MergedFiles, and keep its output as a mod. Run it again after adding, removing or updating these mods.</source>
+      <translation>Estes scripts são alterados por mais de um mod. O jogo usa só uma cópia de cada, então as mudanças do outro mod se perdem ou o jogo para com um erro de script:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Execute o Script Merger (WitcherScriptMerger) pelo MO2 para combiná-los em mod0000_MergedFiles e mantenha o resultado como um mod. Execute de novo depois de adicionar, remover ou atualizar esses mods.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• e mais {0}</translation>
+    </message>
+  </context>
 </TS>

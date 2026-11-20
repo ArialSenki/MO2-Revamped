@@ -2786,8 +2786,15 @@ static bool rootBuilderEnabled(const PluginContainer& plugins)
 // (Baldur's Gate 3, Cyberpunk 2077) or the game's one data folder (Data in the
 // Bethesda games, Data Files in Morrowind). Where it holds one folder per mod
 // (Stardew Valley's Mods, Bannerlord's Modules, ...), root/ is mod content.
-static bool modsUseRootFolder(const IPluginGame* game)
+// A game plugin can also ask for it with its setting root_folder_to_game_folder
+// (The Witcher 3: mods go to Mods, their DLC and menu files to the game folder).
+static bool modsUseRootFolder(const IPluginGame* game, const Settings& settings)
 {
+  if (settings.plugins()
+          .setting(game->name(), QStringLiteral("root_folder_to_game_folder"))
+          .toBool()) {
+    return true;
+  }
   const QString relative = QDir::cleanPath(
       game->gameDirectory().relativeFilePath(game->dataDirectory().absolutePath()));
   static const QStringList dataFolders = {QStringLiteral("."), QStringLiteral("Data"),
@@ -2814,7 +2821,7 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
 {
   const IPluginGame* game = managedGame();
   if (game == nullptr || m_PluginContainer == nullptr ||
-      rootBuilderEnabled(*m_PluginContainer) || !modsUseRootFolder(game)) {
+      rootBuilderEnabled(*m_PluginContainer) || !modsUseRootFolder(game, m_Settings)) {
     return {};
   }
 
@@ -3135,7 +3142,7 @@ std::vector<Mapping> OrganizerCore::fileMapping(const QString& profileName,
   // MO2 Revamped: a mod's Root/ folder (Root Builder's layout, which Wabbajack
   // lists use) goes to the game's own folder, not the data folder; Root
   // Builder, when it's there and on, deploys it itself
-  const bool mapRoot = !rootBuilderEnabled(*m_PluginContainer) && modsUseRootFolder(game);
+  const bool mapRoot = !rootBuilderEnabled(*m_PluginContainer) && modsUseRootFolder(game, m_Settings);
   const QString gameRoot =
       QDir::toNativeSeparators(game->gameDirectory().absolutePath());
 

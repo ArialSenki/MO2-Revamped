@@ -21225,4 +21225,43 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
       <translation>L&apos;ordre de chargement que recevra le jeu, avec les problèmes de chaque mod : dépendances manquantes ou chargées trop tard, Script Extender, conflits.</translation>
     </message>
   </context>
+  <context>
+    <name>Witcher3Game</name>
+    <message>
+      <source>The Witcher 3: Wild Hunt support for MO2 Revamped: mods, DLC folders, settings menus and DLLs from one mod, script conflicts for Script Merger, the next-gen menu lists and saves. Based on the work of Holt59.</source>
+      <translation>Prise en charge de The Witcher 3: Wild Hunt pour MO2 Revamped : mods, dossiers DLC, menus de réglages et DLL depuis un même mod, conflits de scripts pour Script Merger, listes de menus de la version next-gen et sauvegardes. Basé sur le travail de Holt59.</translation>
+    </message>
+    <message>
+      <source>Map each mod&apos;s root folder to the game folder, where the game looks for DLC folders, settings menus and DLLs (not used when Root Builder does it)</source>
+      <translation>Fait apparaître le dossier root de chaque mod dans le dossier du jeu, où le jeu cherche les dossiers DLC, les menus de réglages et les DLL (inutilisé si Root Builder s&apos;en charge)</translation>
+    </message>
+    <message>
+      <source>The Witcher 3 Mod Check</source>
+      <translation>Vérification des mods de The Witcher 3</translation>
+    </message>
+    <message>
+      <source>Warns about scripts two Witcher 3 mods change (Script Merger can combine them) and about menus the next-gen game won&apos;t load.</source>
+      <translation>Avertit des scripts que deux mods de Witcher 3 modifient (Script Merger peut les combiner) et des menus que la version next-gen ne chargera pas.</translation>
+    </message>
+    <message>
+      <source>Menus the next-gen game won&apos;t load</source>
+      <translation>Menus que la version next-gen ne chargera pas</translation>
+    </message>
+    <message>
+      <source>Mods change the same scripts</source>
+      <translation>Des mods modifient les mêmes scripts</translation>
+    </message>
+    <message>
+      <source>The next-gen version of the game loads a mod&apos;s settings menu only when bin/config/r4game/user_config_matrix/pc/dx11filelist.txt or dx12filelist.txt lists it, and these menus aren&apos;t listed:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Add a line “name.xml;” for each to both files (in a mod of their own, so the game&apos;s files stay as they are), or install the mods&apos; versions made for the next-gen game.</source>
+      <translation>La version next-gen du jeu ne charge le menu de réglages d&apos;un mod que si bin/config/r4game/user_config_matrix/pc/dx11filelist.txt ou dx12filelist.txt le liste, et ces menus n&apos;y sont pas :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Ajoutez une ligne « nom.xml; » pour chacun dans les deux fichiers (dans un mod à part, pour que les fichiers du jeu restent tels quels), ou installez les versions next-gen des mods.</translation>
+    </message>
+    <message>
+      <source>These scripts are changed by more than one mod. The game uses only one copy of each, so the other mod&apos;s changes are lost or the game stops with a script error:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Run Script Merger (WitcherScriptMerger) from MO2 to combine them into mod0000_MergedFiles, and keep its output as a mod. Run it again after adding, removing or updating these mods.</source>
+      <translation>Ces scripts sont modifiés par plus d&apos;un mod. Le jeu n&apos;utilise qu&apos;une copie de chacun, donc les changements de l&apos;autre mod sont perdus ou le jeu s&apos;arrête sur une erreur de script :&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Lancez Script Merger (WitcherScriptMerger) depuis MO2 pour les combiner dans mod0000_MergedFiles, et gardez le résultat comme un mod. Relancez-le après avoir ajouté, retiré ou mis à jour ces mods.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• et {0} de plus</translation>
+    </message>
+  </context>
 </TS>
