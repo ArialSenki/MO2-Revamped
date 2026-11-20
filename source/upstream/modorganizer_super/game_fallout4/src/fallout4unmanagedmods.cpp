@@ -16,8 +16,7 @@ QStringList Fallout4UnmangedMods::mods(bool onlyOfficial) const
   for (QString plugin : otherPlugins) {
     pluginList.removeAll(plugin);
   }
-  QDir dataDir(game()->dataDirectory());
-  for (const QString& fileName : dataDir.entryList({"*.esp", "*.esl", "*.esm"})) {
+  for (const QString& fileName : dataPlugins()) {
     if (!pluginList.contains(fileName, Qt::CaseInsensitive)) {
       // MO2 Revamped: "only official" is the DLC and Creation Club ones
       // (pluginList never has them here, so nothing was listed)
@@ -35,7 +34,7 @@ QStringList Fallout4UnmangedMods::secondaryFiles(const QString& modName) const
   // file extension in FO4 is .ba2 instead of bsa
   QStringList archives;
   QDir dataDir = game()->dataDirectory();
-  for (const QString& archiveName : dataDir.entryList({modName + "*.ba2"})) {
+  for (const QString& archiveName : dataFilesMatching(modName, ".ba2")) {
     archives.append(dataDir.absoluteFilePath(archiveName));
   }
   return archives;
