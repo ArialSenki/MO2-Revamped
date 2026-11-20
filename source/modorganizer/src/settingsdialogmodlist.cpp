@@ -41,6 +41,20 @@ ModListSettingsTab::ModListSettingsTab(Settings& s, SettingsDialog& d)
       QStringLiteral("collapsibleSeparatorsSectionIcon"), 26,
       QStringLiteral("collapsibleSeparatorsSectionTitle"),
       QStringLiteral("S"));
+  CircularUi::addGroupHeading(
+      ui->modListCategoriesGroup, ":/MO/gui/mainwindow/filter.svg",
+      QStringLiteral("modListDisplayIcon"), 26,
+      QStringLiteral("modListDisplaySectionTitle"), QStringLiteral("C"));
+
+  // MO2 Revamped: the categories, with the list they sort (this button was on
+  // the General page)
+  ui->categoriesBtn->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+  QObject::connect(ui->categoriesBtn, &QPushButton::clicked, ui->categoriesBtn, [this] {
+    CategoriesDialog catDialog(&dialog());
+    if (catDialog.exec() == QDialog::Accepted) {
+      catDialog.commitChanges();
+    }
+  });
 
   // connect before setting to trigger
   QObject::connect(ui->collapsibleSeparatorsAscBox, &QCheckBox::toggled, [=] {

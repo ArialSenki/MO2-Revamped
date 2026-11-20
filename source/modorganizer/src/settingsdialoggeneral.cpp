@@ -1,5 +1,4 @@
 #include "settingsdialoggeneral.h"
-#include "categoriesdialog.h"
 #include "fluenticons.h"
 #include "circularuihelpers.h"
 #include "colortable.h"
@@ -58,34 +57,30 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       ui->groupBox_9, ":/MO/gui/mainwindow/settings.svg",
       QStringLiteral("generalMiscIcon"), 26,
       QStringLiteral("generalSectionTitle"), QStringLiteral("M"));
-  CircularUi::addGroupHeading(
-      ui->toolbarViewGroup, ":/MO/gui/mainwindow/tools.svg",
-      QStringLiteral("generalToolbarIcon"), 26,
-      QStringLiteral("generalSectionTitle"), QStringLiteral("T"));
-
-  // Keep the two General-page actions in a card that matches the settings
-  // sections above, while retaining the same buttons and click behavior.
-  ui->widget_10->setObjectName(QStringLiteral("generalActionsCard"));
-  ui->widget_10->setTitle(QObject::tr("Categories and dialog choices"));
-  if (QLayout* oldLayout = ui->widget_10->layout()) {
-    while (QLayoutItem* item = oldLayout->takeAt(0)) {
-      delete item;
+  // MO2 Revamped: Updates right after the language, then the lists, the
+  // profile defaults and the dialogs card (the toolbar card is on Appearance,
+  // the categories button on Mod list)
+  if (auto* page = qobject_cast<QBoxLayout*>(ui->groupBox_6->parentWidget()->layout())) {
+    const int languageAt = page->indexOf(ui->groupBox_61);
+    if (languageAt >= 0 && page->indexOf(ui->groupBox_6) > languageAt + 1) {
+      page->removeWidget(ui->groupBox_6);
+      page->insertWidget(languageAt + 1, ui->groupBox_6);
     }
-    delete oldLayout;
   }
-  auto* actionsLayout = new QVBoxLayout(ui->widget_10);
-  auto* actionButtonsLayout = new QHBoxLayout;
-  actionButtonsLayout->setContentsMargins(0, 0, 0, 0);
-  actionButtonsLayout->setSpacing(8);
-  actionButtonsLayout->addWidget(ui->resetDialogsButton);
-  actionButtonsLayout->addWidget(ui->categoriesBtn);
-  actionButtonsLayout->addStretch(1);
-  actionsLayout->addLayout(actionButtonsLayout);
-  // a card as the ones above it: same heading, margins and background
-  CircularUi::addGroupHeading(
-      ui->widget_10, ":/MO/gui/mainwindow/tools.svg",
-      QStringLiteral("generalActionsIcon"), 26,
-      QStringLiteral("generalSectionTitle"), QStringLiteral("A"));
+  // Reset dialog choices as wide as its text, on the left, the last thing in
+  // the card
+  ui->resetDialogsButton->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
+  if (auto* box = qobject_cast<QBoxLayout*>(ui->groupBox_9->layout())) {
+    const int at = box->indexOf(ui->resetDialogsButton);
+    if (at >= 0) {
+      box->removeWidget(ui->resetDialogsButton);
+      auto* buttons = new QHBoxLayout;
+      buttons->setContentsMargins(0, 0, 0, 0);
+      buttons->addWidget(ui->resetDialogsButton);
+      buttons->addStretch(1);
+      box->insertLayout(at, buttons);
+    }
+  }
 
   // language
   ui->languageBox->setFixedWidth(260);
@@ -93,7 +88,7 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
   addLanguages();
   selectLanguage();
 
-  // MO2 Revamped: the size of the whole interface, beside the language
+  // MO2 Revamped: the language as a row of its own
   if (auto* grid = qobject_cast<QGridLayout*>(ui->groupBox_61->layout())) {
     // the language as a row like the others, its box on the right; alone under
     // the heading it sat further left than every title below it
@@ -122,57 +117,6 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
     languageLayout->addWidget(ui->languageBox);
     grid->addWidget(languageRow, languageAt, 0, 1, qMax(1, grid->columnCount()));
 
-    auto* label = new QLabel(QObject::tr("Interface size"), ui->groupBox_61);
-    m_scaleBox  = new QComboBox(ui->groupBox_61);
-    m_scaleBox->setObjectName(QStringLiteral("interfaceScaleBox"));
-    m_scaleBox->setFixedWidth(260);
-    for (int percent : GlobalSettings::interfaceScales()) {
-      m_scaleBox->addItem(percent == 100 ? QObject::tr("%1% (normal)").arg(percent)
-                                         : QObject::tr("%1%").arg(percent),
-                          percent);
-    }
-    m_scaleBox->setCurrentIndex(m_scaleBox->findData(GlobalSettings::interfaceScale()));
-    const QString tip = QObject::tr(
-        "Makes all of Mod Organizer's text, boxes and windows smaller or larger "
-        "together. It applies when Mod Organizer starts again.");
-    m_scaleBox->setToolTip(tip);
-    label->setToolTip(tip);
-    label->setBuddy(m_scaleBox);
-    // a row of its own below the language, as "Versions to be notified of": the
-    // card's heading already moved the grid's first rows
-    auto* row       = new QFrame(ui->groupBox_61);
-    // styled as the other settings rows ("Versions to be notified of")
-    row->setObjectName(QStringLiteral("fluentSettingRow"));
-    auto* rowLayout = new QHBoxLayout(row);
-    // the margins of the other rows, so the title and the box line up with them
-    rowLayout->setContentsMargins(4, 6, 4, 6);
-    rowLayout->setSpacing(12);
-    label->setObjectName(QStringLiteral("fluentSettingTitle"));
-    rowLayout->addWidget(label);
-    rowLayout->addStretch(1);
-    rowLayout->addWidget(m_scaleBox);
-    grid->addWidget(row, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
-
-    // text in grey for OLED screens, where ClearType's colours fringe
-    m_greyText = new QCheckBox(QObject::tr("Smooth text in grey (OLED screens)"),
-                               ui->groupBox_61);
-    m_greyText->setObjectName(QStringLiteral("greyscaleTextBox"));
-    m_greyText->setChecked(GlobalSettings::greyscaleText());
-    m_greyText->setToolTip(QObject::tr(
-        "Draws text without Windows' coloured edges, which show as a coloured halo on "
-        "OLED screens. It applies when Mod Organizer starts again."));
-    grid->addWidget(m_greyText, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
-
-    // the small notices at the bottom of the window, or only their sound
-    m_soundOnly = new QCheckBox(QObject::tr("Notices: sound only, without the card"),
-                                ui->groupBox_61);
-    m_soundOnly->setObjectName(QStringLiteral("noticeSoundOnlyBox"));
-    m_soundOnly->setChecked(GlobalSettings::noticeSoundOnly());
-    m_soundOnly->setToolTip(QObject::tr(
-        "Plays Windows' notification sound instead of showing the small notices at "
-        "the bottom of the window (\"Installation successful\" and so on). They're "
-        "still in MO2's log. Questions and errors still show."));
-    grid->addWidget(m_soundOnly, grid->rowCount(), 0, 1, qMax(1, grid->columnCount()));
   }
 
   // download list
@@ -210,127 +154,20 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       settings().interface().showChangeGameConfirmation());
   ui->doubleClickPreviews->setChecked(
       settings().interface().doubleClicksOpenPreviews());
-  // how smoothly things move, in Miscellaneous where the on/off box was
-  {
-    auto* label    = new QLabel(QObject::tr("Animations"), ui->groupBox_9);
-    m_animationBox = new QComboBox(ui->groupBox_9);
-    m_animationBox->setObjectName(QStringLiteral("animationLevelBox"));
-    m_animationBox->setFixedWidth(260);
-    // the theme pads the list, which Qt leaves out of the list's height: it would
-    // scroll a whole row to show the last level and hide the first
-    m_animationBox->view()->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-    // the rate Monitor runs at: the main window's screen
-    const int monitorHz = FluentMotion::monitorRate();
-    m_animationBox->addItem(QObject::tr("Off"), FluentMotion::levelKey(FluentMotion::Level::Off));
-    m_animationBox->addItem(QObject::tr("Saver (30 Hz)"),
-                            FluentMotion::levelKey(FluentMotion::Level::Saver));
-    m_animationBox->addItem(QObject::tr("Standard (60 Hz)"),
-                            FluentMotion::levelKey(FluentMotion::Level::Standard));
-    m_animationBox->addItem(monitorHz > 0 ? QObject::tr("Monitor (%1 Hz)").arg(monitorHz)
-                                          : QObject::tr("Monitor"),
-                            FluentMotion::levelKey(FluentMotion::Level::Monitor));
-    const int current = m_animationBox->findData(FluentMotion::levelKey(
-        FluentMotion::levelFromKey(settings().interface().animationLevel())));
-    m_animationBox->setCurrentIndex(current >= 0 ? current : 2);
-    const QString tip = QObject::tr(
-        "How smoothly tabs, switches, menus, the log panel and the Run button move. "
-        "Off shows every change at once. Monitor moves them at your screen's refresh "
-        "rate (up to 240 Hz); it uses a little more CPU while something moves, and "
-        "none while nothing does.");
-    m_animationBox->setToolTip(tip);
-    label->setToolTip(tip);
-    label->setBuddy(m_animationBox);
-    label->setObjectName(QStringLiteral("fluentSettingTitle"));
-    auto* row = new QFrame(ui->groupBox_9);
-    // styled as the other settings rows ("Interface size")
-    row->setObjectName(QStringLiteral("fluentSettingRow"));
-    auto* rowLayout = new QHBoxLayout(row);
-    rowLayout->setContentsMargins(4, 6, 4, 6);
-    rowLayout->setSpacing(12);
-    rowLayout->addWidget(label);
-    rowLayout->addStretch(1);
-    rowLayout->addWidget(m_animationBox);
-    ui->groupBox_9->layout()->addWidget(row);
+  // the small notices at the bottom of the window, or only their sound; with
+  // the other window and dialog behaviour
+  m_soundOnly = new QCheckBox(QObject::tr("Notices: sound only, without the card"),
+                              ui->groupBox_9);
+  m_soundOnly->setObjectName(QStringLiteral("noticeSoundOnlyBox"));
+  m_soundOnly->setChecked(GlobalSettings::noticeSoundOnly());
+  m_soundOnly->setToolTip(QObject::tr(
+      "Plays Windows' notification sound instead of showing the small notices at "
+      "the bottom of the window (\"Installation successful\" and so on). They're "
+      "still in MO2's log. Questions and errors still show."));
+  // before the row of Reset dialog choices, the card's last item
+  if (auto* box = qobject_cast<QBoxLayout*>(ui->groupBox_9->layout())) {
+    box->insertWidget(std::max(0, box->count() - 1), m_soundOnly);
   }
-
-  // The legacy View > Toolbars controls now live with the other interface
-  // preferences. Read the live widgets so existing toolbar settings carry over.
-  auto* mainWindow = qobject_cast<QMainWindow*>(d.parentWidget());
-  auto* mainToolbar =
-      mainWindow ? mainWindow->findChild<QToolBar*>(QStringLiteral("toolBar"))
-                 : nullptr;
-  // command bars use the Windows 11 sizes (see MainWindow)
-  ui->toolbarIconSizeCombo->addItem(
-      QObject::tr("Small"),
-      QVariant::fromValue(QSize(16, 16)));
-  ui->toolbarIconSizeCombo->addItem(
-      QObject::tr("Medium"),
-      QVariant::fromValue(QSize(20, 20)));
-  ui->toolbarIconSizeCombo->addItem(
-      QObject::tr("Large"),
-      QVariant::fromValue(QSize(28, 28)));
-  ui->toolbarIconSizeCombo->setMinimumWidth(170);
-  ui->toolbarButtonStyleCombo->addItem(
-      QObject::tr("Icons only"), static_cast<int>(Qt::ToolButtonIconOnly));
-  ui->toolbarButtonStyleCombo->addItem(
-      QObject::tr("Text only"), static_cast<int>(Qt::ToolButtonTextOnly));
-  ui->toolbarButtonStyleCombo->addItem(
-      QObject::tr("Icons and text"),
-      static_cast<int>(Qt::ToolButtonTextBesideIcon));
-  ui->toolbarButtonStyleCombo->setMinimumWidth(190);
-
-  if (mainWindow) {
-    if (mainToolbar) {
-      int sizeIndex = ui->toolbarIconSizeCombo->findData(
-          QVariant::fromValue(mainToolbar->iconSize()));
-      if (sizeIndex < 0) {
-        const QSize currentSize = mainToolbar->iconSize();
-        ui->toolbarIconSizeCombo->addItem(
-            QObject::tr("Current (%1 × %2)")
-                .arg(currentSize.width())
-                .arg(currentSize.height()),
-            QVariant::fromValue(currentSize));
-        sizeIndex = ui->toolbarIconSizeCombo->count() - 1;
-      }
-      ui->toolbarIconSizeCombo->setCurrentIndex(sizeIndex);
-      int styleIndex = ui->toolbarButtonStyleCombo->findData(
-          static_cast<int>(mainToolbar->toolButtonStyle()));
-      if (styleIndex < 0) {
-        ui->toolbarButtonStyleCombo->addItem(
-            QObject::tr("Current custom style"),
-            static_cast<int>(mainToolbar->toolButtonStyle()));
-        styleIndex = ui->toolbarButtonStyleCombo->count() - 1;
-      }
-      ui->toolbarButtonStyleCombo->setCurrentIndex(styleIndex);
-    } else {
-      ui->toolbarIconSizeCombo->setEnabled(false);
-      ui->toolbarButtonStyleCombo->setEnabled(false);
-    }
-
-    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
-            QStringLiteral("statusBar"))) {
-      ui->statusBarVisibleBox->setChecked(statusBar->isVisible());
-    } else {
-      ui->statusBarVisibleBox->setEnabled(false);
-    }
-
-    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
-            QStringLiteral("logDock"))) {
-      ui->logPanelVisibleBox->setChecked(logDock->isVisible());
-    } else {
-      ui->logPanelVisibleBox->setEnabled(false);
-    }
-  } else {
-    ui->toolbarViewGroup->setEnabled(false);
-  }
-  // update() applies only the boxes the user changes
-  for (auto* box : {ui->statusBarVisibleBox, ui->logPanelVisibleBox}) {
-    box->setProperty("mo2InitialChecked", box->isChecked());
-  }
-
-  QObject::connect(ui->categoriesBtn, &QPushButton::clicked, [&] {
-    onEditCategories();
-  });
 
   QObject::connect(ui->resetDialogsButton, &QPushButton::clicked, [&] {
     onResetDialogs();
@@ -355,26 +192,8 @@ void GeneralSettingsTab::update()
     emit settings().languageChanged(newLanguage);
   }
 
-  // interface size: kept for the next start, which is when Qt applies it
-  bool restartNeeded = false;
-  if (m_scaleBox != nullptr) {
-    const int scale = m_scaleBox->currentData().toInt();
-    if (scale != GlobalSettings::interfaceScale()) {
-      GlobalSettings::setInterfaceScale(scale);
-      restartNeeded = true;
-    }
-  }
   if (m_soundOnly != nullptr) {
     GlobalSettings::setNoticeSoundOnly(m_soundOnly->isChecked());
-  }
-  if (m_greyText != nullptr && m_greyText->isChecked() != GlobalSettings::greyscaleText()) {
-    GlobalSettings::setGreyscaleText(m_greyText->isChecked());
-    restartNeeded = true;
-  }
-  if (restartNeeded) {
-    MessageDialog::showMessage(
-        QObject::tr("These changes apply when Mod Organizer starts again."),
-        parentWidget(), true);
   }
 
   // download list
@@ -403,54 +222,6 @@ void GeneralSettingsTab::update()
       ui->changeGameConfirmation->isChecked());
   settings().interface().setDoubleClicksOpenPreviews(
       ui->doubleClickPreviews->isChecked());
-  if (m_animationBox != nullptr) {
-    const QString level = m_animationBox->currentData().toString();
-    settings().interface().setAnimationLevel(level);
-    FluentMotion::setLevel(FluentMotion::levelFromKey(level));
-  }
-
-  if (auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget())) {
-    const QVariant iconSizeData = ui->toolbarIconSizeCombo->currentData();
-    const QVariant buttonStyleData = ui->toolbarButtonStyleCombo->currentData();
-    if (iconSizeData.isValid() && buttonStyleData.isValid()) {
-      const QSize iconSize = iconSizeData.toSize();
-      const auto buttonStyle = static_cast<Qt::ToolButtonStyle>(
-          buttonStyleData.toInt());
-      // through MO2's main window, which also resets the buttons' fixed
-      // sizes and the notification badge; plain QMainWindows take it as is
-      if (!QMetaObject::invokeMethod(mainWindow, "setToolbarSize",
-                                     Q_ARG(QSize, iconSize)) ||
-          !QMetaObject::invokeMethod(mainWindow, "setToolbarButtonStyle",
-                                     Q_ARG(Qt::ToolButtonStyle, buttonStyle))) {
-        for (auto* toolbar : mainWindow->findChildren<QToolBar*>()) {
-          toolbar->setIconSize(iconSize);
-          toolbar->setToolButtonStyle(buttonStyle);
-        }
-      }
-    }
-
-    // only what the user changed here: a log panel tabbed behind another
-    // dock reads as hidden and must not be closed by an unrelated OK
-    auto changed = [](QCheckBox* box) {
-      return box->isChecked() != box->property("mo2InitialChecked").toBool();
-    };
-    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
-            QStringLiteral("statusBar"));
-        statusBar && changed(ui->statusBarVisibleBox)) {
-      statusBar->setVisible(ui->statusBarVisibleBox->isChecked());
-      settings().geometry().saveVisibility(statusBar);
-    }
-    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
-            QStringLiteral("logDock"));
-        logDock && changed(ui->logPanelVisibleBox)) {
-      logDock->setVisible(ui->logPanelVisibleBox->isChecked());
-    }
-
-    // These are the same persisted geometry settings used by MO2's original
-    // View menu, so existing user preferences remain in effect.
-    settings().geometry().saveToolbars(mainWindow);
-    settings().geometry().saveDocks(mainWindow);
-  }
 }
 
 void GeneralSettingsTab::addLanguages()
@@ -540,15 +311,6 @@ void GeneralSettingsTab::resetDialogs()
 {
   settings().widgets().resetQuestionButtons();
   GlobalSettings::resetDialogs();
-}
-
-void GeneralSettingsTab::onEditCategories()
-{
-  CategoriesDialog catDialog(&dialog());
-
-  if (catDialog.exec() == QDialog::Accepted) {
-    catDialog.commitChanges();
-  }
 }
 
 void GeneralSettingsTab::onResetDialogs()

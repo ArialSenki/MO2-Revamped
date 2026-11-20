@@ -1240,7 +1240,8 @@ QDialog#SettingsDialog QWidget#generalTab QLabel#generalSectionTitle {
     padding: 0 0px;
 }
 
-QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription {
+QDialog#SettingsDialog QWidget#generalTab QLabel#toolbarViewDescription,
+QDialog#SettingsDialog QWidget#themeTab QLabel#toolbarViewDescription {
     color: #C5C5C5;
     font-size: 9pt;
 }
@@ -1282,7 +1283,8 @@ QDialog#SettingsDialog QWidget#pathsTab QLabel#pathsSectionTitle {
 
 QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListDisplayGroup,
 QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListWorkflowGroup,
-QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget {
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget,
+QDialog#SettingsDialog QWidget#uiTab QGroupBox#modListCategoriesGroup {
     color: #FFFFFF;
     background-color: #2B2B2B;
     border: 1px solid #363636;
@@ -1307,6 +1309,7 @@ QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowIcon,
 QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsSectionIcon { background-color: transparent; border: none; padding: 0px; }
 
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListDisplayDescription,
+QDialog#SettingsDialog QWidget#uiTab QLabel#modListCategoriesDescription,
 QDialog#SettingsDialog QWidget#uiTab QLabel#modListWorkflowDescription,
 QDialog#SettingsDialog QWidget#uiTab QLabel#collapsibleSeparatorsDescription {
     color: #C5C5C5;
@@ -1328,6 +1331,8 @@ QDialog#SettingsDialog QWidget#uiTab QGroupBox#collapsibleSeparatorsWidget QWidg
 }
 
 QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeStyleGroup,
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeDisplayGroup,
+QDialog#SettingsDialog QWidget#themeTab QGroupBox#toolbarViewGroup,
 QDialog#SettingsDialog QWidget#themeTab QGroupBox#themeColorsGroup {
     color: #FFFFFF;
     background-color: #2B2B2B;

@@ -70,7 +70,7 @@
            <item>
             <widget class="QLabel" name="generalPageSubtitle">
              <property name="text">
-              <string>Set defaults for the interface, downloads, updates, profiles, and workspace panels.</string>
+              <string>Set the language, updates, downloads, profile defaults, and how dialogs behave.</string>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -238,7 +238,7 @@
            <item>
             <widget class="QGroupBox" name="groupBox_9">
              <property name="title">
-              <string>Miscellaneous</string>
+              <string>Windows and dialogs</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_14">
               <property name="leftMargin">
@@ -283,91 +283,6 @@
                 </property>
                </widget>
               </item>
-             </layout>
-           </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="toolbarViewGroup">
-             <property name="title">
-              <string>Toolbar and panels</string>
-             </property>
-             <layout class="QGridLayout" name="toolbarViewLayout">
-              <item row="1" column="0">
-               <widget class="QLabel" name="toolbarSizeLabel">
-                <property name="text">
-                 <string>Toolbar icon size</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QComboBox" name="toolbarIconSizeCombo">
-                <property name="toolTip">
-                 <string>Choose the size of toolbar icons.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="toolbarStyleLabel">
-                <property name="text">
-                 <string>Toolbar button style</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QComboBox" name="toolbarButtonStyleCombo">
-                <property name="toolTip">
-                 <string>Choose whether toolbar buttons show icons, text, or both.</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0" colspan="2">
-               <widget class="QLabel" name="toolbarViewDescription">
-                <property name="text">
-                 <string>Set the toolbar appearance and choose which workspace panels stay visible.</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0" colspan="2">
-               <widget class="QCheckBox" name="statusBarVisibleBox">
-                <property name="toolTip">
-                 <string>Show or hide the status bar at the bottom of the main window.</string>
-                </property>
-                <property name="text">
-                 <string>Show status bar</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0" colspan="2">
-               <widget class="QCheckBox" name="logPanelVisibleBox">
-                <property name="toolTip">
-                 <string>Show or hide the log panel.</string>
-                </property>
-                <property name="text">
-                 <string>Show log panel</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="widget_10">
-             <layout class="QHBoxLayout" name="horizontalLayout_12">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
               <item>
                <widget class="QPushButton" name="resetDialogsButton">
                 <property name="maximumSize">
@@ -387,34 +302,8 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="categoriesBtn">
-                <property name="toolTip">
-                 <string>Modify the categories available to arrange your mods.</string>
-                </property>
-                <property name="whatsThis">
-                 <string>Modify the categories available to arrange your mods.</string>
-                </property>
-                <property name="text">
-                 <string>Configure mod categories</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
              </layout>
-            </widget>
+           </widget>
            </item>
            <item>
             <spacer name="verticalSpacer_2">
@@ -437,9 +326,9 @@
      </widget>
      <widget class="QWidget" name="themeTab">
       <attribute name="title">
-       <string>Theme</string>
+       <string>Appearance</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_20" stretch="0,0,0,1">
+      <layout class="QVBoxLayout" name="verticalLayout_20" stretch="0,0,0,0,1">
        <item>
         <widget class="QLabel" name="themePageTitle">
          <property name="text">
@@ -450,7 +339,7 @@
        <item>
         <widget class="QLabel" name="themePageSubtitle">
          <property name="text">
-          <string>Choose a light or dark theme, then customize the highlights used for mod conflicts and selected plugins.</string>
+          <string>Choose the theme, text size, animations, toolbar, and the highlight colors for mod conflicts and selected plugins.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -497,6 +386,73 @@
              </size>
             </property>
            </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="toolbarViewGroup">
+         <property name="title">
+          <string>Toolbar and panels</string>
+         </property>
+         <layout class="QGridLayout" name="toolbarViewLayout">
+          <item row="1" column="0">
+           <widget class="QLabel" name="toolbarSizeLabel">
+            <property name="text">
+             <string>Toolbar icon size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="toolbarIconSizeCombo">
+            <property name="toolTip">
+             <string>Choose the size of toolbar icons.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="toolbarStyleLabel">
+            <property name="text">
+             <string>Toolbar button style</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="toolbarButtonStyleCombo">
+            <property name="toolTip">
+             <string>Choose whether toolbar buttons show icons, text, or both.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLabel" name="toolbarViewDescription">
+            <property name="text">
+             <string>Set the toolbar appearance and choose which workspace panels stay visible.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="statusBarVisibleBox">
+            <property name="toolTip">
+             <string>Show or hide the status bar at the bottom of the main window.</string>
+            </property>
+            <property name="text">
+             <string>Show status bar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="QCheckBox" name="logPanelVisibleBox">
+            <property name="toolTip">
+             <string>Show or hide the log panel.</string>
+            </property>
+            <property name="text">
+             <string>Show log panel</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1061,6 +1017,49 @@ If you disable this feature, MO will only display official DLCs this way. Please
                <string>Keep separator collapse state per profile</string>
               </property>
              </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="modListCategoriesGroup">
+         <property name="title">
+          <string>Categories</string>
+         </property>
+         <layout class="QVBoxLayout" name="modListCategoriesLayout">
+          <item>
+           <widget class="QLabel" name="modListCategoriesDescription">
+            <property name="text">
+             <string>Create, rename, organize, and map the categories used to sort and filter mods.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="modListCategoriesButtons">
+            <item>
+             <widget class="QPushButton" name="categoriesBtn">
+              <property name="toolTip">
+               <string>Modify the categories available to arrange your mods.</string>
+              </property>
+              <property name="whatsThis">
+               <string>Modify the categories available to arrange your mods.</string>
+              </property>
+              <property name="text">
+               <string>Manage categories</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="modListCategoriesSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>

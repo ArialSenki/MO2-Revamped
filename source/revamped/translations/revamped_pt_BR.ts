@@ -10835,6 +10835,10 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
   <context>
     <name>QObject</name>
     <message>
+      <source>Display</source>
+      <translation>Exibição</translation>
+    </message>
+    <message>
       <source>Loading files… %1%</source>
       <translation>Carregando arquivos… %1%</translation>
     </message>
@@ -12166,6 +12170,30 @@ p, li { white-space: pre-wrap; }
   </context>
   <context>
     <name>SettingsDialog</name>
+    <message>
+      <source>Windows and dialogs</source>
+      <translation>Janelas e diálogos</translation>
+    </message>
+    <message>
+      <source>Manage categories</source>
+      <translation>Gerenciar categorias</translation>
+    </message>
+    <message>
+      <source>Categories</source>
+      <translation>Categorias</translation>
+    </message>
+    <message>
+      <source>Set the language, updates, downloads, profile defaults, and how dialogs behave.</source>
+      <translation>Escolha o idioma, as atualizações, os downloads, os padrões dos perfis e o comportamento das caixas de diálogo.</translation>
+    </message>
+    <message>
+      <source>Choose the theme, text size, animations, toolbar, and the highlight colors for mod conflicts and selected plugins.</source>
+      <translation>Escolha o tema, o tamanho do texto, as animações, a barra de ferramentas e as cores que destacam conflitos de mods e plugins selecionados.</translation>
+    </message>
+    <message>
+      <source>Create, rename, organize, and map the categories used to sort and filter mods.</source>
+      <translation>Crie, renomeie, organize e mapeie as categorias usadas para ordenar e filtrar mods.</translation>
+    </message>
     <message>
       <source>
 Choose how much detail MO2 writes to ModOrganizer.log. Info is recommended for everyday use; select Debug when collecting information to troubleshoot a problem.</source>

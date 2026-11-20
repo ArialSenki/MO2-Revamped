@@ -13,6 +13,19 @@
 #include "ui_settingsdialog.h"
 #include "themeeditordialog.h"
 #include "usertheme.h"
+#include "fluentmotion.h"
+#include "messagedialog.h"
+#include <QAbstractItemView>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDockWidget>
+#include <QFrame>
+#include <QGroupBox>
+#include <QLabel>
+#include <QMainWindow>
+#include <QStatusBar>
+#include <QToolBar>
+#include <QVBoxLayout>
 #include <QBoxLayout>
 #include <QCoreApplication>
 #include <QDir>
@@ -70,6 +83,10 @@ ThemeSettingsTab::ThemeSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   selectStyle();
   addThemeButtons();
 
+  // the size of everything, the animations and the toolbar, under the theme
+  addDisplayCard();
+  loadToolbarCard();
+
   // colors
   ui->colorTable->load(s);
 
@@ -126,6 +143,8 @@ void ThemeSettingsTab::update()
 
   // colors
   ui->colorTable->commitColors();
+
+  updateDisplayAndToolbar();
 }
 
 void ThemeSettingsTab::addStyles()
@@ -260,4 +279,260 @@ void ThemeSettingsTab::addThemeButtons()
   QObject::connect(folderButton, &QPushButton::clicked, folderButton, [this] {
     shell::Explore(stylesheetsDir());
   });
+}
+
+void ThemeSettingsTab::addDisplayCard()
+{
+  // MO2 Revamped: how big and how smooth everything is, beside the theme
+  // (these were on the General page)
+  auto* page = ui->themeStyleGroup->parentWidget();
+  auto* card = new QGroupBox(QObject::tr("Display"), page);
+  card->setObjectName(QStringLiteral("themeDisplayGroup"));
+  auto* box = new QVBoxLayout(card);
+  box->setContentsMargins(9, 9, 9, 9);
+  if (auto* pageLayout = qobject_cast<QBoxLayout*>(page->layout())) {
+    pageLayout->insertWidget(pageLayout->indexOf(ui->themeStyleGroup) + 1, card);
+  }
+
+  {
+    auto* label = new QLabel(QObject::tr("Interface size"), card);
+    m_scaleBox  = new QComboBox(card);
+    m_scaleBox->setObjectName(QStringLiteral("interfaceScaleBox"));
+    m_scaleBox->setFixedWidth(260);
+    for (int percent : GlobalSettings::interfaceScales()) {
+      m_scaleBox->addItem(percent == 100 ? QObject::tr("%1% (normal)").arg(percent)
+                                         : QObject::tr("%1%").arg(percent),
+                          percent);
+    }
+    m_scaleBox->setCurrentIndex(m_scaleBox->findData(GlobalSettings::interfaceScale()));
+    const QString tip = QObject::tr(
+        "Makes all of Mod Organizer's text, boxes and windows smaller or larger "
+        "together. It applies when Mod Organizer starts again.");
+    m_scaleBox->setToolTip(tip);
+    label->setToolTip(tip);
+    label->setBuddy(m_scaleBox);
+    auto* row       = new QFrame(card);
+    // styled as the other settings rows ("Versions to be notified of")
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* rowLayout = new QHBoxLayout(row);
+    // the margins of the other rows, so the title and the box line up with them
+    rowLayout->setContentsMargins(4, 6, 4, 6);
+    rowLayout->setSpacing(12);
+    label->setObjectName(QStringLiteral("fluentSettingTitle"));
+    rowLayout->addWidget(label);
+    rowLayout->addStretch(1);
+    rowLayout->addWidget(m_scaleBox);
+    box->addWidget(row);
+
+    // text in grey for OLED screens, where ClearType's colours fringe
+    m_greyText = new QCheckBox(QObject::tr("Smooth text in grey (OLED screens)"),
+                               card);
+    m_greyText->setObjectName(QStringLiteral("greyscaleTextBox"));
+    m_greyText->setChecked(GlobalSettings::greyscaleText());
+    m_greyText->setToolTip(QObject::tr(
+        "Draws text without Windows' coloured edges, which show as a coloured halo on "
+        "OLED screens. It applies when Mod Organizer starts again."));
+    box->addWidget(m_greyText);
+  }
+
+  // how smoothly things move
+  {
+    auto* label    = new QLabel(QObject::tr("Animations"), card);
+    m_animationBox = new QComboBox(card);
+    m_animationBox->setObjectName(QStringLiteral("animationLevelBox"));
+    m_animationBox->setFixedWidth(260);
+    // the theme pads the list, which Qt leaves out of the list's height: it would
+    // scroll a whole row to show the last level and hide the first
+    m_animationBox->view()->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    // the rate Monitor runs at: the main window's screen
+    const int monitorHz = FluentMotion::monitorRate();
+    m_animationBox->addItem(QObject::tr("Off"), FluentMotion::levelKey(FluentMotion::Level::Off));
+    m_animationBox->addItem(QObject::tr("Saver (30 Hz)"),
+                            FluentMotion::levelKey(FluentMotion::Level::Saver));
+    m_animationBox->addItem(QObject::tr("Standard (60 Hz)"),
+                            FluentMotion::levelKey(FluentMotion::Level::Standard));
+    m_animationBox->addItem(monitorHz > 0 ? QObject::tr("Monitor (%1 Hz)").arg(monitorHz)
+                                          : QObject::tr("Monitor"),
+                            FluentMotion::levelKey(FluentMotion::Level::Monitor));
+    const int current = m_animationBox->findData(FluentMotion::levelKey(
+        FluentMotion::levelFromKey(settings().interface().animationLevel())));
+    m_animationBox->setCurrentIndex(current >= 0 ? current : 2);
+    const QString tip = QObject::tr(
+        "How smoothly tabs, switches, menus, the log panel and the Run button move. "
+        "Off shows every change at once. Monitor moves them at your screen's refresh "
+        "rate (up to 240 Hz); it uses a little more CPU while something moves, and "
+        "none while nothing does.");
+    m_animationBox->setToolTip(tip);
+    label->setToolTip(tip);
+    label->setBuddy(m_animationBox);
+    label->setObjectName(QStringLiteral("fluentSettingTitle"));
+    auto* row = new QFrame(card);
+    // styled as the other settings rows ("Interface size")
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(4, 6, 4, 6);
+    rowLayout->setSpacing(12);
+    rowLayout->addWidget(label);
+    rowLayout->addStretch(1);
+    rowLayout->addWidget(m_animationBox);
+    box->addWidget(row);
+  }
+
+  CircularUi::addGroupHeading(card, ":/MO/gui/mainwindow/settings.svg",
+                              QStringLiteral("themeStyleIcon"), 26,
+                              QStringLiteral("themeSectionTitle"), QStringLiteral("D"));
+}
+
+void ThemeSettingsTab::loadToolbarCard()
+{
+  CircularUi::addGroupHeading(
+      ui->toolbarViewGroup, ":/MO/gui/mainwindow/tools.svg",
+      QStringLiteral("themeColorsIcon"), 26,
+      QStringLiteral("themeSectionTitle"), QStringLiteral("T"));
+
+  // The legacy View > Toolbars controls now live with the other interface
+  // preferences. Read the live widgets so existing toolbar settings carry over.
+  auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget());
+  auto* mainToolbar =
+      mainWindow ? mainWindow->findChild<QToolBar*>(QStringLiteral("toolBar"))
+                 : nullptr;
+  // command bars use the Windows 11 sizes (see MainWindow)
+  ui->toolbarIconSizeCombo->addItem(
+      QObject::tr("Small"),
+      QVariant::fromValue(QSize(16, 16)));
+  ui->toolbarIconSizeCombo->addItem(
+      QObject::tr("Medium"),
+      QVariant::fromValue(QSize(20, 20)));
+  ui->toolbarIconSizeCombo->addItem(
+      QObject::tr("Large"),
+      QVariant::fromValue(QSize(28, 28)));
+  ui->toolbarIconSizeCombo->setMinimumWidth(170);
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Icons only"), static_cast<int>(Qt::ToolButtonIconOnly));
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Text only"), static_cast<int>(Qt::ToolButtonTextOnly));
+  ui->toolbarButtonStyleCombo->addItem(
+      QObject::tr("Icons and text"),
+      static_cast<int>(Qt::ToolButtonTextBesideIcon));
+  ui->toolbarButtonStyleCombo->setMinimumWidth(190);
+
+  if (mainWindow) {
+    if (mainToolbar) {
+      int sizeIndex = ui->toolbarIconSizeCombo->findData(
+          QVariant::fromValue(mainToolbar->iconSize()));
+      if (sizeIndex < 0) {
+        const QSize currentSize = mainToolbar->iconSize();
+        ui->toolbarIconSizeCombo->addItem(
+            QObject::tr("Current (%1 × %2)")
+                .arg(currentSize.width())
+                .arg(currentSize.height()),
+            QVariant::fromValue(currentSize));
+        sizeIndex = ui->toolbarIconSizeCombo->count() - 1;
+      }
+      ui->toolbarIconSizeCombo->setCurrentIndex(sizeIndex);
+      int styleIndex = ui->toolbarButtonStyleCombo->findData(
+          static_cast<int>(mainToolbar->toolButtonStyle()));
+      if (styleIndex < 0) {
+        ui->toolbarButtonStyleCombo->addItem(
+            QObject::tr("Current custom style"),
+            static_cast<int>(mainToolbar->toolButtonStyle()));
+        styleIndex = ui->toolbarButtonStyleCombo->count() - 1;
+      }
+      ui->toolbarButtonStyleCombo->setCurrentIndex(styleIndex);
+    } else {
+      ui->toolbarIconSizeCombo->setEnabled(false);
+      ui->toolbarButtonStyleCombo->setEnabled(false);
+    }
+
+    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
+            QStringLiteral("statusBar"))) {
+      ui->statusBarVisibleBox->setChecked(statusBar->isVisible());
+    } else {
+      ui->statusBarVisibleBox->setEnabled(false);
+    }
+
+    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
+            QStringLiteral("logDock"))) {
+      ui->logPanelVisibleBox->setChecked(logDock->isVisible());
+    } else {
+      ui->logPanelVisibleBox->setEnabled(false);
+    }
+  } else {
+    ui->toolbarViewGroup->setEnabled(false);
+  }
+  // update() applies only the boxes the user changes
+  for (auto* box : {ui->statusBarVisibleBox, ui->logPanelVisibleBox}) {
+    box->setProperty("mo2InitialChecked", box->isChecked());
+  }
+}
+
+void ThemeSettingsTab::updateDisplayAndToolbar()
+{
+  // interface size: kept for the next start, which is when Qt applies it
+  bool restartNeeded = false;
+  if (m_scaleBox != nullptr) {
+    const int scale = m_scaleBox->currentData().toInt();
+    if (scale != GlobalSettings::interfaceScale()) {
+      GlobalSettings::setInterfaceScale(scale);
+      restartNeeded = true;
+    }
+  }
+  if (m_greyText != nullptr && m_greyText->isChecked() != GlobalSettings::greyscaleText()) {
+    GlobalSettings::setGreyscaleText(m_greyText->isChecked());
+    restartNeeded = true;
+  }
+  if (restartNeeded) {
+    MessageDialog::showMessage(
+        QObject::tr("These changes apply when Mod Organizer starts again."),
+        parentWidget(), true);
+  }
+
+  if (m_animationBox != nullptr) {
+    const QString level = m_animationBox->currentData().toString();
+    settings().interface().setAnimationLevel(level);
+    FluentMotion::setLevel(FluentMotion::levelFromKey(level));
+  }
+
+  if (auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget())) {
+    const QVariant iconSizeData = ui->toolbarIconSizeCombo->currentData();
+    const QVariant buttonStyleData = ui->toolbarButtonStyleCombo->currentData();
+    if (iconSizeData.isValid() && buttonStyleData.isValid()) {
+      const QSize iconSize = iconSizeData.toSize();
+      const auto buttonStyle = static_cast<Qt::ToolButtonStyle>(
+          buttonStyleData.toInt());
+      // through MO2's main window, which also resets the buttons' fixed
+      // sizes and the notification badge; plain QMainWindows take it as is
+      if (!QMetaObject::invokeMethod(mainWindow, "setToolbarSize",
+                                     Q_ARG(QSize, iconSize)) ||
+          !QMetaObject::invokeMethod(mainWindow, "setToolbarButtonStyle",
+                                     Q_ARG(Qt::ToolButtonStyle, buttonStyle))) {
+        for (auto* toolbar : mainWindow->findChildren<QToolBar*>()) {
+          toolbar->setIconSize(iconSize);
+          toolbar->setToolButtonStyle(buttonStyle);
+        }
+      }
+    }
+
+    // only what the user changed here: a log panel tabbed behind another
+    // dock reads as hidden and must not be closed by an unrelated OK
+    auto changed = [](QCheckBox* box) {
+      return box->isChecked() != box->property("mo2InitialChecked").toBool();
+    };
+    if (auto* statusBar = mainWindow->findChild<QStatusBar*>(
+            QStringLiteral("statusBar"));
+        statusBar && changed(ui->statusBarVisibleBox)) {
+      statusBar->setVisible(ui->statusBarVisibleBox->isChecked());
+      settings().geometry().saveVisibility(statusBar);
+    }
+    if (auto* logDock = mainWindow->findChild<QDockWidget*>(
+            QStringLiteral("logDock"));
+        logDock && changed(ui->logPanelVisibleBox)) {
+      logDock->setVisible(ui->logPanelVisibleBox->isChecked());
+    }
+
+    // These are the same persisted geometry settings used by MO2's original
+    // View menu, so existing user preferences remain in effect.
+    settings().geometry().saveToolbars(mainWindow);
+    settings().geometry().saveDocks(mainWindow);
+  }
 }
