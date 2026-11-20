@@ -850,6 +850,33 @@ namespace Mo2RevampedSetup
                 });
             }
 
+            // files earlier releases shipped, or that MO2 wrote beside them, which
+            // no release ships any more: removed and backed up like the stale
+            // files above, also when the manifest they came with is gone or the
+            // folder was filled by hand
+            if (!request.ReinstallOverKeptData)
+            {
+                HashSet<string> removing = new HashSet<string>(staleFiles, StringComparer.OrdinalIgnoreCase);
+                foreach (string obsolete in ObsoleteProgramFiles(target))
+                {
+                    if (payloadPaths.Contains(obsolete) || removing.Contains(obsolete)) continue;
+                    string full;
+                    try { full = SafeCombine(target, obsolete); }
+                    catch { continue; }
+                    staleFiles.Add(obsolete);
+                    removing.Add(obsolete);
+                    states.Add(new InstallFileState
+                    {
+                        Path = obsolete,
+                        ExistedBefore = true,
+                        InstalledSha256 = null,
+                        OriginalSha256 = HashFile(full),
+                        OwnedByRevamped = true,
+                        RemovedByUpdate = true
+                    });
+                }
+            }
+
             // the kept data stays as it is: a program file already there (with no
             // backup made for a new installation) stops the reinstall instead
             if (request.ReinstallOverKeptData)
@@ -4613,6 +4640,35 @@ namespace Mo2RevampedSetup
                 return PathsEqual(Path.GetDirectoryName(fullExecutable), target);
             }
             catch { return false; }
+        }
+
+        // PyQt6's type stubs and 2.5.2's PyQt 6.7.1 modules that the build no
+        // longer makes (their Qt libraries aren't shipped), and the .pyc of the
+        // single-file plugins in plugins\, which MO2 evaluates from source
+        private static readonly string[] ObsoletePyQtModules =
+        {
+            "QAxContainer", "QtBluetooth", "QtMultimedia", "QtMultimediaWidgets", "QtNfc", "QtPdf",
+            "QtPdfWidgets", "QtQuick3D", "QtRemoteObjects", "QtSensors", "QtSerialPort",
+            "QtSpatialAudio", "QtTextToSpeech"
+        };
+
+        private static List<string> ObsoleteProgramFiles(string target)
+        {
+            List<string> found = new List<string>();
+            string pyqt = Path.Combine(target, @"plugins\plugin_python\libs\PyQt6");
+            if (Directory.Exists(pyqt))
+            {
+                foreach (string file in Directory.GetFiles(pyqt, "*.pyi"))
+                    found.Add(@"plugins\plugin_python\libs\PyQt6\" + Path.GetFileName(file));
+                foreach (string module in ObsoletePyQtModules)
+                    if (File.Exists(Path.Combine(pyqt, module + ".pyd")))
+                        found.Add(@"plugins\plugin_python\libs\PyQt6\" + module + ".pyd");
+            }
+            string rootCache = Path.Combine(target, @"plugins\__pycache__");
+            if (Directory.Exists(rootCache))
+                foreach (string file in Directory.GetFiles(rootCache, "*.pyc"))
+                    found.Add(@"plugins\__pycache__\" + Path.GetFileName(file));
+            return found;
         }
 
         private static string SafeCombine(string root, string relative)

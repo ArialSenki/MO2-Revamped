@@ -576,7 +576,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         return self.displayName()
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return (
@@ -5935,7 +5935,7 @@ class EldenRingMo2SaveDiagnose(mobase.IPluginDiagnose):
         return _tr("Elden Ring save checks")
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return _tr("Warns about Elden Ring save routes that need attention.")

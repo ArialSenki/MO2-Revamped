@@ -72,7 +72,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         return tr("Cyberpunk 2077 Framework Check")
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return tr(

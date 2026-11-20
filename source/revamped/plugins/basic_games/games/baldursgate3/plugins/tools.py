@@ -36,7 +36,7 @@ class BG3ToolPlugin(mobase.IPluginTool):
         return mobase.VersionInfo(2, 0, 0)
 
     def author(self):
-        return "ArialSenki; based on the work of daescha"
+        return "MO2 Revamped"
 
     def name(self):
         return f"BG3 Tools: {self.sub_name}"

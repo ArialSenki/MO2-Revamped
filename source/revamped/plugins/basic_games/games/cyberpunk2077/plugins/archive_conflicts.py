@@ -67,7 +67,7 @@ class ArchiveConflictsTool(mobase.IPluginTool):
         return tr("Cyberpunk 2077 Archive Conflicts")
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return tr("Shows which .archive wins where two mods' archives hold the same game files.")

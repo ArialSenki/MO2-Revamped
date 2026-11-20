@@ -469,7 +469,15 @@ class BasicGame(mobase.IPluginGame):
         return self._mappings.author.get()
 
     def description(self) -> str:
-        return self._mappings.description.get()
+        # MO2 Revamped: a class with DescriptionContext gets its description
+        # translated (revamped_<language>.qm) in that context
+        text = self._mappings.description.get()
+        context = getattr(self, "DescriptionContext", None)
+        if context:
+            from PyQt6.QtCore import QCoreApplication
+
+            return QCoreApplication.translate(context, text)
+        return text
 
     def version(self) -> mobase.VersionInfo:
         return self._mappings.version.get()

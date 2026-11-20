@@ -79,7 +79,7 @@ class ToolStub(mobase.IPluginTool):
         return self.displayName()
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return self._tr(self._description)
@@ -128,7 +128,7 @@ class DiagnoseStub(mobase.IPluginDiagnose):
         return QCoreApplication.translate(self._context, self._localized)
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return QCoreApplication.translate(self._context, self._description)

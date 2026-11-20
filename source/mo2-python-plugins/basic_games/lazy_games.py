@@ -185,6 +185,9 @@ def make_stub_class(module_name: str, entry: dict[str, Any]) -> type:
         _manifest_entry=entry,
     )
     for getter in STATIC_GETTERS:
+        # a translated description is BasicGame's own (DescriptionContext)
+        if getter == "description" and "DescriptionContext" in attributes:
+            continue
         if getter in entry.get("answers", {}):
             attributes[getter] = _answer(entry["answers"][getter])
     for name in entry.get("overrides", []):

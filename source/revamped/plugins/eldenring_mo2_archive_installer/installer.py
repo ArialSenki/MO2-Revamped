@@ -157,7 +157,7 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         return self.tr("Elden Ring Archive Layout Installer")
 
     def author(self) -> str:
-        return "ArialSenki"
+        return "MO2 Revamped"
 
     def description(self) -> str:
         return self.tr(
