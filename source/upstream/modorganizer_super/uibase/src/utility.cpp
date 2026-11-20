@@ -1074,13 +1074,15 @@ void deleteChildWidgets(QWidget* w)
   }
 }
 
+// MO2 Revamped: only the ends; 2.5.2 removed every space, so Windows' error
+// messages read "Thesystemcannotfindthefilespecified."
 void trimWString(std::wstring& s)
 {
-  s.erase(std::remove_if(s.begin(), s.end(),
-                         [](wint_t ch) {
-                           return std::iswspace(ch);
-                         }),
-          s.end());
+  const auto notSpace = [](wint_t ch) {
+    return !std::iswspace(ch);
+  };
+  s.erase(std::find_if(s.rbegin(), s.rend(), notSpace).base(), s.end());
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
 }
 
 std::wstring getMessage(DWORD id, HMODULE mod)
