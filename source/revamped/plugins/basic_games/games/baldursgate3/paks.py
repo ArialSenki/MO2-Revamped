@@ -273,6 +273,7 @@ class PakCache:
     def __init__(self, file: Path):
         self.file = file
         self._lock = threading.Lock()
+        self._save_lock = threading.Lock()
         self._entries: dict[str, dict[str, Any]] | None = None
         self._dirty = False
 
@@ -327,6 +328,10 @@ class PakCache:
             self._dirty = True
 
     def save(self) -> None:
+        with self._save_lock:
+            self._save()
+
+    def _save(self) -> None:
         with self._lock:
             if not self._dirty or self._entries is None:
                 return

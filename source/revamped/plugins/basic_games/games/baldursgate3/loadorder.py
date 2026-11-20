@@ -156,6 +156,8 @@ class Plan:
         self.duplicates: list[tuple[str, str, str]] = []  # (module, dropped mod, kept mod)
         self.missing: list[tuple[str, str]] = []  # (mod, dependency)
         self.late: list[tuple[str, str, str]] = []  # (mod, dependency, its mod)
+        # the same as MO2 mod names: (mod, the mod with what it needs)
+        self.late_mods: list[tuple[str, str]] = []
         self.older: list[tuple[str, str, str, str]] = []  # (mod, dep, needed, found)
         self.conflicts: list[tuple[str, str]] = []
         self.left_out: list[tuple[str, str]] = []  # (mod, why)
@@ -247,6 +249,9 @@ def make_plan(
                 continue
             if uuid in index and index[uuid] > i:
                 plan.late.append((_mod_label(module), label, found.get("mod") or ""))
+                pair = (module.get("mod") or "", found.get("mod") or "")
+                if all(pair) and pair[0] != pair[1] and pair not in plan.late_mods:
+                    plan.late_mods.append(pair)
             need, have = int(dep.get("version64") or 0), int(found.get("version64") or 0)
             if need and have and have < need:
                 plan.older.append(
@@ -258,6 +263,36 @@ def make_plan(
                     (_mod_label(module), other.get("name") or other["uuid"])
                 )
     return plan
+
+
+def fix_order(
+    pairs: list[tuple[str, str]],
+    priority: Callable[[str], int],
+    set_priority: Callable[[str, int], Any],
+    rounds: int = 200,
+) -> list[str]:
+    """Moves each needed mod just above the mod that needs it (MO2's
+    setPriority to the needing mod's place pushes that one down by one),
+    until every pair is in order. Only the needed mods move, and only up;
+    a cycle (A needs B, B needs A) is left as it is. Returns the mods moved,
+    in order."""
+    moved: list[str] = []
+    for _ in range(rounds):
+        late = [(m, d) for m, d in pairs if priority(d) > priority(m)]
+        if not late:
+            break
+        mod, dep = min(late, key=lambda pair: priority(pair[0]))
+        if (dep, mod) in pairs:  # a cycle: nothing to do for this pair
+            pairs = [p for p in pairs if p not in ((mod, dep), (dep, mod))]
+            continue
+        before = priority(dep)
+        set_priority(dep, priority(mod))
+        if priority(dep) == before:
+            # MO2 didn't move it (a locked mod): leave this pair
+            pairs = [p for p in pairs if p != (mod, dep)]
+            continue
+        moved.append(dep)
+    return moved
 
 
 def _mod_label(module: dict[str, Any]) -> str:

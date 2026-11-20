@@ -21116,5 +21116,89 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
       <source>level</source>
       <translation>niveau</translation>
     </message>
+    <message>
+      <source>{0} modules in the order the game loads them (top first); {1} with problems.</source>
+      <translation>{0} modules dans l&apos;ordre où le jeu les charge (du haut vers le bas) ; {1} avec des problèmes.</translation>
+    </message>
+    <message>
+      <source>Baldur&apos;s Gate 3 load order</source>
+      <translation>Ordre de chargement de Baldur&apos;s Gate 3</translation>
+    </message>
+    <message>
+      <source>Move needed mods up</source>
+      <translation>Monter les mods requis</translation>
+    </message>
+    <message>
+      <source>Moves each mod that others need just above them in the mod list, so it loads first.</source>
+      <translation>Place chaque mod requis juste au-dessus des mods qui en ont besoin, pour qu&apos;il se charge avant.</translation>
+    </message>
+    <message>
+      <source>the game</source>
+      <translation>le jeu</translation>
+    </message>
+    <message>
+      <source>needs the Script Extender</source>
+      <translation>nécessite le Script Extender</translation>
+    </message>
+    <message>
+      <source>outside MO2</source>
+      <translation>hors de MO2</translation>
+    </message>
+    <message>
+      <source>Module</source>
+      <translation>Module</translation>
+    </message>
+    <message>
+      <source>Mod</source>
+      <translation>Mod</translation>
+    </message>
+    <message>
+      <source>Version</source>
+      <translation>Version</translation>
+    </message>
+    <message>
+      <source>Problems</source>
+      <translation>Problèmes</translation>
+    </message>
+    <message>
+      <source>The load order couldn&apos;t be worked out; see MO2&apos;s log.</source>
+      <translation>Impossible de déterminer l&apos;ordre de chargement ; voir le journal de MO2.</translation>
+    </message>
+    <message>
+      <source>Some new paks are still being read: open this again in a moment.</source>
+      <translation>Certains nouveaux paks sont encore en lecture : rouvrez ceci dans un instant.</translation>
+    </message>
+    <message>
+      <source>These mods will move up in the mod list, each just above the mod that needs it:</source>
+      <translation>Ces mods vont monter dans la liste, chacun juste au-dessus du mod qui en a besoin :</translation>
+    </message>
+    <message>
+      <source>needs {0}, which isn&apos;t active</source>
+      <translation>nécessite {0}, qui n&apos;est pas actif</translation>
+    </message>
+    <message>
+      <source>loads before {0}, which it needs</source>
+      <translation>se charge avant {0}, dont il a besoin</translation>
+    </message>
+    <message>
+      <source>conflicts with {0}</source>
+      <translation>est en conflit avec {0}</translation>
+    </message>
+    <message>
+      <source>above</source>
+      <translation>au-dessus de</translation>
+    </message>
+    <message>
+      <source>needs {0} {1}, found {2}</source>
+      <translation>nécessite {0} {1}, trouvé {2}</translation>
+    </message>
+    <message>
+      <source>Load Order</source>
+      <translation>Ordre de chargement</translation>
+    </message>
+    <message>
+      <source>The load order the game will get, with each mod&apos;s problems: missing or late dependencies, the Script Extender, conflicts.</source>
+      <translation>L&apos;ordre de chargement que recevra le jeu, avec les problèmes de chaque mod : dépendances manquantes ou chargées trop tard, Script Extender, conflits.</translation>
+    </message>
   </context>
 </TS>

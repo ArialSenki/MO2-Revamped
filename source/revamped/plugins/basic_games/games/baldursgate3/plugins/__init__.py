@@ -9,6 +9,7 @@ from .diagnose import BG3LoadOrderCheck
 from .tools import (
     BG3ToolCheckForLsLibUpdates,
     BG3ToolConvertJsonsToYaml,
+    BG3ToolLoadOrder,
     BG3ToolReparsePakMetadata,
 )
 
@@ -18,5 +19,6 @@ def createPlugins() -> list[mobase.IPlugin]:
         BG3ToolCheckForLsLibUpdates(),
         BG3ToolReparsePakMetadata(),
         BG3ToolConvertJsonsToYaml(),
+        BG3ToolLoadOrder(),
         BG3LoadOrderCheck(),
     ]

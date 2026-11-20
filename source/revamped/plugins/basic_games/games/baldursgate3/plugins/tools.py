@@ -127,6 +127,23 @@ class BG3ToolConvertJsonsToYaml(BG3ToolPlugin):
             progress.close()
 
 
+class BG3ToolLoadOrder(BG3ToolPlugin):
+    icon_name = "refresh"
+    sub_name = "Load Order"
+    desc = (
+        "The load order the game will get, with each mod's problems: missing "
+        "or late dependencies, the Script Extender, conflicts."
+    )
+
+    def display(self):
+        game = _bg3_game(self._organizer)
+        if game is None:
+            return
+        from .order_view import LoadOrderDialog
+
+        LoadOrderDialog(game, self._organizer, getattr(self, "_parent", None)).exec()
+
+
 def convert_jsons_in_dir_to_yaml(path: Path):
     # written by the plugin's own YAML writer: MO2's Python has no PyYAML.
     # A file that can't be read is skipped and named in the log.
