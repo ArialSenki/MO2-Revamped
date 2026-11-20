@@ -20611,6 +20611,14 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <source>Configures Root Builder for Cyberpunk once, if it is installed and enabled</source>
       <translation>Configura o Root Builder para o Cyberpunk uma vez, se estiver instalado e ativado</translation>
     </message>
+    <message>
+      <source>redscript could not compile the mods&apos; scripts</source>
+      <translation>O redscript não conseguiu compilar os scripts dos mods</translation>
+    </message>
+    <message>
+      <source>The last time the game started, redscript stopped on errors in these scripts, so the game showed a compilation error and no redscript mod worked:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Update the mods named here or turn them off (often they need a newer version of the game, redscript or a framework such as Codeware). The full log is r6/logs/redscript_rCURRENT.log in Overwrite.</source>
+      <translation>Na última vez que o jogo foi iniciado, o redscript parou por erros nestes scripts, então o jogo mostrou um erro de compilação e nenhum mod de redscript funcionou:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Atualize os mods citados aqui ou desative-os (muitas vezes eles precisam de uma versão mais nova do jogo, do redscript ou de um framework como o Codeware). O log completo é r6/logs/redscript_rCURRENT.log, no Overwrite.</translation>
+    </message>
   </context>
   <context>
     <name>BaldursGate3Game</name>

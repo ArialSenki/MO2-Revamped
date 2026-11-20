@@ -11,12 +11,16 @@ import mobase
 from PyQt6.QtCore import QTimer
 
 from ..frameworks import FRAMEWORKS, CodewareCandidate, ModFiles, Report, analyze, scan_codeware
+from .. import redscript_log
 from ..util import log_warning, tr
 
 GAME_NAME = "Cyberpunk 2077"
 # problem keys: a missing framework is its index in FRAMEWORKS
 REDMOD_DLC = 100
 OUTSIDE_DEPLOY = 101
+REDSCRIPT_ERRORS = 102
+# script errors named in the problem's text
+LISTED_ERRORS = 10
 # mods named in a problem's text
 LISTED_MODS = 12
 
@@ -57,6 +61,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         mod_list.onModInstalled(lambda *_: self._changed())
         mod_list.onModRemoved(lambda *_: self._changed())
         organizer.onProfileChanged(lambda *_: self._changed())
+        # the game compiles the scripts as it starts: read its log once it closes
+        organizer.onFinishedRun(lambda *_: self._changed())
         return True
 
     def name(self) -> str:
@@ -93,6 +99,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
             keys.append(REDMOD_DLC)
         if report.outside_redmod_deploy:
             keys.append(OUTSIDE_DEPLOY)
+        if self._redscript_errors():
+            keys.append(REDSCRIPT_ERRORS)
         return keys
 
     def shortDescription(self, key: int) -> str:
@@ -100,6 +108,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
             return tr("REDmod mods need the REDmod DLC")
         if key == OUTSIDE_DEPLOY:
             return tr("REDmod files deployed outside MO2")
+        if key == REDSCRIPT_ERRORS:
+            return tr("redscript could not compile the mods' scripts")
         return tr("Missing framework: {0}").format(FRAMEWORKS[key].name)
 
     def fullDescription(self, key: int) -> str:
@@ -120,6 +130,27 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
                 "files in your store, or start “Cyberpunk 2077 - skip REDmod "
                 "deploy”, which starts the game without -modded."
             )
+        if key == REDSCRIPT_ERRORS:
+            errors = self._redscript_errors()
+            lines = [
+                "• <b>{0}</b>: {1}{2} — {3}".format(
+                    html.escape(mod or tr("game folder")),
+                    html.escape(error.script or "?"),
+                    f":{error.line}" if error.line else "",
+                    html.escape(error.message),
+                )
+                for mod, error in errors[:LISTED_ERRORS]
+            ]
+            if len(errors) > LISTED_ERRORS:
+                lines.append(tr("• and {0} more").format(len(errors) - LISTED_ERRORS))
+            return tr(
+                "The last time the game started, redscript stopped on errors in these "
+                "scripts, so the game showed a compilation error and no redscript mod "
+                "worked:<br><br>{0}<br><br>Update the mods named here or turn them off "
+                "(often they need a newer version of the game, redscript or a framework "
+                "such as Codeware). The full log is r6/logs/redscript_rCURRENT.log in "
+                "Overwrite."
+            ).format("<br>".join(lines))
         framework = FRAMEWORKS[key]
         users = report.missing.get(framework.key, [])
         return tr(
@@ -141,6 +172,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
 
     def _changed(self) -> None:
         self._report = None
+        self._redscript_cache = None
         try:
             self._invalidate()
         except Exception:  # noqa: BLE001 - MO2 not ready yet
@@ -193,6 +225,29 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
             self._scan.start()
             QTimer.singleShot(250, finished)
         return [c.name for c in candidates if self._codeware.get(c.key)]
+
+    def _redscript_errors(self) -> list[tuple[str, redscript_log.ScriptError]]:
+        """The script errors of the last compile, with the mod each script
+        comes from ("" for the game folder); none when it compiled."""
+        cached = getattr(self, "_redscript_cache", None)
+        if cached is not None and self._report is not None:
+            return cached
+        result: list[tuple[str, redscript_log.ScriptError]] = []
+        try:
+            game = self._organizer.managedGame()
+            found = self._organizer.findFiles("r6/logs", "redscript_rCURRENT.log")
+            if game is not None and game.gameName() == GAME_NAME and found:
+                text = Path(found[0]).read_text(encoding="utf-8", errors="replace")
+                if redscript_log.failed(text):
+                    game_dir = game.gameDirectory().absolutePath()
+                    for error in redscript_log.parse(text, game_dir):
+                        origins = self._organizer.getFileOrigins(error.script) if error.script else []
+                        origin = origins[0] if origins else ""
+                        result.append(("" if origin == "data" else origin, error))
+        except Exception as error:  # noqa: BLE001 - never break MO2's problem list
+            log_warning(f"Cyberpunk 2077: redscript log not read: {error}")
+        self._redscript_cache = result
+        return result
 
     @staticmethod
     def _mod_list(names: list[str]) -> str:

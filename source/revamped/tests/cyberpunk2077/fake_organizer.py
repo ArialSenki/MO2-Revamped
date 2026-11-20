@@ -158,6 +158,20 @@ class FakeOrganizer:
                 found.append(str(real))
         return found
 
+    def getFileOrigins(self, path: str) -> list[str]:
+        """The mods a file comes from, winner first ("data" for the game)."""
+        key = path.replace("\\", "/").strip("/").casefold()
+        origins = []
+        for name in reversed([n for n in self.mod_order if n in self.active]):
+            if (self.mods / name / key).is_file() or any(
+                f.relative_to(self.mods / name).as_posix().casefold() == key
+                for f in (self.mods / name).rglob("*") if f.is_file()
+            ):
+                origins.append(name)
+        if self.game_dir and (self.game_dir / key).is_file():
+            origins.append("data")
+        return origins
+
     def virtualFileTree(self):
         return make_tree(sorted(self.origins()))
 
@@ -186,4 +200,7 @@ class FakeOrganizer:
         return True
 
     def onProfileChanged(self, callback) -> bool:
+        return True
+
+    def onFinishedRun(self, callback) -> bool:
         return True
