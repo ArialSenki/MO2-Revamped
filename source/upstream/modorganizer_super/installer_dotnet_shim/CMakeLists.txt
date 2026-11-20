@@ -1,0 +1,5 @@
+# MO2 Revamped: native stand-ins for the C++/CLI installers (common/dotnetplugin.h)
+cmake_minimum_required(VERSION 3.16)
+project(installer_dotnet_shim)
+add_subdirectory(fomod_csharp)
+add_subdirectory(omod)

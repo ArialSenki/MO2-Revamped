@@ -478,7 +478,10 @@ $pythonPluginPrefixes = @(
     # folder still has 2.5.2's PyQt 6.7.1 modules the stage doesn't build
     # (QtBluetooth, QtMultimedia, QtPdf, QAxContainer...): their Qt libraries
     # aren't shipped, so Python couldn't import them anyway
-    'plugins\plugin_python\libs\PyQt6\'
+    'plugins\plugin_python\libs\PyQt6\',
+    # 2.5.2's OMOD installer and its .NET libraries: the upstream stage has
+    # them in installer_omod\dotnet\, behind the native stand-in
+    'plugins\installer_omod\'
 )
 
 function Copy-PythonPluginOverlay {
@@ -818,7 +821,8 @@ function Copy-EldenRingPlugins {
     param([string]$SourceRoot, [string]$DestinationRoot)
     $sourcePlugins = Join-Path $SourceRoot 'plugins'
     $targetPlugins = Join-Path $DestinationRoot 'plugins'
-    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'eldenring_mo2_tools', 'installer_wizard', 'plugin_python')
+    # installer_fomod_csharp\: the C# FOMOD installer its stand-in loads (installer_dotnet_shim)
+    $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'installer_fomod_csharp', 'eldenring_mo2_tools', 'installer_wizard', 'plugin_python')
     $allowedRootFiles = @(
         'DDSPreview.py', 'diagnose_basic.dll', 'eldenring_mo2_native_profile_tool.py',
         'eldenring_mo2_save_isolation.py', 'eldenring_mo2_startup_tool.py',
@@ -868,7 +872,7 @@ function Copy-EldenRingPlugins {
         'basic_games\games\game_eldenring_mo2.py',
         'data\revamped_fluent.py', 'installer_wizard\dialog.py',
         'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
-        'plugin_python\plugin_python.dll',
+        'plugin_python\plugin_python.dll', 'installer_fomod_csharp.dll', 'installer_fomod_csharp\dotnet\installer_fomod_csharp.dll',
         'plugin_python\dlls\python312.dll', 'plugin_python\libs\pythoncore.zip',
         'plugin_python\libs\_ssl.pyd', 'plugin_python\libs\_hashlib.pyd'
     )) {

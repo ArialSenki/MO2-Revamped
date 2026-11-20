@@ -25,7 +25,7 @@ native plugins/game_ttw.dll
 native plugins/installer_bain.dll
 native plugins/installer_bundle.dll
 native plugins/installer_fomod.dll
-native plugins/installer_fomod_csharp.dll
+native plugins/installer_fomod_csharp/dotnet/installer_fomod_csharp.dll
 native plugins/installer_manual.dll
 native plugins/installer_quick.dll
 native plugins/bsa_extractor.dll
@@ -36,7 +36,7 @@ native plugins/diagnose_basic.dll
 native plugins/check_fnis.dll
 native plugins/inieditor.dll
 native plugins/inibakery.dll
-native plugins/installer_omod/installer_omod.dll
+native plugins/installer_omod/dotnet/installer_omod.dll
 native plugins/plugin_python/plugin_python.dll
 native plugins/plugin_python/dlls/runner.dll
 native plugins/plugin_python/libs/mobase.cp312-win_amd64.pyd
@@ -44,11 +44,16 @@ native usvfs_x64.dll
 native usvfs_x86.dll
 native usvfs_proxy_x64.exe
 native usvfs_proxy_x86.exe
-dotnet plugins/installer_omod/OMODFramework.dll
-dotnet plugins/installer_omod/OMODFramework.Scripting.dll
-dotnet plugins/installer_omod/RtfPipe.dll
-dotnet plugins/installer_omod/ICSharpCode.SharpZipLib.dll
-dotnet plugins/installer_omod/System.Drawing.Common.dll
+dotnet plugins/installer_omod/dotnet/OMODFramework.dll
+dotnet plugins/installer_omod/dotnet/OMODFramework.Scripting.dll
+dotnet plugins/installer_omod/dotnet/RtfPipe.dll
+dotnet plugins/installer_omod/dotnet/ICSharpCode.SharpZipLib.dll
+dotnet plugins/installer_omod/dotnet/System.Drawing.Common.dll
+# MO2 Revamped's native stand-ins for the two C++/CLI installers, where MO2 has
+# always loaded those (installer_dotnet_shim): no 2.5.2 binary to compare, but
+# they must not start .NET and may only use what uibase exports
+shim plugins/installer_fomod_csharp.dll
+shim plugins/installer_omod/installer_omod.dll
 native dlls/7z.dll
 native plugins/plugin_python/libs/PyQt6/QtCore.pyd
 native plugins/plugin_python/libs/PyQt6/QtDBus.pyd

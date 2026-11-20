@@ -4652,6 +4652,12 @@ namespace Mo2RevampedSetup
             "QtSpatialAudio", "QtTextToSpeech"
         };
 
+        private static readonly string[] ObsoleteOmodLibraries =
+        {
+            "OMODFramework.dll", "OMODFramework.Scripting.dll", "RtfPipe.dll",
+            "ICSharpCode.SharpZipLib.dll", "System.Drawing.Common.dll"
+        };
+
         private static List<string> ObsoleteProgramFiles(string target)
         {
             List<string> found = new List<string>();
@@ -4664,6 +4670,11 @@ namespace Mo2RevampedSetup
                     if (File.Exists(Path.Combine(pyqt, module + ".pyd")))
                         found.Add(@"plugins\plugin_python\libs\PyQt6\" + module + ".pyd");
             }
+            // the OMOD installer's .NET libraries moved to installer_omod\dotnet\
+            // with it; its stand-in is installer_omod\installer_omod.dll
+            foreach (string library in ObsoleteOmodLibraries)
+                if (File.Exists(Path.Combine(target, @"plugins\installer_omod\" + library)))
+                    found.Add(@"plugins\installer_omod\" + library);
             string rootCache = Path.Combine(target, @"plugins\__pycache__");
             if (Directory.Exists(rootCache))
                 foreach (string file in Directory.GetFiles(rootCache, "*.pyc"))

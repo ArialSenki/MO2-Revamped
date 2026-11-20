@@ -46,7 +46,12 @@ target_compile_definitions(installer_omod PRIVATE "NOGDI")
 # aren't pulled in. We do need it to build first, though.
 add_dependencies(installer_omod dummy_cs_project)
 
-mo2_install_target(installer_omod FOLDER)
+# MO2 Revamped: in installer_omod\dotnet\ with its .NET libraries; the native
+# stand-in (installer_dotnet_shim) is installer_omod\installer_omod.dll and
+# loads this one when an OMOD is installed
+install(TARGETS installer_omod RUNTIME DESTINATION bin/plugins/installer_omod/dotnet)
+install(TARGETS installer_omod ARCHIVE DESTINATION libs)
+install(FILES $<TARGET_PDB_FILE:installer_omod> DESTINATION pdb)
 
 install(
 	FILES
@@ -55,7 +60,7 @@ install(
 	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.dll"
 	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.dll"
 	"$<TARGET_FILE_DIR:${PROJECT_NAME}>/RtfPipe.dll"
-	DESTINATION "${MO2_INSTALL_PATH}/bin/plugins/installer_omod/"
+	DESTINATION "${MO2_INSTALL_PATH}/bin/plugins/installer_omod/dotnet/"
 )
 install(
 	FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.pdb"
