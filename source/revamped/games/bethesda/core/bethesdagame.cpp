@@ -4,8 +4,17 @@
 // (game_gamebryo and the game_* plugins built on it), which this replaces.
 #include "bethesdagame.h"
 
+#include "archives/bsainvalidation.h"
+#include "archives/iniarchives.h"
+#include "content/datachecker.h"
+#include "content/unmanagedmods.h"
 #include "detection/stores.h"
+#include "extender/bethesdaextender.h"
 #include "ini/inifiles.h"
+#include "ini/localsavegames.h"
+#include "plugins/filetimeplugins.h"
+#include "saves/bethesdasavegame.h"
+#include "saves/savegameinfo.h"
 #include "util/peheader.h"
 #include "util/winfolders.h"
 
@@ -141,7 +150,32 @@ QList<MOBase::PluginSetting> BethesdaGame::settings() const
   return out;
 }
 
-void BethesdaGame::registerFeatures() {}
+void BethesdaGame::registerFeatures()
+{
+  // the order MO2's Gamebryo plugins register them in
+  if (!m_Def.extender.loader.isEmpty()) {
+    registerFeature(std::make_shared<BethesdaScriptExtender>(this));
+  }
+  auto archives = std::make_shared<IniDataArchives>(this);
+  registerFeature(archives);
+  if (!m_Def.archives.invalidationBsa.isEmpty()) {
+    registerFeature(std::make_shared<DummyBsaInvalidation>(archives.get(), this));
+  }
+  registerFeature(std::make_shared<BethesdaSaveGameInfo>(this));
+  registerFeature(std::make_shared<IniLocalSavegames>(this));
+  registerFeature(std::make_shared<BethesdaDataChecker>(m_Def));
+  registerFeature(std::make_shared<BethesdaDataContent>(m_Def, m_Organizer->gameFeatures()));
+  switch (m_Def.loadOrder) {
+  case LoadOrderKind::FileTime:
+    registerFeature(std::make_shared<FileTimeGamePlugins>(m_Organizer));
+    break;
+  case LoadOrderKind::PluginsTxtStar:
+    // phase 2 of the framework (Skyrim SE); no game uses it yet
+    MOBase::log::error("{}: plugins.txt with '*' is not supported yet", name());
+    break;
+  }
+  registerFeature(std::make_shared<DataFolderMods>(this));
+}
 
 void BethesdaGame::registerFeature(std::shared_ptr<MOBase::GameFeature> feature)
 {
@@ -313,8 +347,12 @@ BethesdaGame::listSaves(QDir folder) const
   return saves;
 }
 
-std::shared_ptr<const MOBase::ISaveGame> BethesdaGame::makeSaveGame(const QString&) const
+std::shared_ptr<const MOBase::ISaveGame> BethesdaGame::makeSaveGame(const QString& path) const
 {
+  switch (m_Def.saveFormat) {
+  case SaveFormat::Fallout3:
+    return readFallout3SaveGame(this, path);
+  }
   return nullptr;
 }
 

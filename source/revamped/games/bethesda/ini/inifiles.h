@@ -21,9 +21,12 @@ namespace mo2r::bethesda
 QString iniValue(const QString& iniPath, const QString& section, const QString& key,
                  const QString& defaultValue, int maxLength = 260);
 
-// writes a value (or, with a null value, removes the key); false on failure
+// writes a value; false on failure
 bool setIniValue(const QString& iniPath, const QString& section, const QString& key,
                  const QString& value);
+
+// removes a key; false on failure
+bool removeIniValue(const QString& iniPath, const QString& section, const QString& key);
 
 // the folder with the INIs a profile uses: its own with local settings,
 // otherwise the game's My Games folder

@@ -3,6 +3,7 @@
 #include "inifiles.h"
 
 #include <iprofile.h>
+#include <log.h>
 #include <registry.h>
 #include <utility.h>
 
@@ -36,8 +37,15 @@ bool setIniValue(const QString& iniPath, const QString& section, const QString& 
   const auto k = key.toStdWString();
   const auto v = value.toStdWString();
   const auto p = iniPath.toStdWString();
-  return MOBase::WriteRegistryValue(s.c_str(), k.c_str(),
-                                    value.isNull() ? nullptr : v.c_str(), p.c_str());
+  return MOBase::WriteRegistryValue(s.c_str(), k.c_str(), v.c_str(), p.c_str());
+}
+
+bool removeIniValue(const QString& iniPath, const QString& section, const QString& key)
+{
+  const auto s = section.toStdWString();
+  const auto k = key.toStdWString();
+  const auto p = iniPath.toStdWString();
+  return MOBase::WriteRegistryValue(s.c_str(), k.c_str(), nullptr, p.c_str());
 }
 
 QString profileIniFolder(const MOBase::IProfile* profile, const QString& myGamesPath)
@@ -54,7 +62,9 @@ void copyIfMissing(const QString& sourceFolder, const QDir& directory,
     return;
   }
   if (!MOBase::shellCopy(sourceFolder + "/" + sourceName, destination)) {
-    QFile(destination).open(QIODevice::WriteOnly);
+    if (!QFile(destination).open(QIODevice::WriteOnly)) {
+      MOBase::log::warn("failed to create {}", destination);
+    }
   }
 }
 
