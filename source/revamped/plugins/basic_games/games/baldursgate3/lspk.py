@@ -1,5 +1,7 @@
-"""MO2 Revamped: a reader for the index of Baldur's Gate 3's .pak files (LSPK
-version 18, the one the game and LSLib write) and the small files in them.
+"""A reader for the index of Baldur's Gate 3's .pak files (LSPK versions 15,
+16 and 18: what the game and the LSLib versions mods are built with write)
+and the small files in them. Part of MO2 Revamped's Baldur's Gate 3 plugin
+(GPL-3.0).
 
 Reading a mod's metadata ran Divine.exe twice per pak (meta.lsx out, then the
 list of its files), a .NET start each time; with a few hundred paks
@@ -26,10 +28,15 @@ class Damaged(Unsupported):
 
 _MAGIC = b"LSPK"
 # Version, FileListOffset, FileListSize, Flags, Priority, Md5, NumParts
+# (version 16 and 18; version 15 has no NumParts)
 _HEADER18 = struct.Struct("<IQIBB16sH")
+_HEADER15 = struct.Struct("<IQIBB16s")
 # Name, OffsetInFile1, OffsetInFile2, ArchivePart, Flags, SizeOnDisk,
 # UncompressedSize
 _ENTRY18 = struct.Struct("<256sIHBBII")
+# versions 15 and 16: Name, OffsetInFile, SizeOnDisk, UncompressedSize,
+# ArchivePart, Flags, Crc, Unknown
+_ENTRY15 = struct.Struct("<256sQQQIIII")
 _SOLID = 0x04
 _METHOD_NONE, _METHOD_ZLIB, _METHOD_LZ4 = 0, 1, 2
 
@@ -97,6 +104,15 @@ class Entry:
         self.name = name.split(b"\0", 1)[0].decode("utf-8", "replace")
         self.offset = off1 | (off2 << 32)
 
+    @classmethod
+    def v15(cls, raw: tuple) -> "Entry":
+        name, offset, size_on_disk, size, part, flags, _crc, _unknown = raw
+        self = cls.__new__(cls)
+        self.name = name.split(b"\0", 1)[0].decode("utf-8", "replace")
+        self.offset, self.part, self.flags = offset, part, flags & 0xFF
+        self.size_on_disk, self.size = size_on_disk, size
+        return self
+
 
 class Package:
     def __init__(self, path: Path):
@@ -111,13 +127,25 @@ class Package:
         with open(path, "rb") as f:
             file_size = os.fstat(f.fileno()).st_size
             head = f.read(4 + _HEADER18.size)
-            if len(head) < 4 + _HEADER18.size or head[:4] != _MAGIC:
-                raise Unsupported("not an LSPK package")
-            version, list_offset, _list_size, flags, _prio, _md5, parts = (
-                _HEADER18.unpack_from(head, 4)
-            )
-            if version != 18:
+            if len(head) < 4 + _HEADER15.size or head[:4] != _MAGIC:
+                # BG3 paks and saves always start with LSPK: anything else is a
+                # cut or broken download, which Divine reads no better
+                raise Damaged("not an LSPK package, or cut short")
+            version = struct.unpack_from("<I", head, 4)[0]
+            if version in (16, 18):
+                if len(head) < 4 + _HEADER18.size:
+                    raise Damaged("header cut short")
+                _v, list_offset, _list_size, flags, _prio, _md5, parts = (
+                    _HEADER18.unpack_from(head, 4)
+                )
+            elif version == 15:
+                _v, list_offset, _list_size, flags, _prio, _md5 = (
+                    _HEADER15.unpack_from(head, 4)
+                )
+                parts = 1
+            else:
                 raise Unsupported(f"LSPK version {version}")
+            entry_struct = _ENTRY18 if version == 18 else _ENTRY15
             if flags & _SOLID or parts > 1:
                 raise Unsupported("solid or split package")
             if list_offset + 8 > file_size:
@@ -132,14 +160,18 @@ class Package:
                 or compressed_size < 0
                 or list_offset + 8 + compressed_size > file_size
                 # LZ4 can't expand more than 255 times
-                or num_files * _ENTRY18.size > compressed_size * 255 + 16
+                or num_files * entry_struct.size > compressed_size * 255 + 16
             ):
                 raise Damaged("bad file list")
             data = f.read(compressed_size)
             if len(data) != compressed_size:
                 raise Damaged("file list cut short")
-            raw = lz4_block(data, num_files * _ENTRY18.size)
-        self.entries = [Entry(e) for e in _ENTRY18.iter_unpack(raw)]
+            raw = lz4_block(data, num_files * entry_struct.size)
+        self.version = version
+        if version == 18:
+            self.entries = [Entry(e) for e in _ENTRY18.iter_unpack(raw)]
+        else:
+            self.entries = [Entry.v15(e) for e in _ENTRY15.iter_unpack(raw)]
 
     @property
     def names(self) -> list[str]:
@@ -153,6 +185,10 @@ class Package:
             if e.name.rsplit("/", 1)[-1].casefold() == wanted:
                 return e
         return None
+
+    def read_file(self, file_name: str) -> bytes | None:
+        entry = self.find(file_name)
+        return None if entry is None else self.read(entry)
 
     def read(self, entry: Entry) -> bytes:
         if entry.part != 0:
