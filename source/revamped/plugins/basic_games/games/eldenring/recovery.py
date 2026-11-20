@@ -1,4 +1,4 @@
-"""MO2 Revamped: steam's save folders set aside for a launch, and put back: the
+"""MO2 Revamped: Steam's save folders set aside for a launch, and put back: the
 recovery sessions, their records and locks, and the watch until the game
 starts.
 

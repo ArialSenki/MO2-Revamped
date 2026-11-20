@@ -1,4 +1,4 @@
-"""MO2 Revamped: eLDEN RING Reforged's online launcher as an MO2 program, kept
+"""MO2 Revamped: ELDEN RING Reforged's online launcher as an MO2 program, kept
 in step with its mod.
 
 Part of the Elden Ring and Nightreign game plugin (game_eldenring_mo2.py),

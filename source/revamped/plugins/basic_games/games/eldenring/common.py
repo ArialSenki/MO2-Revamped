@@ -257,9 +257,8 @@ class _MainWindowCloseWatcher(QObject):
         return False
 
 
-
 # the folder of game_eldenring_mo2.py, where the bridge and the me3
 # compatibility DLL are installed beside it
-GAMES_DIR = Path(__file__).resolve().parent.parent
+GAMES_DIR = Path(__file__).parent.parent
 
 __all__ = ['_QT_LOG_CALLS', '_log_game_name', 'set_log_game_name', '_safe_qt_log', 'qCritical', 'qInfo', 'qWarning', '_module_qinfo', '_module_qwarning', '_with_true_case', '_TR_CONTEXT', '_tr', '_ProcessEntry32W', '_running_process_names', '_running_processes', '_process_image_path', '_RunButtonEnabledMirror', '_ProgramListLock', '_MainWindowCloseWatcher', 'GAMES_DIR']
