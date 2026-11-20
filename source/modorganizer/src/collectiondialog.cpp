@@ -1220,15 +1220,25 @@ void CollectionDialog::updateSteps()
   }
 
   int downloads = 0, downloaded = 0, mods = 0, installed = 0, failed = 0;
+  // files only the user can bring (another site, another game's page), and
+  // the first of them
+  int handLeft = 0, firstHandRow = -1;
   // MO2 Revamped: the files' sizes move the download bar while they arrive,
   // not only when one is complete (a list of hundreds sat still for minutes)
   qint64 totalBytes = 0, doneBytes = 0;
-  for (const auto& e : entries) {
+  for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
+    const auto& e = entries[i];
     if (!e.selected || e.status == Status::Skipped) {
       continue;
     }
     const auto& mod = m_session->modOf(e);
     ++mods;
+    if (needsHand(e) && (e.status == Status::Pending || e.status == Status::WaitingForClick)) {
+      ++handLeft;
+      if (firstHandRow < 0) {
+        firstHandRow = i;
+      }
+    }
     if (e.status == Status::Installed) {
       ++installed;
     } else if (e.status == Status::Failed) {
@@ -1262,8 +1272,31 @@ void CollectionDialog::updateSteps()
   const bool running = stage == Stage::Running;
   QString text       = downloads == 0 ? tr("Nothing to download")
                                       : tr("%1 of %2 files").arg(downloaded).arg(downloads);
-  if (running && downloaded < downloads) {
+  // MO2 Revamped: when nothing is left but files the user gets by hand, the
+  // install waits for them: say so, and show the first one's instructions
+  // (a window that said "in progress" waited with no word of why)
+  const bool onlyHandLeft = running && handLeft > 0 && downloaded + handLeft >= downloads;
+  if (onlyHandLeft) {
+    text += QStringLiteral(" · ") +
+            tr("waiting for you: %n file(s) to get by hand", "", handLeft);
+    if (!m_pointedAtHand) {
+      m_pointedAtHand = true;
+      const int current = currentRow();
+      const bool onHand = current >= 0 && current < static_cast<int>(entries.size()) &&
+                          needsHand(entries[current]) &&
+                          (entries[current].status == Status::Pending ||
+                           entries[current].status == Status::WaitingForClick);
+      if (!onHand && firstHandRow < m_tree->topLevelItemCount()) {
+        QTreeWidgetItem* item = m_tree->topLevelItem(firstHandRow);
+        m_tree->setCurrentItem(item);
+        m_tree->scrollToItem(item);
+      }
+    }
+  } else if (running && downloaded < downloads) {
     text += QStringLiteral(" · ") + tr("in progress");
+  }
+  if (!onlyHandLeft) {
+    m_pointedAtHand = false;
   }
   if (totalBytes > 0 && downloaded < downloads) {
     show(0, static_cast<int>(doneBytes * 1000 / totalBytes), 1000, text);
@@ -1394,7 +1427,10 @@ QString CollectionDialog::statusText(const CollectionSession::Entry& e) const
 {
   switch (e.status) {
   case Status::Pending:
-    return e.byHand ? tr("Install by hand: another game's file") : tr("Pending");
+    if (e.byHand) {
+      return tr("Install by hand: another game's file");
+    }
+    return needsHand(e) ? tr("Get by hand: from another site") : tr("Pending");
   case Status::WaitingForClick:
     return tr("Waiting for your click");
   case Status::Downloading:
@@ -1432,6 +1468,12 @@ int CollectionDialog::currentRow() const
 {
   const auto* item = m_tree->currentItem();
   return item != nullptr ? item->data(ColName, RowRole).toInt() : -1;
+}
+
+bool CollectionDialog::needsHand(const CollectionSession::Entry& e) const
+{
+  const auto& mod = m_session->modOf(e);
+  return e.byHand || (mod.type != SourceType::Nexus && mod.type != SourceType::Bundle);
 }
 
 void CollectionDialog::updateExternal()

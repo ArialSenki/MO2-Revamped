@@ -1400,6 +1400,30 @@ InstallationResult InstallationManager::install(const QString& fileName,
       break;
     }
 
+    // MO2 Revamped: a collection's file that no installer recognises (a tool
+    // such as xEdit, a folder of extras) goes in as its archive lays it out,
+    // as Vortex stages it, instead of stopping the unattended install on the
+    // manual installer's window
+    if (installer->isManualInstaller() &&
+        installResult.result() == IPluginInstaller::RESULT_NOTATTEMPTED &&
+        filesTree != nullptr && qApp->property("mo2r.collectionInstall").toBool()) {
+      ArchiveFileTree* p = dynamic_cast<ArchiveFileTree*>(filesTree.get());
+      if (p != nullptr) {
+        log::debug("collection install: '{}' has no layout an installer knows, "
+                   "installed as its archive lays it out",
+                   QString(modName));
+        p->detach();
+        p->mapToArchive(*m_ArchiveHandler);
+        installResult = doInstall(modName, gameName, modID, version, newestVersion,
+                                  categoryID, fileCategoryID, repository);
+        if (installResult.result() == IPluginInstaller::RESULT_SUCCESS ||
+            installResult.result() == IPluginInstaller::RESULT_SUCCESSCANCEL) {
+          installResult.m_result = IPluginInstaller::RESULT_SUCCESS;
+        }
+        return installResult;
+      }
+    }
+
     try {
       {  // simple case
         IPluginInstallerSimple* installerSimple =

@@ -17641,6 +17641,17 @@ Instale o .NET Desktop Runtime {1} para Windows x64 em {0} e depois abra o BG3 M
       <source>Not started</source>
       <translation>Não iniciado</translation>
     </message>
+    <message numerus="yes">
+      <source>waiting for you: %n file(s) to get by hand</source>
+      <translation>
+        <numerusform>aguardando você: %n arquivo para obter manualmente</numerusform>
+        <numerusform>aguardando você: %n arquivos para obter manualmente</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Get by hand: from another site</source>
+      <translation>Manualmente: de outro site</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>

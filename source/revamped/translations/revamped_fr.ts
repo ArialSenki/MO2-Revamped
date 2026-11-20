@@ -17829,6 +17829,17 @@ Installez .NET Desktop Runtime {1} pour Windows x64 depuis {0}, puis relancez BG
       <source>Not started</source>
       <translation>Pas commencé</translation>
     </message>
+    <message numerus="yes">
+      <source>waiting for you: %n file(s) to get by hand</source>
+      <translation>
+        <numerusform>en attente de toi : %n fichier à récupérer à la main</numerusform>
+        <numerusform>en attente de toi : %n fichiers à récupérer à la main</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Get by hand: from another site</source>
+      <translation>À la main : depuis un autre site</translation>
+    </message>
   </context>
   <context>
     <name>CollectionSession</name>
