@@ -12442,6 +12442,34 @@ Esempio:
       <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
       <translation>Connettiti con la chiave API personale della pagina del tuo account Nexus. I messaggi di connessione compaiono accanto a queste azioni.</translation>
     </message>
+    <message>
+      <source>Animations</source>
+      <translation>Animazioni</translation>
+    </message>
+    <message>
+      <source>Off</source>
+      <translation>Disattivate</translation>
+    </message>
+    <message>
+      <source>Saver (30 Hz)</source>
+      <translation>Risparmio (30 Hz)</translation>
+    </message>
+    <message>
+      <source>Standard (60 Hz)</source>
+      <translation>Standard (60 Hz)</translation>
+    </message>
+    <message>
+      <source>Monitor (%1 Hz)</source>
+      <translation>Monitor (%1 Hz)</translation>
+    </message>
+    <message>
+      <source>Monitor</source>
+      <translation>Monitor</translation>
+    </message>
+    <message>
+      <source>How smoothly tabs, switches, menus, the log panel and the Run button move. Off shows every change at once. Monitor moves them at your screen's refresh rate (up to 240 Hz); it uses a little more CPU while something moves, and none while nothing does.</source>
+      <translation>Quanto si muovono fluidi schede, interruttori, menu, il pannello del log e il pulsante Avvia. Disattivate mostra ogni cambiamento subito. Monitor li muove alla frequenza del tuo schermo (fino a 240 Hz); usa un po’ più di CPU mentre qualcosa si muove, e niente quando non si muove nulla.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

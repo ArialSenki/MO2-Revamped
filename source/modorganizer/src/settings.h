@@ -614,6 +614,13 @@ public:
   bool animationsEnabled() const;
   void setAnimationsEnabled(bool b);
 
+  // how smoothly things move: "off", "saver", "standard" or "monitor" (see
+  // FluentMotion::Level); a setting from before the levels reads as "off" or
+  // "standard", and the on/off value is kept for older versions
+  //
+  QString animationLevel() const;
+  void setAnimationLevel(const QString& level);
+
   // filename of the theme
   //
   std::optional<QString> styleName() const;

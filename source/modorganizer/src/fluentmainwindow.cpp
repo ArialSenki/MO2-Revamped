@@ -113,7 +113,10 @@ bool MainWindow::usesFluentMica()
 
 void MainWindow::setupFluentLayout()
 {
-  FluentMotion::setEnabled(m_OrganizerCore.settings().interface().animationsEnabled());
+  FluentMotion::setLevel(
+      FluentMotion::levelFromKey(m_OrganizerCore.settings().interface().animationLevel()));
+  // Monitor: the rate of the screen this window is on
+  FluentMotion::followScreenOf(this);
 
   // the Run button follows the process from the moment it is clicked; other
   // launches (shortcuts, plugins) leave it alone

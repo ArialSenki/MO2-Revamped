@@ -13,6 +13,7 @@
 #include <QIcon>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QAbstractItemView>
 #include <QCheckBox>
 #include <QFrame>
 #include <QComboBox>
@@ -209,7 +210,48 @@ GeneralSettingsTab::GeneralSettingsTab(Settings& s, SettingsDialog& d)
       settings().interface().showChangeGameConfirmation());
   ui->doubleClickPreviews->setChecked(
       settings().interface().doubleClicksOpenPreviews());
-  ui->animationsBox->setChecked(settings().interface().animationsEnabled());
+  // how smoothly things move, in Miscellaneous where the on/off box was
+  {
+    auto* label    = new QLabel(QObject::tr("Animations"), ui->groupBox_9);
+    m_animationBox = new QComboBox(ui->groupBox_9);
+    m_animationBox->setObjectName(QStringLiteral("animationLevelBox"));
+    m_animationBox->setFixedWidth(260);
+    // the theme pads the list, which Qt leaves out of the list's height: it would
+    // scroll a whole row to show the last level and hide the first
+    m_animationBox->view()->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    // the rate Monitor runs at: the main window's screen
+    const int monitorHz = FluentMotion::monitorRate();
+    m_animationBox->addItem(QObject::tr("Off"), FluentMotion::levelKey(FluentMotion::Level::Off));
+    m_animationBox->addItem(QObject::tr("Saver (30 Hz)"),
+                            FluentMotion::levelKey(FluentMotion::Level::Saver));
+    m_animationBox->addItem(QObject::tr("Standard (60 Hz)"),
+                            FluentMotion::levelKey(FluentMotion::Level::Standard));
+    m_animationBox->addItem(monitorHz > 0 ? QObject::tr("Monitor (%1 Hz)").arg(monitorHz)
+                                          : QObject::tr("Monitor"),
+                            FluentMotion::levelKey(FluentMotion::Level::Monitor));
+    const int current = m_animationBox->findData(FluentMotion::levelKey(
+        FluentMotion::levelFromKey(settings().interface().animationLevel())));
+    m_animationBox->setCurrentIndex(current >= 0 ? current : 2);
+    const QString tip = QObject::tr(
+        "How smoothly tabs, switches, menus, the log panel and the Run button move. "
+        "Off shows every change at once. Monitor moves them at your screen's refresh "
+        "rate (up to 240 Hz); it uses a little more CPU while something moves, and "
+        "none while nothing does.");
+    m_animationBox->setToolTip(tip);
+    label->setToolTip(tip);
+    label->setBuddy(m_animationBox);
+    label->setObjectName(QStringLiteral("fluentSettingTitle"));
+    auto* row = new QFrame(ui->groupBox_9);
+    // styled as the other settings rows ("Interface size")
+    row->setObjectName(QStringLiteral("fluentSettingRow"));
+    auto* rowLayout = new QHBoxLayout(row);
+    rowLayout->setContentsMargins(4, 6, 4, 6);
+    rowLayout->setSpacing(12);
+    rowLayout->addWidget(label);
+    rowLayout->addStretch(1);
+    rowLayout->addWidget(m_animationBox);
+    ui->groupBox_9->layout()->addWidget(row);
+  }
 
   // The legacy View > Toolbars controls now live with the other interface
   // preferences. Read the live widgets so existing toolbar settings carry over.
@@ -361,8 +403,11 @@ void GeneralSettingsTab::update()
       ui->changeGameConfirmation->isChecked());
   settings().interface().setDoubleClicksOpenPreviews(
       ui->doubleClickPreviews->isChecked());
-  settings().interface().setAnimationsEnabled(ui->animationsBox->isChecked());
-  FluentMotion::setEnabled(ui->animationsBox->isChecked());
+  if (m_animationBox != nullptr) {
+    const QString level = m_animationBox->currentData().toString();
+    settings().interface().setAnimationLevel(level);
+    FluentMotion::setLevel(FluentMotion::levelFromKey(level));
+  }
 
   if (auto* mainWindow = qobject_cast<QMainWindow*>(dialog().parentWidget())) {
     const QVariant iconSizeData = ui->toolbarIconSizeCombo->currentData();

@@ -20,6 +20,7 @@ private:
   QComboBox* m_scaleBox = nullptr;
   QCheckBox* m_greyText = nullptr;
   QCheckBox* m_soundOnly = nullptr;
+  QComboBox* m_animationBox = nullptr;
 
   void addLanguages();
   void selectLanguage();

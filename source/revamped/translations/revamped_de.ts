@@ -11934,6 +11934,34 @@ Firefox.exe</translation>
       <source>Connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
       <translation>Verbinde dich mit dem persönlichen API-Schlüssel von deiner Nexus-Kontoseite. Verbindungsmeldungen erscheinen neben diesen Aktionen.</translation>
     </message>
+    <message>
+      <source>Animations</source>
+      <translation>Animationen</translation>
+    </message>
+    <message>
+      <source>Off</source>
+      <translation>Aus</translation>
+    </message>
+    <message>
+      <source>Saver (30 Hz)</source>
+      <translation>Sparsam (30 Hz)</translation>
+    </message>
+    <message>
+      <source>Standard (60 Hz)</source>
+      <translation>Standard (60 Hz)</translation>
+    </message>
+    <message>
+      <source>Monitor (%1 Hz)</source>
+      <translation>Bildschirm (%1 Hz)</translation>
+    </message>
+    <message>
+      <source>Monitor</source>
+      <translation>Bildschirm</translation>
+    </message>
+    <message>
+      <source>How smoothly tabs, switches, menus, the log panel and the Run button move. Off shows every change at once. Monitor moves them at your screen's refresh rate (up to 240 Hz); it uses a little more CPU while something moves, and none while nothing does.</source>
+      <translation>Wie flüssig sich Tabs, Schalter, Menüs, der Protokollbereich und die Schaltfläche „Starten“ bewegen. Aus zeigt jede Änderung sofort. Bildschirm bewegt sie mit der Bildwiederholrate deines Bildschirms (bis 240 Hz); das braucht etwas mehr CPU, solange sich etwas bewegt, und keine, wenn sich nichts bewegt.</translation>
+    </message>
 </context>
   <context>
     <name>QueryOverwriteDialog</name>

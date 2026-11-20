@@ -2192,6 +2192,25 @@ void InterfaceSettings::setAnimationsEnabled(bool b)
   set(m_Settings, "Settings", "animations", b);
 }
 
+QString InterfaceSettings::animationLevel() const
+{
+  // animations turned off in an older version, which keeps only the on/off
+  // value, stay off
+  if (!animationsEnabled()) {
+    return QStringLiteral("off");
+  }
+  if (auto v = getOptional<QString>(m_Settings, "Settings", "animation_level")) {
+    return *v;
+  }
+  return QStringLiteral("standard");
+}
+
+void InterfaceSettings::setAnimationLevel(const QString& level)
+{
+  set(m_Settings, "Settings", "animation_level", level);
+  setAnimationsEnabled(level.compare(QStringLiteral("off"), Qt::CaseInsensitive) != 0);
+}
+
 std::optional<QString> InterfaceSettings::styleName() const
 {
   return getOptional<QString>(m_Settings, "Settings", "style");

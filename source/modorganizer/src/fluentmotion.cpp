@@ -1,7 +1,15 @@
 #include "fluentmotion.h"
 #include "fluenticons.h"
 
+#include <log.h>
+
+#include <QAbstractAnimation>
 #include <QAction>
+#include <QElapsedTimer>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QTimer>
+#include <QWindow>
 #include <QEvent>
 #include <QGraphicsOpacityEffect>
 #include <QLabel>
@@ -14,12 +22,237 @@
 #include <QVariantAnimation>
 #include <QWidget>
 
+#include <memory>
+
 namespace FluentMotion
 {
 
 namespace
 {
   bool g_enabled = true;
+  Level g_level  = Level::Standard;
+  // the level animations go back to when they are turned on again
+  Level g_lastOn = Level::Standard;
+
+  // a screen that says it draws more often than this is drawn at this; one
+  // that doesn't say is taken as 60
+  constexpr int MaxRate      = 240;
+  constexpr int StandardRate = 60;
+  constexpr int SaverRate    = 30;
+
+  // Advances every Qt animation in the program at a set number of frames a
+  // second. Qt's own driver ticks every 16 ms whatever the screen; this one
+  // waits for each frame's own time (6 or 7 ms in turn at 144), so the rate is
+  // the screen's and not the nearest whole millisecond's. Qt starts it when
+  // something begins to animate and stops it once nothing does: idle, it
+  // costs nothing.
+  class RateDriver : public QAnimationDriver
+  {
+  public:
+    RateDriver()
+    {
+      m_timer.setSingleShot(true);
+      m_timer.setTimerType(Qt::PreciseTimer);
+      QObject::connect(&m_timer, &QTimer::timeout, this, [this] {
+        tick();
+      });
+      m_stats = qEnvironmentVariableIsSet("MO2R_ANIMATION_STATS");
+    }
+
+    void setRate(int framesPerSecond)
+    {
+      m_rate     = framesPerSecond;
+      m_periodNs = 1000000000LL / framesPerSecond;
+    }
+
+    int rate() const { return m_rate; }
+
+  protected:
+    void start() override
+    {
+      QAnimationDriver::start();
+      m_clock.start();
+      m_next   = m_periodNs;
+      m_frames = 0;
+      schedule();
+    }
+
+    void stop() override
+    {
+      m_timer.stop();
+      if (m_stats && m_frames > 1) {
+        const qint64 ms = m_clock.elapsed();
+        MOBase::log::info("animations: {} frames in {} ms ({:.1f} a second, set to {})",
+                           m_frames, ms, ms > 0 ? m_frames * 1000.0 / ms : 0.0, m_rate);
+      }
+      QAnimationDriver::stop();
+    }
+
+  private:
+    void tick()
+    {
+      advance();
+      ++m_frames;
+      // the last animation may have ended in that frame
+      if (!isRunning()) {
+        return;
+      }
+      // a late frame (a busy moment) drops the frames it missed rather than
+      // drawing them in a burst
+      const qint64 now = m_clock.nsecsElapsed();
+      m_next += m_periodNs;
+      if (m_next <= now) {
+        m_next = now + m_periodNs - (now - m_next) % m_periodNs;
+      }
+      schedule();
+    }
+
+    void schedule()
+    {
+      const qint64 wait = m_next - m_clock.nsecsElapsed();
+      m_timer.start(static_cast<int>(qMax<qint64>(0, (wait + 500000) / 1000000)));
+    }
+
+    QTimer m_timer;
+    QElapsedTimer m_clock;
+    qint64 m_periodNs = 1000000000LL / StandardRate;
+    qint64 m_next     = 0;
+    qint64 m_frames   = 0;
+    int m_rate        = StandardRate;
+    bool m_stats      = false;
+  };
+
+  RateDriver* g_driver = nullptr;
+  int g_logged         = 0;
+  Level g_loggedLevel  = Level::Standard;
+  QPointer<QWidget> g_window;
+  QMetaObject::Connection g_screenRate;
+
+  QScreen* monitorScreen()
+  {
+    QScreen* screen = g_window != nullptr ? g_window->screen() : nullptr;
+    return screen != nullptr ? screen : QGuiApplication::primaryScreen();
+  }
+
+  int rateFor(Level level)
+  {
+    switch (level) {
+    case Level::Saver:
+      return SaverRate;
+    case Level::Monitor:
+      return monitorRate();
+    default:
+      // off: what still moves by itself (Qt's smooth scrolling) moves as before
+      return StandardRate;
+    }
+  }
+
+  void applyRate()
+  {
+    if (QCoreApplication::instance() == nullptr) {
+      return;
+    }
+    if (g_driver == nullptr) {
+      g_driver = new RateDriver();
+      g_driver->setParent(QCoreApplication::instance());
+      g_driver->install();
+    }
+    const int rate = rateFor(g_level);
+    if (rate != g_driver->rate()) {
+      g_driver->setRate(rate);
+    }
+    if (rate != g_logged || g_level != g_loggedLevel) {
+      g_logged      = rate;
+      g_loggedLevel = g_level;
+      QScreen* screen = monitorScreen();
+      MOBase::log::info("animations: {} ({} frames a second; screen '{}' at {:.2f} Hz)",
+                        levelKey(g_level), g_level == Level::Off ? 0 : rate,
+                        screen != nullptr ? screen->name() : QStringLiteral("?"),
+                        screen != nullptr ? screen->refreshRate() : 0.0);
+    }
+  }
+
+  // the screen the main window is on, and its rate, as either changes
+  void watchScreen(QScreen* screen)
+  {
+    QObject::disconnect(g_screenRate);
+    if (screen != nullptr) {
+      g_screenRate = QObject::connect(screen, &QScreen::refreshRateChanged, screen, [] {
+        applyRate();
+      });
+    }
+    applyRate();
+  }
+
+  // MO2R_ANIMATION_BENCH=<seconds>: once the main window shows, a corner of
+  // it the size of a switch or a tab's underline is redrawn in a loop for that
+  // long and the frames drawn are logged (measurements)
+  void runBench(QWidget* window)
+  {
+    bool ok           = false;
+    const int seconds = qEnvironmentVariableIntValue("MO2R_ANIMATION_BENCH", &ok);
+    if (!ok || seconds <= 0) {
+      return;
+    }
+    auto* bench = new QVariantAnimation(window);
+    bench->setStartValue(0.0);
+    bench->setEndValue(1.0);
+    bench->setDuration(seconds * 1000);
+    auto frames = std::make_shared<qint64>(0);
+    auto clock  = std::make_shared<QElapsedTimer>();
+    QObject::connect(bench, &QVariantAnimation::valueChanged, window, [window, frames] {
+      ++*frames;
+      window->update(QRect(16, 16, 240, 48));
+    });
+    QObject::connect(bench, &QAbstractAnimation::finished, window, [bench, frames, clock] {
+      const qint64 ms = clock->elapsed();
+      MOBase::log::info("animation bench: {} frames in {} ms ({:.1f} a second, {} at {})",
+                        *frames, ms, ms > 0 ? *frames * 1000.0 / ms : 0.0,
+                        levelKey(g_level), frameRate());
+      bench->deleteLater();
+    });
+    // after the start's own work, so the window is idle around it
+    QTimer::singleShot(8000, window, [bench, clock] {
+      MOBase::log::info("animation bench: start");
+      clock->start();
+      bench->start();
+    });
+  }
+
+  class ScreenFollower : public QObject
+  {
+  public:
+    using QObject::QObject;
+
+  protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+      auto* window = qobject_cast<QWidget*>(watched);
+      // shown, or its native window made again (window flags, Mica): the
+      // screen of the window it has now
+      if (window != nullptr &&
+          (event->type() == QEvent::Show || event->type() == QEvent::WinIdChange) &&
+          window->windowHandle() != nullptr && window->windowHandle() != m_handle) {
+        QObject::disconnect(m_screenChanged);
+        m_handle        = window->windowHandle();
+        m_screenChanged = QObject::connect(m_handle, &QWindow::screenChanged, this,
+                                           [](QScreen* screen) {
+                                             watchScreen(screen);
+                                           });
+        watchScreen(m_handle->screen());
+        if (!m_benched) {
+          m_benched = true;
+          runBench(window);
+        }
+      }
+      return QObject::eventFilter(watched, event);
+    }
+
+  private:
+    QPointer<QWindow> m_handle;
+    QMetaObject::Connection m_screenChanged;
+    bool m_benched = false;
+  };
 
   // drawn over a tool button: its chevron, at the angle the menu animation is
   // at; the button's mouse events go through
@@ -99,7 +332,74 @@ bool enabled()
 
 void setEnabled(bool enabled)
 {
-  g_enabled = enabled;
+  setLevel(enabled ? (g_level == Level::Off ? g_lastOn : g_level) : Level::Off);
+}
+
+Level level()
+{
+  return g_level;
+}
+
+void setLevel(Level level)
+{
+  g_level   = level;
+  g_enabled = level != Level::Off;
+  if (g_enabled) {
+    g_lastOn = level;
+  }
+  applyRate();
+}
+
+void followScreenOf(QWidget* window)
+{
+  if (window == nullptr || g_window == window) {
+    return;
+  }
+  g_window = window;
+  window->installEventFilter(new ScreenFollower(window));
+  applyRate();
+}
+
+int monitorRate()
+{
+  QScreen* screen = monitorScreen();
+  const qreal hz  = screen != nullptr ? screen->refreshRate() : 0.0;
+  if (hz < 1.0) {
+    return StandardRate;
+  }
+  return qBound(SaverRate, qRound(hz), MaxRate);
+}
+
+int frameRate()
+{
+  if (g_level == Level::Off) {
+    return 0;
+  }
+  return g_driver != nullptr ? g_driver->rate() : rateFor(g_level);
+}
+
+QString levelKey(Level level)
+{
+  switch (level) {
+  case Level::Off:
+    return QStringLiteral("off");
+  case Level::Saver:
+    return QStringLiteral("saver");
+  case Level::Monitor:
+    return QStringLiteral("monitor");
+  default:
+    return QStringLiteral("standard");
+  }
+}
+
+Level levelFromKey(const QString& key)
+{
+  for (Level level : {Level::Off, Level::Saver, Level::Standard, Level::Monitor}) {
+    if (key.compare(levelKey(level), Qt::CaseInsensitive) == 0) {
+      return level;
+    }
+  }
+  return Level::Standard;
 }
 
 QVariantAnimation* createAnimation(QObject* parent, QEasingCurve::Type easing)

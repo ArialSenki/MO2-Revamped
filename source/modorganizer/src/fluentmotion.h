@@ -2,6 +2,7 @@
 #define FLUENTMOTION_H
 
 #include <QEasingCurve>
+#include <QString>
 
 #include <functional>
 
@@ -12,7 +13,8 @@ class QToolButton;
 class QWidget;
 
 // Shared timing for the Fluent v4 animations. Everything that moves goes through
-// here so the "Enable animations" setting can turn all of it off at once.
+// here so the Animations setting can turn all of it off at once, or set how
+// smoothly it moves.
 namespace FluentMotion
 {
 
@@ -23,6 +25,34 @@ constexpr int Slow   = 333;
 
 bool enabled();
 void setEnabled(bool enabled);
+
+// how often everything that moves is drawn (Settings > General > Animations).
+// Every Qt animation in the program (these, smooth scrolling, the switches)
+// advances on one timer, which runs only while something animates
+enum class Level
+{
+  Off,       // no animations: every change shows at once
+  Saver,     // 30 frames a second
+  Standard,  // 60 frames a second, as before
+  Monitor    // the refresh rate of the screen the main window is on
+};
+
+Level level();
+void setLevel(Level level);
+
+// the main window: Monitor follows the screen it is on and that screen's rate
+void followScreenOf(QWidget* window);
+
+// the frames a second animations run at now (0 when they are off)
+int frameRate();
+
+// the frames a second Monitor runs at: the main window's screen, 30 to 240,
+// 60 when the screen doesn't say
+int monitorRate();
+
+// the level's name as kept in the settings, and back (Standard if unknown)
+QString levelKey(Level level);
+Level levelFromKey(const QString& key);
 
 // creates a QVariantAnimation owned by parent with the Fluent easing; its
 // duration is set by start()
