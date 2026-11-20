@@ -36,7 +36,17 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <usvfs.h>
 
-static const char SHMID[] = "mod_organizer_instance";
+// The name of usvfs's shared memory. Upstream uses one fixed name for every run,
+// so a game still running from an MO2 that was closed (or from upstream MO2, with
+// its own usvfs build) kept that memory alive and the next MO2 opened it instead
+// of making its own, starting from the other run's files and settings. One name
+// per MO2 run, from its process id and start time, keeps every run apart.
+// The name must stay under 56 characters: usvfs appends tree suffixes to it.
+static std::string makeShmId()
+{
+  return "mo2_revamped_" + std::to_string(::GetCurrentProcessId()) + "_" +
+         std::to_string(::GetTickCount64());
+}
 using namespace MOBase;
 
 std::string to_hex(void* bufferIn, size_t bufferSize)
@@ -139,7 +149,8 @@ UsvfsConnector::UsvfsConnector()
 
   usvfsParameters* params = usvfsCreateParameters();
 
-  usvfsSetInstanceName(params, SHMID);
+  const std::string shmId = makeShmId();
+  usvfsSetInstanceName(params, shmId.c_str());
   usvfsSetDebugMode(params, false);
   usvfsSetLogLevel(params, logLevel);
   usvfsSetCrashDumpType(params, dumpType);
@@ -152,7 +163,7 @@ UsvfsConnector::UsvfsConnector()
              " . instance: {}\n"
              " . log: {}\n"
              " . dump: {} ({})",
-             SHMID, usvfsLogLevelToString(logLevel), dumpPath.c_str(),
+             shmId, usvfsLogLevelToString(logLevel), dumpPath.c_str(),
              usvfsCrashDumpTypeToString(dumpType));
 
   usvfsCreateVFS(params);
