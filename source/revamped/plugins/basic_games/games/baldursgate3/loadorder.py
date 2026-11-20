@@ -21,6 +21,7 @@ from .paks import (
     PakCache,
     forced_in_load_order,
     is_builtin,
+    is_part,
     scan_mod_paks,
     version64_text,
 )
@@ -99,6 +100,8 @@ def read_mods(
         for pak in entry.paks:
             if canceled():
                 raise Canceled()
+            if is_part(pak):
+                continue
             try:
                 info = cache.info(pak, divine)
             except NeedsLSLib:

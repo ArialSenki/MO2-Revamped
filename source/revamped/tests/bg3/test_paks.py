@@ -243,6 +243,19 @@ class Writing(Tmp):
         self.assertEqual(loadorder.dropped_by_game([U["A"].casefold(), U["B"].casefold()], now), [U["B"].casefold()])
 
 
+class SplitPaks(Tmp):
+    def test_later_parts_are_not_read_as_mods(self):
+        mod = self.tmp / "big"
+        mod_pak(mod / "Big.pak", "Big", U["A"])
+        (mod / "Big_1.pak").write_bytes(b"second part, no header")
+        (mod / "Other_2.pak").write_bytes(b"LSPK broken")
+        entries = loadorder.read_mods([("big", mod)], paks.PakCache(self.tmp / "c.json"), None)
+        self.assertEqual([m["uuid"] for m in entries[0].modules], [U["A"]])
+        # a lone "_2" pak with no first part is still read (and here broken)
+        self.assertEqual([f[0] for f in entries[0].failed], ["Other_2.pak"])
+        self.assertEqual(len(entries[0].paks), 3)
+
+
 class Canceling(Tmp):
     def test_cancel_between_paks(self):
         mod = self.tmp / "m"

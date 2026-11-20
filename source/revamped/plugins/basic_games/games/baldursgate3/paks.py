@@ -378,6 +378,17 @@ def scan_mod_paks(modpath: Path) -> list[Path]:
     return sorted(by_name.values())
 
 
+_part_re = re.compile(r"(.+)_(\d+)\.pak", re.I)
+
+
+def is_part(pak: Path) -> bool:
+    """A later part of a split package (Big_1.pak next to Big.pak): it goes
+    to the documents' Mods folder with its first part, and only the first
+    part has the index."""
+    match = _part_re.fullmatch(pak.name)
+    return bool(match) and pak.with_name(match[1] + pak.suffix).exists()
+
+
 def forced_in_load_order(modpath: Path, pak: Path) -> bool:
     """A Wabbajack list author's tool (made with the unofficial BG3 plugin)
     leaves "LoadOrder = true" in the mod's meta.ini for a pak it wants in the
