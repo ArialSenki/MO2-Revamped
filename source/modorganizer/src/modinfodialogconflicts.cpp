@@ -745,6 +745,7 @@ void GeneralConflictsTab::restoreState(const Settings& s)
 
 bool GeneralConflictsTab::update()
 {
+  MOBase::TimeThis tt("GeneralConflictsTab::update()");
   clear();
 
   if (m_tab->origin() != nullptr) {

@@ -2385,6 +2385,7 @@ bool OrganizerCore::syncOriginPriorities(const std::vector<unsigned int>& change
 
 void OrganizerCore::modStatusChanged(unsigned int index)
 {
+  TimeThis tt("OrganizerCore::modStatusChanged()");
   // the structure in use now is replaced when the refresh ends
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;
@@ -2420,6 +2421,7 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
 void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 {
+  TimeThis tt("OrganizerCore::modStatusChanged(list)");
   // the structure in use now is replaced when the refresh ends
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;

@@ -4249,6 +4249,7 @@ static bool BySortValue(const std::pair<UINT32, QTreeWidgetItem*>& LHS,
 void MainWindow::updateBSAList(const QStringList& defaultArchives,
                                const QStringList& activeArchives)
 {
+  TimeThis tt("MainWindow::updateBSAList()");
   m_DefaultArchives = defaultArchives;
   ui->bsaList->clear();
   ui->bsaList->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
