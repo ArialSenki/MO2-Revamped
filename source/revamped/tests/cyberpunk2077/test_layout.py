@@ -88,6 +88,29 @@ class LayoutTest(unittest.TestCase):
         # a wrapper around loose archives
         self.assertEqual(self.fixed(["Mod/a.archive", "Mod/b.png"]), ["archive/pc/mod/a.archive", "b.png"])
 
+    def test_wrapper_with_a_folder_of_its_own_name(self) -> None:
+        # a real Nexus archive (Price Reducer): merging the wrapper into its
+        # parent crashed MO2
+        self.assertEqual(
+            self.fixed(["PriceReducer/PriceReducer/init.lua", "PriceReducer/readme.txt"]),
+            ["bin/x64/plugins/cyber_engine_tweaks/mods/PriceReducer/init.lua", "readme.txt"],
+        )
+        self.assertEqual(
+            self.fixed(["Mod/Mod/archive/pc/mod/a.archive"]),
+            ["archive/pc/mod/a.archive"],
+        )
+
+    def test_redscript_folder_without_r6_scripts(self) -> None:
+        # a real Nexus archive (Cyberbane RU Translation)
+        self.assertEqual(
+            self.fixed(["Cyberbane/API/CyberbaneAPI.reds", "Cyberbane/Core/Log.reds", "readme.txt"]),
+            ["r6/scripts/Cyberbane/API/CyberbaneAPI.reds", "r6/scripts/Cyberbane/Core/Log.reds", "readme.txt"],
+        )
+        # two such folders may be options: left to the manual installer
+        self.assertIs(self.check(["A/a.reds", "B/b.reds"]), INVALID)
+        # a wrapper around the game's folders is taken out, not put in r6/scripts
+        self.assertEqual(self.fixed(["Mod/r6/scripts/M/a.reds"]), ["r6/scripts/M/a.reds"])
+
     def test_wrapper_depth_limit(self) -> None:
         self.assertIs(self.check(["1/2/3/4/archive/pc/mod/a.archive"]), INVALID)
         self.assertIs(self.check(["1/2/3/archive/pc/mod/a.archive"]), FIXABLE)
