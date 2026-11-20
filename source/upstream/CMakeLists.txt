@@ -68,3 +68,6 @@ foreach (p ${MO2_UPSTREAM_PROJECTS})
 endforeach()
 # MO2 Revamped: the native stand-ins of the C++/CLI installers
 add_subdirectory(${S}/installer_dotnet_shim installer_dotnet_shim)
+
+# MO2 Revamped's own Bethesda framework and the game plugins built on it
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../revamped/games/bethesda revamped_bethesda)
