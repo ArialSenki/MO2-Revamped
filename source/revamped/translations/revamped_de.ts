@@ -21861,6 +21861,14 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <source>Cancel</source>
       <translation>Abbrechen</translation>
     </message>
+    <message>
+      <source>Yes to all</source>
+      <translation>Ja, alle</translation>
+    </message>
+    <message>
+      <source>No to all</source>
+      <translation>Nein, keine</translation>
+    </message>
   </context>
   <context>
     <name>RevampedInstallerSettings</name>
@@ -21907,6 +21915,17 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
     <message>
       <source>The order in which MO2 tries this installer: a higher number goes first</source>
       <translation>Die Reihenfolge, in der MO2 diesen Installer versucht: eine höhere Zahl kommt zuerst</translation>
+    </message>
+  </context>
+  <context>
+    <name>OMODFrameworkWrapper</name>
+    <message>
+      <source>Show the readme?</source>
+      <translation>Liesmich anzeigen?</translation>
+    </message>
+    <message>
+      <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
+      <translation>Das Liesmich erklärt vielleicht die Optionen der Installation. Es bleibt neben dem Installer offen, bis du es schließt.</translation>
     </message>
   </context>
 </TS>

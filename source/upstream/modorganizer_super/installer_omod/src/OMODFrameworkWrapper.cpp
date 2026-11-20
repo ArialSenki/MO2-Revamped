@@ -6,6 +6,7 @@ using namespace cli;
 #include <array>
 #include <filesystem>
 
+#include <QDir>
 #include <QMessageBox>
 #include <QTemporaryDir>
 #include <QProgressDialog>
@@ -102,6 +103,7 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
 
     connect(this, &OMODFrameworkWrapper::pickModName, this, &OMODFrameworkWrapper::pickModNameSlot, Qt::ConnectionType::BlockingQueuedConnection);
     connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
+    connect(this, &OMODFrameworkWrapper::removeMod, this, &OMODFrameworkWrapper::removeModSlot, Qt::ConnectionType::BlockingQueuedConnection);
     connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
     connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
     connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
@@ -251,6 +253,14 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     emit createMod(modInterface, modName);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
+
+    // MO2 Revamped: a script that cancels, or an error, no longer leaves an
+    // empty mod in the list
+    bool installed = false;
+    scope_guard leftoverGuard([this, &installed, modInterface]() {
+      if (!installed)
+        emit removeMod(modInterface);
+    });
 
     {
       QTemporaryDir tempPath(modInterface->absolutePath() + "/OMODInstallTempXXXXXX");
@@ -520,6 +530,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       omodsPendingPostInstall.append(toQString(omod.ModName));
       modInterface->setPluginSetting("Omod Installer", "omodsPendingPostInstall", omodsPendingPostInstall);
     }
+    installed = true;
     return EInstallResult::RESULT_SUCCESS;
   }
   catch (const std::exception& e)
@@ -550,7 +561,7 @@ void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IMod
 
   if (!omodsPendingPostInstall.empty() && !(mMoInfo->modList()->state(mod->name()) & MOBase::IModList::STATE_ACTIVE))
   {
-    auto response = QMessageBox::question(mParentWidget, tr("Activate mod?"),
+    auto response = omodQuestion(mParentWidget, tr("Activate mod?"),
                                         /*: %1 is the left-pane mod name.
                                             %2 is the name from the metadata of an OMOD.
                                         */
@@ -586,7 +597,7 @@ void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IMod
           */
           message = tr("%1 wants to activate %2. Do you want to do so?").arg(omodName).arg(plugin);
 
-          response = QMessageBox::question(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+          response = omodQuestion(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
           if (response == QMessageBox::NoToAll)
           {
             MOBase::log::debug("User skipped all.");
@@ -629,7 +640,7 @@ void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IMod
           */
           message = tr("%1 installed %2, but doesn't activate it by default. Do you want to activate it anyway?").arg(omodName).arg(plugin);
 
-          response = QMessageBox::question(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+          response = omodQuestion(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
           if (response == QMessageBox::NoToAll)
           {
             MOBase::log::debug("User skipped all.");
@@ -740,11 +751,32 @@ void OMODFrameworkWrapper::createModSlot(MOBase::IModInterface*& modInterfaceOut
   modInterfaceOut = mMoInfo->createMod(modName);
 }
 
+void OMODFrameworkWrapper::removeModSlot(MOBase::IModInterface* mod)
+{
+  if (mod == nullptr)
+    return;
+  // only a folder that got nothing but its meta.ini: a mod that already had
+  // files (one the install was merging into) stays as it was. The new mod
+  // isn't in MO2's list yet, so the folder itself goes; the list refresh
+  // after the install drops it.
+  QDir folder(mod->absolutePath());
+  const QStringList entries = folder.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+  if (entries.isEmpty() || (entries.size() == 1 && entries.front().compare("meta.ini", Qt::CaseInsensitive) == 0))
+  {
+    if (!folder.removeRecursively())
+      MOBase::log::warn("the unfinished OMOD install {} couldn't be removed", mod->name());
+  }
+  else
+  {
+    MOBase::log::debug("the unfinished OMOD install {} has files; left as it is", mod->name());
+  }
+}
+
 void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QString& readme)
 {
-  if (QMessageBox::question(mParentWidget, tr("Display Readme?"),
-    //: <br> is a line break. Translators can remove it if it makes things clearer.
-    tr("The Readme may explain installation options. Display it?<br>It will remain visible until you close it.")) == QMessageBox::StandardButton::Yes)
+  if (omodQuestion(mParentWidget, tr("Show the readme?"),
+    tr("The readme may explain the installation's options. It stays open beside the installer until you close it."),
+    QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::StandardButton::Yes)
   {
     // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
     // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.

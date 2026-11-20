@@ -45,14 +45,11 @@ QMessageBox::StandardButton MessageBoxHelper::warning(QWidget* parent, const QSt
   return response;
 }
 
-namespace
-{
-
 // MO2 Revamped: an OMOD script's message or question is MO2's content dialog
 // over the installer's window, with the script's own title and words; 2.5.2
 // showed Qt's message boxes. Without a title, a plain one says where the text
 // comes from.
-QMessageBox::StandardButton showScriptMessage(QWidget* parent, const QString& title,
+QMessageBox::StandardButton omodQuestion(QWidget* parent, const QString& title,
                                               const QString& text,
                                               QMessageBox::StandardButtons buttons,
                                               QMessageBox::StandardButton defaultButton)
@@ -71,7 +68,8 @@ QMessageBox::StandardButton showScriptMessage(QWidget* parent, const QString& ti
     const char* text;
   };
   static const Choice choices[] = {
-      {QMessageBox::Yes, "Yes"},       {QMessageBox::No, "No"},
+      {QMessageBox::Yes, "Yes"},       {QMessageBox::YesToAll, "Yes to all"},
+      {QMessageBox::No, "No"},         {QMessageBox::NoToAll, "No to all"},
       {QMessageBox::Ok, "OK"},         {QMessageBox::Retry, "Retry"},
       {QMessageBox::Ignore, "Ignore"}, {QMessageBox::Abort, "Abort"},
       {QMessageBox::Cancel, "Cancel"},
@@ -111,24 +109,22 @@ QMessageBox::StandardButton showScriptMessage(QWidget* parent, const QString& ti
   return QMessageBox::NoButton;
 }
 
-}  // namespace
-
 void MessageBoxHelper::criticalMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
 {
-  standardButtonOut = showScriptMessage(parent, title, text, buttons, defaultButton);
+  standardButtonOut = omodQuestion(parent, title, text, buttons, defaultButton);
 }
 
 void MessageBoxHelper::informationMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
 {
-  standardButtonOut = showScriptMessage(parent, title, text, buttons, defaultButton);
+  standardButtonOut = omodQuestion(parent, title, text, buttons, defaultButton);
 }
 
 void MessageBoxHelper::questionMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
 {
-  standardButtonOut = showScriptMessage(parent, title, text, buttons, defaultButton);
+  standardButtonOut = omodQuestion(parent, title, text, buttons, defaultButton);
 }
 
 void MessageBoxHelper::warningMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
 {
-  standardButtonOut = showScriptMessage(parent, title, text, buttons, defaultButton);
+  standardButtonOut = omodQuestion(parent, title, text, buttons, defaultButton);
 }

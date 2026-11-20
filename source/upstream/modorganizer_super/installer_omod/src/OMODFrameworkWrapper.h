@@ -44,6 +44,8 @@ signals:
 
   void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
 
+  void removeMod(MOBase::IModInterface* mod);
+
   void displayReadme(const QString& modName, const QString& readme);
 
   void showWaitDialog(QString message);
@@ -52,6 +54,7 @@ signals:
 protected slots:
   void pickModNameSlot(bool& successOut, MOBase::GuessedValue<QString>& modName);
   void createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
+  void removeModSlot(MOBase::IModInterface* mod);
   void displayReadmeSlot(const QString& modName, const QString& readme);
   
   void showWaitDialogSlot(QString message);

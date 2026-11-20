@@ -21837,6 +21837,14 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
+    <message>
+      <source>Yes to all</source>
+      <translation>Sim para todos</translation>
+    </message>
+    <message>
+      <source>No to all</source>
+      <translation>Não para todos</translation>
+    </message>
   </context>
   <context>
     <name>RevampedInstallerSettings</name>
@@ -21883,6 +21891,17 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
     <message>
       <source>The order in which MO2 tries this installer: a higher number goes first</source>
       <translation>A ordem em que o MO2 tenta este instalador: um número maior vem primeiro</translation>
+    </message>
+  </context>
+  <context>
+    <name>OMODFrameworkWrapper</name>
+    <message>
+      <source>Show the readme?</source>
+      <translation>Mostrar o leia-me?</translation>
+    </message>
+    <message>
+      <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
+      <translation>O leia-me pode explicar as opções da instalação. Ele fica aberto ao lado do instalador até você fechá-lo.</translation>
     </message>
   </context>
 </TS>
