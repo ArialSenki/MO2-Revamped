@@ -838,7 +838,9 @@ function Copy-EldenRingPlugins {
         } elseif ($allowedDirectories -icontains $parts[0]) {
             $include = $true
             if ($parts[0] -ieq 'basic_games' -and $parts.Length -ge 3 -and $parts[1] -ieq 'games') {
-                $include = $parts.Length -eq 3 -and $allowedGameFiles -icontains $parts[2]
+                # the Elden Ring plugin's own modules are in games\eldenring
+                $include = ($parts.Length -eq 3 -and $allowedGameFiles -icontains $parts[2]) -or
+                    ($parts.Length -eq 4 -and $parts[2] -ieq 'eldenring' -and $parts[3] -like '*.py')
             } elseif ($parts[0] -ieq 'data') {
                 # the DDS support files, and the Fluent helpers the BAIN wizard
                 # imports
@@ -865,7 +867,8 @@ function Copy-EldenRingPlugins {
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
         'eldenring_mo2_tools\save_isolation.py', 'eldenring_mo2_tools\native_profile_tool.py',
         'eldenring_mo2_tools\startup_tool.py', 'eldenring_mo2_tools\stub.py',
-        'basic_games\games\game_eldenring_mo2.py',
+        'basic_games\games\game_eldenring_mo2.py', 'basic_games\games\eldenring\common.py',
+        'basic_games\games\eldenring\recovery_probe.py',
         'data\revamped_fluent.py', 'installer_wizard\dialog.py',
         'basic_games\games\eldenring_mo2_bridge.dll', 'basic_games\games\eldenring_mo2_me3_compat.dll',
         'plugin_python\plugin_python.dll',
@@ -887,7 +890,10 @@ function Copy-EldenRingPlugins {
     $gameDirectory = Join-Path $targetPlugins 'basic_games\games'
     $nestedGameFiles = @(
         Get-ChildItem -LiteralPath $gameDirectory -File -Recurse -Force |
-            Where-Object { $_.DirectoryName -ine $gameDirectory }
+            Where-Object {
+                $_.DirectoryName -ine $gameDirectory -and
+                $_.DirectoryName -ine (Join-Path $gameDirectory 'eldenring')
+            }
     )
     if ($nestedGameFiles.Count -gt 0) {
         $names = $nestedGameFiles | ForEach-Object { $_.FullName.Substring($gameDirectory.Length).TrimStart('\') }

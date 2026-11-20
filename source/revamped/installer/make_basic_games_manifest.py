@@ -138,7 +138,7 @@ def describe(obj, BasicGame) -> dict:
         and (inspect.isfunction(value) or inspect.ismethod(value))
         and value is not getattr(BasicGame, name, None)
     )
-    return {
+    entry = {
         "class": cls.__name__,
         "attributes": attributes,
         "answers": answers,
@@ -146,6 +146,13 @@ def describe(obj, BasicGame) -> dict:
         "settings": settings,
         "overrides": overrides,
     }
+    # a check the stub runs in its init() (see lazy_games.ManifestGame.init)
+    probe = getattr(cls, "ManifestInitProbe", None)
+    if probe is not None:
+        if not isinstance(probe, str) or ":" not in probe:
+            raise SystemExit(f"{cls.__name__}.ManifestInitProbe must be 'module:function'")
+        entry["init_probe"] = probe
+    return entry
 
 
 def main() -> int:

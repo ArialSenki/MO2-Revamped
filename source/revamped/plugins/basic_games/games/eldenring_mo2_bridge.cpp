@@ -1683,6 +1683,114 @@ void* __cdecl map_archive_path_hook(EldenRingLocalWString* path, uint64_t p2,
   return result;
 }
 
+// A byte the code must have, or must have in the bits of mask (a register
+// number in the low bits of a ModRM byte, for instance).
+struct MaskedByte {
+  unsigned char value;
+  unsigned char mask;
+};
+
+// The resolver a call at `call` (an E8 rel32) leads to, through up to eight
+// jmp rel32 thunks; null when any step leaves the game's code.
+unsigned char* resolver_call_target(const unsigned char* call,
+                                    const unsigned char* image_base, size_t image_size,
+                                    const IMAGE_SECTION_HEADER* sections,
+                                    unsigned int section_count) {
+  int32_t displacement = 0;
+  memcpy(&displacement, call + 1, sizeof(displacement));
+  auto* target = const_cast<unsigned char*>(call + 5 + displacement);
+  if (!is_in_executable_section(target, image_base, image_size, sections, section_count)) {
+    return nullptr;
+  }
+  unsigned int jumps = 0;
+  while (is_readable_address(target, 5) && target[0] == 0xE9) {
+    if (jumps++ >= 8) {
+      return nullptr;
+    }
+    int32_t jump_displacement = 0;
+    memcpy(&jump_displacement, target + 1, sizeof(jump_displacement));
+    target = target + 5 + jump_displacement;
+    if (!is_in_executable_section(target, image_base, image_size, sections, section_count)) {
+      return nullptr;
+    }
+  }
+  return target;
+}
+
+// The second way to the archive resolver, when no call site matches the
+// exact code around it: the instructions that set up the call's arguments,
+// with any register and stack offset. Elden Ring 1.17 to 1.17.2 and
+// Nightreign 1.3.3 each give one target this way, the same as the exact
+// search (tests/eldenring/signatures.py). At least two calls must agree.
+void* find_resolver_by_argument_setup(const unsigned char* image_base, size_t image_size,
+                                      const IMAGE_SECTION_HEADER* sections,
+                                      unsigned int section_count) {
+  // mov r8,r? ; mov qword [rsp+?],0 ; xor edx,edx ; mov rcx,r? ; call
+  static const MaskedByte elden_ring[] = {
+      {0x4C, 0xFF}, {0x8B, 0xFF}, {0xC0, 0xF8}, {0x48, 0xFF}, {0xC7, 0xFF}, {0x44, 0xFF},
+      {0x24, 0xFF}, {0x00, 0x00}, {0x00, 0xFF}, {0x00, 0xFF}, {0x00, 0xFF}, {0x00, 0xFF},
+      {0x33, 0xFF}, {0xD2, 0xFF}, {0x49, 0xFF}, {0x8B, 0xFF}, {0xC8, 0xF8}, {0xE8, 0xFF}};
+  // mov r8,r? ; xor edx,edx ; mov [rsp+?],rax ; mov rcx,r? ; call
+  static const MaskedByte nightreign[] = {
+      {0x4C, 0xFF}, {0x8B, 0xFF}, {0xC0, 0xF8}, {0x33, 0xFF}, {0xD2, 0xFF}, {0x48, 0xFF},
+      {0x89, 0xFF}, {0x44, 0xFF}, {0x24, 0xFF}, {0x00, 0x00}, {0x49, 0xFF}, {0x8B, 0xFF},
+      {0xC8, 0xF8}, {0xE8, 0xFF}};
+  struct Pattern {
+    const MaskedByte* bytes;
+    size_t size;
+  };
+  const Pattern patterns[] = {{elden_ring, sizeof(elden_ring) / sizeof(elden_ring[0])},
+                              {nightreign, sizeof(nightreign) / sizeof(nightreign[0])}};
+  void* resolver = nullptr;
+  unsigned int calls = 0;
+  for (unsigned int section_index = 0; section_index < section_count; ++section_index) {
+    const IMAGE_SECTION_HEADER& section = sections[section_index];
+    if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                : section.SizeOfRawData;
+    size = (std::min)(size, image_size - section.VirtualAddress);
+    for (const auto& range : readable_ranges(image_base + section.VirtualAddress, size)) {
+      const unsigned char* code = range.first;
+      for (const Pattern& pattern : patterns) {
+        // the call's displacement must lie in the same range
+        for (size_t offset = 0; offset + pattern.size + 4 <= range.second; ++offset) {
+          size_t at = 0;
+          while (at < pattern.size &&
+                 (code[offset + at] & pattern.bytes[at].mask) == pattern.bytes[at].value) {
+            ++at;
+          }
+          if (at != pattern.size) {
+            continue;
+          }
+          unsigned char* target = resolver_call_target(code + offset + pattern.size - 1,
+                                                       image_base, image_size, sections,
+                                                       section_count);
+          if (target == nullptr) {
+            continue;
+          }
+          if (resolver != nullptr && resolver != target) {
+            log_line("Loose asset hook fallback: the calls disagree; not used.");
+            return nullptr;
+          }
+          resolver = target;
+          ++calls;
+        }
+      }
+    }
+  }
+  if (calls < 2) {
+    return nullptr;
+  }
+  char message[96] = {};
+  snprintf(message, sizeof(message),
+           "Loose asset hook: resolver found by its %u calls' arguments.", calls);
+  log_line(message);
+  return resolver;
+}
+
 bool install_loose_asset_hook() {
   // the code around a call to the resolver: Elden Ring, then Nightreign (1.3.3).
   // The plugin looks for the same on disk (ResolverCallSites): change both together
@@ -1809,6 +1917,12 @@ bool install_loose_asset_hook() {
   }
 
   if (resolver == nullptr || matches == 0) {
+    // a game update can change the code after the call: the arguments it
+    // is given may still be recognized
+    resolver = find_resolver_by_argument_setup(image_base, image_size, image_sections,
+                                               nt->FileHeader.NumberOfSections);
+  }
+  if (resolver == nullptr) {
     log_line("Loose asset hook skipped: supported archive resolver target could not be resolved in executable sections.");
     return false;
   }
@@ -2525,12 +2639,22 @@ void inspect_loaded_mods() {
       if (entry.hModule == g_module) {
         continue;
       }
+      // the module's whole path: the snapshot's szExePath stops at 259
+      // characters, and an initializer must match the path MO2 gave
+      std::wstring module_path(32768, L'\0');
+      const DWORD module_path_length = GetModuleFileNameW(
+          entry.hModule, module_path.data(), static_cast<DWORD>(module_path.size()));
+      if (module_path_length > 0 && module_path_length < module_path.size()) {
+        module_path.resize(module_path_length);
+      } else {
+        module_path = entry.szExePath;
+      }
       // what MO2 asked for by path counts wherever the mods folder is and
       // whatever it is called; the folder names only sort out the rest.
       // was_seen last: its table only has room for these
       NativeInitializerRequest* request =
-          find_native_initializer(entry.szExePath);
-      if ((request == nullptr && !has_managed_dll_path_segment(entry.szExePath)) ||
+          find_native_initializer(module_path.c_str());
+      if ((request == nullptr && !has_managed_dll_path_segment(module_path.c_str())) ||
           was_seen(entry.hModule)) {
         continue;
       }
@@ -2545,11 +2669,11 @@ void inspect_loaded_mods() {
           FreeLibrary(held);
         }
         log_line("MO2-managed DLL was unloaded before it could be inspected:",
-                 entry.szExePath);
+                 module_path.c_str());
         continue;
       }
 
-      log_line("Found MO2-managed DLL:", entry.szExePath);
+      log_line("Found MO2-managed DLL:", module_path.c_str());
       if (request != nullptr) {
         request->module = entry.hModule;
         if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
@@ -2562,7 +2686,7 @@ void inspect_loaded_mods() {
             InterlockedExchange(&request->started, 0);
             FreeLibrary(held);
             log_line("Could not start Revamped native initializer thread:",
-                     entry.szExePath);
+                     module_path.c_str());
           }
         } else {
           FreeLibrary(held);
@@ -3335,6 +3459,107 @@ void add_code_location(StackText& out, uintptr_t address) {
   out.add_hex(address - reinterpret_cast<uintptr_t>(info.AllocationBase));
 }
 
+// The DLLs from outside Windows that were unloaded, newest last: a thread
+// that starts in one of them after it went away is named by it.
+struct UnloadedDll {
+  uintptr_t base;
+  size_t size;
+  wchar_t name[64];
+};
+constexpr unsigned int kUnloadedDllSlots = 16;
+UnloadedDll g_unloaded_dlls[kUnloadedDllSlots] = {};
+volatile LONG g_unloaded_dll_count = 0;
+
+void remember_unloaded_dll(const LoaderDllNotificationData* data) {
+  if (data->DllBase == nullptr || data->BaseDllName == nullptr ||
+      data->BaseDllName->Buffer == nullptr) {
+    return;
+  }
+  // the loader calls back under its own lock: one writer at a time
+  const LONG index = InterlockedIncrement(&g_unloaded_dll_count) - 1;
+  UnloadedDll& slot = g_unloaded_dlls[static_cast<unsigned int>(index) % kUnloadedDllSlots];
+  slot.base = reinterpret_cast<uintptr_t>(data->DllBase);
+  slot.size = data->SizeOfImage;
+  const size_t length = (std::min)(static_cast<size_t>(data->BaseDllName->Length / sizeof(wchar_t)),
+                                   static_cast<size_t>(63));
+  std::memcpy(slot.name, data->BaseDllName->Buffer, length * sizeof(wchar_t));
+  slot.name[length] = L'\0';
+}
+
+const wchar_t* unloaded_dll_at(uintptr_t address) {
+  const LONG count = InterlockedCompareExchange(&g_unloaded_dll_count, 0, 0);
+  for (LONG index = count - 1; index >= 0 && index >= count - static_cast<LONG>(kUnloadedDllSlots);
+       --index) {
+    const UnloadedDll& slot = g_unloaded_dlls[static_cast<unsigned int>(index) % kUnloadedDllSlots];
+    if (address >= slot.base && address - slot.base < slot.size) {
+      return slot.name;
+    }
+  }
+  return nullptr;
+}
+
+// A thread a mod's DLL started as it loaded, whose DLL was unloaded before
+// the thread ran its first instruction: it would crash the game at once
+// (Nightreign with Damage Competition, about one start in fifteen). Such a
+// thread has nothing left to run, so it ends there instead, and the game
+// goes on without that DLL. Only a thread faulting at its own start address
+// on memory that holds no module counts: every other crash is left alone.
+using NtQueryInformationThreadFunction = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+NtQueryInformationThreadFunction g_query_thread = nullptr;
+volatile LONG g_orphan_threads = 0;
+
+[[noreturn]] void end_orphan_thread() {
+  if (InterlockedIncrement(&g_orphan_threads) <= 4) {
+    log_line("Stopped a thread whose DLL was unloaded before it started; the game goes on without that DLL.");
+  }
+  ExitThread(0);
+}
+
+LONG CALLBACK stop_orphan_threads(EXCEPTION_POINTERS* info) {
+  const EXCEPTION_RECORD* record = info->ExceptionRecord;
+  if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION || record->NumberParameters < 2 ||
+      record->ExceptionInformation[0] != 8 ||  // executing
+      record->ExceptionInformation[1] != reinterpret_cast<ULONG_PTR>(record->ExceptionAddress) ||
+      g_query_thread == nullptr) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  const uintptr_t address = reinterpret_cast<uintptr_t>(record->ExceptionAddress);
+  void* start = nullptr;
+  // ThreadQuerySetWin32StartAddress
+  if (g_query_thread(GetCurrentThread(), 9, &start, sizeof(start), nullptr) < 0 ||
+      reinterpret_cast<uintptr_t>(start) != address) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  MEMORY_BASIC_INFORMATION memory = {};
+  if (VirtualQuery(record->ExceptionAddress, &memory, sizeof(memory)) == 0 ||
+      (memory.State == MEM_COMMIT && memory.Type == MEM_IMAGE)) {
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
+  const wchar_t* dll = unloaded_dll_at(address);
+  if (dll != nullptr) {
+    log_line("A thread started in a DLL that was already unloaded:", dll);
+  } else {
+    log_line("A thread started in code that is no longer there.");
+  }
+  // out through a function of the bridge's own, with the stack as a call
+  // would leave it
+  info->ContextRecord->Rip = reinterpret_cast<DWORD64>(&end_orphan_thread);
+  info->ContextRecord->Rsp = (info->ContextRecord->Rsp & ~static_cast<DWORD64>(0xF)) - 8;
+  return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+void install_orphan_thread_guard() {
+  HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  if (ntdll == nullptr) {
+    return;
+  }
+  g_query_thread = reinterpret_cast<NtQueryInformationThreadFunction>(
+      reinterpret_cast<void*>(GetProcAddress(ntdll, "NtQueryInformationThread")));
+  if (g_query_thread != nullptr && AddVectoredExceptionHandler(1, stop_orphan_threads) != nullptr) {
+    log_line("Guard on: a thread whose DLL was unloaded before it started is stopped instead of crashing the game.");
+  }
+}
+
 VOID CALLBACK dll_notification(ULONG reason, const LoaderDllNotificationData* data,
                                PVOID) {
   if (data == nullptr || data->FullDllName == nullptr || is_windows_dll(data->FullDllName)) {
@@ -3348,6 +3573,7 @@ VOID CALLBACK dll_notification(ULONG reason, const LoaderDllNotificationData* da
     text.add_hex(reinterpret_cast<uintptr_t>(data->DllBase));
     log_line("DLL loaded:", text.text);
   } else if (reason == kLoaderDllUnloaded) {
+    remember_unloaded_dll(data);
     // who unloaded it: the frames past the loader's own (ntdll)
     void* frames[24] = {};
     const USHORT count = RtlCaptureStackBackTrace(1, 24, frames, nullptr);
@@ -3412,8 +3638,9 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.65.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.68.");
     register_dll_notifications();
+    install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
