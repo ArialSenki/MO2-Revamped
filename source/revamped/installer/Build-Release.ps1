@@ -1182,6 +1182,31 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $borderlessDll -PathTyp
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $fullStage 'borderless') | Out-Null
 Copy-Item -LiteralPath $borderlessDll -Destination (Join-Path $fullStage 'borderless\mo2r_borderless.dll') -Force
+# Microsoft's Visual C++ runtime for Wine and Proton (see VcRuntime.cs): the
+# setup copies it beside ModOrganizer.exe only there, where Wine's own
+# versions lack functions MO2 uses. Kept in its own folder, which Windows
+# never loads DLLs from: on Windows MO2 uses the installed runtime, which may
+# be newer
+$redistVersion = (Get-Content -LiteralPath (Join-Path $vsRoot 'VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt') -TotalCount 1).Trim()
+$redistRoot = Join-Path $vsRoot "VC\Redist\MSVC\$redistVersion\x64"
+$wineRuntime = Join-Path $fullStage 'vcruntime-wine'
+New-Item -ItemType Directory -Force -Path $wineRuntime | Out-Null
+foreach ($name in @('concrt140.dll', 'msvcp140.dll', 'msvcp140_1.dll', 'msvcp140_2.dll', 'msvcp140_atomic_wait.dll',
+        'msvcp140_codecvt_ids.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'vcomp140.dll')) {
+    $folder = if ($name -eq 'vcomp140.dll') { 'Microsoft.VC143.OpenMP' } else { 'Microsoft.VC143.CRT' }
+    $source = Join-Path $redistRoot "$folder\$name"
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "The Visual C++ runtime file was not found: $source" }
+    $signature = Get-AuthenticodeSignature -LiteralPath $source
+    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch '(^|, )O=Microsoft Corporation(,|$)') {
+        throw "The Visual C++ runtime file has no valid Microsoft signature: $source"
+    }
+    $info = (Get-Item -LiteralPath $source).VersionInfo
+    # the setup's VcRuntime.Required: older than the toolset may not run MO2
+    if ([version]::new($info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart) -lt [version]'14.44.0') {
+        throw "The Visual C++ runtime file is older than 14.44: $source ($($info.FileVersion))"
+    }
+    Copy-Item -LiteralPath $source -Destination (Join-Path $wineRuntime $name) -Force
+}
 Copy-Item -LiteralPath $generalUninstallerStub -Destination (Join-Path $fullStage 'unins000.exe') -Force
 Copy-RevampedLicenses -DestinationRoot $fullStage
 Write-BasicGamesManifest -StageRoot $fullStage
