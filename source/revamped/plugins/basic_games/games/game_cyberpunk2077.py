@@ -39,7 +39,6 @@ from ..basic_features.basic_save_game_info import (
     BasicGameSaveGameInfo,
     format_date,
 )
-from ..basic_features.utils import root_builder_enabled
 from ..basic_game import BasicGame
 from .cyberpunk2077.layout import CyberpunkModDataChecker
 from .cyberpunk2077.util import (
@@ -47,6 +46,7 @@ from .cyberpunk2077.util import (
     log_critical,
     log_info,
     log_warning,
+    root_builder_enabled,
     saved_games_folder,
     tr,
 )

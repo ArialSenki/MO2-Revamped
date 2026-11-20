@@ -37,6 +37,17 @@ def tr(text: str) -> str:
     return QCoreApplication.translate(TR_CONTEXT, text)
 
 
+def root_builder_enabled(organizer) -> bool:
+    """Whether Root Builder deploys the mods' root/ folders itself; without
+    it, MO2 Revamped maps them to the game folder. Its plugin name is
+    RootBuilder; "Root Builder" is its display name. Kept here, not taken from
+    basic_features, so an older basic_games doesn't stop this plugin loading."""
+    try:
+        return any(organizer.isPluginEnabled(name) for name in ("RootBuilder", "Root Builder"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def known_folder(guid: str, fallback: str) -> str:
     """A Windows known folder, also when the user moved it (Saved Games on
     another drive)."""

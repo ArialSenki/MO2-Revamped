@@ -45,7 +45,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
         mod_list = organizer.modList()
-        mod_list.onModStateChanged(lambda *_: self._changed())
+        # MO2 2.5's form: one call with every changed mod
+        mod_list.onModStateChanged(self._states_changed)
         mod_list.onModInstalled(lambda *_: self._changed())
         mod_list.onModRemoved(lambda *_: self._changed())
         organizer.onProfileChanged(lambda *_: self._changed())
@@ -127,6 +128,9 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         pass
 
     # the report
+
+    def _states_changed(self, states: dict) -> None:
+        self._changed()
 
     def _changed(self) -> None:
         self._report = None
