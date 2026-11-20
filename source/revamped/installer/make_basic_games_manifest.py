@@ -56,16 +56,79 @@ def jsonable(value):
     raise TypeError(f"{type(value).__name__} can't go in the manifest")
 
 
+def user_folders() -> list[tuple[str, str]]:
+    """This machine's user folders, most specific first, and the placeholder
+    BasicGame resolves to the same folder on the user's machine."""
+    from PyQt6.QtCore import QStandardPaths
+
+    def where(kind):
+        return QStandardPaths.writableLocation(kind)
+
+    found = [
+        (where(QStandardPaths.StandardLocation.DocumentsLocation), "%DOCUMENTS%"),
+        (where(QStandardPaths.StandardLocation.HomeLocation), "%USERPROFILE%"),
+    ]
+    return [(os.path.normcase(os.path.normpath(p)), token) for p, token in found if p]
+
+
+def forbidden_folders() -> list[str]:
+    """Folders no value may name once the placeholders are in."""
+    names = [os.environ.get(v) for v in ("USERPROFILE", "LOCALAPPDATA", "APPDATA", "HOME")]
+    return [os.path.normcase(os.path.normpath(n)) for n in names if n]
+
+
+def portable(value, folders):
+    """value with this machine's user folders written as BasicGame's
+    placeholders (attributes some games resolve in __init__, from
+    SHGetKnownFolderPath or LOCALAPPDATA)."""
+    if isinstance(value, list):
+        return [portable(v, folders) for v in value]
+    if not isinstance(value, str):
+        return value
+    for folder, token in folders:
+        text = os.path.normcase(value.replace("/", os.sep))
+        start = text.find(folder)
+        if start != -1 and (len(text) == start + len(folder) or text[start + len(folder)] == os.sep):
+            rest = value[start + len(folder):].replace(chr(92), "/")
+            return value[:start] + token + rest
+    return value
+
+
+def local_paths(value, forbidden) -> list[str]:
+    texts = value if isinstance(value, list) else [value]
+    hits = []
+    for t in texts:
+        if isinstance(t, list):
+            hits += local_paths(t, forbidden)
+        elif isinstance(t, str):
+            folded = os.path.normcase(t.replace("/", os.sep))
+            hits += [f for f in forbidden if f in folded]
+    return hits
+
+
 def describe(obj, BasicGame) -> dict:
     cls = type(obj)
     exposed = sorted(
         m._exposed_name for m in vars(obj._mappings).values() if hasattr(m, "_exposed_name")
     )
-    attributes = {n: jsonable(getattr(obj, n)) for n in exposed if hasattr(obj, n)}
-    answers = {g: jsonable(getattr(obj, g)()) for g in STATIC_GETTERS}
+    folders = user_folders()
+    attributes = {
+        n: portable(jsonable(getattr(obj, n)), folders) for n in exposed if hasattr(obj, n)
+    }
+    answers = {g: portable(jsonable(getattr(obj, g)()), folders) for g in STATIC_GETTERS}
     settings = [
-        [s.key, s.description, jsonable(s.default_value)] for s in obj.settings()
+        [s.key, s.description, portable(jsonable(s.default_value), folders)]
+        for s in obj.settings()
     ]
+    # a folder of this machine left in a value would ship with the release
+    forbidden = forbidden_folders()
+    for what, value in (
+        list(attributes.items()) + list(answers.items()) + [("settings", settings)]
+    ):
+        if local_paths(value, forbidden):
+            raise SystemExit(
+                f"{cls.__name__}.{what} names a folder of this machine: {value!r}"
+            )
     overrides = sorted(
         name
         for name, value in inspect.getmembers(cls)
@@ -132,6 +195,8 @@ def main() -> int:
             with open(file, "rb") as f:
                 digest = hashlib.sha256(f.read()).hexdigest()
             modules[module_p] = {"sha256": digest, "classes": classes}
+        except SystemExit:
+            raise
         except Exception as error:
             skipped.append(f"{module_p}: {type(error).__name__}: {error}")
 
