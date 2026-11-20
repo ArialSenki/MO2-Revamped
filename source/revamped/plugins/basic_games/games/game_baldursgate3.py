@@ -408,12 +408,10 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         try:
             from .baldursgate3.paks import scan_mod_paks
 
+            # in a worker thread: a big pak read on the interface's thread
+            # froze MO2 right after the installation
             launch = self.launch()
-            for pak in scan_mod_paks(Path(mod.absolutePath())):
-                try:
-                    launch.cache.info(pak, None)
-                except Exception as e:  # noqa: BLE001
-                    log_info(f"{mod.name()}: {pak.name} will be read when the game starts ({e})")
-            launch.cache.save()
+            launch.unread.extend(scan_mod_paks(Path(mod.absolutePath())))
+            launch.read_in_background()
         except Exception as e:  # noqa: BLE001
             log_info(f"couldn't read the paks of the new mod {mod.name()}: {e}")
