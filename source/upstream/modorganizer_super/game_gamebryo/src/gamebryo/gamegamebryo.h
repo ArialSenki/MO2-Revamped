@@ -160,14 +160,15 @@ protected:
 
   // MO2 Revamped: the script extender's loader is in the game folder but not
   // its runtime for this game version (prefix + version + ".dll", the name
-  // the loader looks for), so the game would start without it. The expected
-  // name goes to *expected.
+  // the loader looks for) there or in an active mod's Root/ folder, so the
+  // game would start without it. The expected name goes to *expected.
   bool scriptExtenderRuntimeMissing(const QString& runtimePrefix,
                                     QString* expected) const;
 
   // MO2 Revamped: script extender plugins (DLLs in pluginsDir, in the virtual
-  // Data folder) but no Address Library file for this game version, which
-  // most of them need. The expected name goes to *expected.
+  // Data folder) and an Address Library for other game versions, but none for
+  // this one (the game was updated past it). The expected name goes to
+  // *expected.
   bool addressLibraryMissing(const QString& pluginsDir, QString* expected) const;
 
 protected:
