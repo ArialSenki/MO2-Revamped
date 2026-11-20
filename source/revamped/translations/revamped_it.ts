@@ -12431,6 +12431,14 @@ Esempio:
       <translation>Smussa il testo in grigio (schermi OLED)</translation>
     </message>
     <message>
+      <source>Use the new interface (Qt Quick) where available</source>
+      <translation>Usa la nuova interfaccia (Qt Quick) dove disponibile</translation>
+    </message>
+    <message>
+      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Mostra con essa le finestre che hanno una nuova versione (la finestra delle istanze e la domanda sul tema di una nuova istanza), disegnate con Qt Quick. Funzionano allo stesso modo e usano un po&apos; più di memoria. Si applica al prossimo avvio di Mod Organizer.</translation>
+    </message>
+    <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
       <translation>Disegna il testo senza i bordi colorati di Windows, che sugli schermi OLED appaiono come un alone colorato. Si applica quando Mod Organizer si riapre.</translation>
     </message>
