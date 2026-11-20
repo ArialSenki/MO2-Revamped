@@ -2129,7 +2129,7 @@ class EldenRingMo2Game(BasicGame):
     )
     DescriptionContext = _TR_CONTEXT
     Version = "0.5.0-alpha.97"
-    NativeBridgeVersion = "0.5.0-alpha.65"
+    NativeBridgeVersion = "0.5.0-alpha.66"
 
     GameName = "ELDEN RING"
     GameShortName = "eldenring"
@@ -2144,6 +2144,12 @@ class EldenRingMo2Game(BasicGame):
     GameProcess = "eldenring.exe"
     # the code around a call to the game's file loader, Elden Ring then Nightreign:
     # install_loose_asset_hook in the bridge looks for the same, change both together
+    # the arguments set up for that call, when the code after it changed:
+    # find_resolver_by_argument_setup in the bridge, change both together
+    ResolverArgumentSetups = (
+        re.compile(rb"(?s)\x4C\x8B[\xC0-\xC7]\x48\xC7\x44\x24.\x00\x00\x00\x00\x33\xD2\x49\x8B[\xC8-\xCF]\xE8"),
+        re.compile(rb"(?s)\x4C\x8B[\xC0-\xC7]\x33\xD2\x48\x89\x44\x24.\x49\x8B[\xC8-\xCF]\xE8"),
+    )
     ResolverCallSites = (
         (b"", bytes.fromhex("48837B2008488D4B087203488B094C8B4B1841B8050000004D3BC8")),
         (bytes.fromhex("33D24889442420498BCD"), bytes.fromhex("48837F18087203488B3F48837B1805")),
@@ -6613,7 +6619,28 @@ class EldenRingMo2Game(BasicGame):
                                 return False
                             found = target
                     match = data.find(after, match + 1, raw + size)
-        return found is not None
+        if found is not None:
+            return True
+        # the bridge's second way (find_resolver_by_argument_setup): the
+        # arguments set up for the call, two calls or more agreeing
+        calls = 0
+        for start, size, raw in sections:
+            for pattern in cls.ResolverArgumentSetups:
+                for match in pattern.finditer(data, raw, raw + size):
+                    call = match.end() - 1
+                    if call + 5 > raw + size:
+                        continue
+                    target = follow_jumps(
+                        start + call + 5 - raw
+                        + int.from_bytes(data[call + 1:call + 5], "little", signed=True)
+                    )
+                    if target is None:
+                        continue
+                    if found is not None and found != target:
+                        return False
+                    found = target
+                    calls += 1
+        return calls >= 2
 
     @staticmethod
     def game_version_text(executable: Path) -> str:

@@ -166,6 +166,41 @@ def loose_asset_resolver(image: Image) -> Result:
     return Result("loose asset resolver", False, f"call sites disagree: {len(targets)} targets")
 
 
+# find_resolver_by_argument_setup: the second way, when no call site matches
+# the exact code (the instructions that set up the call's arguments)
+RESOLVER_ARGUMENT_SETUPS = (
+    re.compile(rb"(?s)\x4C\x8B[\xC0-\xC7]\x48\xC7\x44\x24.\x00\x00\x00\x00\x33\xD2\x49\x8B[\xC8-\xCF]\xE8"),
+    re.compile(rb"(?s)\x4C\x8B[\xC0-\xC7]\x33\xD2\x48\x89\x44\x24.\x49\x8B[\xC8-\xCF]\xE8"),
+)
+
+
+def loose_asset_resolver_fallback(image: Image) -> Result:
+    """The fallback on its own must reach the same function as the exact
+    search, from at least two calls that agree."""
+    exact = loose_asset_resolver(image)
+    targets: dict[int, int] = {}
+    data = image.data
+    for section in image.code():
+        end = section.rva + section.size
+        for pattern in RESOLVER_ARGUMENT_SETUPS:
+            for match in pattern.finditer(data, section.rva, end):
+                call = match.end() - 1
+                if call + 5 > end:
+                    continue
+                target = _follow_jumps(image, call + 5 + _rel32(data, call + 1))
+                if target is not None:
+                    targets[target] = targets.get(target, 0) + 1
+    if len(targets) != 1:
+        return Result("loose asset resolver (fallback)", False,
+                      f"{len(targets)} different targets, the bridge needs 1")
+    target, calls = next(iter(targets.items()))
+    same = exact.ok and exact.detail.endswith(f"0x{target:X}")
+    ok = calls >= 2 and same
+    return Result("loose asset resolver (fallback)", ok,
+                  f"{calls} call(s) -> rva 0x{target:X}"
+                  + ("" if same else "; not the exact search's target"))
+
+
 def _is_wwise_open_call_site(code: bytes, at: int) -> bool:
     """is_wwise_open_call_site, byte for byte."""
     if at + 26 > len(code) or code[at] != 0xE8 or code[at + 5] != 0x83 \
@@ -362,6 +397,7 @@ def scan(path: Path) -> Report:
     report = Report(image, nightreign)
     checks = [
         loose_asset_resolver(image),
+        loose_asset_resolver_fallback(image),
         wwise_open(image, nightreign),
         save_extension_literal(image),
         security_cookie(image),

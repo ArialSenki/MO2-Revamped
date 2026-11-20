@@ -1683,6 +1683,114 @@ void* __cdecl map_archive_path_hook(EldenRingLocalWString* path, uint64_t p2,
   return result;
 }
 
+// A byte the code must have, or must have in the bits of mask (a register
+// number in the low bits of a ModRM byte, for instance).
+struct MaskedByte {
+  unsigned char value;
+  unsigned char mask;
+};
+
+// The resolver a call at `call` (an E8 rel32) leads to, through up to eight
+// jmp rel32 thunks; null when any step leaves the game's code.
+unsigned char* resolver_call_target(const unsigned char* call,
+                                    const unsigned char* image_base, size_t image_size,
+                                    const IMAGE_SECTION_HEADER* sections,
+                                    unsigned int section_count) {
+  int32_t displacement = 0;
+  memcpy(&displacement, call + 1, sizeof(displacement));
+  auto* target = const_cast<unsigned char*>(call + 5 + displacement);
+  if (!is_in_executable_section(target, image_base, image_size, sections, section_count)) {
+    return nullptr;
+  }
+  unsigned int jumps = 0;
+  while (is_readable_address(target, 5) && target[0] == 0xE9) {
+    if (jumps++ >= 8) {
+      return nullptr;
+    }
+    int32_t jump_displacement = 0;
+    memcpy(&jump_displacement, target + 1, sizeof(jump_displacement));
+    target = target + 5 + jump_displacement;
+    if (!is_in_executable_section(target, image_base, image_size, sections, section_count)) {
+      return nullptr;
+    }
+  }
+  return target;
+}
+
+// The second way to the archive resolver, when no call site matches the
+// exact code around it: the instructions that set up the call's arguments,
+// with any register and stack offset. Elden Ring 1.17 to 1.17.2 and
+// Nightreign 1.3.3 each give one target this way, the same as the exact
+// search (tests/eldenring/signatures.py). At least two calls must agree.
+void* find_resolver_by_argument_setup(const unsigned char* image_base, size_t image_size,
+                                      const IMAGE_SECTION_HEADER* sections,
+                                      unsigned int section_count) {
+  // mov r8,r? ; mov qword [rsp+?],0 ; xor edx,edx ; mov rcx,r? ; call
+  static const MaskedByte elden_ring[] = {
+      {0x4C, 0xFF}, {0x8B, 0xFF}, {0xC0, 0xF8}, {0x48, 0xFF}, {0xC7, 0xFF}, {0x44, 0xFF},
+      {0x24, 0xFF}, {0x00, 0x00}, {0x00, 0xFF}, {0x00, 0xFF}, {0x00, 0xFF}, {0x00, 0xFF},
+      {0x33, 0xFF}, {0xD2, 0xFF}, {0x49, 0xFF}, {0x8B, 0xFF}, {0xC8, 0xF8}, {0xE8, 0xFF}};
+  // mov r8,r? ; xor edx,edx ; mov [rsp+?],rax ; mov rcx,r? ; call
+  static const MaskedByte nightreign[] = {
+      {0x4C, 0xFF}, {0x8B, 0xFF}, {0xC0, 0xF8}, {0x33, 0xFF}, {0xD2, 0xFF}, {0x48, 0xFF},
+      {0x89, 0xFF}, {0x44, 0xFF}, {0x24, 0xFF}, {0x00, 0x00}, {0x49, 0xFF}, {0x8B, 0xFF},
+      {0xC8, 0xF8}, {0xE8, 0xFF}};
+  struct Pattern {
+    const MaskedByte* bytes;
+    size_t size;
+  };
+  const Pattern patterns[] = {{elden_ring, sizeof(elden_ring) / sizeof(elden_ring[0])},
+                              {nightreign, sizeof(nightreign) / sizeof(nightreign[0])}};
+  void* resolver = nullptr;
+  unsigned int calls = 0;
+  for (unsigned int section_index = 0; section_index < section_count; ++section_index) {
+    const IMAGE_SECTION_HEADER& section = sections[section_index];
+    if ((section.Characteristics & IMAGE_SCN_MEM_EXECUTE) == 0 ||
+        section.VirtualAddress >= image_size) {
+      continue;
+    }
+    size_t size = section.Misc.VirtualSize != 0 ? section.Misc.VirtualSize
+                                                : section.SizeOfRawData;
+    size = (std::min)(size, image_size - section.VirtualAddress);
+    for (const auto& range : readable_ranges(image_base + section.VirtualAddress, size)) {
+      const unsigned char* code = range.first;
+      for (const Pattern& pattern : patterns) {
+        // the call's displacement must lie in the same range
+        for (size_t offset = 0; offset + pattern.size + 4 <= range.second; ++offset) {
+          size_t at = 0;
+          while (at < pattern.size &&
+                 (code[offset + at] & pattern.bytes[at].mask) == pattern.bytes[at].value) {
+            ++at;
+          }
+          if (at != pattern.size) {
+            continue;
+          }
+          unsigned char* target = resolver_call_target(code + offset + pattern.size - 1,
+                                                       image_base, image_size, sections,
+                                                       section_count);
+          if (target == nullptr) {
+            continue;
+          }
+          if (resolver != nullptr && resolver != target) {
+            log_line("Loose asset hook fallback: the calls disagree; not used.");
+            return nullptr;
+          }
+          resolver = target;
+          ++calls;
+        }
+      }
+    }
+  }
+  if (calls < 2) {
+    return nullptr;
+  }
+  char message[96] = {};
+  snprintf(message, sizeof(message),
+           "Loose asset hook: resolver found by its %u calls' arguments.", calls);
+  log_line(message);
+  return resolver;
+}
+
 bool install_loose_asset_hook() {
   // the code around a call to the resolver: Elden Ring, then Nightreign (1.3.3).
   // The plugin looks for the same on disk (ResolverCallSites): change both together
@@ -1809,6 +1917,12 @@ bool install_loose_asset_hook() {
   }
 
   if (resolver == nullptr || matches == 0) {
+    // a game update can change the code after the call: the arguments it
+    // is given may still be recognized
+    resolver = find_resolver_by_argument_setup(image_base, image_size, image_sections,
+                                               nt->FileHeader.NumberOfSections);
+  }
+  if (resolver == nullptr) {
     log_line("Loose asset hook skipped: supported archive resolver target could not be resolved in executable sections.");
     return false;
   }
@@ -3412,7 +3526,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.65.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.66.");
     register_dll_notifications();
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
