@@ -291,6 +291,36 @@ class PluginTest(unittest.TestCase):
         )
         self.assertEqual(len(content.getAllContents()), 7)
 
+    def test_wrapper_folders(self):
+        checker = BG3ModDataChecker()
+        from harness import tree_paths
+
+        for files, fixed in (
+            (["Camera Fix 1.0/bin/NativeMods/Fix.dll", "readme.txt"], ["bin/NativeMods/Fix.dll"]),
+            (["Faster Rolls/Data/Public/Game/GUI/x.xaml"], ["Data/Public/Game/GUI/x.xaml"]),
+        ):
+            tree = make_tree(files)
+            self.assertEqual(checker.dataLooksValid(tree), mobase.ModDataChecker.FIXABLE, files)
+            self.assertEqual([p for p in tree_paths(checker.fix(tree)) if not p.endswith(".txt")], fixed)
+        # two folders: options, never a guess
+        two = make_tree(["A/bin/x.dll", "B/bin/y.dll"])
+        self.assertEqual(checker.dataLooksValid(two), mobase.ModDataChecker.INVALID)
+        # loose files in a wrapper stay valid as they are (the mapper sends them to Data)
+        lutes = make_tree(["Smaller Lutes/Generated/Public/Shared/x.GR2"])
+        self.assertEqual(checker.dataLooksValid(lutes), mobase.ModDataChecker.VALID)
+        self.assertEqual(BG3DataContent().getContentsFor(lutes), [Content.LOOSE_FILES])
+        workspace = make_tree(["Work/Mods/Work/meta.lsx", "Work/Public/Work/x.txt"])
+        self.assertEqual(BG3DataContent().getContentsFor(workspace), [Content.WORKSPACE])
+
+    def test_loose_wrapper_is_mapped_not_packed(self):
+        self.install()
+        root = self.organizer.add_mod("Lutes", ["Smaller Lutes/Generated/Public/Shared/x.GR2"])
+        self.organizer.setPluginSetting(NAME, "autobuild_paks", True)
+        self.assertTrue(self.run_game())  # no LSLib asked (setUp fails if it is)
+        sources = {Path(m.source): Path(m.destination) for m in self.game.mappings()}
+        self.assertEqual(sources[root / "Smaller Lutes" / "Generated"].name, "Generated")
+        self.assertEqual(sources[root / "Smaller Lutes" / "Generated"].parent.name, "Data")
+
     # saves
 
     def test_saves(self):

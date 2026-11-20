@@ -18,6 +18,7 @@ from typing import Callable, Optional
 
 import mobase
 
+from .loadorder import is_workspace
 from .paks import scan_mod_paks
 from .util import (
     SE_CONFIG_FOLDER,
@@ -30,6 +31,8 @@ from .util import (
 )
 
 _top_level_data_folders = {f.casefold() for f in TOP_LEVEL_DATA_FOLDERS}
+# a mod's folders that are mapped by their own rules
+_mod_root_folders = {"bin", "root", "script extender", SE_CONFIG_FOLDER.casefold(), "pak_files"}
 
 # what the game writes to its documents folder goes to Overwrite;
 # ModCrashSanityCheck is the game's marker for a start that crashed with mods
@@ -174,6 +177,12 @@ class FileMapper:
                     self.map_folder(folder, game_data / "Mods" / folder.name)
             elif name in _top_level_data_folders:
                 self.map_folder(entry, game_data / entry.name)
+            elif name not in _mod_root_folders and not is_workspace(entry):
+                # loose files in a wrapper folder ("Smaller Lutes/Generated/..."),
+                # which the original plugin packed with LSLib
+                for sub in subfolders(entry):
+                    if sub.name.casefold() in _top_level_data_folders:
+                        self.map_folder(sub, game_data / sub.name)
 
     def map_folder(self, folder: Path, dest: Path) -> None:
         self.mappings_list.append(

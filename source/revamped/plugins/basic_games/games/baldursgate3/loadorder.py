@@ -67,17 +67,21 @@ class ModEntry:
         self.workspaces: list[Path] = []
 
 
+def is_workspace(folder: Path) -> bool:
+    """An unpacked module: <folder>/Mods/<x>/meta.lsx."""
+    return any((sub / "meta.lsx").is_file() for sub in subfolders(folder / "Mods"))
+
+
 def packable_folders(modpath: Path) -> list[Path]:
-    """A mod's folders that hold an unpacked mod (a "mod workspace":
-    <folder>/Mods/<x>/meta.lsx or <folder>/Public/...), which the game only
-    loads packed."""
-    found = []
-    for folder in subfolders(modpath):
-        if folder.name.casefold() in _not_packable:
-            continue
-        if any((folder / f).is_dir() for f in LOOSE_FILE_FOLDERS):
-            found.append(folder)
-    return found
+    """A mod's folders that hold an unpacked module (a "mod workspace"),
+    which the game only loads packed. A folder with only the game's folders
+    (Public/, Generated/...) and no meta.lsx is loose files in a wrapper
+    folder: the mapper sends it to Data, nothing is packed."""
+    return [
+        folder
+        for folder in subfolders(modpath)
+        if folder.name.casefold() not in _not_packable and is_workspace(folder)
+    ]
 
 
 def read_mods(

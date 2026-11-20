@@ -60,6 +60,40 @@ class BG3ModDataChecker(BasicModDataChecker):
     def dataLooksValid(
         self, filetree: mobase.IFileTree
     ) -> mobase.ModDataChecker.CheckReturn:
+        status = self._check(filetree)
+        if status is mobase.ModDataChecker.INVALID and self._wrapper(filetree) is not None:
+            # one folder around a mod that is valid inside ("Mod 1.0/bin/...",
+            # "Mod/Data/..."): the quick installer takes the folder off
+            return mobase.ModDataChecker.FIXABLE
+        return status
+
+    def fix(self, filetree: mobase.IFileTree) -> mobase.IFileTree:
+        wrapper = self._wrapper(filetree)
+        if wrapper is not None:
+            filetree.merge(wrapper)
+            wrapper.detach()
+        return super().fix(filetree)
+
+    def _wrapper(self, filetree: mobase.IFileTree) -> mobase.IFileTree | None:
+        """The one folder around the mod, when what is inside is valid as it
+        is; never a guess between two folders (FOMOD-like options)."""
+        rp = self._regex_patterns
+        entries = [e for e in filetree if e.isDir() or not rp.delete.match(e.name().casefold())]
+        if len(entries) != 1 or not isinstance(entries[0], mobase.IFileTree):
+            return None
+        wrapper = entries[0]
+        if wrapper.name().casefold() in self._mapped_folders | _root_folders:
+            return None
+        if self._check(wrapper) is mobase.ModDataChecker.VALID and any(
+            e.name().casefold() in _root_folders or e.name().casefold().endswith(".pak")
+            for e in wrapper
+        ):
+            return wrapper
+        return None
+
+    def _check(
+        self, filetree: mobase.IFileTree
+    ) -> mobase.ModDataChecker.CheckReturn:
         status = mobase.ModDataChecker.INVALID
         rp = self._regex_patterns
         # a readme next to valid files doesn't make an installed mod "fixable",
@@ -95,6 +129,18 @@ class BG3ModDataChecker(BasicModDataChecker):
                 status = mobase.ModDataChecker.INVALID
                 break
         return status
+
+
+# the folders a mod's root may have for the game folder itself
+_root_folders = {"bin", "data", "mods", "script extender", "root"}
+
+
+def has_module(folder: mobase.IFileTree) -> bool:
+    """A mod workspace: Mods/<name>/meta.lsx inside."""
+    mods = folder.find("Mods")
+    if not isinstance(mods, mobase.IFileTree):
+        return False
+    return any(isinstance(e, mobase.IFileTree) and e.find("meta.lsx") is not None for e in mods)
 
 
 def _has_pak(folder: mobase.IFileTree) -> bool:
@@ -175,11 +221,10 @@ class BG3DataContent(mobase.ModDataContent):
                         contents.add(Content.LOOSE_FILES)
             elif folded == "bin":
                 _bin_contents(entry, contents)
-            else:
-                for e in entry:
-                    if e.name().casefold() in _loose_file_folders:
-                        contents.add(Content.WORKSPACE)
-                        break
+            elif any(e.name().casefold() in _loose_file_folders for e in entry):
+                # packed when the game starts if it's a module; otherwise its
+                # game folders go to Data as loose files
+                contents.add(Content.WORKSPACE if has_module(entry) else Content.LOOSE_FILES)
         return sorted(contents)
 
 
