@@ -23,7 +23,12 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <filesystem>
 #include <map>
 
-#include <QMessageBox>
+#include <QButtonGroup>
+#include <QCoreApplication>
+#include <QListWidget>
+#include <QPixmap>
+#include <QPlainTextEdit>
+#include <QStackedWidget>
 #include <QCheckBox>
 #include <QRadioButton>
 #include <QInputDialog>
@@ -46,6 +51,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "psettings.h"
 #include "installer_fomod_postdialog.h"
+#include "fluentcontentdialog.h"
 #include "csharp_interface.h"
 #include "csharp_utils.h"
 
@@ -424,146 +430,194 @@ namespace CSharp {
 
   // UI methods:
 
-  DialogResult BaseScriptImpl::ExtendedMessageBox(String^ p_strMessage, String^ p_strTitle, String^ p_strDetails, MessageBoxButtons p_mbbButtons, MessageBoxIcon p_mdiIcon) {
-    QMessageBox messageBox(g.ParentWidget);
-    if (!String::IsNullOrEmpty(p_strTitle)) {
-      messageBox.setWindowTitle(to_qstring(p_strTitle));
-    }
-    messageBox.setText(to_qstring(p_strMessage));
+  // MO2 Revamped: a script's message and its choices are MO2's content
+  // dialogs over the installer's window. 2.5.2 showed a plain message box
+  // (whose warning icon a missing break dropped) and a bare list of check
+  // boxes with each option's description only as a tooltip.
+
+  namespace
+  {
+  QString scriptText(const char* text)
+  {
+    return QCoreApplication::translate("RevampedCSharpScript", text);
+  }
+
+  // a button of the band that ends the dialog with its result as its id
+  void addResultButton(RevampedFluent::ContentDialog& dialog, QButtonGroup& group,
+                       const char* text, int result, bool primary)
+  {
+    QPushButton* button = dialog.addButton(scriptText(text), primary);
+    group.addButton(button, result);
+  }
+  }  // namespace
+
+  DialogResult BaseScriptImpl::ExtendedMessageBox(String^ p_strMessage, String^ p_strTitle, String^ p_strDetails, MessageBoxButtons p_mbbButtons, MessageBoxIcon) {
+    const QString title = String::IsNullOrEmpty(p_strTitle)
+                              ? scriptText("Message from the installer")
+                              : to_qstring(p_strTitle);
+    RevampedFluent::ContentDialog dialog(g.ParentWidget, QStringLiteral("csharpScriptMessage"),
+                                         title, to_qstring(p_strMessage));
+    dialog.setMinimumWidth(480);
 
     if (!String::IsNullOrEmpty(p_strDetails)) {
-      messageBox.setDetailedText(to_qstring(p_strDetails));
+      auto* details = new QPlainTextEdit(&dialog);
+      details->setReadOnly(true);
+      details->setPlainText(to_qstring(p_strDetails));
+      details->setAccessibleName(scriptText("Details"));
+      details->setMinimumHeight(120);
+      dialog.body()->addWidget(details, 1);
     }
 
-    // For whatever reason MessageBoxIcon has duplicated entries...
-    switch (p_mdiIcon) {
-    case MessageBoxIcon::Error:
-      // case MessageBoxIcon::Stop:
-      messageBox.setIcon(QMessageBox::Icon::Critical);
-      break;
-    case MessageBoxIcon::Asterisk:
-      // case MessageBoxIcon::Information:
-      messageBox.setIcon(QMessageBox::Icon::Information);
-      break;
-    case MessageBoxIcon::Question:
-      messageBox.setIcon(QMessageBox::Icon::Question);
-      break;
-    case MessageBoxIcon::Exclamation:
-      // case MessageBoxIcon::Hand:
-      // case MessageBoxIcon::Warning:
-      // case MessageBoxIcon::None:
-      messageBox.setIcon(QMessageBox::Icon::Warning);
-    case MessageBoxIcon::None:
-      messageBox.setIcon(QMessageBox::Icon::NoIcon);
-      break;
-    }
+    const int abortId  = static_cast<int>(DialogResult::Abort);
+    const int retryId  = static_cast<int>(DialogResult::Retry);
+    const int ignoreId = static_cast<int>(DialogResult::Ignore);
+    const int okId     = static_cast<int>(DialogResult::OK);
+    const int cancelId = static_cast<int>(DialogResult::Cancel);
+    const int yesId    = static_cast<int>(DialogResult::Yes);
+    const int noId     = static_cast<int>(DialogResult::No);
 
-    QMessageBox::StandardButtons buttons;
-
+    // done(id) ends the dialog with the clicked button's result
+    QButtonGroup group(&dialog);
     switch (p_mbbButtons) {
     case MessageBoxButtons::AbortRetryIgnore:
-      buttons = QMessageBox::StandardButton::Abort | QMessageBox::StandardButton::Retry | QMessageBox::StandardButton::Ignore;
-      break;
-    case MessageBoxButtons::OK:
-      buttons = QMessageBox::StandardButton::Ok;
+      addResultButton(dialog, group, "Abort", abortId, false);
+      addResultButton(dialog, group, "Retry", retryId, true);
+      addResultButton(dialog, group, "Ignore", ignoreId, false);
       break;
     case MessageBoxButtons::OKCancel:
-      buttons = QMessageBox::StandardButton::Ok | QMessageBox::Cancel;
+      addResultButton(dialog, group, "OK", okId, true);
+      addResultButton(dialog, group, "Cancel", cancelId, false);
       break;
     case MessageBoxButtons::RetryCancel:
-      buttons = QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Retry;
+      addResultButton(dialog, group, "Retry", retryId, true);
+      addResultButton(dialog, group, "Cancel", cancelId, false);
       break;
     case MessageBoxButtons::YesNoCancel:
-      buttons = QMessageBox::StandardButton::Yes | QMessageBox::No | QMessageBox::Cancel;
+      addResultButton(dialog, group, "Yes", yesId, true);
+      addResultButton(dialog, group, "No", noId, false);
+      addResultButton(dialog, group, "Cancel", cancelId, false);
       break;
     case MessageBoxButtons::YesNo:
-      buttons = QMessageBox::StandardButton::Yes | QMessageBox::No;
+      addResultButton(dialog, group, "Yes", yesId, true);
+      addResultButton(dialog, group, "No", noId, false);
+      break;
+    default:
+      addResultButton(dialog, group, "OK", okId, true);
       break;
     }
+    // a string connect: C++/CLI finds no signal for a function pointer
+    QObject::connect(&group, SIGNAL(idClicked(int)), &dialog, SLOT(done(int)));
 
-    messageBox.setStandardButtons(buttons);
-
-    // Only some case are possible here:
-    switch (messageBox.exec()) {
-    case QMessageBox::Button::Abort:
-      return DialogResult::Abort;
-    case QMessageBox::Button::Cancel:
-      return DialogResult::Cancel;
-    case QMessageBox::Button::Ignore:
-      return DialogResult::Ignore;
-    case QMessageBox::Button::No:
-      return DialogResult::No;
-    case QMessageBox::Button::Ok:
-      return DialogResult::OK;
-    case QMessageBox::Button::Retry:
-      return DialogResult::Retry;
-    case QMessageBox::Button::Yes:
-      return DialogResult::Yes;
+    const int result = dialog.exec();
+    if (result != QDialog::Rejected) {
+      return static_cast<DialogResult>(result);
     }
-
-    return DialogResult::None;
+    // closed with Esc or the title bar: Cancel when there is one, as Windows
+    // does; otherwise the answer that changes nothing
+    if (group.button(cancelId) != nullptr) {
+      return DialogResult::Cancel;
+    }
+    if (group.button(noId) != nullptr) {
+      return DialogResult::No;
+    }
+    if (group.button(ignoreId) != nullptr) {
+      return DialogResult::Ignore;
+    }
+    return DialogResult::OK;
   }
 
 
   array<int>^ BaseScriptImpl::Select(array<SelectOption^>^ p_sopOptions, String^ p_strTitle, bool p_booSelectMany) {
     using namespace System::Collections::Generic;
 
-    // MO2 Revamped: over the installer's window, and freed when done (it
-    // was parentless and never deleted)
-    auto inputDialogOwner = std::make_unique<QDialog>(g.ParentWidget);
-    QDialog* inputDialog  = inputDialogOwner.get();
-    QVBoxLayout* layout = new QVBoxLayout(inputDialog);
-    inputDialog->setWindowTitle(to_qstring(p_strTitle));
-    inputDialog->setLayout(layout);
+    const QString title = String::IsNullOrEmpty(p_strTitle)
+                              ? (p_booSelectMany ? scriptText("Choose any of these")
+                                                 : scriptText("Choose one"))
+                              : to_qstring(p_strTitle);
+    RevampedFluent::ContentDialog dialog(
+        g.ParentWidget, QStringLiteral("csharpScriptSelect"), title,
+        p_booSelectMany ? scriptText("Check the options you want.")
+                        : scriptText("Select the option you want."));
+    dialog.setMinimumSize(720, 460);
+    dialog.setSizeGripEnabled(true);
 
-    layout->setSizeConstraint(QLayout::SetFixedSize);
+    // the options on the left; the selected one's picture and description on
+    // the right, one page per option
+    auto* row = new QHBoxLayout;
+    row->setSpacing(12);
+    auto* list = new QListWidget(&dialog);
+    list->setAccessibleName(title);
+    list->setMinimumWidth(240);
+    auto* pages = new QStackedWidget(&dialog);
+    pages->setProperty("fluentCard", true);
 
-    if (p_booSelectMany) {
-      layout->addWidget(new QLabel(QObject::tr("Choose any:"), inputDialog));
-    }
-    else {
-      layout->addWidget(new QLabel(QObject::tr("Choose one:"), inputDialog));
-    }
-
-    QList<QAbstractButton*> items;
     for each (SelectOption ^ opt in p_sopOptions) {
-      QAbstractButton* btn;
+      const QString name = to_qstring(opt->Item);
+      auto* item = new QListWidgetItem(name, list);
       if (p_booSelectMany) {
-        btn = new QCheckBox(to_qstring(opt->Item), inputDialog);
-      }
-      else {
-        btn = new QRadioButton(to_qstring(opt->Item), inputDialog);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Unchecked);
       }
 
-      if (!String::IsNullOrEmpty(opt->Desc)) {
-        btn->setToolTip(to_qstring(opt->Desc));
+      auto* page = new QWidget(pages);
+      auto* pageLayout = new QVBoxLayout(page);
+      pageLayout->setContentsMargins(16, 14, 16, 14);
+      pageLayout->setSpacing(10);
+      if (!String::IsNullOrEmpty(opt->Preview)) {
+        QPixmap picture;
+        if (auto entry = g.SourceTree->find(to_qstring(opt->Preview)); entry != nullptr) {
+          const QString path = extractFile(entry);
+          if (!path.isEmpty()) {
+            picture.load(path);
+          }
+        }
+        if (!picture.isNull()) {
+          auto* label = new QLabel(page);
+          label->setAlignment(Qt::AlignCenter);
+          label->setPixmap(picture.scaled(QSize(420, 240), Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation));
+          label->setAccessibleName(scriptText("Picture of the option"));
+          pageLayout->addWidget(label);
+        }
       }
-
-      layout->addWidget(btn);
-      items.append(btn);
+      auto* nameLabel = new QLabel(name, page);
+      nameLabel->setObjectName(QStringLiteral("instanceDetailName"));
+      nameLabel->setTextFormat(Qt::PlainText);
+      nameLabel->setWordWrap(true);
+      pageLayout->addWidget(nameLabel);
+      auto* description = new QPlainTextEdit(page);
+      description->setReadOnly(true);
+      description->setFrameShape(QFrame::NoFrame);
+      description->setPlainText(to_qstring(opt->Desc));
+      description->setAccessibleName(scriptText("Option description"));
+      pageLayout->addWidget(description, 1);
+      pages->addWidget(page);
     }
 
-    if (!p_booSelectMany && items.size() > 0) {
-      items[0]->setChecked(true);
+    row->addWidget(list, 2);
+    row->addWidget(pages, 3);
+    dialog.body()->addLayout(row, 1);
+
+    QObject::connect(list, SIGNAL(currentRowChanged(int)), pages, SLOT(setCurrentIndex(int)));
+    if (list->count() > 0) {
+      list->setCurrentRow(0);
     }
 
-    QDialogButtonBox* buttonBox = new QDialogButtonBox(
-      QDialogButtonBox::Cancel | QDialogButtonBox::Ok, inputDialog);
-    layout->addWidget(buttonBox);
+    QPushButton* ok     = dialog.addButton(scriptText("OK"), true);
+    QPushButton* cancel = dialog.addButton(scriptText("Cancel"), false);
+    QObject::connect(ok, SIGNAL(clicked()), &dialog, SLOT(accept()));
+    QObject::connect(cancel, SIGNAL(clicked()), &dialog, SLOT(reject()));
+    list->setFocus();
 
-    // Using old signal/slot syntax since the new one does not work here (probably
-    // due to the C++/CLR nature):
-    QObject::connect(buttonBox, SIGNAL(accepted()), inputDialog, SLOT(accept()));
-    QObject::connect(buttonBox, SIGNAL(rejected()), inputDialog, SLOT(reject()));
-
-    inputDialog->setModal(true);
-    if (inputDialog->exec() != QDialog::Accepted) {
+    if (dialog.exec() != QDialog::Accepted) {
       return gcnew array<int>(0);
     }
 
-    List<int>^ selected = gcnew List<int>(items.size());
-    for (int i = 0; i < items.size(); ++i) {
-      if (items[i]->isChecked()) {
+    List<int>^ selected = gcnew List<int>(list->count());
+    for (int i = 0; i < list->count(); ++i) {
+      const bool chosen = p_booSelectMany ? list->item(i)->checkState() == Qt::Checked
+                                          : i == list->currentRow();
+      if (chosen) {
         selected->Add(i);
       }
     }
