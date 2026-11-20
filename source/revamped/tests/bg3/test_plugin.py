@@ -304,3 +304,14 @@ class PluginTest(unittest.TestCase):
         self.assertIn("Balanced", meta.values())
         odd_save = next(s for s in saves if "Odd" in s.getFilepath())
         self.assertEqual(odd_save.getName(), "Odd")
+
+    def test_saves_whose_info_cant_be_read(self):
+        # current saves compress SaveInfo.json with Zstandard: the folder
+        # name gives the leader and the title
+        folder = self.tmp / "Story" / "Shadowheart-4217126111015__A Nautiloid in Hell - 0h 00m"
+        lsv = write_pak(folder / "A Nautiloid in Hell - 0h 00m.lsv", {"meta.lsf": b"x"})
+        (folder / "A Nautiloid in Hell - 0h 00m.WebP").write_bytes(b"img")
+        save = list_saves(self.tmp / "Story")[0]
+        self.assertEqual(save.getName(), "A Nautiloid in Hell - 0h 00m")
+        self.assertTrue(save.allFiles()[1].endswith(".WebP"))
+        self.assertEqual(save_metadata(lsv, save)["Character"], "Shadowheart")

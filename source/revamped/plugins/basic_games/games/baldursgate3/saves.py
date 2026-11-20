@@ -1,10 +1,13 @@
-"""Baldur's Gate 3 saves: <saves>/<folder>/<name>.lsv with its <name>.webp
-screenshot. A .lsv is an LSPK package; its SaveInfo.json has the save's
-name, the party and the game version, read here without LSLib."""
+"""Baldur's Gate 3 saves: <saves>/<Leader>-<id>__<title>/<title>.lsv with its
+<title>.WebP screenshot. A .lsv is an LSPK package; its SaveInfo.json has the
+save's name, the party and the game version. Current saves compress it with
+Zstandard, which MO2's Python can't read, so the folder's name gives the
+leader and the title then."""
 
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,17 +16,39 @@ import mobase
 from ...basic_features.basic_save_game_info import BasicGameSaveGame, format_date
 
 
+_folder_re = re.compile(r"(?P<leader>.+?)-\d+__(?P<title>.+)")
+
+
+def folder_parts(lsv: Path) -> tuple[str, str]:
+    """(leader, title) from the save's folder name, or ("", stem)."""
+    match = _folder_re.fullmatch(lsv.parent.name)
+    if match:
+        return match["leader"], match["title"]
+    return "", lsv.stem
+
+
+def preview_of(lsv: Path) -> Path | None:
+    """The save's screenshot, by its real name (the game writes .WebP)."""
+    try:
+        for file in lsv.parent.iterdir():
+            if file.stem == lsv.stem and file.suffix.casefold() == ".webp":
+                return file
+    except OSError:
+        pass
+    return None
+
+
 class BG3SaveGame(BasicGameSaveGame):
     def getName(self) -> str:
         info = save_info(self._filepath)
         name = info.get("Save Name") if info else None
-        return str(name) if name else self._filepath.stem
+        return str(name) if name else folder_parts(self._filepath)[1]
 
     def allFiles(self) -> list[str]:
         # the screenshot goes with the save when MO2 moves or deletes it
         files = [self.getFilepath()]
-        preview = self._filepath.with_suffix(".webp")
-        if preview.exists():
+        preview = preview_of(self._filepath)
+        if preview is not None:
             files.append(preview.as_posix())
         return files
 
@@ -84,6 +109,9 @@ def save_metadata(lsv: Path, save: mobase.ISaveGame) -> dict[str, Any]:
     meta: dict[str, Any] = {tr("Saved"): format_date(save.getCreationTime())}
     info = save_info(Path(lsv))
     if not info:
+        leader = folder_parts(Path(lsv))[0]
+        if leader:
+            meta[tr("Character")] = leader
         return meta
     party = info.get("Active Party") or {}
     characters = party.get("Characters") if isinstance(party, dict) else None

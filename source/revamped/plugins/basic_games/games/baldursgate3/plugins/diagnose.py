@@ -33,7 +33,8 @@ class BG3LoadOrderCheck(mobase.IPluginDiagnose):
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
         mod_list = organizer.modList()
-        mod_list.onModStateChanged(lambda *_: self._changed())
+        # MO2 2.5's form: one call with every changed mod
+        mod_list.onModStateChanged(self._states_changed)
         mod_list.onModMoved(lambda *_: self._changed())
         mod_list.onModInstalled(lambda *_: self._changed())
         mod_list.onModRemoved(lambda *_: self._changed())
@@ -136,6 +137,8 @@ class BG3LoadOrderCheck(mobase.IPluginDiagnose):
         if key == LATE:
             lines = [
                 tr("{0} needs {1} ({2})").replace("{0}", m).replace("{1}", d).replace("{2}", dm)
+                if dm and dm.casefold() != d.casefold()
+                else tr("{0} needs {1}").replace("{0}", m).replace("{1}", d)
                 for m, d, dm in plan.late
             ]
             return tr(
@@ -189,6 +192,9 @@ class BG3LoadOrderCheck(mobase.IPluginDiagnose):
 
     def startGuidedFix(self, key: int) -> None:
         pass
+
+    def _states_changed(self, states: dict) -> None:
+        self._changed()
 
     def _changed(self) -> None:
         self._fresh = False
