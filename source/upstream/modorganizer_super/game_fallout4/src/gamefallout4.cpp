@@ -20,6 +20,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QList>
+#include <QSet>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -115,7 +116,11 @@ MOBase::VersionInfo GameFallout4::version() const
 
 QList<PluginSetting> GameFallout4::settings() const
 {
-  return QList<PluginSetting>();
+  // MO2 Revamped
+  return {PluginSetting("script_extender_checks",
+                        tr("Warn when F4SE doesn't match the game version or the "
+                           "Address Library is missing"),
+                        QVariant(true))};
 }
 
 MappingType GameFallout4::mappings() const
@@ -174,14 +179,19 @@ QString GameFallout4::steamAPPId() const
 
 QStringList GameFallout4::testFilePlugins() const
 {
-  QStringList plugins;
-  if (m_Organizer != nullptr && m_Organizer->profile() != nullptr) {
-    QString customIni(
-        m_Organizer->profile()->absoluteIniFilePath("Fallout4Custom.ini"));
+  if (m_Organizer == nullptr || m_Organizer->profile() == nullptr) {
+    return {};
+  }
+  // MO2 Revamped: the ten sTestFile entries were read from the INI (ten opens
+  // of the file) twice per primaryPlugins() call; now once per change of it
+  const QString customIni =
+      m_Organizer->profile()->absoluteIniFilePath("Fallout4Custom.ini");
+  return cachedFromFile(customIni, [&customIni] {
+    QStringList plugins;
     if (QFile(customIni).exists()) {
       for (int i = 1; i <= 10; ++i) {
         QString setting("sTestFile");
-        setting += std::to_string(i);
+        setting += QString::number(i);
         WCHAR value[MAX_PATH];
         DWORD length = ::GetPrivateProfileStringW(
             L"General", setting.toStdWString().c_str(), L"", value, MAX_PATH,
@@ -193,8 +203,8 @@ QStringList GameFallout4::testFilePlugins() const
         }
       }
     }
-  }
-  return plugins;
+    return plugins;
+  });
 }
 
 QStringList GameFallout4::primaryPlugins() const
@@ -247,28 +257,16 @@ QStringList GameFallout4::DLCPlugins() const
 
 QStringList GameFallout4::CCPlugins() const
 {
-  QStringList plugins = {};
-  QFile file(gameDirectory().absoluteFilePath("Fallout4.ccc"));
-  if (file.open(QIODevice::ReadOnly)) {
-    ON_BLOCK_EXIT([&file]() {
-      file.close();
-    });
-
-    if (file.size() == 0) {
-      return plugins;
-    }
-    while (!file.atEnd()) {
-      QByteArray line = file.readLine().trimmed();
-      QString modName;
-      if ((line.size() > 0) && (line.at(0) != '#')) {
-        modName = QString::fromUtf8(line.constData()).toLower();
-      }
-
-      if (modName.size() > 0) {
-        if (!plugins.contains(modName, Qt::CaseInsensitive)) {
-          plugins.append(modName);
-        }
-      }
+  // MO2 Revamped: Fallout4.ccc read again only when it changes
+  // (primaryPlugins() runs many times per refresh); lower case, as before
+  QStringList plugins;
+  QSet<QString> pluginsLookup;
+  for (const QString& line :
+       cachedFileLines(gameDirectory().absoluteFilePath("Fallout4.ccc"))) {
+    const QString modName = line.toLower();
+    if (!pluginsLookup.contains(modName)) {
+      pluginsLookup.insert(modName);
+      plugins.append(modName);
     }
   }
   return plugins;
@@ -305,6 +303,16 @@ std::vector<unsigned int> GameFallout4::activeProblems() const
   if (m_Organizer->managedGame() == this) {
     if (testFilePresent())
       result.push_back(PROBLEM_TEST_FILE);
+    // MO2 Revamped: script extender checks (setting "script_extender_checks")
+    if (m_Organizer->pluginSetting(name(), "script_extender_checks").toBool()) {
+      QString ignored;
+      if (scriptExtenderRuntimeMissing("f4se_", &ignored)) {
+        result.push_back(PROBLEM_SCRIPT_EXTENDER_VERSION);
+      }
+      if (addressLibraryMissing("F4SE/Plugins", &ignored)) {
+        result.push_back(PROBLEM_ADDRESS_LIBRARY);
+      }
+    }
   }
   return result;
 }
@@ -336,6 +344,10 @@ QString GameFallout4::shortDescription(unsigned int key) const
   switch (key) {
   case PROBLEM_TEST_FILE:
     return tr("sTestFile lines in Fallout4Custom.ini");
+  case PROBLEM_SCRIPT_EXTENDER_VERSION:
+    return tr("F4SE doesn't match the game version");
+  case PROBLEM_ADDRESS_LIBRARY:
+    return tr("Address Library for F4SE Plugins is missing");
   }
   return "";
 }
@@ -350,6 +362,27 @@ QString GameFallout4::fullDescription(unsigned int key) const
               "<p>Remove the sTestFile lines from Fallout4Custom.ini (in the profile's "
               "folder if the profile has its own INI files, otherwise in "
               "Documents\\My Games\\Fallout4) and start the game again.</p>");
+  }
+  case PROBLEM_SCRIPT_EXTENDER_VERSION: {
+    QString expected;
+    scriptExtenderRuntimeMissing("f4se_", &expected);
+    return tr("<p>The game folder has F4SE's loader, but not %1, the F4SE runtime for "
+              "this game version (%2). Started through F4SE, the game won't run, or "
+              "will run without F4SE and its plugins.</p>"
+              "<p>Install the F4SE build for this game version from its official site "
+              "into the game folder, or change the game back to the version that "
+              "matches your F4SE.</p>")
+        .arg(expected, gameVersion());
+  }
+  case PROBLEM_ADDRESS_LIBRARY: {
+    QString expected;
+    addressLibraryMissing("F4SE/Plugins", &expected);
+    return tr("<p>Some active mods have F4SE plugins, but no mod has %1, the Address "
+              "Library for this game version (%2). Most F4SE plugins need it, and "
+              "without it they don't load or the game closes at start.</p>"
+              "<p>Install \"Address Library for F4SE Plugins\" from Nexus (the file for "
+              "your game version) and activate it.</p>")
+        .arg(expected, gameVersion());
   }
   }
   return "";

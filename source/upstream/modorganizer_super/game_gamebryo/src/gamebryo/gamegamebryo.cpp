@@ -11,6 +11,7 @@
 #include "savegameinfo.h"
 #include "scopeguard.h"
 #include "scriptextender.h"
+#include "igamefeatures.h"
 #include "utility.h"
 #include "vdf_parser.h"
 
@@ -31,6 +32,7 @@
 #include <winreg.h>
 #include <winver.h>
 
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -157,52 +159,39 @@ QString GameGamebryo::getLauncherName() const
 
 WORD GameGamebryo::getArch(QString const& program) const
 {
-  WORD arch = 0;
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(this->gameDirectory().absoluteFilePath(program))
-          .toStdWString();
-
-  WIN32_FIND_DATAW FindFileData;
-  HANDLE hFind = ::FindFirstFileW(app_name.c_str(), &FindFileData);
-
-  // exit if the binary was not found
-  if (hFind == INVALID_HANDLE_VALUE)
-    return arch;
-
-  HANDLE hFile            = INVALID_HANDLE_VALUE;
-  HANDLE hMapping         = INVALID_HANDLE_VALUE;
-  LPVOID addrHeader       = nullptr;
-  PIMAGE_NT_HEADERS peHdr = nullptr;
-
-  hFile = CreateFileW(app_name.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
-                      OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-  if (hFile == INVALID_HANDLE_VALUE)
-    goto cleanup;
-
-  hMapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY | SEC_IMAGE, 0, 0,
-                                program.toStdWString().c_str());
-  if (hMapping == INVALID_HANDLE_VALUE)
-    goto cleanup;
-
-  addrHeader = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-  if (addrHeader == NULL)
-    goto cleanup;  // couldn't memory map the file
-
-  peHdr = ImageNtHeader(addrHeader);
-  if (peHdr == NULL)
-    goto cleanup;  // couldn't read the header
-
-  arch = peHdr->FileHeader.Machine;
-
-cleanup:  // release all of our handles
-  FindClose(hFind);
-  if (hFile != INVALID_HANDLE_VALUE)
-    CloseHandle(hFile);
-  if (hMapping != INVALID_HANDLE_VALUE)
-    CloseHandle(hMapping);
-  return arch;
+  // MO2 Revamped: the machine field read from the PE headers (the first few
+  // KB), not by mapping the whole exe as an image under a global name
+  QFile file(this->gameDirectory().absoluteFilePath(program));
+  if (!file.open(QIODevice::ReadOnly)) {
+    return 0;
+  }
+  const QByteArray head = file.read(4096);
+  if (head.size() < static_cast<int>(sizeof(IMAGE_DOS_HEADER))) {
+    return 0;
+  }
+  IMAGE_DOS_HEADER dos;
+  std::memcpy(&dos, head.constData(), sizeof(dos));
+  if (dos.e_magic != IMAGE_DOS_SIGNATURE || dos.e_lfanew < 0) {
+    return 0;
+  }
+  const qint64 ntOffset = dos.e_lfanew;
+  QByteArray nt;
+  if (ntOffset + qint64(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER)) <= head.size()) {
+    nt = head.mid(ntOffset, sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER));
+  } else if (file.seek(ntOffset)) {
+    nt = file.read(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER));
+  }
+  if (nt.size() < static_cast<int>(sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER))) {
+    return 0;
+  }
+  DWORD signature;
+  std::memcpy(&signature, nt.constData(), sizeof(signature));
+  if (signature != IMAGE_NT_SIGNATURE) {
+    return 0;
+  }
+  IMAGE_FILE_HEADER fileHeader;
+  std::memcpy(&fileHeader, nt.constData() + sizeof(DWORD), sizeof(fileHeader));
+  return fileHeader.Machine;
 }
 
 QFileInfo GameGamebryo::findInGameFolder(const QString& relativePath) const
@@ -519,4 +508,107 @@ void GameGamebryo::registerFeature(std::shared_ptr<MOBase::GameFeature> feature)
 {
   // priority does not matter, this is a game plugin so will get lowest priority in MO2
   m_Organizer->gameFeatures()->registerFeature(this, feature, 0, true);
+}
+
+QStringList GameGamebryo::cachedFromFile(const QString& path,
+                                         const std::function<QStringList()>& compute) const
+{
+  const QFileInfo info(path);
+  const bool exists      = info.exists();
+  const qint64 size      = exists ? info.size() : -1;
+  const QDateTime mtime  = exists ? info.lastModified() : QDateTime();
+  const QString key      = path.toCaseFolded();
+
+  {
+    std::scoped_lock lock(m_FileCacheMutex);
+    auto it = m_FileCache.find(key);
+    if (it != m_FileCache.end() && it->second.exists == exists &&
+        it->second.size == size && it->second.modified == mtime) {
+      return it->second.value;
+    }
+  }
+
+  QStringList value = compute();
+
+  std::scoped_lock lock(m_FileCacheMutex);
+  m_FileCache[key] = FileCacheEntry{exists, size, mtime, value};
+  return value;
+}
+
+QStringList GameGamebryo::cachedFileLines(const QString& path) const
+{
+  return cachedFromFile(path, [&path] {
+    QStringList lines;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      return lines;
+    }
+    while (!file.atEnd()) {
+      const QByteArray line = file.readLine().trimmed();
+      if (!line.isEmpty() && line.at(0) != '#') {
+        lines.append(QString::fromUtf8(line));
+      }
+    }
+    return lines;
+  });
+}
+
+QString GameGamebryo::gameVersionJoined(int parts, const QString& separator) const
+{
+  const QString exe = gameDirectory().absoluteFilePath(binaryName());
+  // read again when the exe changes (a game update)
+  const QStringList version = cachedFromFile(exe, [this] {
+    return QStringList{gameVersion()};
+  });
+  QStringList numbers = version.value(0).split('.', Qt::SkipEmptyParts);
+  if (numbers.isEmpty() || version.value(0).startsWith(FALLBACK_GAME_VERSION)) {
+    return {};
+  }
+  while (numbers.size() < parts) {
+    numbers.append("0");
+  }
+  return numbers.mid(0, parts).join(separator);
+}
+
+bool GameGamebryo::scriptExtenderRuntimeMissing(const QString& runtimePrefix,
+                                                QString* expected) const
+{
+  if (m_Organizer == nullptr) {
+    return false;
+  }
+  auto extender = m_Organizer->gameFeatures()->gameFeature<MOBase::ScriptExtender>();
+  if (extender == nullptr || !extender->isInstalled()) {
+    return false;
+  }
+  const QString version = gameVersionJoined(3, "_");
+  if (version.isEmpty()) {
+    return false;
+  }
+  const QString runtime = runtimePrefix + version + ".dll";
+  if (expected != nullptr) {
+    *expected = runtime;
+  }
+  return !gameDirectory().exists(runtime);
+}
+
+bool GameGamebryo::addressLibraryMissing(const QString& pluginsDir,
+                                         QString* expected) const
+{
+  if (m_Organizer == nullptr) {
+    return false;
+  }
+  const QString version = gameVersionJoined(4, "-");
+  if (version.isEmpty()) {
+    return false;
+  }
+  if (m_Organizer->findFiles(pluginsDir, QStringList{"*.dll"}).isEmpty()) {
+    return false;
+  }
+  // "versionlib-" is the Anniversary Edition's, "version-" the older one's
+  const QStringList names = {"versionlib-" + version + ".bin",
+                             "version-" + version + ".bin"};
+  if (expected != nullptr) {
+    *expected = pluginsDir + "/" + names.first();
+  }
+  return m_Organizer->findFiles(pluginsDir, names).isEmpty();
 }
