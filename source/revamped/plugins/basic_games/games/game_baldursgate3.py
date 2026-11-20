@@ -108,9 +108,8 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         settings = super().settings() + [
             mobase.PluginSetting(
                 "force_load_dlls",
-                "Load the native DLL mods (bin/NativeMods) and the Script Extender "
-                "through the VFS, so Native Mod Loader isn't needed. With Native Mod "
-                "Loader installed, it loads its mods itself.",
+                "Force load all dlls detected in active mods. Removes the need for "
+                "'Native Mod Loader' and similar mods.",
                 True,
             ),
             mobase.PluginSetting(
@@ -222,20 +221,21 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
 
     def forced_dlls(self) -> list[str]:
         """The DLLs the game should load from the mods, relative to bin/:
-        the Script Extender's DWrite.dll and the native mods. Native Mod
-        Loader's bink2w64_original.dll (the game's own, renamed) never; the
-        native mods only when Native Mod Loader isn't there to load them."""
+        the Script Extender's DWrite.dll and the native mods (NativeMods/).
+
+        The game imports bink2w64.dll as it starts, before the VFS is there,
+        so it always gets its own: Native Mod Loader's proxy never runs under
+        MO2, and the native mods it would load are loaded here instead (as
+        the original plugin did). The DLLs with the name of one of the
+        game's (that proxy) and NML's renamed original are never forced."""
         tree = self._organizer.virtualFileTree()
         libs: dict[str, str] = {}
         base = self.base_dlls()
         bin_paths = ["bin"] if root_builder_enabled(self._organizer) else ["bin", "Root/bin"]
-        nml = False
         for bin_path in bin_paths:
             folder = tree.find(bin_path)
             if not isinstance(folder, mobase.IFileTree):
                 continue
-            if folder.find("bink2w64_original.dll") is not None:
-                nml = True
 
             def visit(_: Any, entry: mobase.FileTreeEntry, folder=folder) -> mobase.IFileTree.WalkReturn:
                 relpath = entry.pathFrom(folder).replace("\\", "/")
@@ -246,8 +246,6 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
                 return mobase.IFileTree.WalkReturn.CONTINUE
 
             folder.walk(visit)
-        if nml:
-            libs = {k: v for k, v in libs.items() if not k.startswith("nativemods/")}
         return list(libs.values())
 
     def base_dlls(self) -> set[str]:

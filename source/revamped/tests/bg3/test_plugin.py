@@ -136,10 +136,12 @@ class PluginTest(unittest.TestCase):
         # (the fake VFS tree has lower-case names)
         dlls = sorted(d.casefold() for d in self.game.forced_dlls())
         self.assertEqual(dlls, ["dwrite.dll", "nativemods/bg3wasd.dll"])
+        # Native Mod Loader's proxy never runs under MO2 (the game takes its
+        # own bink2w64.dll before the VFS is there): its mods are still forced
         self.organizer.add_mod("NML", ["bin/bink2w64.dll", "bin/bink2w64_original.dll"])
-        self.assertEqual([d.casefold() for d in self.game.forced_dlls()], ["dwrite.dll"])
+        self.assertEqual(sorted(d.casefold() for d in self.game.forced_dlls()), ["dwrite.dll", "nativemods/bg3wasd.dll"])
         loads = self.game.executableForcedLoads()
-        self.assertEqual(sorted(l.process() for l in loads), ["bg3.exe", "bg3_dx11.exe"])
+        self.assertEqual(sorted(l.process() for l in loads), ["bg3.exe"] * 2 + ["bg3_dx11.exe"] * 2)
         self.organizer.setPluginSetting(NAME, "force_load_dlls", False)
         self.assertEqual(self.game.executableForcedLoads(), [])
 
