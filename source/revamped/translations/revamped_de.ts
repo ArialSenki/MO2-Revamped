@@ -21100,4 +21100,75 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <translation>• und {0} weitere</translation>
     </message>
   </context>
+  <context>
+    <name>StardewValleyGame</name>
+    <message>
+      <source>Stardew Valley support for MO2 Revamped: SMAPI mods and content packs, their dependencies and duplicates, SMAPI&apos;s version and the saves with their farm. Based on the work of Syer10.</source>
+      <translation>Unterstützung für Stardew Valley in MO2 Revamped: SMAPI-Mods und Inhaltspakete, ihre Abhängigkeiten und Duplikate, die SMAPI-Version und die Spielstände mit ihrer Farm. Basiert auf der Arbeit von Syer10.</translation>
+    </message>
+    <message>
+      <source>Stardew Valley Mod Check</source>
+      <translation>Stardew Valley Mod-Prüfung</translation>
+    </message>
+    <message>
+      <source>Warns when Stardew Valley mods need SMAPI, a framework or another mod that isn&apos;t there or is too old, and about mods SMAPI skips as duplicates.</source>
+      <translation>Warnt, wenn Stardew-Valley-Mods SMAPI, ein Framework oder einen anderen Mod brauchen, der fehlt oder zu alt ist, und vor Mods, die SMAPI als Duplikate überspringt.</translation>
+    </message>
+    <message>
+      <source>The same mod (the same UniqueID in manifest.json) is in more than one folder of the game&apos;s Mods folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;SMAPI then loads none of the copies. Keep one of them: turn the other mods off or remove the duplicate folder.</source>
+      <translation>Derselbe Mod (dieselbe UniqueID in manifest.json) liegt in mehr als einem Ordner des Mods-Ordners des Spiels:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;SMAPI lädt dann keine der Kopien. Behalte nur eine: schalte die anderen Mods aus oder entferne den doppelten Ordner.</translation>
+    </message>
+    <message>
+      <source>• and {0} more</source>
+      <translation>• und {0} weitere</translation>
+    </message>
+    <message>
+      <source>SMAPI isn&apos;t installed</source>
+      <translation>SMAPI ist nicht installiert</translation>
+    </message>
+    <message>
+      <source>Mods need other mods that aren&apos;t there</source>
+      <translation>Mods brauchen andere Mods, die fehlen</translation>
+    </message>
+    <message>
+      <source>Mods need newer versions of other mods</source>
+      <translation>Mods brauchen neuere Versionen anderer Mods</translation>
+    </message>
+    <message>
+      <source>Mods need a newer SMAPI</source>
+      <translation>Mods brauchen ein neueres SMAPI</translation>
+    </message>
+    <message>
+      <source>The same mod is installed twice</source>
+      <translation>Derselbe Mod ist doppelt installiert</translation>
+    </message>
+    <message>
+      <source>These active mods are SMAPI mods, and SMAPI isn&apos;t in the game folder:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install SMAPI with its own installer from &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; (into the game folder, not as a mod), then start the game with the SMAPI program in MO2.</source>
+      <translation>Diese aktiven Mods sind SMAPI-Mods, und SMAPI ist nicht im Spielordner:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installiere SMAPI mit seinem eigenen Installer von &lt;a href=&quot;{1}&quot;&gt;{1}&lt;/a&gt; (in den Spielordner, nicht als Mod) und starte das Spiel dann mit dem SMAPI-Programm in MO2.</translation>
+    </message>
+    <message>
+      <source>These mods are needed, and no active mod has them (needed mod: the mods that need it):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Install them or turn them on in the mod list. SMAPI doesn&apos;t load a mod whose required mods are missing.</source>
+      <translation>Diese Mods werden gebraucht, und kein aktiver Mod enthält sie (gebrauchter Mod: die Mods, die ihn brauchen):&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Installiere sie oder schalte sie in der Modliste ein. SMAPI lädt keinen Mod, dem benötigte Mods fehlen.</translation>
+    </message>
+    <message>
+      <source>These mods need a newer version of another mod:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Update the needed mods. SMAPI skips a mod whose required mods are too old.</source>
+      <translation>Diese Mods brauchen eine neuere Version eines anderen Mods:&lt;br&gt;&lt;br&gt;{0}&lt;br&gt;&lt;br&gt;Aktualisiere die benötigten Mods. SMAPI überspringt einen Mod, dessen benötigte Mods zu alt sind.</translation>
+    </message>
+    <message>
+      <source>The installed SMAPI ({0}) is older than these mods need:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Update SMAPI with its installer from &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt;.</source>
+      <translation>Das installierte SMAPI ({0}) ist älter, als diese Mods brauchen:&lt;br&gt;&lt;br&gt;{1}&lt;br&gt;&lt;br&gt;Aktualisiere SMAPI mit seinem Installer von &lt;a href=&quot;{2}&quot;&gt;{2}&lt;/a&gt;.</translation>
+    </message>
+    <message>
+      <source>{0} needs {1} {2} or newer; {3} is installed</source>
+      <translation>{0} braucht {1} {2} oder neuer; installiert ist {3}</translation>
+    </message>
+    <message>
+      <source>{0} needs SMAPI {1} or newer</source>
+      <translation>{0} braucht SMAPI {1} oder neuer</translation>
+    </message>
+    <message>
+      <source>the game&apos;s Mods folder</source>
+      <translation>der Mods-Ordner des Spiels</translation>
+    </message>
+  </context>
 </TS>
