@@ -105,6 +105,22 @@ def _only_suffix(tree: mobase.IFileTree, suffixes: tuple[str, ...]) -> bool:
     return files > 0 and not other
 
 
+def _has_folder_named(tree: mobase.IFileTree, names: frozenset[str]) -> bool:
+    """Whether a folder with one of the names is anywhere in the tree (then it
+    is a wrapper around the game's folders, not a mod's own folder)."""
+    found = False
+
+    def visit(_path: str, entry: mobase.FileTreeEntry) -> mobase.IFileTree.WalkReturn:
+        nonlocal found
+        if _is_dir(entry) and _name(entry) in names:
+            found = True
+            return mobase.IFileTree.WalkReturn.STOP
+        return mobase.IFileTree.WalkReturn.CONTINUE
+
+    tree.walk(visit)
+    return found
+
+
 def _is_doc(entry: mobase.FileTreeEntry) -> bool:
     if _is_dir(entry):
         return False
@@ -124,6 +140,26 @@ def prune_empty(tree: mobase.IFileTree | None) -> None:
         parent = tree.parent()
         tree.detach()
         tree = parent
+
+
+def unwrap(tree: mobase.IFileTree, inner: mobase.IFileTree) -> None:
+    """Takes a folder's contents up into its parent, and the folder away.
+
+    The folder is first given a name nothing else has, then its entries are
+    moved up one by one: merging it into its parent crashed MO2 (an access
+    violation in IFileTree::merge) when it held an entry of its own name, as
+    an archive with "Mod/Mod/init.lua" does."""
+    temporary = "__mo2_revamped_unwrap__"
+    while tree.exists(temporary):
+        temporary += "_"
+    if not tree.move(inner, temporary):
+        return
+    holder = tree.find(temporary, mobase.FileTreeEntry.FileTypes.DIRECTORY)
+    if not isinstance(holder, mobase.IFileTree):
+        return
+    for entry in list(holder):
+        tree.insert(entry, mobase.IFileTree.InsertPolicy.MERGE)
+    holder.detach()
 
 
 class CyberpunkModDataChecker(mobase.ModDataChecker):
@@ -164,8 +200,7 @@ class CyberpunkModDataChecker(mobase.ModDataChecker):
             inner = self._wrapper(filetree)
             if inner is None or self._check(inner, 1) is self.INVALID:
                 break
-            filetree.merge(inner)
-            inner.detach()
+            unwrap(filetree, inner)
         _, actions = self._plan(filetree)
         for action in actions:
             action()
@@ -201,6 +236,11 @@ class CyberpunkModDataChecker(mobase.ModDataChecker):
         actions: list[Action] = []
         entries = list(tree)
         has_audio = any(_has_suffix(entry, AUDIO_SUFFIXES) for entry in entries)
+        # the archive's only folder (documents apart); two may be options
+        folders = [entry for entry in entries if _is_dir(entry)]
+        lone_folder = folders[0] if len(folders) == 1 and all(
+            _is_dir(entry) or _is_doc(entry) for entry in entries
+        ) else None
 
         def move(entry: mobase.FileTreeEntry, target: str) -> Action:
             def run() -> None:
@@ -237,6 +277,14 @@ class CyberpunkModDataChecker(mobase.ModDataChecker):
                     actions.append(move(entry, "r6/"))
                 elif name == "tweaks" and _only_suffix(entry, TWEAK_SUFFIXES):
                     actions.append(move(entry, "r6/"))
+                elif (
+                    lone_folder is not None
+                    and name == _name(lone_folder)
+                    and _only_suffix(entry, (".reds",))
+                    and not _has_folder_named(entry, TOP_FOLDERS)
+                ):
+                    # a redscript mod's own folder, without r6/scripts
+                    actions.append(move(entry, "r6/scripts/"))
                 # any other folder: kept as it is
             elif name.endswith(ARCHIVE_SUFFIXES):
                 actions.append(move(entry, ARCHIVE_MOD))

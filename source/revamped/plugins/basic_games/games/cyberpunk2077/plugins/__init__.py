@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import html
+import threading
 from pathlib import Path
 
 import mobase
 
-from ..frameworks import FRAMEWORKS, ModFiles, Report, analyze
+from PyQt6.QtCore import QTimer
+
+from ..frameworks import FRAMEWORKS, CodewareCandidate, ModFiles, Report, analyze, scan_codeware
 from ..util import log_warning, tr
 
 GAME_NAME = "Cyberpunk 2077"
@@ -39,6 +42,10 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
     def __init__(self) -> None:
         super().__init__()
         self._report: Report | None = None
+        # which mods import Codeware, by candidate key; filled in the
+        # background (reading many scripts can take seconds)
+        self._codeware: dict[tuple, bool] = {}
+        self._scan: threading.Thread | None = None
 
     # IPlugin
 
@@ -151,11 +158,41 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
                     active_mod_files(self._organizer),
                     self._organizer.virtualFileTree(),
                     game_dir,
+                    self._codeware_users,
                 )
             except Exception as error:  # noqa: BLE001 - never break MO2's problem list
                 log_warning(f"Cyberpunk 2077 framework check failed: {error}")
         self._report = report
         return report
+
+    def _codeware_users(self, candidates: list[CodewareCandidate]) -> list[str]:
+        """The candidates known to import Codeware; the unknown ones are read
+        in a background thread, and the report is made again when it ends."""
+        unknown = [c for c in candidates if c.key not in self._codeware]
+        if unknown and self._scan is None:
+            results: dict[tuple, bool] = {}
+
+            def work() -> None:
+                try:
+                    results.update(scan_codeware(unknown))
+                except Exception:  # noqa: BLE001 - never let a read stop MO2
+                    pass
+
+            def finished() -> None:
+                if self._scan is not None and self._scan.is_alive():
+                    QTimer.singleShot(250, finished)
+                    return
+                self._codeware.update(results)
+                # a mod the scan could not read counts as not using Codeware
+                for candidate in unknown:
+                    self._codeware.setdefault(candidate.key, False)
+                self._scan = None
+                self._changed()
+
+            self._scan = threading.Thread(target=work, name="Cyberpunk 2077 Codeware scan", daemon=True)
+            self._scan.start()
+            QTimer.singleShot(250, finished)
+        return [c.name for c in candidates if self._codeware.get(c.key)]
 
     @staticmethod
     def _mod_list(names: list[str]) -> str:
@@ -166,5 +203,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
 
 
 def createPlugins() -> list[mobase.IPlugin]:
-    return [CyberpunkFrameworkCheck()]
+    from .archive_conflicts import ArchiveConflictsTool
+
+    return [CyberpunkFrameworkCheck(), ArchiveConflictsTool()]
 

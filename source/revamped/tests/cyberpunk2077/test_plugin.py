@@ -303,6 +303,15 @@ class FrameworkTest(unittest.TestCase):
             game.setGamePath(game_dir)
             check = CyberpunkFrameworkCheck()
             check.init(organizer)
+            # Codeware's users are read in the background: first without it
+            problems = check.activeProblems()
+            self.assertEqual(len(problems), 2)
+            from PyQt6.QtCore import QCoreApplication
+
+            deadline = time.time() + 10
+            while (check._scan is not None or check._report is not None) and time.time() < deadline:
+                QCoreApplication.processEvents()
+                time.sleep(0.05)
             problems = check.activeProblems()
             self.assertEqual(len(problems), 3)
             texts = [check.fullDescription(key) for key in problems]
