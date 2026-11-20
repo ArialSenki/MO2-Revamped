@@ -1,4 +1,5 @@
 #include "multiprocess.h"
+#include "env.h"
 #include "utility.h"
 #include <QLocalSocket>
 #include <QTimer>
@@ -200,7 +201,12 @@ void MOMultiProcess::sendMessage(const QString& message)
 
   if (connected) {
     const ServerOwner owner = serverOwner(socket);
-    if (owner != ServerOwner::ThisUser) {
+    // MO2 Revamped: Wine and Proton have no Windows accounts to keep apart
+    // (every program of a prefix runs as the same Linux user); if a Wine
+    // version can't report a pipe's owner, links mustn't be refused for it
+    if (owner != ServerOwner::ThisUser && env::runningUnderWine()) {
+      MOBase::log::debug("under Wine: the pipe's owner isn't checked");
+    } else if (owner != ServerOwner::ThisUser) {
       socket.abort();
       reportError(owner == ServerOwner::OtherAccount
                       ? tr("Another Windows account's program answered instead of "
