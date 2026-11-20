@@ -34,6 +34,7 @@ along with usvfs. If not, see <http://www.gnu.org/licenses/>.
 
 // note that there's a mix of boost and std filesystem stuff in this file and
 // that they're not completely compatible
+#include <atomic>
 #include <filesystem>
 
 namespace bfs = boost::filesystem;
@@ -469,6 +470,9 @@ BOOL WINAPI usvfsConnectVFS(const usvfsParameters* params)
   }
 }
 
+// set once the process has started to end, see usvfsDisconnectForProcessExit()
+static std::atomic<bool> processExiting{false};
+
 void WINAPI usvfsDisconnectVFS()
 {
   if (spdlog::get("usvfs").get() == nullptr) {
@@ -476,17 +480,57 @@ void WINAPI usvfsDisconnectVFS()
     spdlog::create<spdlog::sinks::null_sink_mt>("usvfs");
   }
 
-  spdlog::get("usvfs")->debug("remove from process {}", GetCurrentProcessId());
-
-  if (manager != nullptr) {
-    delete manager;
-    manager = nullptr;
+  if (processExiting.load()) {
+    // the process already left the vfs on its way out and the hooks must stay
+    return;
   }
 
-  if (context != nullptr) {
-    delete context;
-    context = nullptr;
+  spdlog::get("usvfs")->debug("remove from process {}", GetCurrentProcessId());
+
+  // taken atomically, so two threads calling this at once never delete the same
+  // object twice
+  auto* oldManager = static_cast<usvfs::HookManager*>(
+      InterlockedExchangePointer(reinterpret_cast<PVOID volatile*>(&manager), nullptr));
+  if (oldManager != nullptr) {
+    delete oldManager;
+  }
+
+  auto* oldContext = static_cast<usvfs::HookContext*>(
+      InterlockedExchangePointer(reinterpret_cast<PVOID volatile*>(&context), nullptr));
+  if (oldContext != nullptr) {
+    delete oldContext;
     spdlog::get("usvfs")->debug("vfs unloaded");
+  }
+}
+
+// Called by the ExitProcess and NtTerminateProcess hooks when this process ends.
+// It used to call usvfsDisconnectVFS(), which deletes the hook manager and the
+// context and removes every hook while the process's other threads still run:
+// a thread inside a hook then reads the freed context (HookContext::readAccess
+// locks a mutex inside it), and two threads exiting at once deleted the same
+// objects twice. Both ended in heap corruption (0xc0000374) or an access
+// violation when games closed. Now the process only leaves the shared process
+// list and drops its connection, once; the hooks and the context stay valid
+// until the process is gone, which also keeps file access from DLLs unloading
+// at exit inside the vfs.
+void usvfsDisconnectForProcessExit()
+{
+  if (processExiting.exchange(true)) {
+    return;
+  }
+
+  if (spdlog::get("usvfs").get() == nullptr) {
+    spdlog::create<spdlog::sinks::null_sink_mt>("usvfs");
+  }
+
+  try {
+    if (manager != nullptr) {
+      manager->context()->releaseForProcessExit();
+    } else if (context != nullptr) {
+      context->releaseForProcessExit();
+    }
+  } catch (const std::exception& e) {
+    spdlog::get("usvfs")->debug("failed to leave the vfs on exit: {}", e.what());
   }
 }
 
@@ -945,13 +989,24 @@ const char* WINAPI usvfsVersionString()
 // DllMain
 //
 
-BOOL APIENTRY DllMain(HMODULE module, DWORD reasonForCall, LPVOID)
+BOOL APIENTRY DllMain(HMODULE module, DWORD reasonForCall, LPVOID reserved)
 {
   switch (reasonForCall) {
   case DLL_PROCESS_ATTACH: {
     dllModule = module;
   } break;
   case DLL_PROCESS_DETACH: {
+    // The process is ending (reserved is set) and Windows has already ended every
+    // other thread. The hooks stayed in place for them (see
+    // usvfsDisconnectForProcessExit); take them out now, before this DLL's own
+    // objects are destroyed, so the DLLs that unload after this one call the
+    // original functions.
+    if (reserved != nullptr && manager != nullptr) {
+      try {
+        manager->removeHooksAtProcessEnd();
+      } catch (...) {
+      }
+    }
     if (exceptionHandler)
       ::RemoveVectoredExceptionHandler(exceptionHandler);
   } break;

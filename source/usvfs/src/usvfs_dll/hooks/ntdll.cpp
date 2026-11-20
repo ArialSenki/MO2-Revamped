@@ -1509,7 +1509,7 @@ NTSTATUS WINAPI usvfs::hook_NtTerminateProcess(HANDLE ProcessHandle,
                                 GetProcessId(ProcessHandle) == GetCurrentProcessId();
 
   if (isCurrentProcess) {
-    usvfsDisconnectVFS();
+    usvfsDisconnectForProcessExit();
   }
 
   res = ::NtTerminateProcess(ProcessHandle, ExitStatus);

@@ -174,6 +174,14 @@ void HookContext::registerProcess(DWORD pid)
   m_Parameters->registerProcess(pid);
 }
 
+void HookContext::releaseForProcessExit()
+{
+  unregisterCurrentProcess();
+  const auto userCount = m_Parameters->userDisconnected();
+  spdlog::get("usvfs")->info("process {} exiting, {} users left",
+                             ::GetCurrentProcessId(), userCount);
+}
+
 void HookContext::unregisterCurrentProcess()
 {
   m_Parameters->unregisterProcess(::GetCurrentProcessId());
