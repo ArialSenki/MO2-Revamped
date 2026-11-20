@@ -16,6 +16,7 @@
 #include "handlereditdialog.h"
 #include <QLocale>
 #include <QPushButton>
+#include <QTimer>
 #include <QTranslator>
 
 
@@ -167,7 +168,29 @@ HandlerStorage *loadStorage(bool forceReg, bool startupRegistration)
     registerBox.button(QMessageBox::Save)
         ->setText(QCoreApplication::translate("NxmHandler", "No, don't ask again"));
     registerBox.setDefaultButton(QMessageBox::Yes);
-    switch (registerBox.exec()) {
+    // MO2 Revamped: Mod Organizer starts "reg" at every start and instance
+    // switch and doesn't wait for it. Unanswered (MO2 hidden, on another
+    // desktop, the box behind its window), each one stayed alive for good and
+    // kept uibase.dll in use: only one asks at a time, in front, and gives up
+    // after two minutes with nothing saved, so the next start asks again
+    HANDLE promptMutex = nullptr;
+    if (startupRegistration && !forceReg) {
+      promptMutex = ::CreateMutexW(nullptr, TRUE, L"Local\\MO2Revamped-nxmhandler-register-prompt");
+      if (promptMutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
+        ::CloseHandle(promptMutex);
+        return nullptr;
+      }
+      registerBox.setWindowFlag(Qt::WindowStaysOnTopHint);
+      QTimer::singleShot(120000, &registerBox, [&registerBox] {
+        registerBox.done(QMessageBox::Cancel);
+      });
+    }
+    const int answer = registerBox.exec();
+    if (promptMutex != nullptr) {
+      ::ReleaseMutex(promptMutex);
+      ::CloseHandle(promptMutex);
+    }
+    switch (answer) {
       case QMessageBox::Yes: {
         // base dir is either the global dir if it exists or the local application
         // dir
