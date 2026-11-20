@@ -179,7 +179,8 @@ QStringList CreationGamePlugins::readPluginList(MOBase::IPluginList* pluginList)
         }
       }
     } else {
-      pluginName.remove(0, 1);
+      // MO2 Revamped: a primary plugin listed without '*': its name as it is
+      // (the first letter was cut off here, as if it had the '*')
       pluginsFound.insert(pluginName.toCaseFolded());
     }
   }
