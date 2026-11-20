@@ -53,7 +53,88 @@ namespace Mo2RevampedSetup
                     SetupDiagnostics.Error("Could not read the Visual C++ " + architecture + " runtime version.", ex);
                 }
             }
+            // Wine and Proton: winetricks (or protontricks) may have copied
+            // Microsoft's DLLs into the prefix without the installer's registry
+            // entry; Wine's own versions of them don't count, they lack newer
+            // functions MO2 uses
+            if ((best == null || best < Required) && WineHost.IsRunning)
+            {
+                Version files = WinePrefixDllVersion(architecture);
+                if (files != null && (best == null || files > best)) best = files;
+            }
             return best;
+        }
+
+        // the oldest of Microsoft's runtime DLLs in a Wine prefix, or null when
+        // one is missing or is Wine's own
+        private static Version WinePrefixDllVersion(string architecture)
+        {
+            try
+            {
+                string folder = architecture == "x86"
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.SystemX86)
+                    : (Environment.Is64BitProcess
+                        ? Environment.SystemDirectory
+                        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Sysnative"));
+                // every one MO2, usvfs and the plugins import: a partial copy
+                // from an old winetricks run doesn't count
+                List<string> names = new List<string> {
+                    "vcruntime140.dll", "msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll",
+                    "msvcp140_atomic_wait.dll", "vcomp140.dll", "concrt140.dll" };
+                if (architecture != "x86") names.Add("vcruntime140_1.dll");
+                Version oldest = null;
+                foreach (string name in names)
+                {
+                    string path = Path.Combine(folder, name);
+                    if (!File.Exists(path) || IsWineDll(path)) return null;
+                    Version version = NativeFileVersion(path);
+                    if (version == null) return null;
+                    if (oldest == null || version < oldest) oldest = version;
+                }
+                SetupDiagnostics.Info("Visual C++ " + architecture + " DLLs in the Wine prefix: " + oldest + ".");
+                return oldest;
+            }
+            catch (Exception ex)
+            {
+                SetupDiagnostics.Error("Could not read the Visual C++ " + architecture + " DLLs of the Wine prefix.", ex);
+                return null;
+            }
+        }
+
+        // Wine's own DLLs, and the placeholders it puts in system32 for them,
+        // say so right after the DOS header
+        private static bool IsWineDll(string path)
+        {
+            byte[] header = new byte[128];
+            int read;
+            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                read = stream.Read(header, 0, header.Length);
+            return System.Text.Encoding.ASCII.GetString(header, 0, read).IndexOf("Wine ", StringComparison.Ordinal) >= 0;
+        }
+
+        // major.minor.build of a file's fixed version, or null
+        private static Version NativeFileVersion(string path)
+        {
+            IntPtr data = IntPtr.Zero;
+            try
+            {
+                int ignored;
+                int size = GetFileVersionInfoSizeW(path, out ignored);
+                if (size <= 0) return null;
+                data = Marshal.AllocHGlobal(size);
+                if (!GetFileVersionInfoW(path, 0, size, data)) return null;
+                IntPtr pointer;
+                uint length;
+                // VS_FIXEDFILEINFO: dwFileVersionMS at 8, dwFileVersionLS at 12
+                if (!VerQueryValueW(data, @"\", out pointer, out length) || length < 16) return null;
+                int ms = Marshal.ReadInt32(pointer, 8);
+                int ls = Marshal.ReadInt32(pointer, 12);
+                return new Version((ms >> 16) & 0xFFFF, ms & 0xFFFF, (ls >> 16) & 0xFFFF);
+            }
+            finally
+            {
+                if (data != IntPtr.Zero) Marshal.FreeHGlobal(data);
+            }
         }
 
         public static bool IsCurrent(string architecture)
@@ -66,6 +147,49 @@ namespace Mo2RevampedSetup
         // only a restart is left, then restartNeeded is set), otherwise the
         // text to show the user. Never throws: MO2 itself is already installed.
         public static string Ensure(bool needX86, Action<string> report, out bool restartNeeded)
+        {
+            string result = EnsureInstalled(needX86, report, out restartNeeded);
+            // only with a current runtime: an older Microsoft DLL left by a
+            // game would otherwise be loaded instead of Wine's newer one
+            if (WineHost.IsRunning && result == null && IsCurrent("x64") && (!needX86 || IsCurrent("x86")))
+                PreferMicrosoftDllsUnderWine();
+            return result;
+        }
+
+        // Wine loads its own versions of these DLLs even when Microsoft's are
+        // in the prefix, and some functions MO2 and usvfs use are only stubs
+        // there that end the program. This is what winetricks' vcrun2022
+        // sets: Microsoft's DLL when present, Wine's otherwise. A value the
+        // user already set is kept
+        private static readonly string[] WineOverrideDlls = new string[] {
+            "concrt140", "msvcp140", "msvcp140_1", "msvcp140_2", "msvcp140_atomic_wait",
+            "msvcp140_codecvt_ids", "vcomp140", "vcruntime140", "vcruntime140_1" };
+
+        private static void PreferMicrosoftDllsUnderWine()
+        {
+            try
+            {
+                using (RegistryKey key = Registry.CurrentUser.CreateSubKey(@"Software\Wine\DllOverrides"))
+                {
+                    List<string> set = new List<string>();
+                    foreach (string dll in WineOverrideDlls)
+                    {
+                        if (key.GetValue(dll) != null || key.GetValue("*" + dll) != null) continue;
+                        key.SetValue(dll, "native,builtin", RegistryValueKind.String);
+                        set.Add(dll);
+                    }
+                    SetupDiagnostics.Info(set.Count == 0
+                        ? "Wine DLL overrides for Visual C++ were already set."
+                        : "Wine DLL overrides set to native,builtin: " + String.Join(", ", set.ToArray()) + ".");
+                }
+            }
+            catch (Exception ex)
+            {
+                SetupDiagnostics.Error("Could not set Wine's DLL overrides for Visual C++.", ex);
+            }
+        }
+
+        private static string EnsureInstalled(bool needX86, Action<string> report, out bool restartNeeded)
         {
             restartNeeded = false;
             List<string> missing = new List<string>();
@@ -215,11 +339,81 @@ namespace Mo2RevampedSetup
             if (!HasExactName(signer.SubjectName, "O=Microsoft Corporation") ||
                 !String.Equals(signer.GetNameInfo(X509NameType.SimpleName, false), "Microsoft Corporation", StringComparison.Ordinal))
                 throw new InvalidOperationException(InstallerText.T("el archivo descargado no está firmado por Microsoft"));
+            // the .NET of Wine and Proton (Mono) can return no product name for
+            // this installer; Windows' own version functions, which Wine has
+            // too, read the same resource of the signed file
             FileVersionInfo info = FileVersionInfo.GetVersionInfo(path);
-            if (info.ProductName == null || info.ProductName.IndexOf("Visual C++", StringComparison.OrdinalIgnoreCase) < 0)
+            string product = info.ProductName;
+            if (!NamesVisualCpp(product))
+            {
+                string native = NativeVersionString(path, "ProductName");
+                string description = NativeVersionString(path, "FileDescription");
+                SetupDiagnostics.Info("Product name of " + Path.GetFileName(path) + ": .NET '" + product +
+                    "', Windows '" + native + "', description '" + description + "'.");
+                product = NamesVisualCpp(native) ? native : description;
+            }
+            if (!NamesVisualCpp(product))
                 throw new InvalidOperationException(InstallerText.T("el archivo descargado no es el instalador de Visual C++"));
-            SetupDiagnostics.Info("Verified " + Path.GetFileName(path) + ": " + subject + ", " + info.ProductName + " " + info.ProductVersion + ".");
+            SetupDiagnostics.Info("Verified " + Path.GetFileName(path) + ": " + subject + ", " + product + " " + info.ProductVersion + ".");
         }
+
+        private static bool NamesVisualCpp(string name)
+        {
+            return name != null && name.IndexOf("Visual C++", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // one string of a file's version resource, in its first language, or null
+        internal static string NativeVersionString(string path, string field)
+        {
+            // unmanaged: VerQueryValue returns pointers into the block
+            IntPtr data = IntPtr.Zero;
+            try
+            {
+                int ignored;
+                int size = GetFileVersionInfoSizeW(path, out ignored);
+                if (size <= 0) return null;
+                data = Marshal.AllocHGlobal(size);
+                if (!GetFileVersionInfoW(path, 0, size, data)) return null;
+                IntPtr pointer;
+                uint length;
+                List<string> languages = new List<string>();
+                if (VerQueryValueW(data, @"\VarFileInfo\Translation", out pointer, out length) && length >= 4)
+                {
+                    for (int offset = 0; offset + 4 <= length; offset += 4)
+                    {
+                        int language = Marshal.ReadInt16(pointer, offset) & 0xFFFF;
+                        int codepage = Marshal.ReadInt16(pointer, offset + 2) & 0xFFFF;
+                        languages.Add(language.ToString("X4") + codepage.ToString("X4"));
+                    }
+                }
+                // US English in Unicode, what Microsoft's installers use
+                languages.Add("040904B0");
+                foreach (string language in languages)
+                {
+                    if (VerQueryValueW(data, @"\StringFileInfo\" + language + @"\" + field, out pointer, out length) &&
+                        pointer != IntPtr.Zero && length > 0)
+                        return Marshal.PtrToStringUni(pointer);
+                }
+            }
+            catch (Exception ex)
+            {
+                SetupDiagnostics.Error("Could not read the " + field + " of '" + path + "'.", ex);
+            }
+            finally
+            {
+                if (data != IntPtr.Zero) Marshal.FreeHGlobal(data);
+            }
+            return null;
+        }
+
+        [DllImport("version.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+        private static extern int GetFileVersionInfoSizeW(string path, out int handle);
+
+        [DllImport("version.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+        private static extern bool GetFileVersionInfoW(string path, int handle, int size, IntPtr data);
+
+        [DllImport("version.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+        private static extern bool VerQueryValueW(IntPtr block, string subBlock, out IntPtr buffer, out uint length);
 
         private static bool HasExactName(X500DistinguishedName name, string expected)
         {

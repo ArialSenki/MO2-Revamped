@@ -23,6 +23,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "settings.h"
 #include "shared/util.h"
 #include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDir>
 #include <QDateTime>
 #include <QEventLoop>
 #include <QProgressDialog>
@@ -36,7 +38,23 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <usvfs.h>
 
-static const char SHMID[] = "mod_organizer_instance";
+// The name of usvfs's shared memory. Upstream uses one fixed name for every
+// instance, so a game still running from another instance (or from upstream MO2,
+// with its own usvfs build) kept that memory alive and the next MO2 opened it
+// instead of making its own, starting from the other instance's files and
+// settings. The name now comes from the instance's settings file: each instance
+// has its own, while a game left running from the same instance is still found
+// by the next MO2 of that instance, as before.
+// usvfs appends "_1", "_2"... to the tree's name unless it already ends in
+// "_<number>", and reads that number back as an int when the tree grows: the name
+// must not end in digits. 25 characters, well under usvfs's limits.
+static std::string makeShmId(const QString& settingsFile)
+{
+  const QByteArray key = QDir::cleanPath(settingsFile).toCaseFolded().toUtf8();
+  const QByteArray hash =
+      QCryptographicHash::hash(key, QCryptographicHash::Sha1).toHex().left(16);
+  return "mo2r_" + hash.toStdString() + "_vfs";
+}
 using namespace MOBase;
 
 std::string to_hex(void* bufferIn, size_t bufferSize)
@@ -139,7 +157,8 @@ UsvfsConnector::UsvfsConnector()
 
   usvfsParameters* params = usvfsCreateParameters();
 
-  usvfsSetInstanceName(params, SHMID);
+  const std::string shmId = makeShmId(s.filename());
+  usvfsSetInstanceName(params, shmId.c_str());
   usvfsSetDebugMode(params, false);
   usvfsSetLogLevel(params, logLevel);
   usvfsSetCrashDumpType(params, dumpType);
@@ -152,7 +171,7 @@ UsvfsConnector::UsvfsConnector()
              " . instance: {}\n"
              " . log: {}\n"
              " . dump: {} ({})",
-             SHMID, usvfsLogLevelToString(logLevel), dumpPath.c_str(),
+             shmId, usvfsLogLevelToString(logLevel), dumpPath.c_str(),
              usvfsCrashDumpTypeToString(dumpType));
 
   usvfsCreateVFS(params);

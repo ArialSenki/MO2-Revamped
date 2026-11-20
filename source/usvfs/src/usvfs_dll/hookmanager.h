@@ -58,6 +58,12 @@ public:
   ///
   void removeHook(const std::string& functionName);
 
+  ///
+  /// \brief remove every hook while the process ends, once no other thread is left
+  /// (DLL_PROCESS_DETACH at process exit); the context is not touched
+  ///
+  void removeHooksAtProcessEnd() { removeHooks(); }
+
 private:
   void logStubInt(LPVOID address);
   static void logStub(LPVOID address);

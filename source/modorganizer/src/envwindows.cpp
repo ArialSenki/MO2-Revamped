@@ -9,6 +9,49 @@ namespace env
 
 using namespace MOBase;
 
+namespace
+{
+using WineGetVersion = const char*(__cdecl*)();
+
+WineGetVersion wineGetVersionFunction()
+{
+  // Wine's ntdll exports it; Windows' doesn't
+  HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  return ntdll == nullptr ? nullptr
+                          : reinterpret_cast<WineGetVersion>(
+                                GetProcAddress(ntdll, "wine_get_version"));
+}
+}  // namespace
+
+bool runningUnderWine()
+{
+  static const bool wine = [] {
+    if (wineGetVersionFunction() != nullptr) {
+      return true;
+    }
+    // some Wine builds can hide their exports from programs; the prefix still
+    // has Wine's own machine key (drives, settings), which Windows never has
+    HKEY key = nullptr;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Wine", 0, KEY_READ, &key) ==
+        ERROR_SUCCESS) {
+      RegCloseKey(key);
+      return true;
+    }
+    return false;
+  }();
+  return wine;
+}
+
+QString wineVersion()
+{
+  if (const auto function = wineGetVersionFunction()) {
+    if (const char* version = function()) {
+      return QString::fromLatin1(version);
+    }
+  }
+  return runningUnderWine() ? QStringLiteral("unknown") : QString();
+}
+
 WindowsInfo::WindowsInfo()
 {
   // loading ntdll.dll, the functions will be found with GetProcAddress()
@@ -91,6 +134,12 @@ QString WindowsInfo::toString() const
   }
 
   sl.push_back("elevated: " + elevated);
+
+  // reports of problems under Linux need it: Wine reports a Windows version of
+  // its own choosing
+  if (runningUnderWine()) {
+    sl.push_back("Wine " + wineVersion());
+  }
 
   return sl.join(", ");
 }

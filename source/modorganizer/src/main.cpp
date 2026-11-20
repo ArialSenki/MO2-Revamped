@@ -64,8 +64,15 @@ void configureDiagnosticsFromEnvironment() noexcept
   wchar_t value[2] = {};
   const DWORD length = GetEnvironmentVariableW(
       L"MO2_REVAMPED_DIAGNOSTICS", value, static_cast<DWORD>(std::size(value)));
-  InterlockedExchange(&g_revampedDiagnosticsEnabled,
-                      length == 1 && value[0] == L'1' ? 1 : 0);
+  bool enabled = length == 1 && value[0] == L'1';
+  // MO2 Revamped: under Wine and Proton (Linux, Steam Deck) on unless set to 0.
+  // Reports from there often had no file at all: MO2 had stopped before its
+  // log, which only starts once an instance is open. logs\startup_diagnostics.log
+  // next to ModOrganizer.exe (or in %TEMP%) then says how far it got
+  if (!enabled && !(length == 1 && value[0] == L'0') && env::runningUnderWine()) {
+    enabled = true;
+  }
+  InterlockedExchange(&g_revampedDiagnosticsEnabled, enabled ? 1 : 0);
 }
 
 void appendText(char* buffer, size_t capacity, size_t& length,
@@ -184,6 +191,43 @@ void appendModuleDetails(char* buffer, size_t capacity, size_t& length,
                  address - reinterpret_cast<uintptr_t>(module));
 }
 
+// MO2 Revamped: on by itself under Wine, the logs grow with every start. Past
+// 1 MiB the log becomes <name>.old (replacing an older one) and a new one
+// starts: the run that made it big stays there to be sent
+void rotateDiagnosticLog(const wchar_t* path) noexcept
+{
+  WIN32_FILE_ATTRIBUTE_DATA data = {};
+  if (path == nullptr || path[0] == L'\0' ||
+      !GetFileAttributesExW(path, GetFileExInfoStandard, &data) ||
+      (data.nFileSizeHigh == 0 && data.nFileSizeLow <= 1024 * 1024)) {
+    return;
+  }
+  wchar_t old[kDiagnosticPathCapacity + 8] = {};
+  size_t length = 0;
+  while (path[length] != L'\0' && length < kDiagnosticPathCapacity) {
+    old[length] = path[length];
+    ++length;
+  }
+  const wchar_t suffix[] = L".old";
+  CopyMemory(old + length, suffix, sizeof(suffix));
+  MoveFileExW(path, old, MOVEFILE_REPLACE_EXISTING);
+}
+
+void rotateTemporaryDiagnosticLog(const wchar_t* fileName) noexcept
+{
+  wchar_t path[kDiagnosticPathCapacity] = {};
+  const DWORD length = GetTempPathW(static_cast<DWORD>(std::size(path)), path);
+  size_t nameLength  = 0;
+  while (fileName[nameLength] != L'\0') {
+    ++nameLength;
+  }
+  if (length == 0 || length + nameLength + 1 >= std::size(path)) {
+    return;
+  }
+  CopyMemory(path + length, fileName, (nameLength + 1) * sizeof(wchar_t));
+  rotateDiagnosticLog(path);
+}
+
 void prepareMemoryDiagnosticPath() noexcept
 {
   wchar_t executablePath[kDiagnosticPathCapacity] = {};
@@ -225,6 +269,11 @@ void prepareMemoryDiagnosticPath() noexcept
              currentLength * sizeof(wchar_t));
   CopyMemory(g_startupDiagnosticPath + currentLength, startupLogFile,
              sizeof(startupLogFile));
+
+  rotateDiagnosticLog(g_memoryDiagnosticPath);
+  rotateDiagnosticLog(g_startupDiagnosticPath);
+  rotateTemporaryDiagnosticLog(L"ModOrganizer-memory_diagnostics.log");
+  rotateTemporaryDiagnosticLog(L"ModOrganizer-startup_diagnostics.log");
 }
 
 HANDLE openMemoryDiagnosticLog() noexcept
@@ -622,6 +671,17 @@ int run(int argc, char* argv[])
     if (scale != 100) {
       qputenv("QT_SCALE_FACTOR", QByteArray::number(scale / 100.0, 'f', 2));
       setScaleFactor = true;
+    }
+  }
+
+  // MO2 Revamped: Chromium's sandbox relies on Windows security features Wine
+  // doesn't have (Linux, Steam Deck), and QtWebEngine's page process can then
+  // fail to start, leaving MO2's web pages (Nexus, LOOT's report) blank. Qt
+  // runs it without the sandbox when this is set; a value the user set wins
+  if (env::runningUnderWine()) {
+    log::info("running under Wine {}", env::wineVersion());
+    if (!qEnvironmentVariableIsSet("QTWEBENGINE_DISABLE_SANDBOX")) {
+      qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
     }
   }
 

@@ -118,6 +118,12 @@ public:
 
   void registerProcess(DWORD pid);
   void unregisterCurrentProcess();
+
+  /// the process is ending: take it off the shared process list and drop its
+  /// connection, but keep this context alive, since other threads of the process
+  /// may still be inside a hook that uses it
+  void releaseForProcessExit();
+
   std::vector<DWORD> registeredProcesses() const;
 
   void blacklistExecutable(const std::wstring& executableName);
@@ -175,6 +181,10 @@ private:
 
 extern "C" DLLEXPORT usvfs::HookContext* WINAPI
 usvfsCreateHookContext(const usvfsParameters& params, HMODULE module);
+
+// leaves the vfs once when this process ends, keeping hooks and context in
+// place for the threads still running (usvfs.cpp)
+void usvfsDisconnectForProcessExit();
 
 class PreserveGetLastError
 {

@@ -229,6 +229,16 @@ Association getAssociation(const QFileInfo& file);
 //
 std::filesystem::path thisProcessPath();
 
+// whether MO2 runs under Wine (Linux, Steam Deck through Proton, macOS); Wine
+// reports whatever Windows version its prefix is set to, so features that need
+// Windows itself (Mica, rounded corners, Chromium's sandbox) check this too
+//
+bool runningUnderWine();
+
+// Wine's version, such as "10.17", empty when not running under Wine
+//
+QString wineVersion();
+
 }  // namespace env
 
 #endif  // ENV_ENV_H
