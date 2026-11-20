@@ -11,6 +11,8 @@ Rectangle {
     // after the text, such as the chevron of a button with a menu
     property string trailingGlyph
     property color glyphColor: primary ? Fluent.onAccent : Fluent.text
+    // the text, when not the theme's: a destructive action in the critical color
+    property color textColor: Fluent.text
     property string tip
     property bool primary: false
     property bool flat: false
@@ -75,7 +77,7 @@ Rectangle {
             text: button.text
             color: !button.enabled ? Fluent.disabledText
                  : button.primary ? Fluent.onAccent
-                 : (button.down ? Fluent.muted : Fluent.text)
+                 : (button.down ? Fluent.muted : button.textColor)
             anchors.verticalCenter: parent.verticalCenter
         }
         FluentGlyph {

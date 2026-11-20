@@ -59,22 +59,52 @@ public:
   }
 };
 
-// one engine for every view: the QML types and the compiled files load once
-QQmlEngine* sharedEngine()
+// one engine for the views that are open: the QML types and the compiled files
+// load once for them. It goes when the last view does, so the memory comes
+// back while MO2 runs (the startup Instances window, then the game), and is
+// made again for the next view
+QPointer<QQmlEngine>& engineHolder()
 {
   static QPointer<QQmlEngine> engine;
-  static bool made = false;
-  if (!made) {
-    made   = true;
+  return engine;
+}
+
+int& openViews()
+{
+  static int count = 0;
+  return count;
+}
+
+QQmlEngine* sharedEngine()
+{
+  auto& engine = engineHolder();
+  if (!engine) {
+    if (QCoreApplication::closingDown()) {
+      return nullptr;
+    }
     engine = new QQmlEngine;
     engine->addImageProvider(QStringLiteral("mo2"), new IconProvider);
     // gone before the application is: the engine first, then what it read
-    QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
-      delete engine.data();
-      icons().clear();
-    });
+    static const bool once = [] {
+      QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
+        delete engineHolder().data();
+        icons().clear();
+      });
+      return true;
+    }();
+    Q_UNUSED(once);
   }
   return engine;
+}
+
+void viewGone()
+{
+  if (--openViews() == 0) {
+    if (auto& engine = engineHolder()) {
+      engine->deleteLater();
+    }
+    icons().clear();
+  }
 }
 
 // follows the theme: Settings applies a new style sheet to the running windows
@@ -157,6 +187,10 @@ QQuickWidget* createView(QWidget* parent, const QString& name, const QVariantMap
     return nullptr;
   }
   auto* view = new QQuickWidget(engine, parent);
+  ++openViews();
+  QObject::connect(view, &QObject::destroyed, [] {
+    viewGone();
+  });
   view->setObjectName(name + QStringLiteral("QuickView"));
   view->setResizeMode(QQuickWidget::SizeRootObjectToView);
   view->setClearColor(fluent->window());

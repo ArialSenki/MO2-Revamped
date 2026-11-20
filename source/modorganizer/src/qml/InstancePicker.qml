@@ -512,6 +512,7 @@ Rectangle {
                     visible: root.s["delete"].visible
                     glyph: "\uE74D"
                     glyphColor: Fluent.critical
+                    textColor: Fluent.critical
                     text: root.s["delete"].text
                     tip: root.s["delete"].tip
                     enabled: root.s["delete"].enabled
