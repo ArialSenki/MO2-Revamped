@@ -349,9 +349,13 @@ void InstancesQuickBridge::setFilter(const QString& text)
 void InstancesQuickBridge::setSearchFocus(bool focused)
 {
   m_searchFocus = focused;
-  // closes once it has neither text nor the focus, as a short list's search
-  if (!focused && m_dialog->m_filter->text().isEmpty()) {
-    m_searchOpen = false;
-  }
+  scheduleSync();
+}
+
+void InstancesQuickBridge::listRefilled()
+{
+  // as updateList() decides for the Widgets box: a short list keeps its search
+  // open only while it has the focus or text
+  m_searchOpen = m_searchFocus || !m_dialog->m_filter->text().isEmpty();
   scheduleSync();
 }

@@ -102,7 +102,10 @@ QQmlEngine* sharedEngine()
 void viewGone()
 {
   if (--openViews() == 0) {
-    if (auto& engine = engineHolder()) {
+    // out of the holder first: a view made before the deletion runs (the
+    // theme question right after the startup Instances window) gets a new one
+    if (QQmlEngine* engine = engineHolder().data()) {
+      engineHolder().clear();
       engine->deleteLater();
     }
     icons().clear();

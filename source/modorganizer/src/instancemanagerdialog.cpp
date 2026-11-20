@@ -1486,6 +1486,9 @@ void InstanceManagerDialog::updateList()
   // a short list hides the search, unless Ctrl+F opened it and it is in use
   m_filter->setVisible(m_instances.size() > 6 || m_filter->hasFocus() ||
                        !m_filter->text().isEmpty());
+  if (m_quick != nullptr) {
+    m_quick->listRefilled();
+  }
   if (m_filter->isHidden()) {
     m_filter->clear();
   }
