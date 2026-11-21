@@ -57,6 +57,27 @@ int wmain(int argc, wchar_t** argv) {
     }
     return ready ? 0 : 1;
   }
+  if (argc > 3 && wcscmp(argv[3], L"underlock") == 0) {
+    // as Elden Ring does: the first window made while this thread holds the
+    // loader lock, when no initializer thread can start; it must not wait
+    typedef LONG(NTAPI * Lock)(ULONG, ULONG*, ULONG_PTR*);
+    typedef LONG(NTAPI * Unlock)(ULONG, ULONG_PTR);
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    Lock lock = (Lock)GetProcAddress(ntdll, "LdrLockLoaderLock");
+    Unlock unlock = (Unlock)GetProcAddress(ntdll, "LdrUnlockLoaderLock");
+    ULONG_PTR cookie = 0;
+    lock(0, NULL, &cookie);
+    const ULONGLONG started = GetTickCount64();
+    HWND window = CreateWindowExW(0, L"STATIC", L"game", WS_OVERLAPPED, 0, 0, 10, 10,
+                                  NULL, NULL, NULL, NULL);
+    const ULONGLONG waited = GetTickCount64() - started;
+    unlock(0, cookie);
+    printf("window under the loader lock after %llu ms\n", waited);
+    if (window) {
+      DestroyWindow(window);
+    }
+    return waited < 1000 ? 0 : 1;
+  }
   // the bridge waits up to 10 s for game code, then scans for 10 s
   for (int waited = 0; waited < 25000; waited += 250) {
     if (GetFileAttributesA("initialized.txt") != INVALID_FILE_ATTRIBUTES) {

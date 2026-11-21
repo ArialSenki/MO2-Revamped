@@ -1141,9 +1141,26 @@ void finish_initial_game_window(HWND window, DWORD requested_style) {
   }
 }
 
+// Whether this thread holds the loader lock (PEB LoaderLock, its owning
+// thread id). Elden Ring makes its first window under it: no new thread can
+// start then, so an initializer's thread can't run while the window waits.
+bool thread_holds_loader_lock() {
+  const auto peb = reinterpret_cast<const unsigned char*>(__readgsqword(0x60));
+  if (peb == nullptr) {
+    return false;
+  }
+  const auto lock = *reinterpret_cast<const RTL_CRITICAL_SECTION* const*>(peb + 0x110);
+  return lock != nullptr &&
+         static_cast<DWORD>(reinterpret_cast<uintptr_t>(lock->OwningThread)) == GetCurrentThreadId();
+}
+
 void wait_for_native_initializers_before_window(HWND parent_window) {
   if (g_native_initializers_done == nullptr || parent_window != nullptr ||
       InterlockedExchange(&g_window_waited, 1) != 0) {
+    return;
+  }
+  if (thread_holds_loader_lock()) {
+    log_line("The game makes its first window under the loader lock: it doesn't wait for the native initializers.");
     return;
   }
   const ULONGLONG started = GetTickCount64();
@@ -3743,7 +3760,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.71.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.72.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
