@@ -77,14 +77,28 @@ QString FomodCSharpShim::description() const
 
 QList<PluginSetting> FomodCSharpShim::settings() const
 {
-  return {PluginSetting("enabled", "check to enable this plugin", QVariant(true)),
-          PluginSetting("prefer", "prefer this over the NCC based plugin", QVariant(true))};
+  // MO2 Revamped: the same descriptions as the real plugin; this stand-in is
+  // the one MO2 shows in its settings
+  return {PluginSetting("enabled",
+                        QCoreApplication::translate("RevampedInstallerSettings",
+                                                    "Use this installer"),
+                        QVariant(true)),
+          PluginSetting("prefer",
+                        QCoreApplication::translate(
+                            "RevampedInstallerSettings",
+                            "Try this installer before the FOMOD XML installer when an "
+                            "archive has both a script and a ModuleConfig.xml"),
+                        QVariant(true))};
 }
 
 unsigned int FomodCSharpShim::priority() const
 {
-  // It's the same priority as the FOMOD installer but those should never conflict:
-  return m_MOInfo->pluginSetting(name(), "prefer").toBool() ? 110 : 90;
+  // MO2 Revamped: one step below the FOMOD XML installer's 110/90 (as in the
+  // real plugin). MO2 sorts installers by this stand-in's number, and some
+  // archives carry both a ModuleConfig.xml and a script (Marts Mutant Mod):
+  // with the same number either one went first. Both "prefer" settings on
+  // means the XML installer; turning off its "prefer" lets the script go first
+  return m_MOInfo->pluginSetting(name(), "prefer").toBool() ? 109 : 89;
 }
 
 bool FomodCSharpShim::isArchiveSupported(std::shared_ptr<const IFileTree> tree) const

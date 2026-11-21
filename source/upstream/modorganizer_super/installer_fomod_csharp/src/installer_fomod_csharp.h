@@ -58,8 +58,12 @@ public:
 
   virtual unsigned int priority() const override
   {
-    // It's the same priority as the FOMOD installer but those should never conflict:
-    return m_MOInfo->pluginSetting(name(), "prefer").toBool() ? 110 : 90;
+    // MO2 Revamped: one step below the FOMOD XML installer's 110/90. Some
+    // archives carry both a ModuleConfig.xml and a script (Marts Mutant Mod),
+    // and with the same number MO2's sort picked either one. Now both
+    // "prefer" settings on means the XML installer; turning off its "prefer"
+    // lets the script go first
+    return m_MOInfo->pluginSetting(name(), "prefer").toBool() ? 109 : 89;
   }
 
   virtual bool isManualInstaller() const override { return false; }
