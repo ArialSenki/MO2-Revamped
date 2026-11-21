@@ -363,6 +363,17 @@ void Fluent::refresh()
   m_accentFillHover     = c("#1A6FC0", "#48B1E8");
   m_accentFillPressed   = c("#3B82C8", "#42A0D2");
   m_onAccent            = dark ? QColor("#000000") : QColor("#FFFFFF");
+  m_primaryBorder       = m_accentFill;
+  m_primaryText         = m_onAccent;
+  if (oled) {
+    // as the widgets' main button in OLED Black (oledRules()): a dim accent
+    // fill, an accent outline and accent text, not a bright block
+    m_accentFill        = QColor("#0A1A24");
+    m_accentFillHover   = QColor("#0E2331");
+    m_accentFillPressed = QColor("#08151D");
+    m_primaryBorder     = QColor("#285470");
+    m_primaryText       = QColor("#9CCDE8");
+  }
   m_control             = c("#FBFBFB", "#2D2D2D");
   m_controlHover        = c("#F6F6F6", "#323232");
   m_controlPressed      = c("#F2F2F2", "#272727");

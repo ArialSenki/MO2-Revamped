@@ -86,6 +86,9 @@ class Fluent : public QObject
   Q_PROPERTY(QColor accentFill READ accentFill NOTIFY changed)
   Q_PROPERTY(QColor accentFillHover READ accentFillHover NOTIFY changed)
   Q_PROPERTY(QColor accentFillPressed READ accentFillPressed NOTIFY changed)
+  // a primary button's outline and text (OLED Black dims the button)
+  Q_PROPERTY(QColor primaryBorder READ primaryBorder NOTIFY changed)
+  Q_PROPERTY(QColor primaryText READ primaryText NOTIFY changed)
   Q_PROPERTY(QColor onAccent READ onAccent NOTIFY changed)
   // a standard button and a text box
   Q_PROPERTY(QColor control READ control NOTIFY changed)
@@ -148,6 +151,8 @@ public:
   QColor accentFill() const { return m_accentFill; }
   QColor accentFillHover() const { return m_accentFillHover; }
   QColor accentFillPressed() const { return m_accentFillPressed; }
+  QColor primaryBorder() const { return m_primaryBorder; }
+  QColor primaryText() const { return m_primaryText; }
   QColor onAccent() const { return m_onAccent; }
   QColor control() const { return m_control; }
   QColor controlHover() const { return m_controlHover; }
@@ -189,7 +194,7 @@ private:
   bool m_dark = false, m_oled = false, m_animated = true;
   QColor m_window, m_surface, m_surfaceBorder, m_divider, m_text, m_muted, m_disabledText,
       m_accent, m_critical, m_caution, m_success, m_accentFill, m_accentFillHover,
-      m_accentFillPressed, m_onAccent, m_control, m_controlHover, m_controlPressed,
+      m_accentFillPressed, m_primaryBorder, m_primaryText, m_onAccent, m_control, m_controlHover, m_controlPressed,
       m_controlDisabled, m_controlBorder, m_controlBorderBottom, m_input, m_subtleHover,
       m_subtleSelected, m_subtlePressed, m_tintAccent, m_tintCaution, m_tintCritical,
       m_tintNeutral, m_onTintCaution, m_caption, m_chip, m_chipHover;

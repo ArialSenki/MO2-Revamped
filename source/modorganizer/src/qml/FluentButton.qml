@@ -10,7 +10,7 @@ Rectangle {
     property string glyph
     // after the text, such as the chevron of a button with a menu
     property string trailingGlyph
-    property color glyphColor: primary ? Fluent.onAccent : Fluent.text
+    property color glyphColor: primary ? Fluent.primaryText : Fluent.text
     // the text, when not the theme's: a destructive action in the critical color
     property color textColor: Fluent.text
     property string tip
@@ -38,7 +38,7 @@ Rectangle {
         return down ? Fluent.controlPressed : hovered ? Fluent.controlHover : Fluent.control
     }
     border.width: flat ? 0 : 1
-    border.color: primary && enabled ? color : Fluent.controlBorder
+    border.color: primary && enabled ? (Fluent.oled ? Fluent.primaryBorder : color) : Fluent.controlBorder
     Behavior on color { ColorAnimation { duration: Fluent.fast } }
 
     // the darker lower edge of a raised control
@@ -76,7 +76,7 @@ Rectangle {
             visible: button.text !== ""
             text: button.text
             color: !button.enabled ? Fluent.disabledText
-                 : button.primary ? Fluent.onAccent
+                 : button.primary ? Fluent.primaryText
                  : (button.down ? Fluent.muted : button.textColor)
             anchors.verticalCenter: parent.verticalCenter
         }
