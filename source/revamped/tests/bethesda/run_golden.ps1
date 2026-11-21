@@ -22,7 +22,7 @@ falloutnv case. MO2 also dates every plugin, Data included, to
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Work,
       [ValidateSet('skyrimse', 'falloutnv')][string]$Game = 'skyrimse',
-      [string[]]$Cases, [switch]$Record)
+      [string[]]$Cases, [switch]$Record, [int]$LockWaitSeconds = 1800)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $tools = 'D:\mo2build\scripts'
@@ -48,8 +48,8 @@ try {
     $env:MO2R_GOLDEN_OUT = $out
     # the lock for each case, not the whole run: mo2lock counts a lock older
     # than 30 min with no MO2 running as stale, so one taken at the start could
-    # be lost between cases. No lock in 30 min: the run stops.
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds 1800 | Out-Null
+    # be lost between cases. No lock within -LockWaitSeconds: the run stops.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds $LockWaitSeconds | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "no MO2 lock for $case; run stopped" }
     $locked = $true
     $o = & "$tools\vis\desk.ps1" -CommandLine "`"$Bed\ModOrganizer.exe`"" -WorkDir $Bed
