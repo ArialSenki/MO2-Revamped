@@ -428,6 +428,9 @@ private:
   QAction* m_LinkStartMenu;
 
   std::atomic<std::size_t> m_NumberOfProblems;
+  // MO2 Revamped: the problems of the Python plugins, counted on the interface
+  // thread before the worker counts the others
+  std::atomic<std::size_t> m_ProxiedProblems{0};
   std::atomic<bool> m_ProblemsCheckRequired;
   std::mutex m_CheckForProblemsMutex;
   // MO2 Revamped: the checks still running, waited for in cleanup()
