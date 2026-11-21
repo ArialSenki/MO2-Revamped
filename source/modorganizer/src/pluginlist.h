@@ -31,6 +31,7 @@ class IPluginGame;
 }
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QListWidget>
 #include <QString>
 #include <QTemporaryFile>
@@ -377,6 +378,9 @@ private:
 private:
   void syncLoadOrder();
   void updateIndices();
+  // the plugin's index in m_ESPs, or -1: by its exact name first, then without
+  // case
+  int indexOfName(const QString& name) const;
 
   // MO2 Revamped: plugins a profile names that no mod has (a list's optional
   // mods left off); logged as one line once the profile is read
@@ -426,6 +430,10 @@ private:
   std::unordered_map<QString, CachedHeader> m_HeaderCache;
 
   std::map<QString, int, MOBase::FileNameComparator> m_ESPsByName;
+  // MO2 Revamped: the same, by the name exactly as the list has it: what game
+  // plugins look up comes from pluginNames(), and their writers sort the whole
+  // list by priority(name), tens of thousands of lookups per save
+  QHash<QString, int> m_ESPsByExactName;
   std::vector<int> m_ESPsByPriority;
 
   std::map<QString, int, MOBase::FileNameComparator> m_LockedOrder;

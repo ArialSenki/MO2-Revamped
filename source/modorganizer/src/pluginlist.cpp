@@ -248,6 +248,7 @@ void PluginList::refresh(const QString& profileName,
     setProperty("__aboutToChange", true);
     m_ESPs.clear();
     m_ESPsByName.clear();
+    m_ESPsByExactName.clear();
     m_ESPsByPriority.clear();
   } else {
     layoutChange.emplace(this);
@@ -1135,12 +1136,11 @@ QStringList PluginList::pluginNames() const
 
 IPluginList::PluginStates PluginList::state(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return IPluginList::STATE_MISSING;
   } else {
-    return m_ESPs[iter->second].enabled ? IPluginList::STATE_ACTIVE
-                                        : IPluginList::STATE_INACTIVE;
+    return m_ESPs[i].enabled ? IPluginList::STATE_ACTIVE : IPluginList::STATE_INACTIVE;
   }
 }
 
@@ -1201,12 +1201,8 @@ void PluginList::setLoadOrder(const QStringList& pluginList)
 
 int PluginList::priority(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
-    return -1;
-  } else {
-    return m_ESPs[iter->second].priority;
-  }
+  const int i = indexOfName(name);
+  return i < 0 ? -1 : m_ESPs[i].priority;
 }
 
 bool PluginList::setPriority(const QString& name, int newPriority)
@@ -1361,6 +1357,8 @@ PluginList::onPluginMoved(const std::function<void(const QString&, int, int)>& f
 void PluginList::updateIndices()
 {
   m_ESPsByName.clear();
+  m_ESPsByExactName.clear();
+  m_ESPsByExactName.reserve(static_cast<qsizetype>(m_ESPs.size()));
   m_ESPsByPriority.clear();
   m_ESPsByPriority.resize(m_ESPs.size());
   for (unsigned int i = 0; i < m_ESPs.size(); ++i) {
@@ -1374,8 +1372,22 @@ void PluginList::updateIndices()
     m_ESPsByName[m_ESPs[i].name]                                 = i;
     m_ESPsByPriority.at(static_cast<size_t>(m_ESPs[i].priority)) = i;
   }
+  // from the case-insensitive map, so both give the same plugin for a name
+  for (const auto& [name, i] : m_ESPsByName) {
+    m_ESPsByExactName.insert(m_ESPs[i].name, i);
+  }
 
   generatePluginIndexes();
+}
+
+int PluginList::indexOfName(const QString& name) const
+{
+  const auto exact = m_ESPsByExactName.constFind(name);
+  if (exact != m_ESPsByExactName.constEnd()) {
+    return exact.value();
+  }
+  const auto iter = m_ESPsByName.find(name);
+  return iter != m_ESPsByName.end() ? iter->second : -1;
 }
 
 void PluginList::generatePluginIndexes()
