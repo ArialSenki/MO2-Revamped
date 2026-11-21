@@ -26,6 +26,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QButtonGroup>
 #include <QCoreApplication>
 #include <QListWidget>
+#include <QMetaObject>
+#include <QMouseEvent>
 #include <QPixmap>
 #include <QPlainTextEdit>
 #include <QStackedWidget>
@@ -188,6 +190,55 @@ namespace CSharp {
   }
 
 }
+
+namespace {
+
+// MO2 Revamped: in the Select dialog with check boxes, a click on an option's
+// name ticks it too, as the FOMOD installer's check boxes do. An event filter
+// on the list, not signals: under /clr connecting a signal by function pointer
+// finds no signal. A click on the box is ticked by Qt while it handles the
+// release, so the state is checked after that (queued) and nothing toggles twice
+class SelectNameClicks : public QObject
+{
+public:
+  explicit SelectNameClicks(QListWidget* list) : QObject(list), m_list(list) {}
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::MouseButtonPress) {
+      const auto* mouse = static_cast<QMouseEvent*>(event);
+      m_item  = mouse->button() == Qt::LeftButton
+                    ? m_list->itemAt(mouse->position().toPoint())
+                    : nullptr;
+      m_state = m_item != nullptr ? m_item->checkState() : Qt::Unchecked;
+    } else if (event->type() == QEvent::MouseButtonRelease && m_item != nullptr) {
+      const auto* mouse   = static_cast<QMouseEvent*>(event);
+      QListWidgetItem* item = m_item;
+      const Qt::CheckState pressed = m_state;
+      m_item = nullptr;
+      if (mouse->button() == Qt::LeftButton &&
+          m_list->itemAt(mouse->position().toPoint()) == item) {
+        QMetaObject::invokeMethod(
+            this,
+            [item, pressed] {
+              if (item->checkState() == pressed) {
+                item->setCheckState(pressed == Qt::Checked ? Qt::Unchecked
+                                                           : Qt::Checked);
+              }
+            },
+            Qt::QueuedConnection);
+      }
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QListWidget* m_list;
+  QListWidgetItem* m_item = nullptr;
+  Qt::CheckState m_state  = Qt::Unchecked;
+};
+
+}  // namespace
 
 namespace CSharp {
 
@@ -603,20 +654,7 @@ namespace CSharp {
 
     QObject::connect(list, SIGNAL(currentRowChanged(int)), pages, SLOT(setCurrentIndex(int)));
     if (p_booSelectMany) {
-      // clicking an option's name ticks it too, as the FOMOD installer's check
-      // boxes do. A click on the box itself is ticked by Qt before
-      // itemClicked arrives, so the state at the press tells them apart and
-      // nothing toggles twice
-      constexpr int pressedState = Qt::UserRole + 1;
-      QObject::connect(list, &QListWidget::itemPressed, list, [](QListWidgetItem* item) {
-        item->setData(pressedState, static_cast<int>(item->checkState()));
-      });
-      QObject::connect(list, &QListWidget::itemClicked, list, [](QListWidgetItem* item) {
-        if (item->data(pressedState).toInt() == static_cast<int>(item->checkState())) {
-          item->setCheckState(item->checkState() == Qt::Checked ? Qt::Unchecked
-                                                                : Qt::Checked);
-        }
-      });
+      list->viewport()->installEventFilter(new SelectNameClicks(list));
     }
     if (list->count() > 0) {
       list->setCurrentRow(0);
