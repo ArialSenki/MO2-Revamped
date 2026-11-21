@@ -108,6 +108,7 @@ void ExecutablesList::load(const MOBase::IPluginGame* game, const Settings& s)
       setExecutable(exe, IgnoreExisting);
     }
   }
+  addFromModRoots(game, removed, s.paths().mods());
 
   if (needsUpgrade)
     upgradeFromCustom(game);
@@ -210,13 +211,72 @@ static bool sameFileInRenamedMod(const QString& before, const QString& after,
   return a.mid(aSlash).compare(b.mid(bSlash), Qt::CaseInsensitive) == 0;
 }
 
+// MO2 Revamped: a program of the game plugin's that isn't in the game folder
+// but in a mod's Root folder (a collection puts the script extender there,
+// as Vortex does): that file, which a root launch runs as the game folder's;
+// empty when no mod has it
+static QString rootCopyOf(const MOBase::IPluginGame* game, const QFileInfo& binary,
+                          const QString& modsPath)
+{
+  if (modsPath.isEmpty() || binary.fileName().isEmpty()) {
+    return {};
+  }
+  const QDir gameDir = game->gameDirectory();
+  const QString rel  = gameDir.relativeFilePath(binary.absoluteFilePath());
+  if (rel.isEmpty() || rel.startsWith(QStringLiteral(".."))) {
+    return {};
+  }
+  const QDir mods(modsPath);
+  for (const QString& mod : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    const QString candidate = mods.absoluteFilePath(mod + QStringLiteral("/Root/") + rel);
+    if (QFileInfo(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return {};
+}
+
+bool ExecutablesList::addFromModRoots(MOBase::IPluginGame const* game,
+                                      const QStringList& skippedTitles,
+                                      const QString& modsPath)
+{
+  bool added = false;
+
+  for (const ExecutableInfo& info : game->executables()) {
+    if (info.isValid() || skippedTitles.contains(info.title(), Qt::CaseInsensitive) ||
+        find(info.title()) != end()) {
+      continue;
+    }
+    const QString root = rootCopyOf(game, info.binary(), modsPath);
+    if (root.isEmpty()) {
+      continue;
+    }
+    log::debug("adding plugin executable '{}' from a mod's Root folder: {}",
+               info.title(), QDir::toNativeSeparators(root));
+    ExecutableInfo fromRoot(info.title(), QFileInfo(root));
+    for (const QString& arg : info.arguments()) {
+      fromRoot.withArgument(arg);
+    }
+    if (!info.steamAppID().isEmpty()) {
+      fromRoot.withSteamAppId(info.steamAppID());
+    }
+    Executable exe(fromRoot, Executable::UseApplicationIcon);
+    // the game folder is where it runs from
+    exe.workingDirectory(game->gameDirectory().absolutePath());
+    setExecutable(exe, IgnoreExisting);
+    added = true;
+  }
+
+  return added;
+}
+
 bool ExecutablesList::addMissingFromPlugin(MOBase::IPluginGame const* game,
                                            const QStringList& skippedTitles,
                                            const QString& modsPath)
 {
   Q_ASSERT(game != nullptr);
 
-  bool added = false;
+  bool added = addFromModRoots(game, skippedTitles, modsPath);
 
   for (const auto& exe : getPluginExecutables(game)) {
     // MO2 Revamped: one the user removed or renamed stays that way
