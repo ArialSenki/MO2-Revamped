@@ -1,5 +1,7 @@
 #include "fluentdashboard.h"
 #include "fluentpanels.h"
+#include "quickui.h"
+#include "summaryquickbridge.h"
 #include <QElapsedTimer>
 
 #include "categories.h"
@@ -29,6 +31,7 @@
 #include <QLabel>
 #include <QLocale>
 #include <QPushButton>
+#include <QQuickWidget>
 #include <QStyle>
 
 namespace
@@ -70,7 +73,7 @@ FluentHeroBanner::FluentHeroBanner(QWidget* parent) : QFrame(parent)
 }
 
 FluentStatTile::FluentStatTile(char16_t glyph, const QString& caption, QWidget* parent)
-    : QFrame(parent)
+    : QFrame(parent), m_glyph(glyph)
 {
   setObjectName(QStringLiteral("fluentStatTile"));
   setFixedHeight(60);
@@ -117,7 +120,23 @@ QPushButton* FluentStatTile::addAction(const QString& text)
   button->setObjectName(QStringLiteral("fluentStatAction"));
   button->setCursor(Qt::PointingHandCursor);
   m_layout->addWidget(button, 0, Qt::AlignVCenter);
+  m_action = button;
   return button;
+}
+
+QString FluentStatTile::caption() const
+{
+  return m_caption->text();
+}
+
+QString FluentStatTile::value() const
+{
+  return m_value->text();
+}
+
+QString FluentStatTile::tone() const
+{
+  return m_badge->property("tone").toString();
 }
 
 FluentDashboard::FluentDashboard(Ui::MainWindow* mainUi, OrganizerCore& core,
@@ -275,7 +294,27 @@ void FluentDashboard::setupStats(QWidget* central)
   });
 
   auto* layout = qobject_cast<QBoxLayout*>(central->layout());
+  if (QuickUi::enabled()) {
+    // the tiles go on working out of sight; the view draws them and clicks
+    // their buttons
+    auto* bridge = new SummaryQuickBridge({m_active, m_conflicts, m_overwrite, m_updates},
+                                          this);
+    if (QWidget* view = bridge->createView(central)) {
+      m_quick = bridge;
+      stats->hide();
+      layout->insertWidget(1, view);
+      return;
+    }
+    delete bridge;
+  }
   layout->insertWidget(1, stats);
+}
+
+void FluentDashboard::quickChanged()
+{
+  if (m_quick != nullptr) {
+    m_quick->scheduleSync();
+  }
 }
 
 void FluentDashboard::setupModsHeader()
@@ -418,6 +457,7 @@ void FluentDashboard::retranslate()
                                                     : tr("All"));
   }
   applyTabTexts();
+  quickChanged();
 
   refreshStats();
   refreshDisk();
@@ -504,6 +544,7 @@ void FluentDashboard::countMods()
   m_updates->setValue(updates > 0 ? tr("%1 available").arg(updates) : tr("None found"),
                       updates > 0 ? QStringLiteral("accent") : QStringLiteral("neutral"));
   m_updatesAction->setVisible(updates > 0);
+  quickChanged();
 }
 
 void FluentDashboard::refreshDisk()
@@ -534,6 +575,7 @@ void FluentDashboard::refreshDisk()
     m_overwrite->setValue(overwriteText, result.files > 0 ? QStringLiteral("caution")
                                                           : QStringLiteral("neutral"));
     m_overwriteAction->setVisible(result.files > 0 || result.folders);
+    quickChanged();
   });
   watcher->setFuture(QtConcurrent::run([path] {
     Overwrite result;

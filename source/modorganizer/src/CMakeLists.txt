@@ -30,6 +30,7 @@ qt_add_qml_module(organizer
 		qml/FluentToolTipArea.qml
 		qml/InstancePicker.qml
 		qml/ThemeChoice.qml
+		qml/SummaryTiles.qml
 )
 
 # Keep user-specific source paths out of Release binaries. MSVC 19.30+ requires

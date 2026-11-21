@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFrame>
 #include <QPixmap>
+#include <QPointer>
 #include <QTimer>
 
 #include <functional>
@@ -25,6 +26,7 @@ class QBoxLayout;
 class QComboBox;
 class QLabel;
 class QPushButton;
+class SummaryQuickBridge;
 
 namespace Ui
 {
@@ -49,7 +51,16 @@ public:
   void setCaption(const QString& caption);
   QPushButton* addAction(const QString& text);
 
+  // what the tile shows, for its Qt Quick version (SummaryQuickBridge)
+  char16_t glyph() const { return m_glyph; }
+  QString caption() const;
+  QString value() const;
+  QString tone() const;
+  QPushButton* action() const { return m_action; }
+
 private:
+  char16_t m_glyph;
+  QPushButton* m_action = nullptr;
   QLabel* m_badge;
   QLabel* m_caption;
   QLabel* m_value;
@@ -95,6 +106,10 @@ private:
   QLabel* m_profileLabel = nullptr;
   QLabel* m_programLabel = nullptr;
   QLabel* m_modsTitle    = nullptr;
+  // the summary row drawn in Qt Quick (the tiles are then kept out of sight
+  // and the view mirrors them), or null
+  QPointer<SummaryQuickBridge> m_quick;
+  void quickChanged();
   QTimer m_refreshTimer;
   // the disk walks run off the UI thread; a result older than the last
   // request is dropped

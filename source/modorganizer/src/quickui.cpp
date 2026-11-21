@@ -62,9 +62,10 @@ public:
 };
 
 // one engine for the views that are open: the QML types and the compiled files
-// load once for them. It goes when the last view does, so the memory comes
-// back while MO2 runs (the startup Instances window, then the game), and is
-// made again for the next view
+// load once for them. It goes when the last view does, so the memory of the
+// dialogs comes back while MO2 runs (the startup Instances window, then the
+// game), and is made again for the next view. The main window's summary row
+// keeps it for as long as that window is open
 QPointer<QQmlEngine>& engineHolder()
 {
   static QPointer<QQmlEngine> engine;
@@ -75,6 +76,14 @@ int& openViews()
 {
   static int count = 0;
   return count;
+}
+
+// the event loop has ended: an engine still in use goes with its last view,
+// at once, as nothing runs a deleteLater() any more
+bool& quitting()
+{
+  static bool done = false;
+  return done;
 }
 
 QQmlEngine* sharedEngine()
@@ -89,8 +98,13 @@ QQmlEngine* sharedEngine()
     // gone before the application is: the engine first, then what it read
     static const bool once = [] {
       QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
-        delete engineHolder().data();
-        icons().clear();
+        quitting() = true;
+        // the main window (and its summary row) is closed after the loop
+        // ends: its items must not outlive the engine they run on
+        if (openViews() == 0) {
+          delete engineHolder().data();
+          icons().clear();
+        }
       });
       return true;
     }();
@@ -106,7 +120,11 @@ void viewGone()
     // theme question right after the startup Instances window) gets a new one
     if (QQmlEngine* engine = engineHolder().data()) {
       engineHolder().clear();
-      engine->deleteLater();
+      if (quitting()) {
+        delete engine;
+      } else {
+        engine->deleteLater();
+      }
     }
     icons().clear();
   }
@@ -122,7 +140,10 @@ public:
   {
     if (event->type() == QEvent::StyleChange || event->type() == QEvent::PaletteChange) {
       Fluent::instance()->refresh();
-      if (auto* view = qobject_cast<QQuickWidget*>(watched)) {
+      // a view that shows the window behind it (such as the main window's
+      // summary row) keeps its clear color transparent
+      if (auto* view = qobject_cast<QQuickWidget*>(watched);
+          view != nullptr && !view->property("quickSeeThrough").toBool()) {
         view->setClearColor(Fluent::instance()->window());
       }
     }
@@ -344,11 +365,25 @@ void Fluent::refresh()
   m_controlBorder       = c("#E5E5E5", "#3D3D3D");
   m_controlBorderBottom = c("#CCCCCC", "#454545");
   m_input               = c("#FFFFFF", "#2D2D2D");
+  // QLabel#fluentStatBadge, #fluentStatCaption and QPushButton#fluentStatAction
+  m_tintAccent    = c("#DCE8F5", "#1F3443");
+  m_tintCaution   = c("#FFF4CE", "#433519");
+  m_tintCritical  = c("#FDE7E9", "#442726");
+  m_tintNeutral   = c("#E5E5E5", "#3D3D3D");
+  m_onTintCaution = c("#6B4A00", "#F5D58C");
+  m_caption       = c("#6E6E6E", "#9A9A9A");
+  m_chip          = c("#FFFFFF", "#2F2F2F");
+  m_chipHover     = c("#F9F9F9", "#343434");
   m_subtleHover    = faint(m_text, 15);
   m_subtleSelected = faint(m_text, 26);
   m_subtlePressed  = faint(m_text, 10);
 
-  m_fontFamily = QStringLiteral("Segoe UI");
+  // as the Fluent v4 layer: QWidget { font-family: "Segoe UI Variable Text", "Segoe UI" }
+  static const QString family =
+      QFontDatabase::hasFamily(QStringLiteral("Segoe UI Variable Text"))
+          ? QStringLiteral("Segoe UI Variable Text")
+          : QStringLiteral("Segoe UI");
+  m_fontFamily = family;
   m_fontSize   = 9;
   m_dark       = dark;
   m_oled       = oled;
