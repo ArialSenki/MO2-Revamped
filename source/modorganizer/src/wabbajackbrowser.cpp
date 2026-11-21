@@ -712,7 +712,10 @@ void ListBrowser::loadImage(QTreeWidgetItem* item, const QString& url)
 
 const ListBrowser::Entry* ListBrowser::selected() const
 {
-  const QTreeWidgetItem* item = m_list->currentItem();
+  // MO2 Revamped: the selected row, which a screen reader or UI Automation
+  // can change without moving the current one; the current row otherwise
+  const QList<QTreeWidgetItem*> rows = m_list->selectedItems();
+  const QTreeWidgetItem* item = rows.isEmpty() ? m_list->currentItem() : rows.first();
   if (item == nullptr) {
     return nullptr;
   }
