@@ -255,20 +255,6 @@ void DirectoryRefresher::cleanStructure(DirectoryEntry* structure)
   for (int i = 0; i < sizeof(dirs) / sizeof(wchar_t*); ++i) {
     structure->removeDir(std::wstring(dirs[i]));
   }
-
-  // MO2 Revamped: where the data folder is the game folder (Cyberpunk), the
-  // mods' Root folders go to that same folder (fileMapping maps them there):
-  // the Data tab showed them as a "Root" folder next to the game's bin and r6.
-  // Not when the game itself has one
-  if (const auto* game = qApp->property("managed_game").value<IPluginGame*>()) {
-    const QString dataPath = game->dataDirectory().absolutePath();
-    if (QDir::cleanPath(dataPath).compare(
-            QDir::cleanPath(game->gameDirectory().absolutePath()),
-            Qt::CaseInsensitive) == 0 &&
-        !QFileInfo(dataPath + QStringLiteral("/Root")).isDir()) {
-      structure->removeDir(L"Root");
-    }
-  }
 }
 
 void DirectoryRefresher::addModBSAToStructure(DirectoryEntry* root,
