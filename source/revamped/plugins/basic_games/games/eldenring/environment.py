@@ -253,11 +253,15 @@ class EnvironmentMixin:
     def _active_convergence(self) -> bool:
         """Whether an active mod is The Convergence: installed from Nexus
         (its meta.ini names its Nexus page), or by hand with its me3 profile."""
+        return self._active_convergence_root() is not None
+
+    def _active_convergence_root(self) -> Path | None:
+        """The folder of the active mod that is The Convergence, if any."""
         for _name, root, active in self._mod_folders():
             if not active:
                 continue
             if (root / "convergence.me3").is_file() or (root / "me3" / "convergence.me3").is_file():
-                return True
+                return root
             meta = configparser.ConfigParser(interpolation=None, strict=False)
             try:
                 meta.read(root / "meta.ini", encoding="utf-8-sig")
@@ -269,8 +273,8 @@ class EnvironmentMixin:
                 str(general.get("modid", "")).strip() == self.ConvergenceNexusId
                 and game in {"eldenring", "elden ring"}
             ):
-                return True
-        return False
+                return root
+        return None
 
     def _reforged_natives(self) -> list[Path] | None:
         """This run's native DLLs when ELDEN RING Reforged is among them."""

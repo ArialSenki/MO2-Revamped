@@ -4,6 +4,7 @@ profile, forced loads, the launch environment and the online programs."""
 
 from __future__ import annotations
 
+import configparser
 import json
 import os
 import shutil
@@ -262,6 +263,83 @@ class NativeDlls(unittest.TestCase):
             self.game._restore_profile_config_environment()
         self.assertNotIn(self.game.NativeInitializerEnvironment, os.environ)
         self.assertNotIn(self.game.ProfileLaunchConfigEnvironment, os.environ)
+
+
+class ConvergenceWithSeamless(unittest.TestCase):
+    """Seamless Co-op reads its settings next to its DLL, so with The
+    Convergence it runs from a copy whose settings save to cnvco2: their
+    co-op saves no longer share ER0000.co2 with Seamless without Convergence."""
+
+    SEAMLESS_INI = (
+        "[GAMEPLAY]\nallow_invaders = 1\n[PASSWORD]\ncooppassword = secret\n"
+        "[SAVE]\nsave_file_extension = co2\n[LANGUAGE]\nmod_language_override =\n"
+    )
+
+    def setUp(self):
+        appdata_folder()
+        self.organizer = FakeOrganizer()
+        root = self.organizer.add_mod("Seamless", ["SeamlessCoop/ersc.dll", "SeamlessCoop/locale/en.json"])
+        (root / "SeamlessCoop" / "ersc_settings.ini").write_text(self.SEAMLESS_INI, encoding="utf-8")
+        self.seamless_root = root
+
+    def add_convergence(self, extension: str | None = "cnvco2", active: bool = True) -> None:
+        root = self.organizer.add_mod("The Convergence", ["DLLs/ErdTools.dll", "regulation.bin"], active)
+        (root / "meta.ini").write_text("[General]\ngameName=ELDEN RING\nmodid=3419\n", encoding="utf-8")
+        if extension is not None:
+            (root / "DLLs" / "ersc_settings.ini").write_text(
+                f"[PASSWORD]\ncooppassword =\n[SAVE]\nsave_file_extension = {extension}\n", encoding="utf-8")
+
+    def seamless_load(self, game) -> Path:
+        loads = [Path(l.library()) for l in game.executableForcedLoads() if Path(l.library()).name == "ersc.dll"]
+        self.assertEqual(len(loads), 1)
+        return loads[0]
+
+    def test_without_convergence_the_mod_dll(self):
+        game = game_for(self.organizer)
+        self.assertEqual(self.seamless_load(game), self.seamless_root / "SeamlessCoop" / "ersc.dll")
+        self.add_convergence(active=False)
+        game = game_for(self.organizer)
+        self.assertEqual(self.seamless_load(game), self.seamless_root / "SeamlessCoop" / "ersc.dll")
+
+    def test_with_convergence_a_copy_saving_to_cnvco2(self):
+        self.add_convergence()
+        game = game_for(self.organizer)
+        dll = self.seamless_load(game)
+        self.assertNotEqual(dll.parent, self.seamless_root / "SeamlessCoop")
+        self.assertTrue(str(dll).startswith(str(self.organizer.base)))
+        self.assertTrue(dll.is_file())
+        self.assertTrue((dll.parent / "locale" / "en.json").is_file())
+        settings = configparser.ConfigParser(interpolation=None)
+        settings.read(dll.parent / "ersc_settings.ini", encoding="utf-8")
+        self.assertEqual(settings.get("SAVE", "save_file_extension"), "cnvco2")
+        # the user's own settings stay, the mod's file isn't touched
+        self.assertEqual(settings.get("PASSWORD", "cooppassword"), "secret")
+        self.assertEqual(settings.get("GAMEPLAY", "allow_invaders"), "1")
+        self.assertEqual(
+            (self.seamless_root / "SeamlessCoop" / "ersc_settings.ini").read_text(encoding="utf-8"),
+            self.SEAMLESS_INI)
+        # the bridge starts the copy, the DLL usvfs loads
+        self.assertEqual([e["library"] for e in game._seamless_initializer()], [dll])
+
+    def test_settings_follow_the_user_and_convergence(self):
+        self.add_convergence(extension=None)
+        game = game_for(self.organizer)
+        dll = self.seamless_load(game)
+        self.assertIn("save_file_extension = cnvco2", (dll.parent / "ersc_settings.ini").read_text(encoding="utf-8"))
+        # a password changed in the mod reaches the copy on the next launch
+        (self.seamless_root / "SeamlessCoop" / "ersc_settings.ini").write_text(
+            self.SEAMLESS_INI.replace("secret", "other"), encoding="utf-8")
+        dll = self.seamless_load(game_for(self.organizer))
+        text = (dll.parent / "ersc_settings.ini").read_text(encoding="utf-8")
+        self.assertIn("cooppassword = other", text)
+        self.assertIn("save_file_extension = cnvco2", text)
+
+    def test_save_section_added_when_missing(self):
+        cls = type(game_for(self.organizer))
+        text = cls._with_save_extension("[PASSWORD]\ncooppassword = x\n", "cnvco2")
+        self.assertIn("[SAVE]\nsave_file_extension = cnvco2", text)
+        text = cls._with_save_extension("[SAVE]\n; comment\n[OTHER]\n", "cnvco2")
+        self.assertEqual(text.splitlines()[:2], ["[SAVE]", "save_file_extension = cnvco2"])
 
 
 class LinkedModsFolder(unittest.TestCase):
