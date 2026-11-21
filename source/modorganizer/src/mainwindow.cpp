@@ -4268,17 +4268,37 @@ void MainWindow::updateBSAList(const QStringList& defaultArchives,
   // the base names of the active plugins, worked out once: this list is built
   // again on every mod switch, and testing each archive against every plugin
   // with file infos and state lookups was archives x plugins of both
-  QStringList activePluginBases;
+  // MO2 Revamped: in a set, lower case: an archive goes with a plugin whose
+  // base name starts its name, found by looking up each start of the name
+  // instead of testing every plugin (archives x plugins, thousands each with
+  // a big list, on every mod switch)
+  QSet<QString> activePluginBases;
+  int longestBase = 0;
   for (const QString& pluginName : plugins) {
     const QFileInfo pluginInfo(pluginName);
     if (m_OrganizerCore.pluginList()->state(pluginInfo.fileName()) ==
         IPluginList::STATE_ACTIVE) {
-      activePluginBases.append(pluginInfo.completeBaseName());
+      const QString base = pluginInfo.completeBaseName().toLower();
+      activePluginBases.insert(base);
+      longestBase = std::max(longestBase, static_cast<int>(base.size()));
     }
   }
+  // where each active archive is in the load order, by name (indexOf() was a
+  // search through the whole list for every archive)
+  QHash<QString, int> activeIndex;
+  activeIndex.reserve(activeArchives.size());
+  for (int i = activeArchives.size() - 1; i >= 0; --i) {
+    activeIndex.insert(activeArchives[i], i);
+  }
   auto hasAssociatedPlugin = [&](const QString& bsaName) -> bool {
-    for (const QString& base : activePluginBases) {
-      if (bsaName.startsWith(base, Qt::CaseInsensitive)) {
+    // an empty base name matched every archive before
+    if (activePluginBases.contains(QString())) {
+      return true;
+    }
+    const QString lower = bsaName.toLower();
+    const int longest   = std::min(longestBase, static_cast<int>(lower.size()));
+    for (int length = 1; length <= longest; ++length) {
+      if (activePluginBases.contains(lower.left(length))) {
         return true;
       }
     }
@@ -4288,8 +4308,11 @@ void MainWindow::updateBSAList(const QStringList& defaultArchives,
   for (FileEntryPtr current : files) {
     QFileInfo fileInfo(ToQString(current->getName().c_str()));
 
-    if (fileInfo.suffix().toLower() == "bsa" || fileInfo.suffix().toLower() == "ba2") {
-      int index = activeArchives.indexOf(fileInfo.fileName());
+    const QString suffix = fileInfo.suffix();
+    if (suffix.compare(QLatin1String("bsa"), Qt::CaseInsensitive) == 0 ||
+        suffix.compare(QLatin1String("ba2"), Qt::CaseInsensitive) == 0) {
+      const auto found = activeIndex.constFind(fileInfo.fileName());
+      int index        = found != activeIndex.constEnd() ? found.value() : -1;
       if (index == -1) {
         index = 0xFFFF;
       } else {
