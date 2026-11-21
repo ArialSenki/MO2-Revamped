@@ -69,6 +69,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 using namespace MOBase;
 using namespace MOShared;
 
+static void makeIniCopiesWritable(const IPluginGame* game, const QDir& directory);
+
 void Profile::touchFile(QString fileName)
 {
   QFile modList(m_Directory.filePath(fileName));
@@ -113,6 +115,7 @@ Profile::Profile(const QString& name, IPluginGame const* gamePlugin,
     }
 
     gamePlugin->initializeProfile(fullPath, settings);
+    makeIniCopiesWritable(gamePlugin, QDir(fullPath));
     findProfileSettings();
 
     if (EldenRingSaveSettings::supports(gamePlugin)) {
@@ -395,6 +398,26 @@ void Profile::createTweakedIniFile()
     const auto e = ::GetLastError();
     reportError(tr("failed to create tweaked ini: %1")
                     .arg(QString::fromStdWString(formatSystemMessage(e))));
+  }
+}
+
+// MO2 Revamped: the game plugin copies the game's INIs into the profile with
+// their flags: a read-only Fallout.ini in Documents (New Vegas players set it
+// against the launcher) gave a profile copy MO2 couldn't write, and a question
+// about it at every start. The profile's own copies are made writable
+static void makeIniCopiesWritable(const IPluginGame* game, const QDir& directory)
+{
+  if (game == nullptr) {
+    return;
+  }
+  for (const QString& file : game->iniFiles()) {
+    const QString path = directory.filePath(QFileInfo(file).fileName());
+    const QFileInfo info(path);
+    if (info.exists() && !info.isWritable()) {
+      QFile::setPermissions(path, QFile::permissions(path) | QFile::WriteOwner |
+                                      QFile::WriteUser);
+      log::info("made the profile's copy {} writable", QDir::toNativeSeparators(path));
+    }
   }
 }
 
@@ -1148,6 +1171,7 @@ bool Profile::localSettingsEnabled() const
     }
     if (!missingFiles.empty()) {
       m_GamePlugin->initializeProfile(m_Directory, IPluginGame::CONFIGURATION);
+      makeIniCopiesWritable(m_GamePlugin, m_Directory);
       // MO2 Revamped: this is a plain check plugins call at any moment, also off
       // the main thread: the notice comes afterwards, on the main thread, once
       // per profile and set of files
@@ -1195,6 +1219,7 @@ bool Profile::enableLocalSettings(bool enable)
   if (enable) {
     m_GamePlugin->initializeProfile(m_Directory.absolutePath(),
                                     IPluginGame::CONFIGURATION);
+    makeIniCopiesWritable(m_GamePlugin, m_Directory);
   } else {
     QDialogButtonBox::StandardButton res;
     res = QuestionBoxMemory::query(QApplication::activeModalWidget(), "deleteINIQuery",
