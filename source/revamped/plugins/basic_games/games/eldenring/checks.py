@@ -312,16 +312,16 @@ class LaunchChecksMixin:
         return True
 
     def _save_extension_ready(self, app_path: str) -> bool:
-        """Without its own save extension ELDEN RING Reforged uses the save of
-        the other mods: said before the launch, as for the file loader."""
+        """Without its own save extension ELDEN RING Reforged or The
+        Convergence uses the save of the other mods: said before the launch,
+        as for the file loader."""
         self._save_extension_accepted = False
-        if (
-            self._runs_outside_vfs(app_path)
-            or self._reforged_natives() is None
-            # Seamless Co-op names the saves itself
-            or self._active_seamless_dll() is not None
-        ):
+        if self._runs_outside_vfs(app_path):
             return True
+        own_save = self._mod_save_extension()
+        if own_save is None:
+            return True
+        extension, mod_name = own_save
         executable = Path(self.gameDirectory().absolutePath()) / self.GameBinary
         try:
             info = executable.stat()
@@ -344,10 +344,10 @@ class LaunchChecksMixin:
         box = QMessageBox(self._message_parent())
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle(_tr("Saves may mix"))
-        box.setText(_tr("MO2 can't give ELDEN RING Reforged its own save file in this version of the game"))
-        details = _tr("Reforged would use ER0000.sl2, the save of your other mods, instead of "
-                      "ER0000.err, and could overwrite it. This usually follows a game update: "
-                      "look for a new version of MO2 Revamped.")
+        box.setText(_tr("MO2 can't give {0} its own save file in this version of the game").format(mod_name))
+        details = _tr("{0} would use ER0000.sl2, the save of your other mods, instead of "
+                      "ER0000.{1}, and could overwrite it. This usually follows a game update: "
+                      "look for a new version of MO2 Revamped.").format(mod_name, extension)
         if version:
             details += "\n\n" + _tr("Game version: {0}").format(version)
         box.setInformativeText(details)

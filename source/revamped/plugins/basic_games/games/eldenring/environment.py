@@ -8,6 +8,7 @@ whose EldenRingMo2Game takes it as a mixin.
 
 from __future__ import annotations
 
+import configparser
 import json
 import os
 from pathlib import Path
@@ -104,15 +105,14 @@ class EnvironmentMixin:
         os.environ[self.BootBoostEnvironment] = "1" if self._read_boot_boost(path) else "0"
         self._reforged_env_active = True
         reforged_natives = self._reforged_natives()
-        # Seamless Co-op names the saves itself (its save_file_extension)
-        save_extension = (
-            self.ReforgedSaveExtension
-            if reforged_natives is not None and self._active_seamless_dll() is None
-            else None
-        )
+        own_save = self._mod_save_extension()
+        save_extension = own_save[0] if own_save is not None else None
         if reforged_natives is not None and self._set_bridge_environment(
             self.ReforgedAttachEnvironment,
-            self._reforged_attach_config(reforged_natives, save_extension),
+            self._reforged_attach_config(
+                reforged_natives,
+                save_extension if save_extension == self.ReforgedSaveExtension else None,
+            ),
         ):
             qInfo(
                 "Elden Ring MO2: ELDEN RING Reforged is active; its natives get "
@@ -128,7 +128,7 @@ class EnvironmentMixin:
             os.environ[self.SaveExtensionEnvironment] = save_extension
             qInfo(
                 f"Elden Ring MO2: the bridge names the saves ER0000.{save_extension}, "
-                "as ELDEN RING Reforged does."
+                f"as {own_save[1]} does with its own launcher."
             )
         else:
             os.environ.pop(self.SaveExtensionEnvironment, None)
@@ -222,6 +222,41 @@ class EnvironmentMixin:
         return mobase.ExecutableForcedLoadSetting(
             self.GameProcess, str(library)
         ).withEnabled(True).withForced(True)
+
+    def _mod_save_extension(self) -> tuple[str, str] | None:
+        """The save extension an active mod's own launcher gives it, with the
+        mod's name: without it the mod plays ER0000.sl2, the save of the game
+        without mods or of other mods. Seamless Co-op names the saves itself
+        (its save_file_extension), so then there is none."""
+        if self.GameShortName != "eldenring" or self._active_seamless_dll() is not None:
+            return None
+        if self._reforged_natives() is not None:
+            return self.ReforgedSaveExtension, "ELDEN RING Reforged"
+        if self._active_convergence():
+            return self.ConvergenceSaveExtension, "The Convergence"
+        return None
+
+    def _active_convergence(self) -> bool:
+        """Whether an active mod is The Convergence: installed from Nexus
+        (its meta.ini names its Nexus page), or by hand with its me3 profile."""
+        for _name, root, active in self._mod_folders():
+            if not active:
+                continue
+            if (root / "convergence.me3").is_file() or (root / "me3" / "convergence.me3").is_file():
+                return True
+            meta = configparser.ConfigParser(interpolation=None, strict=False)
+            try:
+                meta.read(root / "meta.ini", encoding="utf-8-sig")
+            except (OSError, UnicodeError, configparser.Error):
+                continue
+            general = meta["General"] if meta.has_section("General") else {}
+            game = str(general.get("gameName", "")).strip().casefold()
+            if (
+                str(general.get("modid", "")).strip() == self.ConvergenceNexusId
+                and game in {"eldenring", "elden ring"}
+            ):
+                return True
+        return False
 
     def _reforged_natives(self) -> list[Path] | None:
         """This run's native DLLs when ELDEN RING Reforged is among them."""

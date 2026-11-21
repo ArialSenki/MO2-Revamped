@@ -252,7 +252,9 @@ class SaveRecoveryMixin:
             entry_name = entry.name.casefold()
             if entry_name == "steam_autocloud.vdf" or entry_name.startswith(cls.SavePrefix):
                 return True
-            if entry_name.endswith((".sl2", ".sl2.bak", ".co2", ".co2.bak", ".err", ".err.bak")):
+            if entry_name.endswith(
+                (".sl2", ".sl2.bak", ".co2", ".co2.bak", ".err", ".err.bak", ".cnv", ".cnv.bak")
+            ):
                 return True
         return False
 

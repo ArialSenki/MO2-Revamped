@@ -376,6 +376,13 @@ class EldenRingMo2Game(
     # ELDEN RING Reforged's me3 profile saves to ER0000.err
     ReforgedSaveExtension = "err"
 
+    # The Convergence's me3 profile (convergence.me3, savefile = "ER0000.cnv")
+    # saves to ER0000.cnv; MO2 doesn't use that profile, so without the bridge
+    # renaming the save it played and overwrote ER0000.sl2, the save of
+    # the game without mods
+    ConvergenceSaveExtension = "cnv"
+    ConvergenceNexusId = "3419"
+
     # me3's BootBoost for every Elden Ring start (the archive headers the game
     # decrypts on each start are cached decrypted), and what me3 does for
     # ELDEN RING Reforged beside loading it: Arxan neutralized (disable_arxan),
