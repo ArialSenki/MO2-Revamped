@@ -45,6 +45,18 @@ int wmain(int argc, wchar_t** argv) {
   HMODULE mod = LoadLibraryW(argv[2]);
   printf("bridge %s, mod %s\n", bridge ? "loaded" : "missing", mod ? "loaded" : "missing");
   fflush(stdout);
+  if (argc > 3 && wcscmp(argv[3], L"window") == 0) {
+    // the game's first window: the bridge holds it until the initializer
+    // has returned (the game makes its DXGI factory right after)
+    HWND window = CreateWindowExW(0, L"STATIC", L"game", WS_OVERLAPPED, 0, 0, 10, 10,
+                                  NULL, NULL, NULL, NULL);
+    const int ready = GetFileAttributesA("initialized.txt") != INVALID_FILE_ATTRIBUTES;
+    printf("initializer %s the first window\n", ready ? "returned before" : "NOT done before");
+    if (window) {
+      DestroyWindow(window);
+    }
+    return ready ? 0 : 1;
+  }
   // the bridge waits up to 10 s for game code, then scans for 10 s
   for (int waited = 0; waited < 25000; waited += 250) {
     if (GetFileAttributesA("initialized.txt") != INVALID_FILE_ATTRIBUTES) {

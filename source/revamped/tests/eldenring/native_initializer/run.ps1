@@ -3,7 +3,8 @@
 # in the game folder (usvfs hooks it; alpha.68 matched only that, and no
 # initializer ran in the game). A DLL loaded from a path of 260 characters
 # or more is left out of the process snapshot, so its initializer is not
-# found yet: that case is not tested.
+# found yet: that case is not tested. The game's first window waits until
+# the initializer has returned.
 #   powershell -File run.ps1 -ZigPath <zig 0.13.0> -Bridge <eldenring_mo2_bridge.dll>
 param(
     [Parameter(Mandatory = $true)][string]$ZigPath,
@@ -22,7 +23,8 @@ New-Item -ItemType Directory -Path $short -Force | Out-Null
 Copy-Item (Join-Path $work 'target.dll') $short
 $cases = @(
     @{ Name = 'real path';              Dll = (Join-Path $short 'target.dll'); Mode = '' },
-    @{ Name = 'virtual path (usvfs)';   Dll = (Join-Path $short 'target.dll'); Mode = 'virtual' }
+    @{ Name = 'virtual path (usvfs)';   Dll = (Join-Path $short 'target.dll'); Mode = 'virtual' },
+    @{ Name = 'before the first window'; Dll = (Join-Path $short 'target.dll'); Mode = 'window' }
 )
 $failed = 0
 Push-Location $work
