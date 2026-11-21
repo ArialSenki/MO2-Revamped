@@ -2547,6 +2547,10 @@ QString versionKey(const QString& version)
   for (QString& p : parts) {
     p = QString::number(p.toLongLong());
   }
+  // MO2 Revamped: 2.5.0.0 (a collection's) is 2.5 (Cyberpunk's own)
+  while (parts.size() > 1 && parts.last() == QStringLiteral("0")) {
+    parts.removeLast();
+  }
   return parts.join('.');
 }
 
