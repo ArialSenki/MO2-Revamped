@@ -5274,6 +5274,14 @@ Os saves que ele estava substituindo estão guardados em:
       <translation>Pesquisar plugins</translation>
     </message>
     <message>
+      <source>Search mods</source>
+      <translation>Pesquisar mods</translation>
+    </message>
+    <message>
+      <source>Group mods by</source>
+      <translation>Agrupar mods por</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Pesquisar downloads</translation>
     </message>
@@ -11971,8 +11979,8 @@ Exemplos:
       <translation>Usar a nova interface (Qt Quick) onde houver</translation>
     </message>
     <message>
-      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
-      <translation>Mostra nela as janelas que têm uma versão nova (a janela de instâncias e a pergunta do tema de uma instância nova), desenhadas com Qt Quick. Funcionam do mesmo jeito e usam um pouco mais de memória. Vale quando o Mod Organizer abrir de novo.</translation>
+      <source>Draws the parts that have a new version with Qt Quick: the Instances window, the theme question of a new instance and the summary row of the main window. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Desenha com Qt Quick as partes que têm uma versão nova: a janela de instâncias, a pergunta do tema de uma instância nova e a linha de resumo da janela principal. Funcionam do mesmo jeito e usam um pouco mais de memória. Vale quando o Mod Organizer abrir de novo.</translation>
     </message>
     <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>

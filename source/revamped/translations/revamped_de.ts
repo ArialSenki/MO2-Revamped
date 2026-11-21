@@ -5282,6 +5282,14 @@ Die Spielstände, die ersetzt wurden, liegen in:
       <translation>Plugins suchen</translation>
     </message>
     <message>
+      <source>Search mods</source>
+      <translation>Mods suchen</translation>
+    </message>
+    <message>
+      <source>Group mods by</source>
+      <translation>Mods gruppieren nach</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Downloads suchen</translation>
     </message>
@@ -11987,8 +11995,8 @@ Firefox.exe</translation>
       <translation>Die neue Oberfläche (Qt Quick) verwenden, wo verfügbar</translation>
     </message>
     <message>
-      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
-      <translation>Zeigt die Fenster, die eine neue Version haben (das Instanzen-Fenster und die Themenfrage einer neuen Instanz), darin an, mit Qt Quick gezeichnet. Sie funktionieren gleich und brauchen etwas mehr Arbeitsspeicher. Gilt ab dem nächsten Start von Mod Organizer.</translation>
+      <source>Draws the parts that have a new version with Qt Quick: the Instances window, the theme question of a new instance and the summary row of the main window. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Zeichnet die Teile, die eine neue Version haben, mit Qt Quick: das Instanzen-Fenster, die Themenfrage einer neuen Instanz und die Übersichtszeile des Hauptfensters. Sie funktionieren gleich und brauchen etwas mehr Arbeitsspeicher. Gilt ab dem nächsten Start von Mod Organizer.</translation>
     </message>
     <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>

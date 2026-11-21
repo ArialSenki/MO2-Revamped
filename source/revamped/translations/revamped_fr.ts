@@ -5278,6 +5278,14 @@ Les sauvegardes qu'il remplaçait sont conservées dans :
       <translation>Rechercher des plugins</translation>
     </message>
     <message>
+      <source>Search mods</source>
+      <translation>Rechercher des mods</translation>
+    </message>
+    <message>
+      <source>Group mods by</source>
+      <translation>Grouper les mods par</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Rechercher des téléchargements</translation>
     </message>
@@ -12344,8 +12352,8 @@ Exemple :
       <translation>Utiliser la nouvelle interface (Qt Quick) quand elle existe</translation>
     </message>
     <message>
-      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
-      <translation>Affiche avec elle les fenêtres qui ont une nouvelle version (la fenêtre des instances et la question du thème d&apos;une nouvelle instance), dessinées avec Qt Quick. Elles fonctionnent de la même façon et utilisent un peu plus de mémoire. S&apos;applique au prochain démarrage de Mod Organizer.</translation>
+      <source>Draws the parts that have a new version with Qt Quick: the Instances window, the theme question of a new instance and the summary row of the main window. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Dessine avec Qt Quick les parties qui ont une nouvelle version : la fenêtre des instances, la question du thème d&apos;une nouvelle instance et la ligne de résumé de la fenêtre principale. Elles fonctionnent de la même façon et utilisent un peu plus de mémoire. S&apos;applique au prochain démarrage de Mod Organizer.</translation>
     </message>
     <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
