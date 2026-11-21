@@ -31,10 +31,8 @@ $allCases = @{
   falloutnv = @('mtime', 'disagree', 'disagree-old', 'mixed', 'unicode', 'case', 'big')
 }
 if (-not $Cases) { $Cases = $allCases[$Game] }
-if (Get-Process ModOrganizer -ErrorAction SilentlyContinue) { throw 'a ModOrganizer.exe is running' }
-& "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds 1800 | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'no MO2 lock' }
 $failed = 0
+$locked = $false
 try {
   Copy-Item "$here\mo2r_golden_dump.py" "$Bed\plugins\mo2r_golden_dump.py" -Force
   Set-Content "$Bed\portable.txt" ''
@@ -48,12 +46,21 @@ try {
     $out = Join-Path $Work "$Game-$case-out"
     Remove-Item $out -Recurse -Force -ErrorAction SilentlyContinue
     $env:MO2R_GOLDEN_OUT = $out
+    # the lock for each case, not the whole run: mo2lock counts a lock older
+    # than 30 min with no MO2 running as stale, so one taken at the start could
+    # be lost between cases. No lock in 30 min: the run stops.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds 1800 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "no MO2 lock for $case; run stopped" }
+    $locked = $true
     $o = & "$tools\vis\desk.ps1" -CommandLine "`"$Bed\ModOrganizer.exe`"" -WorkDir $Bed
     $procId = [int](($o | Select-String 'started pid (\d+)').Matches[0].Groups[1].Value)
     $t = Get-Date
     while (-not (Test-Path "$out\done") -and ((Get-Date) - $t).TotalSeconds -lt 400) { Start-Sleep 2 }
     & "$tools\vis\desk.ps1" -CommandLine "powershell.exe -NoProfile -ExecutionPolicy Bypass -File $tools\vis\closepid.ps1 -Target $procId" -WorkDir "$tools\vis" | Out-Null
     for ($i = 0; $i -lt 60 -and (Get-Process -Id $procId -ErrorAction SilentlyContinue); $i++) { Start-Sleep 1 }
+    if (Get-Process -Id $procId -ErrorAction SilentlyContinue) { Stop-Process -Id $procId -Force; Start-Sleep 2 }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null
+    $locked = $false
     if (-not (Test-Path "$out\done")) { "$case`: no output"; $failed++; continue }
     # what MO2 left in the profile once closed (it saves the lists on exit too)
     foreach ($f in 'plugins.txt', 'loadorder.txt') { Copy-Item "$root\instance\profiles\Default\$f" "$out\$f" -Force }
@@ -80,6 +87,6 @@ try {
   }
 } finally {
   Remove-Item "$Bed\plugins\mo2r_golden_dump.py" -Force -ErrorAction SilentlyContinue
-  & "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null
+  if ($locked) { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null }
 }
 if ($failed) { "FAILED: $failed"; exit 1 } else { 'all passed' }
