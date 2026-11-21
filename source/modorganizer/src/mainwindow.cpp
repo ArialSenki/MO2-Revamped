@@ -1814,6 +1814,13 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 {
   setStartupDiagnosticPhase("mainwindow.construct.begin");
   writeStartupDiagnosticEvent("mainwindow.construct.begin");
+  // MO2 Revamped: where building the window spends its time, in one debug line
+  QElapsedTimer setupStage;
+  setupStage.start();
+  QStringList setupTimes;
+  const auto setupMark = [&](const char* what) {
+    setupTimes.append(QStringLiteral("%1 %2 ms").arg(QLatin1String(what)).arg(setupStage.restart()));
+  };
 
   // the theme styles the window's surfaces by this property; set before any of
   // them is polished, MOApplication doesn't have to polish them all again.
@@ -1832,6 +1839,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   connect(ui->startButton, &QToolButton::clicked, this,
           &MainWindow::launchSelectedExecutable);
   writeStartupDiagnosticEvent("mainwindow.setup_ui.complete");
+  setupMark("ui");
   // Revamped keeps the legacy menu commands on the toolbar buttons. Do not
   // restore or show the upstream top menubar for new or existing profiles.
   ui->menuBar->hide();
@@ -2049,6 +2057,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
           .arg(RunMenuToolButton::menuButtonWidth()));
   configureEldenRingHelp();
   languageChange(settings.interface().language());
+  setupMark("custom ui");
   ui->statusBar->setup(ui, settings);
 
   {
@@ -2083,14 +2092,17 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   setupToolbar();
   toggleRevampedEndorseState();
   setupFluentLayout();
+  setupMark("toolbar and layout");
 
   TaskProgressManager::instance().tryCreateTaskbar();
 
   setStartupDiagnosticPhase("mainwindow.setup_mod_lists");
   setupModList();
+  setupMark("mod list");
   ui->espList->setup(m_OrganizerCore, this, ui);
   ui->espList->setBackupActions([this] { createPluginOrderBackup(); },
                                 [this] { restorePluginOrderBackup(); });
+  setupMark("plugin list");
   ui->bsaList->setLocalMoveOnly(true);
   ui->bsaList->setHeaderLabels({tr("Name")});
 
@@ -2166,6 +2178,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   ui->splitter->setStretchFactor(1, 2);
 
   resizeLists(pluginListAdjusted);
+  setupMark("tabs and columns");
 
   new ResponsiveColumnSizer(ui->dataTree, this);
   // the saves list sizes itself: the name stretches, the date fits (see
@@ -2351,6 +2364,7 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   FileDialogMemory::restore(settings);
 
   fixCategories();
+  setupMark("connections");
 
   m_OrganizerCore.setUserInterface(this);
   connect(m_OrganizerCore.modList(), &ModList::showMessage, [=](auto&& message) {
@@ -2379,9 +2393,11 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
   }
 
   updateModPageMenu();
+  setupMark("translators");
 
   // refresh profiles so the current profile can be activated
   refreshProfiles(false);
+  setupMark("profiles");
 
   ui->profileBox->setCurrentText(m_OrganizerCore.currentProfile()->name());
 
@@ -2398,14 +2414,18 @@ MainWindow::MainWindow(Settings& settings, OrganizerCore& organizerCore,
 
   scheduleCheckForProblems();
   refreshExecutablesList();
+  setupMark("executables");
   updatePinnedExecutables();
   resetActionIcons();
   processUpdates();
+  setupMark("icons and updates");
 
   ui->modList->updateModCount();
   ui->espList->updatePluginCount();
   ui->statusBar->updateNormalMessage(m_OrganizerCore);
   setStartupDiagnosticPhase("mainwindow.construct.complete");
+  setupMark("counts");
+  log::debug("main window built: {}", setupTimes.join(QStringLiteral(", ")));
   writeStartupDiagnosticEvent("mainwindow.construct.complete");
 }
 
