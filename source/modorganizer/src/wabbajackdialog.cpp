@@ -1984,6 +1984,39 @@ bool WabbajackDialog::makeInstance(const Wabbajack::InstallResult& result, QStri
       }
     }
   }
+  // MO2 Revamped: what this instance already settled isn't asked again when
+  // the list's opens: the theme, and the categories when it has some (the
+  // list's own, or else this instance's); asking would import Nexus's over
+  // the list's
+  if (!ci.dataPath.isEmpty()) {
+    const auto& current = m_core.settings();
+    const QDir from     = QFileInfo(current.filename()).absoluteDir();
+    const QDir to(ci.dataPath);
+    bool categories = to.exists(QStringLiteral("categories.dat"));
+    if (!categories && from.exists(QStringLiteral("categories.dat"))) {
+      categories = QFile::copy(from.filePath(QStringLiteral("categories.dat")),
+                               to.filePath(QStringLiteral("categories.dat")));
+      if (categories && from.exists(QStringLiteral("nexuscatmap.dat"))) {
+        QFile::remove(to.filePath(QStringLiteral("nexuscatmap.dat")));
+        QFile::copy(from.filePath(QStringLiteral("nexuscatmap.dat")),
+                    to.filePath(QStringLiteral("nexuscatmap.dat")));
+      }
+    }
+    QSettings ini(ci.iniPath, QSettings::IniFormat);
+    if (current.interface().themeChoicePromptCompleted()) {
+      if (const auto style = current.interface().styleName()) {
+        ini.setValue("Settings/style", *style);
+      }
+      ini.setValue("Settings/revamped_theme_choice_prompt_completed", true);
+    }
+    if (categories) {
+      // top-level keys, kept in [General]; with the version a first start
+      // writes, so no older MO2's upgrade step runs on it
+      ini.setValue("first_start", false);
+      ini.setValue("version", m_core.getVersion().asQVersionNumber().toString());
+    }
+    ini.sync();
+  }
   log::info("wabbajack: instance '{}' made for {}", m_instanceName, m_installFolder);
   return true;
 }
