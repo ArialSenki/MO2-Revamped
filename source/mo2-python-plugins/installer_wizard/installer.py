@@ -233,7 +233,9 @@ class WizardInstaller(mobase.IPluginInstallerSimple):
         ):
             return False
 
-        # TODO: Check OMOD?
+        # MO2 Revamped: nothing to check for OMOD. The OMOD installer only takes
+        # .omod files, which never reach this installer, so "prefer_omod" (kept
+        # for existing settings) has no case to decide
 
         return True
 

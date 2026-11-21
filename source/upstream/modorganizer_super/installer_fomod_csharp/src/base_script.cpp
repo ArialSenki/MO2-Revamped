@@ -26,6 +26,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QButtonGroup>
 #include <QCoreApplication>
 #include <QListWidget>
+#include <QMetaObject>
+#include <QMouseEvent>
 #include <QPixmap>
 #include <QPlainTextEdit>
 #include <QStackedWidget>
@@ -188,6 +190,55 @@ namespace CSharp {
   }
 
 }
+
+namespace {
+
+// MO2 Revamped: in the Select dialog with check boxes, a click on an option's
+// name ticks it too, as the FOMOD installer's check boxes do. An event filter
+// on the list, not signals: under /clr connecting a signal by function pointer
+// finds no signal. A click on the box is ticked by Qt while it handles the
+// release, so the state is checked after that (queued) and nothing toggles twice
+class SelectNameClicks : public QObject
+{
+public:
+  explicit SelectNameClicks(QListWidget* list) : QObject(list), m_list(list) {}
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::MouseButtonPress) {
+      const auto* mouse = static_cast<QMouseEvent*>(event);
+      m_item  = mouse->button() == Qt::LeftButton
+                    ? m_list->itemAt(mouse->position().toPoint())
+                    : nullptr;
+      m_state = m_item != nullptr ? m_item->checkState() : Qt::Unchecked;
+    } else if (event->type() == QEvent::MouseButtonRelease && m_item != nullptr) {
+      const auto* mouse   = static_cast<QMouseEvent*>(event);
+      QListWidgetItem* item = m_item;
+      const Qt::CheckState pressed = m_state;
+      m_item = nullptr;
+      if (mouse->button() == Qt::LeftButton &&
+          m_list->itemAt(mouse->position().toPoint()) == item) {
+        QMetaObject::invokeMethod(
+            this,
+            [item, pressed] {
+              if (item->checkState() == pressed) {
+                item->setCheckState(pressed == Qt::Checked ? Qt::Unchecked
+                                                           : Qt::Checked);
+              }
+            },
+            Qt::QueuedConnection);
+      }
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QListWidget* m_list;
+  QListWidgetItem* m_item = nullptr;
+  Qt::CheckState m_state  = Qt::Unchecked;
+};
+
+}  // namespace
 
 namespace CSharp {
 
@@ -602,6 +653,9 @@ namespace CSharp {
     dialog.body()->addLayout(row, 1);
 
     QObject::connect(list, SIGNAL(currentRowChanged(int)), pages, SLOT(setCurrentIndex(int)));
+    if (p_booSelectMany) {
+      list->viewport()->installEventFilter(new SelectNameClicks(list));
+    }
     if (list->count() > 0) {
       list->setCurrentRow(0);
     }

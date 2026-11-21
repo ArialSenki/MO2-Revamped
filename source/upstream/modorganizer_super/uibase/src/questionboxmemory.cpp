@@ -224,7 +224,11 @@ void QuestionBoxMemory::setWindowMemory(const QString& windowName, Button b)
   log::debug("remembering choice {} for window {}", buttonToString(b), windowName);
 
   QMutexLocker locker(&g_mutex);
-  g_setWindow(windowName, b);
+  // MO2 Revamped: the settings clear the callbacks when they go away; a
+  // question still open while MO2 closes just isn't remembered
+  if (g_setWindow) {
+    g_setWindow(windowName, b);
+  }
 }
 
 void QuestionBoxMemory::setFileMemory(const QString& windowName,
@@ -234,13 +238,15 @@ void QuestionBoxMemory::setFileMemory(const QString& windowName,
              windowName + "/" + filename);
 
   QMutexLocker locker(&g_mutex);
-  g_setFile(windowName, filename, b);
+  if (g_setFile) {
+    g_setFile(windowName, filename, b);
+  }
 }
 
 QuestionBoxMemory::Button QuestionBoxMemory::getMemory(const QString& windowName,
                                                        const QString& filename)
 {
-  return g_get(windowName, filename);
+  return g_get ? g_get(windowName, filename) : NoButton;
 }
 
 QString QuestionBoxMemory::buttonToString(Button b)
