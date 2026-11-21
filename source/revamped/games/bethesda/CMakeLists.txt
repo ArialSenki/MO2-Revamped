@@ -6,7 +6,10 @@ add_library(revamped_bethesda STATIC)
 mo2_configure_library(revamped_bethesda
 	WARNINGS 4
 	AUTOMOC ON
-	PUBLIC_DEPENDS uibase)
+	PUBLIC_DEPENDS uibase
+	# Skyrim SE's zlib save bodies (the static zlib the old plugins link; LZ4
+	# is decoded by saves/lz4block.cpp, no liblz4)
+	PRIVATE_DEPENDS zlib)
 
 # mo2_configure_library globs every source under this folder; the game plugins
 # in games/ are their own targets
