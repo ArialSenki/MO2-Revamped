@@ -887,7 +887,7 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   // (rootlaunch.h): a script extender's loader replaced by the game exe and a
   // forced load, proxy DLLs through the import table, or the copy fallback
   const RootLaunch::Plan rootPlan =
-      m_core.planRootLaunch(m_profileName, m_sp.binary, m_sp.arguments);
+      m_core.planRootLaunch(m_profileName, m_sp.binary, m_sp.arguments, m_forcedLibraries);
   if (!rootPlan.runBinary.isEmpty()) {
     log::info("root launch: starting {} instead of {}",
               QDir::toNativeSeparators(rootPlan.runBinary),
