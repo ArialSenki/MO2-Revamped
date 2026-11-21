@@ -15,11 +15,15 @@ Premium, MO2 downloads them on its own.
 - **Download a Nexus collection…** takes a collection link.
 - A collection link from the browser opens it too.
 
+In the gallery, Ctrl+F goes to the search and F5 reloads.
+
 ### The collection window
 
 It shows **What it needs**, the author's notes and the mods.
 
 - **Install into:** **Current profile**, **New profile** or **New instance**.
+  A new instance takes this instance's theme and categories, so the first-start
+  questions don't stop the install.
 - **Separators by category** puts the mods under category separators.
 - **Automatic (Premium)** or **Page by page on Nexus** chooses how files are
   downloaded.
@@ -75,6 +79,8 @@ of its own.
   it.
 - **Open a Wabbajack list…** takes a `.wabbajack` file you already have.
 
+In the gallery, Ctrl+F goes to the search and F5 reloads.
+
 ### Download the archives
 
 The list window shows **What it needs** and each archive with its status.
@@ -100,6 +106,9 @@ folder, the downloads folder or a drive's root. At the end, **Restart in the
 new instance** switches to it.
 
 - The list's own profile, load order and programs come with it.
+- The new instance takes this instance's theme, and the list's categories (or
+  this instance's, when the list has none), so it opens without the
+  first-start questions.
 - MO2 plugins that a list brings are set aside and offered, not installed on
   their own.
 - An install that stopped can be continued later.

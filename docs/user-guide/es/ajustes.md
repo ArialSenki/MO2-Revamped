@@ -1,7 +1,7 @@
 # Ajustes
 
-**Ajustes** (Ctrl+S) tiene estas páginas. El botón **Ayuda** abre la guía del
-programa: su página sobre Apariencia, Plugins o Desarrollador, y el resumen de
+**Ajustes** (Ctrl+S) tiene estas páginas. El botón **Ayuda** (o F1) abre la guía
+del programa: su página sobre Apariencia, Plugins o Desarrollador, y el resumen de
 Ajustes en las demás páginas.
 
 - [General](#general)

@@ -16,11 +16,15 @@ de Nexus; con Premium, MO2 los descarga solo.
 - **Descargar una colección de Nexus…** acepta el enlace de una colección.
 - Un enlace de colección desde el navegador también la abre.
 
+En la galería, Ctrl+F va a la búsqueda y F5 recarga.
+
 ### La ventana de la colección
 
 Muestra **Lo que necesita**, las notas del autor y los mods.
 
 - **Instalar en:** **Perfil actual**, **Nuevo perfil** o **Nueva instancia**.
+  Una instancia nueva toma el tema y las categorías de esta, así que la
+  instalación no se para con las preguntas del primer inicio.
 - **Separadores por categoría** pone los mods bajo separadores de categoría.
 - **Automático (Premium)** o **Página a página en Nexus** elige cómo se
   descargan los archivos.
@@ -81,6 +85,8 @@ Wabbajack, cada una en su propia instancia.
 - **Abrir una lista de Wabbajack…** acepta un archivo `.wabbajack` que ya
   tengas.
 
+En la galería, Ctrl+F va a la búsqueda y F5 recarga.
+
 ### Descargar los archivos
 
 La ventana de la lista muestra **Lo que necesita** y cada archivo con su estado.
@@ -107,6 +113,9 @@ puede ser la del juego, la de descargas ni la raíz de una unidad. Al terminar,
 **Reiniciar en la instancia nueva** cambia a ella.
 
 - El perfil, el orden de carga y los programas de la lista vienen con ella.
+- La instancia nueva toma el tema de esta instancia y las categorías de la lista
+  (o las de esta instancia, si la lista no trae), así que abre sin las
+  preguntas del primer inicio.
 - Los plugins de MO2 que trae una lista se apartan y se ofrecen; no se instalan
   solos.
 - Una instalación que se detuvo se puede continuar más tarde.

@@ -265,6 +265,15 @@ opción `save_backups_kept`); **Restaurar la copia seleccionada** recupera una.
 Mientras el juego se ejecuta desde un perfil aislado, las carpetas de partidas
 de Steam se apartan y vuelven sin cambios al cerrarlo, con cualquier lanzador.
 
+Algunos mods guardan con su propio nombre, para que sus personajes no se mezclen
+con los del juego sin mods: ELDEN RING Reforged `ER0000.err`, Seamless Co-op
+`ER0000.co2`, The Convergence `ER0000.cnv`, y The Convergence con Seamless Co-op
+`ER0000.cnvco2`. Con The Convergence, Seamless Co-op arranca desde una copia de
+su carpeta en la instancia, con tus ajustes; el mod no se toca. Si jugaste a
+The Convergence desde MO2 antes de la beta 16, ese personaje está en
+`ER0000.sl2` (o en `ER0000.co2` con Seamless): cópialo como `ER0000.cnv` (o
+`ER0000.cnvco2`) en la misma carpeta para seguir con él.
+
 **Opciones de inicio.** Herramientas > **Opciones de inicio**: **Omitir las
 pantallas de logos iniciales**, **Inicio del juego más rápido (BootBoost)**,
 **Iniciar Elden Ring minimizado**, **Usar un fondo negro al iniciar**, la

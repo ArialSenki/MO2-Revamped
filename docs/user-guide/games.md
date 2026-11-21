@@ -255,6 +255,15 @@ brings one back.
 While the game runs from an isolated profile, the Steam save folders are set
 aside and come back unchanged when it closes, with every launcher.
 
+Some mods save under their own name, so their characters stay apart from the
+game without mods: ELDEN RING Reforged `ER0000.err`, Seamless Co-op
+`ER0000.co2`, The Convergence `ER0000.cnv`, and The Convergence with Seamless
+Co-op `ER0000.cnvco2`. With The Convergence, Seamless Co-op starts from a copy
+of its folder in the instance with your own settings; the mod isn't changed.
+If you played The Convergence from MO2 before beta 16, that character is in
+`ER0000.sl2` (or `ER0000.co2` with Seamless): copy it as `ER0000.cnv` (or
+`ER0000.cnvco2`) in the same folder to go on with it.
+
 **Startup options.** Tools > **Startup options**: **Skip the intro logo
 screens**, **Faster game start (BootBoost)**, **Start Elden Ring minimized**,
 **Use a black startup background**, process priority, Overwrite cleanup and
