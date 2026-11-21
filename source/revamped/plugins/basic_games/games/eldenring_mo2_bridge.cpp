@@ -3698,7 +3698,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.70.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.73.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
