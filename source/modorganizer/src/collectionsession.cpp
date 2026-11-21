@@ -2314,6 +2314,40 @@ void CollectionSession::startInNewInstance()
   }
   log::info("collection {}: instance '{}' created", m_link.slug, name);
 
+  // MO2 Revamped: what this instance already settled isn't asked again there,
+  // in the middle of the collection: its theme, its categories (the Nexus
+  // ones, imported once) and the first-steps offer
+  {
+    const QDir from = QFileInfo(settings.filename()).absoluteDir();
+    const QDir to(ci.dataPath);
+    bool categories = true;
+    for (const QString& f : {QStringLiteral("categories.dat"),
+                             QStringLiteral("nexuscatmap.dat")}) {
+      if (from.exists(f) && !to.exists(f)) {
+        categories = QFile::copy(from.filePath(f), to.filePath(f)) && categories;
+      } else if (!from.exists(f)) {
+        categories = false;
+      }
+    }
+    QSettings ini(ci.iniPath, QSettings::IniFormat);
+    if (settings.interface().themeChoicePromptCompleted()) {
+      if (const auto style = settings.interface().styleName()) {
+        ini.setValue("Settings/style", *style);
+      }
+      ini.setValue("Settings/revamped_theme_choice_prompt_completed", true);
+    }
+    if (categories) {
+      // with the version a first start writes, so no upgrade step of an older
+      // MO2's runs on it
+      // top-level keys, which QSettings keeps in [General] (a "General/" group
+      // would be its own [%General])
+      ini.setValue("first_start", false);
+      ini.setValue("version", m_core.getVersion().asQVersionNumber().toString());
+    }
+    ini.setValue("Settings/revamped_first_steps_offered", true);
+    ini.sync();
+  }
+
   // the collection's state in the new instance, as chosen here (its mods into
   // the instance's own profile), and the note that opens it at its start
   QJsonObject state = stateObject();
