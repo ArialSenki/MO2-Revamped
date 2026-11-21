@@ -572,16 +572,17 @@ QToolButton#startButton[runState="running"]:disabled {
     border-color: #2C5427;
 }
 
-/* a dialog's main button: the same dark accent tint, not a bright block */
+/* a dialog's main button: a dim accent fill, an accent outline and accent
+   text, so it stands out from the others without a bright block */
 QPushButton:default,
 QDialog QPushButton[fluentPrimary="true"],
 QMessageBox QPushButton:default,
 QDialog QPushButton#fixButton,
 QDialog QPushButton#manageOverwriteButton,
 QMainWindow#MainWindow QPushButton#displayCategoriesBtn:checked {
-    color: #B4DAEF;
-    background-color: #0C1F2B;
-    border: 1px solid #2F6383;
+    color: #A8D4EC;
+    background-color: #123349;
+    border: 1px solid #4A8DB5;
 }
 QPushButton:default:hover,
 QDialog QPushButton[fluentPrimary="true"]:hover,
@@ -589,9 +590,9 @@ QMessageBox QPushButton:default:hover,
 QMainWindow#MainWindow QPushButton#displayCategoriesBtn:checked:hover,
 QDialog QPushButton#fixButton:hover,
 QDialog QPushButton#manageOverwriteButton:hover {
-    color: #C8E4F3;
-    background-color: #112A3A;
-    border-color: #3A769A;
+    color: #C0E0F2;
+    background-color: #174058;
+    border-color: #5AA9D6;
 }
 QPushButton:default:pressed,
 QDialog QPushButton[fluentPrimary="true"]:pressed,
@@ -599,9 +600,9 @@ QMessageBox QPushButton:default:pressed,
 QDialog QPushButton#fixButton:pressed,
 QDialog QPushButton#manageOverwriteButton:pressed,
 QMainWindow#MainWindow QPushButton#displayCategoriesBtn:pressed {
-    color: #9CCDE8;
-    background-color: #09171F;
-    border-color: #285470;
+    color: #8EC3E1;
+    background-color: #0E2A3C;
+    border-color: #3D7DA3;
 }
 QDialog QPushButton:default:disabled,
 QDialog QPushButton[fluentPrimary="true"]:disabled,
