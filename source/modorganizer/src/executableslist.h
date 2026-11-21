@@ -131,6 +131,15 @@ public:
                             const QStringList& skippedTitles, const QString& modsPath);
 
   /**
+   * @brief adds the plugin's executables missing from the game folder that a
+   *        mod's Root folder has (the script extender a collection installs
+   *        there), pointing at that copy
+   * @return whether any executable was added
+   **/
+  bool addFromModRoots(MOBase::IPluginGame const* game,
+                       const QStringList& skippedTitles, const QString& modsPath);
+
+  /**
    * returns the executables provided by the game plugin
    **/
   std::vector<Executable> getPluginExecutables(MOBase::IPluginGame const* game) const;
