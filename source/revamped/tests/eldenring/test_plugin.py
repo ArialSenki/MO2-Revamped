@@ -243,6 +243,24 @@ class NativeDlls(unittest.TestCase):
         )
         self.assertEqual(self.loads(), ["b.dll", "ersc.dll"])
 
+    def test_convergence_seamless_copy_replaces_the_profile_entry(self):
+        # the native profile lists the mod's ersc.dll; with The Convergence
+        # its copy loaded as well, two Seamless Co-op DLLs in one game
+        root = self.organizer.add_mod("The Convergence", ["DLLs/ErdTools.dll"])
+        (root / "meta.ini").write_text("[General]\ngameName=ELDEN RING\nmodid=3419\n", encoding="utf-8")
+        self.organizer.write_profile_ini(
+            "[RevampedNativeProfile]\nversion = 2\n"
+            "native_01 = SeamlessCoop/ersc.dll\nmod_01 = Seamless\nenabled_01 = true\n"
+            "native_02 = DLLs/b.dll\nmod_02 = A\nenabled_02 = true\n"
+        )
+        game = game_for(self.organizer)
+        loads = [Path(load.library()) for load in game.executableForcedLoads()]
+        seamless = [load for load in loads if load.name == "ersc.dll"]
+        self.assertEqual(len(seamless), 1)
+        self.assertEqual(seamless[0].parent.parent.name, game.ConvergenceSeamlessFolder)
+        names = [load.name for load in loads if load.name in ("ersc.dll", "b.dll", "ErdTools.dll")]
+        self.assertLess(names.index("ersc.dll"), names.index("b.dll"))
+
     def test_initializers_name_the_forced_loads(self):
         self.organizer.write_profile_ini(
             "[RevampedNativeProfile]\nversion = 2\n"
@@ -333,6 +351,18 @@ class ConvergenceWithSeamless(unittest.TestCase):
         text = (dll.parent / "ersc_settings.ini").read_text(encoding="utf-8")
         self.assertIn("cooppassword = other", text)
         self.assertIn("save_file_extension = cnvco2", text)
+
+    def test_settings_in_the_system_code_page(self):
+        # a password with "ñ" saved by Notepad in Windows-1252 isn't UTF-8:
+        # the copy failed and Seamless saved to the shared ER0000.co2
+        self.add_convergence()
+        own = self.seamless_root / "SeamlessCoop" / "ersc_settings.ini"
+        own.write_bytes(self.SEAMLESS_INI.replace("secret", "contraseña").encode("cp1252"))
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertNotEqual(dll.parent, self.seamless_root / "SeamlessCoop")
+        data = (dll.parent / "ersc_settings.ini").read_bytes()
+        self.assertIn("cooppassword = contraseña".encode("cp1252"), data)
+        self.assertIn(b"save_file_extension = cnvco2", data)
 
     def test_save_section_added_when_missing(self):
         cls = type(game_for(self.organizer))
