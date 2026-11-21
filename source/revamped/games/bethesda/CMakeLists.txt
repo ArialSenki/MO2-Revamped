@@ -21,6 +21,7 @@ set_property(TARGET revamped_bethesda PROPERTY SOURCES ${_bethesda_sources})
 target_include_directories(revamped_bethesda PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../upstream/modorganizer_super/revamped_fluent)
 
+add_subdirectory(games/fallout3)
 add_subdirectory(games/fallout4)
 add_subdirectory(games/falloutnv)
 add_subdirectory(games/skyrimse)
