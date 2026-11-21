@@ -70,7 +70,10 @@ public:
 
   QSize pictureSize() const { return m_picture.size(); }
 
-  QSize sizeHint() const override { return m_picture.size().boundedTo(QSize(800, 600)); }
+  QSize sizeHint() const override
+  {
+    return (QSizeF(m_picture.size()) / devicePixelRatioF()).toSize().boundedTo(QSize(800, 600));
+  }
   QSize minimumSizeHint() const override { return {64, 64}; }
 
 protected:
@@ -79,12 +82,13 @@ protected:
     if (m_picture.isNull()) {
       return;
     }
-    const QSize size = m_picture.size().scaled(rect().size(), Qt::KeepAspectRatio)
-                           .boundedTo(m_picture.size());
+    // at most one picture pixel per screen pixel, also with display scaling
+    const QSize natural = (QSizeF(m_picture.size()) / devicePixelRatioF()).toSize();
+    const QSize size = natural.scaled(rect().size(), Qt::KeepAspectRatio).boundedTo(natural);
     QRect target(QPoint(0, 0), size);
     target.moveCenter(rect().center());
     QPainter painter(this);
-    painter.setRenderHint(QPainter::SmoothPixmapTransform, size != m_picture.size());
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, size != natural);
     painter.drawPixmap(target, m_picture);
   }
 
