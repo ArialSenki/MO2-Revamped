@@ -50,14 +50,13 @@ include_directories(BEFORE "${CMAKE_CURRENT_LIST_DIR}/deps/sip")
 set(S ${CMAKE_CURRENT_LIST_DIR}/modorganizer_super)
 
 # libraries first: the targets below (and the organizer) find them by name
-foreach (lib uibase bsatk esptk archive githubpp game_gamebryo)
+foreach (lib uibase bsatk esptk archive githubpp)
 	add_subdirectory(${S}/${lib} ${lib})
 endforeach()
 
+# the Bethesda game plugins are MO2 Revamped's own (revamped_bethesda below);
+# game_gamebryo and the old game_* sources are no longer built
 set(MO2_UPSTREAM_PROJECTS
-	game_enderal game_enderalse game_fallout3 game_fallout4 game_fallout4vr
-	game_falloutnv game_morrowind game_nehrim game_oblivion game_skyrim
-	game_skyrimse game_skyrimvr game_starfield game_ttw
 	installer_bain installer_bundle installer_fomod installer_fomod_csharp
 	installer_manual installer_omod installer_quick
 	bsa_extractor bsapacker preview_base preview_bsa diagnose_basic check_fnis
