@@ -36,7 +36,11 @@ try {
         $env:ELDENRING_MO2_NATIVE_INITIALIZERS = "$($case.Dll)|mo2_test_init"
         $arguments = @("`"$(Join-Path $work 'eldenring_mo2_bridge.dll')`"", "`"$($case.Dll)`"")
         if ($case.Mode) { $arguments += $case.Mode }
-        $code = (Start-Process -FilePath .\host.exe -ArgumentList $arguments -NoNewWindow -Wait -PassThru).ExitCode
+        # a hang (alpha.71 under the loader lock) fails the case after 40 s
+        $process = Start-Process -FilePath .\host.exe -ArgumentList $arguments -NoNewWindow -PassThru
+        $null = $process.Handle
+        if (-not $process.WaitForExit(40000)) { $process.Kill(); $process.WaitForExit(); $code = 'hung' }
+        else { $code = $process.ExitCode }
         "{0}: {1}" -f $case.Name, $(if ($code -eq 0) { 'initializer called' } else { $failed++; 'NOT CALLED' })
     }
 } finally {
