@@ -18203,6 +18203,11 @@ Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni
       <translation>Ordinamento delle mod…</translation>
     </message>
     <message>
+      <source>Marked as done by you: %1</source>
+      <comment>summary count</comment>
+      <translation>Segnati come fatti da te: %1</translation>
+    </message>
+    <message>
       <source>Installed: %1</source>
       <comment>summary count</comment>
       <translation>Installate: %1</translation>

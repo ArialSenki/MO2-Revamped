@@ -17981,6 +17981,11 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       <translation>Mods werden sortiert…</translation>
     </message>
     <message>
+      <source>Marked as done by you: %1</source>
+      <comment>summary count</comment>
+      <translation>Von dir als erledigt markiert: %1</translation>
+    </message>
+    <message>
       <source>Installed: %1</source>
       <comment>summary count</comment>
       <translation>Installiert: %1</translation>

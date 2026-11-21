@@ -17957,6 +17957,11 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
       <translation>Ordenando os mods…</translation>
     </message>
     <message>
+      <source>Marked as done by you: %1</source>
+      <comment>summary count</comment>
+      <translation>Marcados como feitos por você: %1</translation>
+    </message>
+    <message>
       <source>Installed: %1</source>
       <comment>summary count</comment>
       <translation>Instalados: %1</translation>

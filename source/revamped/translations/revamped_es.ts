@@ -18242,6 +18242,11 @@ Los tamaños son estimados. Si el espacio se acaba a mitad, las descargas y las 
       <translation>Ordenando los mods…</translation>
     </message>
     <message>
+      <source>Marked as done by you: %1</source>
+      <comment>summary count</comment>
+      <translation>Marcados como hechos por ti: %1</translation>
+    </message>
+    <message>
       <source>Installed: %1</source>
       <comment>summary count</comment>
       <translation>Instalados: %1</translation>

@@ -1356,6 +1356,7 @@ void CollectionSession::buildEntries()
       e.selected     = o.value("selected").toBool(true) || !m_manifest.mods[mod].optional;
       e.presetResult = o.value("preset").toString();
       e.keptExisting = o.value("kept").toBool();
+      e.markedDone   = o.value("markedDone").toBool();
       e.fingerprint  = o.value("fingerprint").toString();
       for (const auto& n : o.value("notes").toArray()) {
         e.notes.append(n.toString());
@@ -1553,6 +1554,9 @@ QJsonObject CollectionSession::stateObject() const
     j.insert("selected", e.selected);
     j.insert("preset", e.presetResult);
     j.insert("kept", e.keptExisting);
+    if (e.markedDone) {
+      j.insert("markedDone", true);
+    }
     j.insert("fingerprint", e.fingerprint);
     j.insert("modId", m_manifest.mods[e.mod].modId);
     j.insert("notes", QJsonArray::fromStringList(e.notes));
@@ -1571,8 +1575,9 @@ void CollectionSession::setStatus(int row, Status s, const QString& reason)
   if (e.status == s && e.reason == reason) {
     return;
   }
-  e.status = s;
-  e.reason = reason;
+  e.status     = s;
+  e.reason     = reason;
+  e.markedDone = false;
   if (s != Status::Downloading) {
     e.progress   = -1;
     e.queuedByUs = false;
@@ -2051,6 +2056,7 @@ void CollectionSession::markDone(int row)
     return;
   }
   setStatus(row, Status::Installed, tr("Marked as done"));
+  m_entries[row].markedDone = true;
   saveState();
   emit changed();
   scheduleScan();
@@ -3933,7 +3939,8 @@ void CollectionSession::prepareUpdate()
   struct Old
   {
     QString status, modName, reason, fingerprint;
-    bool kept = false;
+    bool kept       = false;
+    bool markedDone = false;
   };
   std::vector<RevisionFile> before;
   std::vector<Old> olds;
@@ -3942,7 +3949,7 @@ void CollectionSession::prepareUpdate()
     before.push_back({o.value("modId").toInt(), o.value("fileId").toInt()});
     olds.push_back({o.value("status").toString(), o.value("modName").toString(),
                     o.value("reason").toString(), o.value("fingerprint").toString(),
-                    o.value("kept").toBool()});
+                    o.value("kept").toBool(), o.value("markedDone").toBool()});
   }
   std::vector<RevisionFile> after;
   for (const auto& e : m_entries) {
@@ -3959,6 +3966,7 @@ void CollectionSession::prepareUpdate()
       e.status       = Status::Installed;
       e.modName      = olds[b].modName;
       e.keptExisting = olds[b].kept;
+      e.markedDone   = olds[b].markedDone;
       e.reason       = olds[b].reason;
     } else if (olds[b].status == "skipped") {
       e.status = Status::Skipped;
@@ -4651,7 +4659,16 @@ void CollectionSession::applyPlugins()
 QString CollectionSession::summary() const
 {
   QStringList lines;
-  lines.append(tr("Installed: %1", "summary count").arg(count(Status::Installed)));
+  // MO2 Revamped: the ones the user marked as done aren't counted as ours
+  int markedDone = 0;
+  for (const auto& e : m_entries) {
+    markedDone += e.status == Status::Installed && e.markedDone ? 1 : 0;
+  }
+  lines.append(tr("Installed: %1", "summary count")
+                   .arg(count(Status::Installed) - markedDone));
+  if (markedDone > 0) {
+    lines.append(tr("Marked as done by you: %1", "summary count").arg(markedDone));
+  }
   lines.append(tr("Skipped: %1", "summary count").arg(count(Status::Skipped)));
   lines.append(tr("Failed: %1", "summary count").arg(count(Status::Failed)));
 
