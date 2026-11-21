@@ -14,7 +14,8 @@ from .basic_game_ini import BasicIniGame
 site.addsitedir(os.path.join(os.path.dirname(__file__), "lib"))
 
 
-BasicGame.setup()
+# MO2 Revamped: no BasicGame.setup() here; the stores are scanned the first
+# time a game asks where it is installed (BasicGame.steam_games and the others)
 
 
 def createPlugins():

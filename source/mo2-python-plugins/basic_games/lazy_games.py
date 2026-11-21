@@ -28,7 +28,7 @@ from typing import Any
 
 import mobase
 
-from .basic_game import BasicGame
+from .basic_game import BasicGame, BasicGameMappings
 
 MANIFEST_FORMAT = 1
 
@@ -47,7 +47,17 @@ STATIC_GETTERS = (
 )
 
 # the BasicGame methods a stub always keeps for itself
-OWN_METHODS = set(STATIC_GETTERS) | {"version", "settings", "init", "setGamePath", "setGameVariant", "gameDirectory"}
+OWN_METHODS = set(STATIC_GETTERS) | {
+    "version",
+    "settings",
+    "init",
+    "setGamePath",
+    "setGameVariant",
+    "gameDirectory",
+    # MO2 calls it on every game at each start; the stub's waits for the path
+    # to be read, and a class with its own asks the real object then
+    "detectGame",
+}
 
 
 def instance_game() -> str | None:
@@ -115,7 +125,22 @@ class ManifestGame(BasicGame):
         self._real_game: BasicGame | None = None
         self._stub_organizer: mobase.IOrganizer | None = None
         self._stub_variant: str | None = None
-        super().__init__()
+        # not BasicGame.__init__: its mappings (some 25 objects) are built the
+        # first time something asks for one, which MO2 doesn't for a game it
+        # doesn't manage
+        mobase.IPluginGame.__init__(self)
+        self._gamePath = ""
+
+    @property
+    def _mappings(self) -> BasicGameMappings:
+        mappings = self.__dict__.get("_revamped_stub_mappings")
+        if mappings is None:
+            mappings = self.__dict__["_revamped_stub_mappings"] = BasicGameMappings(self)
+        return mappings
+
+    @_mappings.setter
+    def _mappings(self, value: BasicGameMappings) -> None:
+        self.__dict__["_revamped_stub_mappings"] = value
 
     # what the real class answered when the manifest was written
     def version(self) -> mobase.VersionInfo:
@@ -126,9 +151,14 @@ class ManifestGame(BasicGame):
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         # the real init() registers what the game needs once it is managed;
-        # this one isn't
+        # this one isn't. BasicGame.init's own work (the saves feature, only
+        # read for the managed game) waits for the real object, except a game
+        # with an Origin watcher, which BasicGame hooks to every launch
         self._stub_organizer = organizer
-        result = BasicGame.init(self, organizer)
+        self._organizer = organizer
+        result = True
+        if "GameOriginWatcherExecutables" in self._manifest_entry.get("attributes", {}):
+            result = BasicGame.init(self, organizer)
         # a game whose init() also has work in other games' instances (Elden
         # Ring puts back Steam saves an earlier launch hid) names a cheap
         # check: when it says so, the real plugin is loaded and its init() runs
@@ -152,6 +182,18 @@ class ManifestGame(BasicGame):
             return self._real().gameDirectory()
         return BasicGame.gameDirectory(self)
 
+    def _detect_game_now(self) -> None:
+        # a class with its own detectGame() (Black & White 2 reads a shortcut)
+        # answers through the real object, at the time the path is first read
+        if "detectGame" in self._manifest_entry.get("overrides", []):
+            real = self._real()
+            real.detectGame()
+            path = real._gamePath
+            if path:
+                BasicGame.setGamePath(self, path)
+            return
+        BasicGame._detect_game_now(self)
+
     def setGameVariant(self, variant: str) -> None:
         self._stub_variant = variant
         BasicGame.setGameVariant(self, variant)
@@ -164,8 +206,21 @@ class ManifestGame(BasicGame):
             real = getattr(module, self._manifest_class)()
             if self._stub_organizer is not None:
                 real.init(self._stub_organizer)
-            if self._gamePath:
-                real.setGamePath(self._gamePath)
+            if "detectGame" in self._manifest_entry.get("overrides", []) and self.__dict__.get(
+                "_revamped_detect_pending"
+            ):
+                # the detection MO2 asked for, by the class's own detectGame()
+                self.__dict__["_revamped_detect_pending"] = False
+                self._real_game = real
+                real.detectGame()
+                if real._gamePath:
+                    BasicGame.setGamePath(self, real._gamePath)
+            else:
+                # a pending detection of the stub's runs here, before there is
+                # a real object to hand the path to twice
+                path = self._gamePath
+                if path:
+                    real.setGamePath(path)
             if self._stub_variant is not None:
                 real.setGameVariant(self._stub_variant)
             self._real_game = real
