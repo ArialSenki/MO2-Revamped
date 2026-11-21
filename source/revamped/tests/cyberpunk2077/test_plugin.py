@@ -353,6 +353,83 @@ class FrameworkTest(unittest.TestCase):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_a_toggle_reads_no_other_mod_again(self) -> None:
+        # the check runs on MO2's interface thread after every change: only a
+        # mod whose folder changed (or that was installed again) is read
+        import fake_organizer
+
+        tmp = Path(tempfile.mkdtemp(prefix="cp77-cache-"))
+        reads: list[str] = []
+        saved = fake_organizer.FakeMod.fileTree
+
+        def counted(mod):
+            reads.append(mod.name())
+            return saved(mod)
+
+        fake_organizer.FakeMod.fileTree = counted
+        # the folders' own mtimes: the directory listing the cache reads them
+        # from is updated lazily by NTFS, which folders made a moment ago show
+        from basic_games.games.revamped_shared import mod_cache
+
+        saved_stamps = mod_cache._folder_stamps
+        mod_cache._folder_stamps = lambda parents: {
+            os.path.normcase(os.path.normpath(entry.path)): os.stat(entry.path).st_mtime_ns
+            for parent in set(parents)
+            for entry in os.scandir(parent)
+            if entry.is_dir()
+        }
+        try:
+            organizer = FakeOrganizer(tmp / "instance")
+            organizer.game_dir = make_game_dir(tmp)
+            for index in range(20):
+                organizer.add_mod(f"Mod {index}", [f"archive/pc/mod/m{index}.archive"])
+            organizer.add_mod("Needs TweakXL", ["r6/tweaks/x.yaml"])
+            game = Game()
+            organizer.game = game
+            game.init(organizer)
+            game.setGamePath(organizer.game_dir)
+            check = CyberpunkFrameworkCheck()
+            check.init(organizer)
+            self.assertEqual(len(check.activeProblems()), 1)
+            self.assertEqual(len(reads), 21)
+
+            # turned off and on again: nothing read, the report follows
+            reads.clear()
+            organizer.active.discard("Needs TweakXL")
+            check._states_changed({})
+            self.assertEqual(check.activeProblems(), [])
+            organizer.active.add("Needs TweakXL")
+            check._states_changed({})
+            self.assertEqual(len(check.activeProblems()), 1)
+            self.assertEqual(reads, [])
+
+            # a mod whose folder changed, and one installed again, are read
+            time.sleep(0.02)
+            (organizer.mods / "Mod 3" / "readme.txt").write_text("x")
+            check._mod_files_changed("Mod 7")
+            check.activeProblems()
+            self.assertEqual(sorted(reads), ["Mod 3", "Mod 7"])
+        finally:
+            fake_organizer.FakeMod.fileTree = saved
+            mod_cache._folder_stamps = saved_stamps
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_folder_stamps_from_one_listing(self) -> None:
+        from basic_games.games.revamped_shared import mod_cache
+
+        tmp = Path(tempfile.mkdtemp(prefix="cp77-stamps-"))
+        try:
+            (tmp / "A").mkdir()
+            (tmp / "B").mkdir()
+            (tmp / "file.txt").write_text("x")
+            stamps = mod_cache._folder_stamps([str(tmp), str(tmp)])
+            self.assertEqual(
+                sorted(stamps), sorted(os.path.normcase(str(tmp / n)) for n in ("A", "B"))
+            )
+            self.assertEqual(mod_cache._folder_stamps([str(tmp / "missing")]), {})
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

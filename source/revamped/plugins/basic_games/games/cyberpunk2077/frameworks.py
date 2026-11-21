@@ -162,11 +162,11 @@ class CodewareCandidate:
         return (self.name, str(self.path), self.files)
 
 
-def codeware_candidates(mods: list["ModFiles"]) -> list[CodewareCandidate]:
+def codeware_candidates(mods: list["ModFiles | ModSummary"]) -> list[CodewareCandidate]:
     return [
-        CodewareCandidate(mod.name, mod.path, tuple(files))
-        for mod in mods
-        if (files := reds_files(mod.tree))
+        CodewareCandidate(mod.name, mod.path, files)
+        for mod in map(summary_of, mods)
+        if (files := mod.reds)
     ]
 
 
@@ -195,15 +195,48 @@ class ModFiles:
     tree: mobase.IFileTree
 
 
+@dataclass(frozen=True)
+class ModSummary:
+    """What a mod's files tell the check: the frameworks it holds, those it
+    needs (not its own), whether it is a REDmod, and its redscript files.
+    Made from its file tree once; the check keeps it while the mod's folder
+    doesn't change, so a toggle doesn't read every mod's files again."""
+
+    name: str
+    path: Path
+    provided: frozenset[str]
+    needs: frozenset[str]
+    redmod: bool
+    reds: tuple[str, ...]
+
+
+def summarize(mod: ModFiles) -> ModSummary:
+    own = provided_by_tree(mod.tree)
+    return ModSummary(
+        mod.name,
+        mod.path,
+        frozenset(own),
+        frozenset(needed_by_tree(mod.tree) - own),
+        uses_redmod(mod.tree),
+        tuple(reds_files(mod.tree)),
+    )
+
+
+def summary_of(mod: "ModFiles | ModSummary") -> ModSummary:
+    return mod if isinstance(mod, ModSummary) else summarize(mod)
+
+
 def analyze(
-    mods: list[ModFiles],
+    mods: list[ModFiles | ModSummary],
     virtual_tree: mobase.IFileTree | None,
     game_dir: Path | None,
     codeware_users=None,
 ) -> Report:
-    """mods: the active mods, in priority order. codeware_users: given the
-    candidates, the names of those that import Codeware (as far as known);
-    by default their scripts are read here."""
+    """mods: the active mods, in priority order (their files, or what they
+    tell, see ModSummary). codeware_users: given the candidates, the names of
+    those that import Codeware (as far as known); by default their scripts
+    are read here."""
+    mods = [summary_of(mod) for mod in mods]
     provided: set[str] = set()
     if virtual_tree is not None:
         provided |= provided_by_tree(virtual_tree)
@@ -215,11 +248,10 @@ def analyze(
     needs: dict[str, list[str]] = {}
     redmod_users: list[str] = []
     for mod in mods:
-        own = provided_by_tree(mod.tree)
-        provided |= own
-        for key in needed_by_tree(mod.tree) - own:
+        provided |= mod.provided
+        for key in mod.needs:
             needs.setdefault(key, []).append(mod.name)
-        if uses_redmod(mod.tree):
+        if mod.redmod:
             redmod_users.append(mod.name)
 
     report = Report()

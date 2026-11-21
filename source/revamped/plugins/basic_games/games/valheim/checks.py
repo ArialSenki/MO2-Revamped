@@ -20,6 +20,8 @@ KNOWN = {
 class ModFolder:
     name: str
     path: Path
+    # its BepInEx plugin DLLs, when already read (see plugin_dlls)
+    dlls: list[Path] | None = None
 
 
 @dataclass
@@ -58,7 +60,7 @@ def _game_plugin_dlls(game_dir: Path | None) -> list[Path]:
 def analyze(mods: list[ModFolder], game_dir: Path | None, index: AssemblyIndex) -> Report:
     """mods: the active ones."""
     report = Report()
-    dlls = {mod.name: plugin_dlls(mod.path) for mod in mods}
+    dlls = {mod.name: mod.dlls if mod.dlls is not None else plugin_dlls(mod.path) for mod in mods}
     with_plugins = [mod.name for mod in mods if dlls[mod.name] or (mod.path / "BepInEx" / "patchers").is_dir()]
     bepinex = _has(mods, game_dir, "BepInEx/core/BepInEx.dll") and _has(mods, game_dir, "winhttp.dll")
     if with_plugins and not bepinex:

@@ -8,6 +8,7 @@ from pathlib import Path
 import mobase
 
 from ...revamped_shared import log_warning, translator
+from ...revamped_shared.mod_cache import PerModCache
 from .. import manifest as manifests
 from ..checks import ManifestCache, Report, analyze, display_name, game_folder_manifests, mod_manifests
 
@@ -51,13 +52,16 @@ class StardewValleyCheck(mobase.IPluginDiagnose):
         self._report: Report | None = None
         self._known: dict = {}
         self._cache = ManifestCache()
+        # each mod's manifests, read again only when its folder changes (see
+        # PerModCache: the check runs on the interface thread)
+        self._mods: PerModCache = PerModCache()
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
         mod_list = organizer.modList()
         mod_list.onModStateChanged(lambda states: self._changed())
-        mod_list.onModInstalled(lambda *_: self._changed())
-        mod_list.onModRemoved(lambda *_: self._changed())
+        mod_list.onModInstalled(lambda mod, *_: self._mod_files_changed(mod))
+        mod_list.onModRemoved(lambda name, *_: self._mod_files_changed(name))
         organizer.onProfileChanged(lambda *_: self._changed())
         organizer.onFinishedRun(lambda *_: self._changed())
         # the mod order decides which version of a mod SMAPI sees
@@ -178,6 +182,10 @@ class StardewValleyCheck(mobase.IPluginDiagnose):
         except Exception:  # noqa: BLE001 - MO2 not ready yet
             pass
 
+    def _mod_files_changed(self, mod) -> None:
+        self._mods.forget(mod)
+        self._changed()
+
     def _smapi_stamp(self):
         """SMAPI's files as they are now: a report made before SMAPI was
         installed, updated or removed (outside MO2) is made again."""
@@ -203,15 +211,10 @@ class StardewValleyCheck(mobase.IPluginDiagnose):
         if game is not None and game.gameName() == GAME_NAME and game.isInstalled():
             try:
                 game_dir = Path(game.gameDirectory().absolutePath())
-                mods = []
-                mod_list = self._organizer.modList()
-                for name in mod_list.allModsByProfilePriority():
-                    if not mod_list.state(name) & mobase.ModState.ACTIVE:
-                        continue
-                    mod = mod_list.getMod(name)
-                    if mod is None or mod.isSeparator() or mod.isForeign() or mod.isOverwrite():
-                        continue
-                    mods.append(mod_manifests(name, Path(mod.absolutePath()), mod.fileTree(), self._cache))
+                mods = self._mods.active(
+                    self._organizer,
+                    lambda name, path, mod: mod_manifests(name, path, mod.fileTree(), self._cache),
+                )
                 game_mods = game_folder_manifests(game_dir / "Mods", self._cache)
                 self._known = {m.unique_id: m for entry in [game_mods, *mods] for m in entry.manifests}
                 report = analyze(mods, game_mods, smapi_version(game_dir))

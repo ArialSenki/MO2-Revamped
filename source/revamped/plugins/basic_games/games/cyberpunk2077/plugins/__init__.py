@@ -10,8 +10,18 @@ import mobase
 
 from PyQt6.QtCore import QTimer
 
-from ..frameworks import FRAMEWORKS, CodewareCandidate, ModFiles, Report, analyze, scan_codeware
+from ..frameworks import (
+    FRAMEWORKS,
+    CodewareCandidate,
+    ModFiles,
+    ModSummary,
+    Report,
+    analyze,
+    scan_codeware,
+    summarize,
+)
 from .. import redscript_log
+from ...revamped_shared.mod_cache import PerModCache
 from ..util import log_warning, tr
 
 GAME_NAME = "Cyberpunk 2077"
@@ -50,6 +60,9 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         # background (reading many scripts can take seconds)
         self._codeware: dict[tuple, bool] = {}
         self._scan: threading.Thread | None = None
+        # what each mod's files tell, read again only when its folder
+        # changes (see PerModCache: the check runs on the interface thread)
+        self._summaries: PerModCache[ModSummary] = PerModCache()
 
     # IPlugin
 
@@ -58,8 +71,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         mod_list = organizer.modList()
         # MO2 2.5's form: one call with every changed mod
         mod_list.onModStateChanged(self._states_changed)
-        mod_list.onModInstalled(lambda *_: self._changed())
-        mod_list.onModRemoved(lambda *_: self._changed())
+        mod_list.onModInstalled(lambda mod, *_: self._mod_files_changed(mod))
+        mod_list.onModRemoved(lambda name, *_: self._mod_files_changed(name))
         organizer.onProfileChanged(lambda *_: self._changed())
         # the game compiles the scripts as it starts: read its log once it closes
         organizer.onFinishedRun(lambda *_: self._changed())
@@ -170,6 +183,16 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
     def _states_changed(self, states: dict) -> None:
         self._changed()
 
+    def _mod_files_changed(self, mod) -> None:
+        self._summaries.forget(mod)
+        self._changed()
+
+    def _mod_summaries(self) -> list[ModSummary]:
+        """What the active mods' files tell, in priority order."""
+        return self._summaries.active(
+            self._organizer, lambda name, path, mod: summarize(ModFiles(name, path, mod.fileTree()))
+        )
+
     def _changed(self) -> None:
         self._report = None
         self._redscript_cache = None
@@ -187,7 +210,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
             try:
                 game_dir = Path(game.gameDirectory().absolutePath()) if game.isInstalled() else None
                 report = analyze(
-                    active_mod_files(self._organizer),
+                    self._mod_summaries(),
                     self._organizer.virtualFileTree(),
                     game_dir,
                     self._codeware_users,
