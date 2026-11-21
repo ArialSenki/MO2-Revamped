@@ -39,6 +39,9 @@ public:
     FilterOr
   };
 
+  // MO2 Revamped: timed in the log, with thousands of mods it is a hot path
+  void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+
   enum CriteriaType
   {
     TypeSpecial,

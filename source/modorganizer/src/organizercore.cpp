@@ -2,6 +2,7 @@
 #include "nolvus.h"
 #include "collectionmanifest.h"
 #include <QDateTime>
+#include <QElapsedTimer>
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
@@ -1884,6 +1885,51 @@ void OrganizerCore::refreshBSAList()
   }
 }
 
+bool OrganizerCore::pluginOriginsCurrent(const std::vector<unsigned int>& mods)
+{
+  for (unsigned int index : mods) {
+    const ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
+    for (const QString& plugin :
+         QDir(modInfo->absolutePath())
+             .entryList({QStringLiteral("*.esm"), QStringLiteral("*.esl"),
+                         QStringLiteral("*.esp")},
+                        QDir::Files)) {
+      const FileEntryPtr file = m_DirectoryStructure->findFile(ToWString(plugin));
+      if (file.get() == nullptr) {
+        continue;
+      }
+      if (file->getOrigin() < 0) {
+        return false;
+      }
+      // the name the plugin list gives a plugin's origin: its mod's, or the
+      // structure's for the game folder and the like
+      QString originName = ToQString(
+          m_DirectoryStructure->getOriginByID(file->getOrigin()).getName());
+      const unsigned int modIndex = ModInfo::getIndex(originName);
+      if (modIndex != UINT_MAX) {
+        originName = ModInfo::getByIndex(modIndex)->name();
+      }
+      if (m_PluginList.origin(plugin) != originName) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void OrganizerCore::refreshListsAfterToggle(bool pluginsRebuilt)
+{
+  if (!pluginsRebuilt) {
+    refreshLists();
+  } else if ((m_CurrentProfile != nullptr) && m_DirectoryStructure->isPopulated()) {
+    // what the second rebuild told the view and the plugins: the plugins
+    // enabled with the mod (their signals were blocked), masters and indexes
+    m_PluginList.notifyStatesChanged();
+    // the archives of the mods just added to the structure
+    refreshBSAList();
+  }
+}
+
 void OrganizerCore::refreshLists()
 {
   if ((m_CurrentProfile != nullptr) && m_DirectoryStructure->isPopulated()) {
@@ -1903,6 +1949,8 @@ void OrganizerCore::updateModActiveState(int index, bool active)
 void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
                                           bool active)
 {
+  QElapsedTimer stage;
+  stage.start();
   int enabled = 0;
   for (auto index : modIndices) {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
@@ -1971,9 +2019,13 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         tr("Multiple esps/esls activated, please check that they don't conflict."),
         qApp->activeWindow());
   }
+  const qint64 tStates = stage.restart();
   m_PluginList.refreshLoadOrder();
+  const qint64 tLoadOrder = stage.restart();
   // immediately save affected lists
   m_PluginListsWriter.writeImmediately(false);
+  log::debug("plugins {}: states {} ms, load order {} ms, saved {} ms",
+             active ? "on" : "off", tStates, tLoadOrder, stage.elapsed());
 }
 
 void OrganizerCore::updateModInDirectoryStructure(unsigned int index,
@@ -1988,6 +2040,9 @@ void OrganizerCore::updateModsInDirectoryStructure(
     QMap<unsigned int, ModInfo::Ptr> modInfo)
 {
   std::vector<DirectoryRefresher::EntryInfo> entries;
+  QElapsedTimer stage;
+  stage.start();
+  qint64 tFiles = 0, tPlugins = 0, tActivate = 0, tArchiveList = 0;
 
   for (auto idx : modInfo.keys()) {
     // MO2 Revamped: as in a full refresh, a mod named like the game's folders or
@@ -2006,8 +2061,10 @@ void OrganizerCore::updateModsInDirectoryStructure(
   m_DirectoryRefresher->addMultipleModsFilesToStructure(m_DirectoryStructure, entries);
 
   DirectoryRefresher::cleanStructure(m_DirectoryStructure);
+  tFiles = stage.restart();
   // need to refresh plugin list now so we can activate esps
   refreshESPList(true);
+  tPlugins = stage.restart();
   // activate all esps of the specified mod so the bsas get activated along with
   // it
   // not after a failed refresh: the plugin list wasn't rebuilt above, and each
@@ -2017,12 +2074,14 @@ void OrganizerCore::updateModsInDirectoryStructure(
     updateModsActiveState(modInfo.keys(), true);
     m_PluginList.blockSignals(false);
   }
+  tActivate = stage.restart();
   // now we need to refresh the bsa list and save it so there is no confusion
   // about what archives are available and active
   refreshBSAList();
   if (m_UserInterface != nullptr) {
     m_UserInterface->archivesWriter().writeImmediately(false);
   }
+  tArchiveList = stage.restart();
 
   // MO2 Revamped: the archives handed over, not through setMods(), which waited
   // for a running refresh to end (the window froze when a mod was enabled then)
@@ -2042,6 +2101,9 @@ void OrganizerCore::updateModsInDirectoryStructure(
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
         modInfo[idx]->archives(), archiveContext);
   }
+  log::debug("mods added: files {} ms, plugin list {} ms, plugins on {} ms, archive "
+             "list {} ms, archive contents {} ms",
+             tFiles, tPlugins, tActivate, tArchiveList, stage.elapsed());
 }
 
 void OrganizerCore::loggedInAction(QWidget* parent, std::function<void()> f)
@@ -2385,6 +2447,9 @@ bool OrganizerCore::syncOriginPriorities(const std::vector<unsigned int>& change
 
 void OrganizerCore::modStatusChanged(unsigned int index)
 {
+  TimeThis tt("OrganizerCore::modStatusChanged()");
+  QElapsedTimer stage;
+  stage.start();
   // the structure in use now is replaced when the refresh ends
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;
@@ -2392,10 +2457,13 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
   try {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
-    if (m_CurrentProfile->modEnabled(index)) {
+    const unsigned int rebuildsBefore = m_ESPListRebuilds;
+    const bool enabled                = m_CurrentProfile->modEnabled(index);
+    if (enabled) {
       updateModInDirectoryStructure(index, modInfo);
     } else {
       updateModActiveState(index, false);
+      const qint64 tPlugins = stage.elapsed();
       if (ownsOriginName(modInfo) &&
           m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         FilesOrigin& origin =
@@ -2405,13 +2473,26 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       if (m_UserInterface != nullptr) {
         m_UserInterface->archivesWriter().write();
       }
+      log::debug("mod disabled: plugins off {} ms, origin off {} ms", tPlugins,
+                 stage.elapsed() - tPlugins);
     }
 
-    syncOriginPriorities({index});
+    const qint64 tStructure = stage.restart();
+    const bool moved         = syncOriginPriorities({index});
+    const qint64 tPriorities = stage.restart();
 
-    refreshLists();
+    // MO2 Revamped: enabling already rebuilt the plugin list from the updated
+    // structure (and activated the mod's plugins); a second rebuild cost as
+    // much as the first, ~0.3-0.7 s with a list of thousands of plugins. Not
+    // when the priorities synced after it changed which mod a plugin comes from
+    refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore && !moved &&
+                            pluginOriginsCurrent({index}));
+    const qint64 tLists = stage.restart();
     clearCaches({index});
     m_ModList.notifyModStateChanged({index});
+    log::debug("mod toggle: structure {} ms, priorities {} ms, lists {} ms, caches and "
+               "view {} ms",
+               tStructure, tPriorities, tLists, stage.elapsed());
 
   } catch (const std::exception& e) {
     reportError(tr("failed to update mod list: %1").arg(e.what()));
@@ -2420,12 +2501,14 @@ void OrganizerCore::modStatusChanged(unsigned int index)
 
 void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 {
+  TimeThis tt("OrganizerCore::modStatusChanged(list)");
   // the structure in use now is replaced when the refresh ends
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;
   }
 
   try {
+    const unsigned int rebuildsBefore = m_ESPListRebuilds;
     QMap<unsigned int, ModInfo::Ptr> modsToEnable;
     QMap<unsigned int, ModInfo::Ptr> modsToDisable;
     std::vector<unsigned int> vindices;
@@ -2455,9 +2538,13 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
       }
     }
 
-    syncOriginPriorities(vindices);
+    const bool moved = syncOriginPriorities(vindices);
 
-    refreshLists();
+    // only enabled ones: a mod disabled after the rebuild above still has to
+    // leave the plugin list
+    refreshListsAfterToggle(modsToDisable.isEmpty() &&
+                            m_ESPListRebuilds != rebuildsBefore && !moved &&
+                            pluginOriginsCurrent(vindices));
     clearCaches(vindices);
     m_ModList.notifyModStateChanged(index);
 
@@ -2657,12 +2744,17 @@ void OrganizerCore::savePluginList()
           return;
         }
 
+        QElapsedTimer stage;
+        stage.start();
         m_PluginList.saveTo(m_CurrentProfile->getLockedOrderFileName());
+        const qint64 tLists = stage.restart();
 
         // MO2 Revamped: the plugins whose file time (their load order, for the
         // games using it) couldn't be set are named, once per change
         QStringList locked;
         m_PluginList.saveLoadOrder(*m_DirectoryStructure, &locked);
+        log::debug("plugin lists saved: lists {} ms, file dates {} ms", tLists,
+                   stage.elapsed());
         if (locked != m_UndatedPlugins) {
           m_UndatedPlugins = locked;
           if (!locked.isEmpty()) {

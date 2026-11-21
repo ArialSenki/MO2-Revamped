@@ -34,6 +34,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gameplugins.h>
 
+#include <QElapsedTimer>
 #include <QApplication>
 #include <QDir>
 #include <QMetaObject>
@@ -554,6 +555,8 @@ void DirectoryRefresher::refresh()
 {
   SetThisThreadName("DirectoryRefresher");
   TimeThis tt("DirectoryRefresher::refresh()");
+  QElapsedTimer stage;
+  stage.start();
   auto* p = new DirectoryRefreshProgress(this);
 
   try {
@@ -583,14 +586,19 @@ void DirectoryRefresher::refresh()
       return lhs.priority < rhs.priority;
     });
 
+    const qint64 tData = stage.restart();
     addMultipleModsFilesToStructure(m_Root.get(), m_Mods, p);
+    const qint64 tMods = stage.restart();
 
     m_Root->getFileRegister()->sortOrigins();
+    const qint64 tSort = stage.restart();
 
     cleanStructure(m_Root.get());
 
     m_lastFileCount = m_Root->getFileRegister()->highestCount();
-    log::debug("refresher saw {} files", m_lastFileCount);
+    log::debug("refresher saw {} files (game folders {} ms, mods {} ms, sorting origins "
+               "{} ms, cleaning {} ms)",
+               m_lastFileCount, tData, tMods, tSort, stage.elapsed());
   } catch (const std::exception& e) {
     // what was read is dropped: the plugin list built from a partial structure
     // would be saved without the mods' plugins. The core keeps the previous one

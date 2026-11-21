@@ -51,6 +51,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QSortFilterProxyModel>
+#include <QElapsedTimer>
 #include <QTimer>
 #include <QString>
 #include <QtDebug>
@@ -213,6 +214,10 @@ void PluginList::refresh(const QString& profileName,
                          const QString& lockedOrderFile, bool force)
 {
   TimeThis tt("PluginList::refresh()");
+  // MO2 Revamped: where a refresh spends its time, in one debug line
+  QElapsedTimer stage;
+  stage.start();
+  qint64 tScan = 0, tHeaders = 0, tRows = 0, tGame = 0, tRelations = 0, tMasters = 0;
 
   const auto* gamePlugin = m_Organizer.managedGame();
   if (gamePlugin == nullptr) {
@@ -243,6 +248,7 @@ void PluginList::refresh(const QString& profileName,
     setProperty("__aboutToChange", true);
     m_ESPs.clear();
     m_ESPsByName.clear();
+    m_ESPsByExactName.clear();
     m_ESPsByPriority.clear();
   } else {
     layoutChange.emplace(this);
@@ -302,6 +308,7 @@ void PluginList::refresh(const QString& profileName,
   // MO2 Revamped: the archives sorted by their lower-case name, so a plugin's
   // ("Name*.bsa") are found by a binary search, not by comparing every plugin
   // with every archive
+  tScan = stage.restart();
   std::vector<std::pair<QString, QString>> archivesByName;  // lower case, as it is
   archivesByName.reserve(archiveCandidates.size());
   for (const QString& archive : archiveCandidates) {
@@ -338,16 +345,32 @@ void PluginList::refresh(const QString& profileName,
   };
   std::vector<size_t> unread;
   std::vector<uint64_t> sizes(newPlugins.size());
+  // MO2 Revamped: the size is asked from the disk only in the games whose load
+  // order is the plugins' dates, where MO2 and other tools rewrite those dates
+  // and the write time can't tell a changed file. Elsewhere a stat per loose
+  // plugin on every refresh cost ~0.15-0.25 s for Nolvus' 3,400 plugins, and
+  // the write time tells a changed file (the scan only knows the sizes of
+  // files inside archives)
+  const auto* game = m_Organizer.managedGame();
+  const bool datedLoadOrder =
+      game != nullptr &&
+      game->loadOrderMechanism() == IPluginGame::LoadOrderMechanism::FileTime;
   for (size_t i = 0; i < newPlugins.size(); ++i) {
-    const FILETIME time = (*newPlugins[i].entry)->getFileTime();
-    sizes[i]            = sizeOf(newPlugins[i]);
-    auto cached         = m_HeaderCache.find(newPlugins[i].fullPath);
+    const FILETIME time  = (*newPlugins[i].entry)->getFileTime();
+    const uint64_t known = (*newPlugins[i].entry)->getFileSize();
+    auto cached          = m_HeaderCache.find(newPlugins[i].fullPath);
+    const auto sameSize  = [&]() {
+      if (known != MOShared::FileEntry::NoFileSize) {
+        return cached->second.size == known;
+      }
+      return !datedLoadOrder || cached->second.size == sizeOf(newPlugins[i]);
+    };
     if (cached != m_HeaderCache.end() &&
-        CompareFileTime(&cached->second.time, &time) == 0 &&
-        cached->second.size == sizes[i] &&
+        CompareFileTime(&cached->second.time, &time) == 0 && sameSize() &&
         cached->second.mediumSupported == mediumPluginsAreSupported) {
       newPlugins[i].header = cached->second.header;
     } else {
+      sizes[i] = sizeOf(newPlugins[i]);
       unread.push_back(i);
     }
   }
@@ -363,6 +386,7 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
+  tHeaders = stage.restart();
   for (const NewPlugin& plugin : newPlugins) {
     const QString& filename     = *plugin.filename;
     const FileEntryPtr& current = *plugin.entry;
@@ -439,15 +463,19 @@ void PluginList::refresh(const QString& profileName,
   // functions in GamePlugins will use the IPluginList interface of this, so
   // indices need to work. priority will be off however
   updateIndices();
+  tRows = stage.restart();
 
   if (gamePlugins) {
     gamePlugins->readPluginLists(m_Organizer.managedGameOrganizer()->pluginList());
   }
+  tGame = stage.restart();
 
   fixPrimaryPlugins();
   fixPluginRelationships();
+  tRelations = stage.restart();
 
   testMasters();
+  tMasters = stage.restart();
 
   updateIndices();
 
@@ -470,6 +498,21 @@ void PluginList::refresh(const QString& profileName,
                            columnCount() - 1));
   }
 
+  log::debug("plugin list refresh: files {} ms, headers {} ms, rows {} ms, game's "
+             "lists {} ms, relationships {} ms, masters {} ms, rest {} ms ({} plugins)",
+             tScan, tHeaders, tRows, tGame, tRelations, tMasters, stage.elapsed(),
+             m_ESPs.size());
+  m_Refreshed();
+}
+
+void PluginList::notifyStatesChanged()
+{
+  testMasters();
+  updateIndices();
+  if (!m_ESPs.empty()) {
+    emit dataChanged(index(0, 0),
+                     index(static_cast<int>(m_ESPs.size()) - 1, columnCount() - 1));
+  }
   m_Refreshed();
 }
 
@@ -1105,12 +1148,11 @@ QStringList PluginList::pluginNames() const
 
 IPluginList::PluginStates PluginList::state(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return IPluginList::STATE_MISSING;
   } else {
-    return m_ESPs[iter->second].enabled ? IPluginList::STATE_ACTIVE
-                                        : IPluginList::STATE_INACTIVE;
+    return m_ESPs[i].enabled ? IPluginList::STATE_ACTIVE : IPluginList::STATE_INACTIVE;
   }
 }
 
@@ -1171,12 +1213,8 @@ void PluginList::setLoadOrder(const QStringList& pluginList)
 
 int PluginList::priority(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
-    return -1;
-  } else {
-    return m_ESPs[iter->second].priority;
-  }
+  const int i = indexOfName(name);
+  return i < 0 ? -1 : m_ESPs[i].priority;
 }
 
 bool PluginList::setPriority(const QString& name, int newPriority)
@@ -1205,22 +1243,22 @@ bool PluginList::setPriority(const QString& name, int newPriority)
 
 int PluginList::loadOrder(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return -1;
   } else {
-    return m_ESPs[iter->second].loadOrder;
+    return m_ESPs[i].loadOrder;
   }
 }
 
 QStringList PluginList::masters(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return QStringList();
   } else {
     QStringList result;
-    for (const QString& master : m_ESPs[iter->second].masters) {
+    for (const QString& master : m_ESPs[i].masters) {
       result.append(master);
     }
     return result;
@@ -1229,71 +1267,71 @@ QStringList PluginList::masters(const QString& name) const
 
 QString PluginList::origin(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return QString();
   } else {
-    return m_ESPs[iter->second].originName;
+    return m_ESPs[i].originName;
   }
 }
 
 bool PluginList::hasMasterExtension(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasMasterExtension;
+    return m_ESPs[i].hasMasterExtension;
   }
 }
 
 bool PluginList::hasLightExtension(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasLightExtension;
+    return m_ESPs[i].hasLightExtension;
   }
 }
 
 bool PluginList::isMasterFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isMasterFlagged;
+    return m_ESPs[i].isMasterFlagged;
   }
 }
 
 bool PluginList::isMediumFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isMediumFlagged;
+    return m_ESPs[i].isMediumFlagged;
   }
 }
 
 bool PluginList::isLightFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isLightFlagged;
+    return m_ESPs[i].isLightFlagged;
   }
 }
 
 bool PluginList::hasNoRecords(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasNoRecords;
+    return m_ESPs[i].hasNoRecords;
   }
 }
 
@@ -1331,6 +1369,8 @@ PluginList::onPluginMoved(const std::function<void(const QString&, int, int)>& f
 void PluginList::updateIndices()
 {
   m_ESPsByName.clear();
+  m_ESPsByExactName.clear();
+  m_ESPsByExactName.reserve(static_cast<qsizetype>(m_ESPs.size()));
   m_ESPsByPriority.clear();
   m_ESPsByPriority.resize(m_ESPs.size());
   for (unsigned int i = 0; i < m_ESPs.size(); ++i) {
@@ -1344,8 +1384,22 @@ void PluginList::updateIndices()
     m_ESPsByName[m_ESPs[i].name]                                 = i;
     m_ESPsByPriority.at(static_cast<size_t>(m_ESPs[i].priority)) = i;
   }
+  // from the case-insensitive map, so both give the same plugin for a name
+  for (const auto& [name, i] : m_ESPsByName) {
+    m_ESPsByExactName.insert(m_ESPs[i].name, i);
+  }
 
   generatePluginIndexes();
+}
+
+int PluginList::indexOfName(const QString& name) const
+{
+  const auto exact = m_ESPsByExactName.constFind(name);
+  if (exact != m_ESPsByExactName.constEnd()) {
+    return exact.value();
+  }
+  const auto iter = m_ESPsByName.find(name);
+  return iter != m_ESPsByName.end() ? iter->second : -1;
 }
 
 void PluginList::generatePluginIndexes()

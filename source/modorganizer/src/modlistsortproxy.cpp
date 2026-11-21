@@ -19,6 +19,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "modlistsortproxy.h"
 #include "fluentperf.h"
+#include <utility.h>
 #include "fluenticons.h"
 #include "fluentstatusdelegate.h"
 #include "messagedialog.h"
@@ -711,4 +712,10 @@ void ModListSortProxy::postDataChanged()
       m_PreChangeCriteria.clear();
     }
   });
+}
+
+void ModListSortProxy::sort(int column, Qt::SortOrder order)
+{
+  MOBase::TimeThis tt("ModListSortProxy::sort()");
+  QSortFilterProxyModel::sort(column, order);
 }

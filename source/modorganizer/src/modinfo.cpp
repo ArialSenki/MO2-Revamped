@@ -45,6 +45,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QApplication>
 #include <QDirIterator>
+#include <QElapsedTimer>
 #include <QMutexLocker>
 #include <QSettings>
 #include <algorithm>
@@ -305,6 +306,10 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
                              bool displayForeign, std::size_t refreshThreadCount)
 {
   TimeThis tt("ModInfo::updateFromDisc()");
+  // MO2 Revamped: where the time goes, in one debug line
+  QElapsedTimer stage;
+  stage.start();
+  qint64 tList = 0, tParse = 0, tCreate = 0, tUnmanaged = 0;
 
   QMutexLocker lock(&s_Mutex);
   s_Collection.clear();
@@ -328,6 +333,7 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     // an unchanged file again, so the mods made one by one below only look
     // the values up; parsing ~3600 of them on the interface thread took about
     // a second of every refresh and profile switch on a Nolvus list
+    tList = stage.restart();
     std::vector<std::unique_ptr<QSettings>> parsed(modPaths.size());
     std::vector<std::size_t> order(modPaths.size());
     std::iota(order.begin(), order.end(), std::size_t(0));
@@ -336,9 +342,11 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
                                               QSettings::IniFormat);
     });
 
+    tParse = stage.restart();
     for (const QString& modPath : modPaths) {
       createFrom(QDir(modPath), core);
     }
+    tCreate = stage.restart();
 
     std::for_each(std::execution::par, parsed.begin(), parsed.end(), [](auto& settings) {
       settings.reset();
@@ -366,6 +374,7 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
   }
 
   s_Overwrite = createFromOverwrite(core);
+  tUnmanaged  = stage.restart();
 
   std::sort(s_Collection.begin(), s_Collection.end(), ModInfo::ByName);
 
@@ -373,6 +382,9 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
               refreshThreadCount);
 
   updateIndices();
+  log::debug("mods read: folders {} ms, meta.ini {} ms, mods {} ms, unmanaged {} ms, "
+             "prefetch {} ms ({} mods)",
+             tList, tParse, tCreate, tUnmanaged, stage.elapsed(), s_Collection.size());
 }
 
 bool ModInfo::updateOneFromDisc(const QString& modsDirectory, const QString& name,
