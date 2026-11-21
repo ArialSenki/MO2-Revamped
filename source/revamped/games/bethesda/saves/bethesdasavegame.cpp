@@ -351,14 +351,26 @@ std::shared_ptr<const BethesdaSaveGame> readFallout3SaveGame(const BethesdaGame*
 std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* game,
                                                            const QString& path)
 {
+  return readSkyrimSaveGame(game, path, SkyrimSaveOptions{});
+}
+
+std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* game,
+                                                           const QString& path,
+                                                           const SkyrimSaveOptions& options)
+{
   return makeSave(
       game, path, &readSkyrimSaveInfo,
-      [](const SkyrimSaveInfo& info) {
+      [&options](const SkyrimSaveInfo& info) {
         SaveSummary summary = summaryOf(info);
-        summary.savedAt     = fromFileTime(info.fileTime);
+        if (options.locationInCodePage) {
+          summary.playerLocation =
+              QString::fromLocal8Bit(info.playerLocation.data(),
+                                     static_cast<qsizetype>(info.playerLocation.size()));
+        }
+        summary.savedAt = fromFileTime(info.fileTime);
         return summary;
       },
-      &readSkyrimDetails, true);
+      &readSkyrimDetails, options.lightPlugins);
 }
 
 std::shared_ptr<const BethesdaSaveGame> readFallout4SaveGame(const BethesdaGame* game,

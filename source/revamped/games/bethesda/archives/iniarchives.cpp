@@ -83,16 +83,19 @@ void IniDataArchives::write(MOBase::IProfile* profile, const QStringList& archiv
       MOBase::log::warn("failed to set archives in \"{}\"", ini);
     }
   };
-  const QString list = archives.join(", ");
+  const QString separator =
+      a.separator.isEmpty() ? QStringLiteral(", ") : a.separator.toString();
+  const QString list = archives.join(separator);
   if (a.listKey2.isEmpty() || list.length() <= a.splitLength) {
     // a second key keeps what it had (MO2's rule; the list is read from both)
     set(a.listKey, list);
     return;
   }
-  // split after the last name that fits, as MO2 does
+  // split after the last name that fits, as MO2 does; the second key starts
+  // after the separator
   const qsizetype split = list.lastIndexOf(',', a.splitLength + 1);
   set(a.listKey, list.mid(0, split));
-  set(a.listKey2, list.mid(split + 2));
+  set(a.listKey2, list.mid(split + separator.size()));
 }
 
 }  // namespace mo2r::bethesda

@@ -26,6 +26,8 @@ public:
   bool prepareProfile(MOBase::IProfile* profile) override;
 
 private:
+  // the definition's sLocalSavePath value, or MO2's "__MO_Saves\\"
+  QString savesDummy() const;
   QDir localSavesDirectory() const;
 
   const BethesdaGame* m_Game;

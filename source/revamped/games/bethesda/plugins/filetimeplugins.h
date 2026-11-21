@@ -31,7 +31,11 @@ namespace mo2r::bethesda
 class FileTimeGamePlugins : public MOBase::GamePlugins
 {
 public:
-  explicit FileTimeGamePlugins(MOBase::IOrganizer* organizer);
+  // with orderFromLoadOrderTxt, reading the lists always takes the order
+  // from loadorder.txt, also when only plugins.txt changed (Skyrim LE and
+  // Enderal: the game reads the order from the lists, not from file times)
+  explicit FileTimeGamePlugins(MOBase::IOrganizer* organizer,
+                               bool orderFromLoadOrderTxt = false);
 
   void writePluginLists(const MOBase::IPluginList* pluginList) override;
   void readPluginLists(MOBase::IPluginList* pluginList) override;
@@ -51,6 +55,7 @@ private:
   void commit(const QString& path, const std::string& bytes);
 
   MOBase::IOrganizer* m_Organizer;
+  bool m_OrderFromLoadOrderTxt;
   QDateTime m_LastRead;
   std::map<QString, QByteArray> m_LastWritten;
 };

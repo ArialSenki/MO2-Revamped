@@ -117,6 +117,9 @@ struct ArchiveDefinition
   // not empty: invalidation without a BSA (Fallout 4): bInvalidateOlderFiles=1
   // and an empty sResourceDataDirsFinal in this INI
   QStringView resourceDirsIni;
+  // what the names are joined with when the list is written; empty: ", "
+  // (Enderal SE's plugin wrote ",")
+  QStringView separator;
 };
 
 // MO2's content ids for Bethesda games (the mod list's content column and
@@ -242,6 +245,9 @@ struct GameDefinition
   SaveFormat saveFormat;
   QStringView saveExtension;
   QStringView localSavesIni;  // where sLocalSavePath goes for profile saves
+  // the sLocalSavePath value for profile saves, relative to the My Games
+  // folder; empty: "__MO_Saves\" (Enderal's go through "..\Enderal\")
+  QStringView localSavesDummy;
 
   // --- features ---
   ExtenderDefinition extender;

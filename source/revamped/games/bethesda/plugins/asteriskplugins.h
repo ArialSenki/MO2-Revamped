@@ -19,8 +19,10 @@
 #include <QDateTime>
 #include <QString>
 #include <QStringList>
+#include <QStringView>
 
 #include <map>
+#include <span>
 
 namespace MOBase
 {
@@ -33,7 +35,11 @@ namespace mo2r::bethesda
 class AsteriskGamePlugins : public MOBase::GamePlugins
 {
 public:
-  AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins);
+  // firstActive: lines written as active right after the header, before the
+  // plugins in load order, whatever their state (Enderal SE's plugin wrote
+  // its master and SkyUI_SE.esp so); empty: none
+  AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins,
+                      std::span<const QStringView> firstActive = {});
 
   void writePluginLists(const MOBase::IPluginList* pluginList) override;
   void readPluginLists(MOBase::IPluginList* pluginList) override;
@@ -57,6 +63,7 @@ private:
 
   MOBase::IOrganizer* m_Organizer;
   bool m_LightPlugins;
+  std::span<const QStringView> m_FirstActive;
   QDateTime m_LastRead;
   std::map<QString, QByteArray> m_LastWritten;
 };

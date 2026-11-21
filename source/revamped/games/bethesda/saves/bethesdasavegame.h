@@ -93,6 +93,20 @@ std::shared_ptr<const BethesdaSaveGame> readFallout3SaveGame(const BethesdaGame*
                                                              bool newVegas);
 std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* game,
                                                            const QString& path);
+
+// how the games on Skyrim's format differ in what the Saves tab shows
+struct SkyrimSaveOptions
+{
+  // the card lists the save's light plugins (the Special Edition and VR;
+  // Skyrim 2011 and Enderal have none)
+  bool lightPlugins = true;
+  // the location is in the system code page, not UTF-8 (MO2's Skyrim LE
+  // plugin read it so)
+  bool locationInCodePage = false;
+};
+std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* game,
+                                                           const QString& path,
+                                                           const SkyrimSaveOptions& options);
 std::shared_ptr<const BethesdaSaveGame> readFallout4SaveGame(const BethesdaGame* game,
                                                              const QString& path);
 

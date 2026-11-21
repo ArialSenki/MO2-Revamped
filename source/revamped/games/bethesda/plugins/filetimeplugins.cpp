@@ -54,8 +54,9 @@ namespace
   }
 }  // namespace
 
-FileTimeGamePlugins::FileTimeGamePlugins(MOBase::IOrganizer* organizer)
-    : m_Organizer(organizer)
+FileTimeGamePlugins::FileTimeGamePlugins(MOBase::IOrganizer* organizer,
+                                         bool orderFromLoadOrderTxt)
+    : m_Organizer(organizer), m_OrderFromLoadOrderTxt(orderFromLoadOrderTxt)
 {}
 
 QString FileTimeGamePlugins::profileFile(const QString& name) const
@@ -78,7 +79,9 @@ bool FileTimeGamePlugins::loadOrderFileWins() const
 
 void FileTimeGamePlugins::readPluginLists(IPluginList* pluginList)
 {
-  if (loadOrderFileWins()) {
+  // MO2's Skyrim LE and Enderal plugins keep loadorder.txt's order even then
+  // (getLoadOrder() below is the same for every game, as it was in MO2)
+  if (m_OrderFromLoadOrderTxt || loadOrderFileWins()) {
     pluginList->setLoadOrder(readLoadOrder(pluginList));
     readActiveAndFileTimes(pluginList);
   } else {

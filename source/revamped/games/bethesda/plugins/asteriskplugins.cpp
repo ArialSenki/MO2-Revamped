@@ -60,8 +60,9 @@ namespace
   }
 }  // namespace
 
-AsteriskGamePlugins::AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins)
-    : m_Organizer(organizer), m_LightPlugins(lightPlugins)
+AsteriskGamePlugins::AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins,
+                                         std::span<const QStringView> firstActive)
+    : m_Organizer(organizer), m_LightPlugins(lightPlugins), m_FirstActive(firstActive)
 {}
 
 QString AsteriskGamePlugins::profileFile(const QString& name) const
@@ -192,8 +193,17 @@ void AsteriskGamePlugins::writePluginLists(const IPluginList* pluginList)
 
   // the Creation Club plugins are primary ones too: the game loads them from
   // its .ccc, so they're left out like the masters
-  const WrittenList plugins = writePluginsTxt(
+  WrittenList plugins = writePluginsTxt(
       order, toWide(m_Organizer->managedGame()->primaryPlugins()), PluginsTxtStyle::Asterisk);
+  if (!m_FirstActive.empty()) {
+    std::string first;
+    for (const QStringView name : m_FirstActive) {
+      first += '*';
+      first += name.toString().toLocal8Bit().toStdString();
+      first += "\r\n";
+    }
+    plugins.bytes.insert(MO2Header.size(), first);
+  }
   for (const std::wstring& name : plugins.unencodable) {
     MOBase::log::error("invalid plugin name {}", QString::fromStdWString(name));
   }

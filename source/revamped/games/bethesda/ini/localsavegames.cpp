@@ -26,9 +26,15 @@ namespace
   constexpr int MaxValue       = 260;  // MAX_PATH, as the games read them
 }  // namespace
 
+QString IniLocalSavegames::savesDummy() const
+{
+  const QStringView own = m_Game->definition().localSavesDummy;
+  return (own.isEmpty() ? SavesDummy : own).toString();
+}
+
 QDir IniLocalSavegames::localSavesDirectory() const
 {
-  return QDir(m_Game->myGamesPath()).absoluteFilePath(SavesDummy.toString());
+  return QDir(m_Game->myGamesPath()).absoluteFilePath(savesDummy());
 }
 
 MappingType IniLocalSavegames::mappings(const QDir& profileSaveDir) const
@@ -45,7 +51,8 @@ bool IniLocalSavegames::prepareProfile(MOBase::IProfile* profile)
 
   const QString path    = iniValue(ini, "General", "sLocalSavePath", Skip.toString(), MaxValue);
   const QString myGames = iniValue(ini, "General", "bUseMyGamesDirectory", Skip.toString(), MaxValue);
-  const bool alreadyEnabled = path == SavesDummy;
+  const QString dummy       = savesDummy();
+  const bool alreadyEnabled = path == dummy;
 
   if (enable) {
     QDir saves = localSavesDirectory();
@@ -62,7 +69,7 @@ bool IniLocalSavegames::prepareProfile(MOBase::IProfile* profile)
     if (myGames != Skip) {
       setIniValue(saved, "General", "bUseMyGamesDirectory", myGames);
     }
-    setIniValue(ini, "General", "sLocalSavePath", SavesDummy.toString());
+    setIniValue(ini, "General", "sLocalSavePath", dummy);
     setIniValue(ini, "General", "bUseMyGamesDirectory", "1");
   }
 
