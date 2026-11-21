@@ -20901,6 +20901,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>OK</translation>
     </message>
     <message>
+      <source>%1's script extender is for version %2 of the game, and the game is %3: it will refuse to start, and the list's mods may close the game at once. The list's guide says how to get version %2 (some lists bring a downgrader for it).</source>
+      <translation>Der Script Extender von %1 ist für Version %2 des Spiels, und das Spiel ist %3: Er startet nicht, und die Mods der Liste können das Spiel sofort schließen. Die Anleitung der Liste sagt, wie du Version %2 bekommst (manche Listen bringen dafür einen Downgrader mit).</translation>
+    </message>
+    <message>
       <source>The game isn't the version %1 was made for</source>
       <translation>Das Spiel ist nicht die Version, für die %1 gemacht wurde</translation>
     </message>

@@ -21123,6 +21123,10 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
       <translation>OK</translation>
     </message>
     <message>
+      <source>%1's script extender is for version %2 of the game, and the game is %3: it will refuse to start, and the list's mods may close the game at once. The list's guide says how to get version %2 (some lists bring a downgrader for it).</source>
+      <translation>Lo script extender di %1 è per la versione %2 del gioco, e il gioco è la %3: non si avvierà, e le mod della lista possono chiudere subito il gioco. La guida della lista spiega come ottenere la versione %2 (alcune liste portano un downgrader apposta).</translation>
+    </message>
+    <message>
       <source>The game isn't the version %1 was made for</source>
       <translation>Il gioco non è la versione per cui è stata fatta %1</translation>
     </message>
