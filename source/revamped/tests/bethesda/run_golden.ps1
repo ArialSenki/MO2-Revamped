@@ -66,8 +66,16 @@ try {
     }
     foreach ($f in 'plugins.txt', 'loadorder.txt') {
       $same = (Get-FileHash "$out\$f").Hash -eq (Get-FileHash "$golden\$f").Hash
-      "$Game $case $f`: $(if ($same) { 'same' } else { 'DIFFERENT' })"
-      if (-not $same) { $failed++ }
+      if ($same) { "$Game $case $f`: same"; continue }
+      # the same lines (bytes) in another order: what an unstable golden can
+      # still check (see the note at the top)
+      $a = [IO.File]::ReadAllBytes("$out\$f"); $b = [IO.File]::ReadAllBytes("$golden\$f")
+      $enc = [Text.Encoding]::GetEncoding(28591)
+      $la = $enc.GetString($a) -split "`r`n" | Sort-Object -CaseSensitive
+      $lb = $enc.GetString($b) -split "`r`n" | Sort-Object -CaseSensitive
+      $sameLines = ($la -join "`n") -ceq ($lb -join "`n")
+      "$Game $case $f`: $(if ($sameLines) { 'same lines, other order' } else { 'DIFFERENT' })"
+      $failed++
     }
   }
 } finally {
