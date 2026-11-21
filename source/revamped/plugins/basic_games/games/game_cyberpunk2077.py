@@ -371,7 +371,7 @@ class Cyberpunk2077Game(BasicGame):
             process = Path(self.binaryName()).name
             # a mod's root/ is the game folder too (Wabbajack lists made with
             # Root Builder keep the loaders in root/bin/x64). Read from the
-            # active mods' folders: the data tree leaves root/ out here
+            # active mods' folders, whatever the data tree lists
             in_root: set[str] = set()
             if not root_builder:
                 mods = self._organizer.modList()

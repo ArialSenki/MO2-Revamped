@@ -250,8 +250,8 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
             folder.walk(visit)
 
         # a mod's Root/bin (Wabbajack lists made with Root Builder): read from
-        # the active mods' folders, highest priority first. The data tree
-        # leaves Root/ out where the data folder is the game folder
+        # the active mods' folders, highest priority first, whatever the data
+        # tree lists
         if not root_builder_enabled(self._organizer):
             mods = self._organizer.modList()
             for name in reversed(list(mods.allModsByProfilePriority())):
@@ -284,8 +284,7 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         tree = self._organizer.virtualFileTree()
         if tree.find("bin/DWrite.dll") is not None:
             return True
-        # a mod's Root/bin, from its folder: the data tree leaves Root/ out
-        # where the data folder is the game folder
+        # a mod's Root/bin, from its folder, whatever the data tree lists
         mods = self._organizer.modList()
         for name in mods.allModsByProfilePriority():
             if not mods.state(name) & mobase.ModState.ACTIVE:
