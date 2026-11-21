@@ -18137,6 +18137,11 @@ Les tailles sont estimées. Si l&apos;espace manque en cours de route, les tél�
       <translation>Tri des mods…</translation>
     </message>
     <message>
+      <source>Marked as done by you: %1</source>
+      <comment>summary count</comment>
+      <translation>Marqués comme faits par vous : %1</translation>
+    </message>
+    <message>
       <source>Installed: %1</source>
       <comment>summary count</comment>
       <translation>Installés : %1</translation>

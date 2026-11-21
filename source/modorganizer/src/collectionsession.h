@@ -75,6 +75,8 @@ public:
     bool selected = true;
     QString presetResult;  // applied, partial or none, for FOMOD choices
     bool keptExisting = false;
+    // the user said they installed it themselves: done, but not by us
+    bool markedDone = false;
     // installed for the game's folder (Root/): the collection's paths are
     // the game folder's
     bool rootLayout = false;
