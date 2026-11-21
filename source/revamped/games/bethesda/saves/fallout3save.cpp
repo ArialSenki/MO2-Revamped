@@ -46,7 +46,8 @@ namespace
   }
 }  // namespace
 
-std::optional<Fallout3SaveInfo> readFallout3SaveInfo(std::span<const std::byte> bytes)
+std::optional<Fallout3SaveInfo> readFallout3SaveInfo(std::span<const std::byte> bytes,
+                                                     Fallout3Layout layout)
 {
   BoundedReader r(bytes);
   const auto magic = r.bytes(MagicSize);
@@ -56,7 +57,7 @@ std::optional<Fallout3SaveInfo> readFallout3SaveInfo(std::span<const std::byte> 
   r.skip(sizeof(std::uint32_t));  // header size
   r.skip(sizeof(std::uint32_t));  // version
   r.skip(1);                      // separator
-  for (std::size_t i = 0;; ++i) {
+  for (std::size_t i = 0; layout == Fallout3Layout::NewVegas; ++i) {
     if (i == MaxPreamble || !r.ok()) {
       return std::nullopt;
     }

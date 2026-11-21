@@ -38,8 +38,11 @@ enum class LoadOrderKind
 
 enum class SaveFormat
 {
-  None,     // not read yet: the Saves tab stays empty (Skyrim SE until phase 3)
-  Fallout3  // FO3SAVEGAME: Fallout 3 and New Vegas
+  None,       // not read: the Saves tab stays empty
+  Fallout3,   // FO3SAVEGAME as Fallout 3 writes it
+  FalloutNV,  // FO3SAVEGAME with New Vegas' language block
+  SkyrimSE,   // TESV_SAVEGAME, the body LZ4 or zlib (Skyrim 2011's too)
+  Fallout4    // FO4_SAVEGAME
 };
 
 // a file in the game folder that tells the variant (store) the game is from

@@ -113,8 +113,7 @@ namespace
       .lightPlugins              = true,
       .lootSortingSetting        = {},
 
-      // .ess bodies are LZ4: the saves module reads them in phase 3
-      .saveFormat    = SaveFormat::None,
+      .saveFormat    = SaveFormat::SkyrimSE,
       .saveExtension = u"ess",
       .localSavesIni = u"Skyrimcustom.ini",
 

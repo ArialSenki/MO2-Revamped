@@ -3,7 +3,8 @@
 //
 // The .fos format (UESP's "Fallout 3:Save File Format", the same for New
 // Vegas): "FO3SAVEGAME", the header size, a version, then '|'-separated
-// fields. Strings are a 16-bit length, '|', the bytes and '|'. The header
+// fields. New Vegas puts the game's language (a NUL-padded block ending in
+// '|') before the first field; Fallout 3 doesn't. Strings are a 16-bit length, '|', the bytes and '|'. The header
 // holds the screenshot's size, the save number, the character's name, title,
 // level and location, the play time, the RGB screenshot and the plugin list.
 //
@@ -43,9 +44,16 @@ struct Fallout3SaveData
 // screenshots above this many pixels a side are damage, not pictures
 inline constexpr std::uint32_t MaxScreenshotSide = 8192;
 
+enum class Fallout3Layout
+{
+  Fallout3,  // the screenshot's width right after the version
+  NewVegas   // the language block first
+};
+
 // the fields up to the location; nullopt if the bytes aren't a Fallout 3/New
 // Vegas save or end too early
-std::optional<Fallout3SaveInfo> readFallout3SaveInfo(std::span<const std::byte> bytes);
+std::optional<Fallout3SaveInfo> readFallout3SaveInfo(std::span<const std::byte> bytes,
+                                                     Fallout3Layout layout);
 
 // the play time, screenshot and plugins after the info fields (bytes is the
 // same buffer, info its info); the screenshot points into bytes

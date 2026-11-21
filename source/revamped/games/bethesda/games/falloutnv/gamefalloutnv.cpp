@@ -100,7 +100,7 @@ namespace
       .lightPlugins       = false,
       .lootSortingSetting = u"enable_loot_sorting",
 
-      .saveFormat    = SaveFormat::Fallout3,
+      .saveFormat    = SaveFormat::FalloutNV,
       .saveExtension = u"fos",
       .localSavesIni = u"fallout.ini",
 

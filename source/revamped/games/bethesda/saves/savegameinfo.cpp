@@ -142,6 +142,12 @@ void BethesdaSaveGameWidget::setSave(MOBase::ISaveGame const& save)
   if (s.hasScriptExtenderFile()) {
     card.addNote(tr("Has script extender data"));
   }
+  if (!s.detailsRead()) {
+    // damaged or cut short: say so rather than show nothing missing
+    card.addNote(tr("The plugin list of this save can't be read"));
+    card.finish();
+    return;
+  }
   MOBase::IPluginList* pluginList = m_Game->organizer()->pluginList();
   const auto inactive = [pluginList](const QStringList& plugins) {
     QStringList out;

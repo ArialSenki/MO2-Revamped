@@ -363,7 +363,13 @@ std::shared_ptr<const MOBase::ISaveGame> BethesdaGame::makeSaveGame(const QStrin
   case SaveFormat::None:
     return nullptr;
   case SaveFormat::Fallout3:
-    return readFallout3SaveGame(this, path);
+    return readFallout3SaveGame(this, path, false);
+  case SaveFormat::FalloutNV:
+    return readFallout3SaveGame(this, path, true);
+  case SaveFormat::SkyrimSE:
+    return readSkyrimSaveGame(this, path);
+  case SaveFormat::Fallout4:
+    return readFallout4SaveGame(this, path);
   }
   return nullptr;
 }

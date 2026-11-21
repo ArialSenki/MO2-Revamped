@@ -29,10 +29,16 @@ struct SaveSummary
   unsigned short playerLevel = 0;
   QString playerLocation;
   unsigned long saveNumber = 0;
+  // when the game says it saved (Skyrim SE, Fallout 4); invalid: the file's
+  // time is used
+  QDateTime savedAt;
 };
 
 struct SaveDetails
 {
+  // false if the save's plugin lists couldn't be read (a damaged or cut
+  // file): the lists are then empty, not "nothing missing"
+  bool read = false;
   QStringList plugins;
   QStringList lightPlugins;
   QStringList mediumPlugins;
@@ -63,6 +69,7 @@ public:
   const QStringList& lightPlugins() const { return details().lightPlugins; }
   const QStringList& mediumPlugins() const { return details().mediumPlugins; }
   const QImage& screenshot() const { return details().screenshot; }
+  bool detailsRead() const { return details().read; }
   bool lightEnabled() const { return m_LightEnabled; }
   bool mediumEnabled() const { return m_MediumEnabled; }
 
@@ -80,8 +87,13 @@ private:
   mutable SaveDetails m_Details;
 };
 
-// a Fallout 3 / New Vegas save, null if its header can't be read (logged)
+// a save of the game's format, null if its header can't be read (logged)
 std::shared_ptr<const BethesdaSaveGame> readFallout3SaveGame(const BethesdaGame* game,
+                                                             const QString& path,
+                                                             bool newVegas);
+std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* game,
+                                                           const QString& path);
+std::shared_ptr<const BethesdaSaveGame> readFallout4SaveGame(const BethesdaGame* game,
                                                              const QString& path);
 
 }  // namespace mo2r::bethesda
