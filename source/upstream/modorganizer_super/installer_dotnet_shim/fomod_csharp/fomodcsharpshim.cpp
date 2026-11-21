@@ -87,7 +87,9 @@ QList<PluginSetting> FomodCSharpShim::settings() const
                         QCoreApplication::translate(
                             "RevampedInstallerSettings",
                             "Try this installer before the FOMOD XML installer when an "
-                            "archive has both a script and a ModuleConfig.xml"),
+                            "archive has both a script and a ModuleConfig.xml. It goes "
+                            "first only while the FOMOD XML installer's own setting to "
+                            "go first is off"),
                         QVariant(true))};
 }
 

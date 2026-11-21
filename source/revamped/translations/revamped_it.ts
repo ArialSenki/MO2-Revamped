@@ -22252,8 +22252,8 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
       <translation>Usa questo programma di installazione</translation>
     </message>
     <message>
-      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml</source>
-      <translation>Provare questo programma di installazione prima di quello FOMOD XML quando un archivio ha sia uno script sia un ModuleConfig.xml</translation>
+      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml. It goes first only while the FOMOD XML installer&apos;s own setting to go first is off</source>
+      <translation>Provare questo programma di installazione prima di quello FOMOD XML quando un archivio ha sia uno script sia un ModuleConfig.xml. Viene prima solo finché l&apos;impostazione di quello FOMOD XML per venire prima è disattivata</translation>
     </message>
     <message>
       <source>When a mod is reinstalled from an archive that holds several, choose the same one again without asking</source>

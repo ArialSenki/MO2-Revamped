@@ -22030,8 +22030,8 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <translation>Diesen Installer verwenden</translation>
     </message>
     <message>
-      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml</source>
-      <translation>Diesen Installer vor dem FOMOD-XML-Installer versuchen, wenn ein Archiv ein Skript und eine ModuleConfig.xml enthält</translation>
+      <source>Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml. It goes first only while the FOMOD XML installer&apos;s own setting to go first is off</source>
+      <translation>Diesen Installer vor dem FOMOD-XML-Installer versuchen, wenn ein Archiv ein Skript und eine ModuleConfig.xml enthält. Er kommt nur zuerst, solange die Einstellung des FOMOD-XML-Installers, zuerst zu kommen, aus ist</translation>
     </message>
     <message>
       <source>When a mod is reinstalled from an archive that holds several, choose the same one again without asking</source>

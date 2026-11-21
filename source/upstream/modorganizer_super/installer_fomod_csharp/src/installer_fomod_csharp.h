@@ -52,7 +52,7 @@ public:
   {
     return {
         MOBase::PluginSetting("enabled", QCoreApplication::translate("RevampedInstallerSettings", "Use this installer"), QVariant(true)),
-        MOBase::PluginSetting("prefer", QCoreApplication::translate("RevampedInstallerSettings", "Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml"),
+        MOBase::PluginSetting("prefer", QCoreApplication::translate("RevampedInstallerSettings", "Try this installer before the FOMOD XML installer when an archive has both a script and a ModuleConfig.xml. It goes first only while the FOMOD XML installer's own setting to go first is off"),
                               QVariant(true))};
   }
 
