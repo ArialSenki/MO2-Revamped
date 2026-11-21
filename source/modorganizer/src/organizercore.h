@@ -504,6 +504,10 @@ public slots:
   // whether the plugin list still says each plugin of these mods comes from
   // the mod the structure has it from now
   bool pluginOriginsCurrent(const std::vector<unsigned int>& mods);
+  // after mods were only disabled: their plugins leave the list without
+  // rebuilding every row, unless one of them now comes from another mod or
+  // the priorities moved (moved)
+  void refreshListsAfterDisable(const std::vector<unsigned int>& mods, bool moved);
 
   ModInfo::Ptr installDownload(int downloadIndex, int priority = -1);
   // MO2 Revamped: several downloads or archives, one after another. Each one's
@@ -682,6 +686,8 @@ private:
   // full plugin list rebuilds so far: one a post-refresh task already did isn't
   // done again by refreshLists() at the end of the same refresh
   unsigned int m_ESPListRebuilds = 0;
+  // plugin list refreshes that only added and removed rows
+  unsigned int m_ESPListUpdates = 0;
 
   std::function<void(const QString&)> m_CollectionHandler;
   QStringList m_PendingCollections;

@@ -1855,6 +1855,8 @@ void OrganizerCore::refreshESPList(bool force)
                                m_CurrentProfile->getLockedOrderFileName(), force);
           if (force) {
             ++m_ESPListRebuilds;
+          } else {
+            ++m_ESPListUpdates;
           }
         } catch (const std::exception& e) {
           reportError(tr("Failed to refresh list of esps: %1").arg(e.what()));
@@ -1941,6 +1943,28 @@ void OrganizerCore::refreshListsAfterToggle(bool pluginsRebuilt)
     // the archives of the mods just added to the structure
     refreshBSAList();
   }
+}
+
+void OrganizerCore::refreshListsAfterDisable(const std::vector<unsigned int>& mods,
+                                             bool moved)
+{
+  if ((m_CurrentProfile == nullptr) || !m_DirectoryStructure->isPopulated()) {
+    return;
+  }
+  // MO2 Revamped: the structure no longer has the disabled mods' files, so
+  // refreshing the list without a rebuild drops their plugins and keeps every
+  // other row. A rebuild of all ~3,500 rows on each disable cost ~0.1-0.2 s on a
+  // Nolvus list. It still rebuilds when the refresh had to wait for a directory
+  // update, when the priorities moved, or when a plugin the mod had is now
+  // another mod's (that row would keep the old mod's file)
+  const unsigned int updatesBefore = m_ESPListUpdates;
+  refreshESPList(false);
+  if (moved || m_ESPListUpdates == updatesBefore || !pluginOriginsCurrent(mods)) {
+    refreshESPList(true);
+  } else {
+    m_PluginList.notifyStatesChanged();
+  }
+  refreshBSAList();
 }
 
 void OrganizerCore::refreshLists()
@@ -2498,8 +2522,12 @@ void OrganizerCore::modStatusChanged(unsigned int index)
     // structure (and activated the mod's plugins); a second rebuild cost as
     // much as the first, ~0.3-0.7 s with a list of thousands of plugins. Not
     // when the priorities synced after it changed which mod a plugin comes from
-    refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore && !moved &&
-                            pluginOriginsCurrent({index}));
+    if (enabled) {
+      refreshListsAfterToggle(m_ESPListRebuilds != rebuildsBefore && !moved &&
+                              pluginOriginsCurrent({index}));
+    } else {
+      refreshListsAfterDisable({index}, moved);
+    }
     const qint64 tLists = stage.restart();
     clearCaches({index});
     m_ModList.notifyModStateChanged({index});
@@ -2555,9 +2583,13 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
 
     // only enabled ones: a mod disabled after the rebuild above still has to
     // leave the plugin list
-    refreshListsAfterToggle(modsToDisable.isEmpty() &&
-                            m_ESPListRebuilds != rebuildsBefore && !moved &&
-                            pluginOriginsCurrent(vindices));
+    if (modsToEnable.isEmpty()) {
+      refreshListsAfterDisable(vindices, moved);
+    } else {
+      refreshListsAfterToggle(modsToDisable.isEmpty() &&
+                              m_ESPListRebuilds != rebuildsBefore && !moved &&
+                              pluginOriginsCurrent(vindices));
+    }
     clearCaches(vindices);
     m_ModList.notifyModStateChanged(index);
 
