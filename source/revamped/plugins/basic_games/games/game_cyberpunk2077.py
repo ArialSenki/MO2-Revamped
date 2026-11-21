@@ -311,8 +311,18 @@ class Cyberpunk2077Game(BasicGame):
         return ["UserSettings.json"]
 
     def gameVersion(self) -> str:
+        """The patch players and Nexus know (2.5): the exe's product version
+        string. Its numeric file version (3.0.88.46235) is the engine's and
+        matched no collection's game version."""
         if not self.isInstalled():
             return ""
+        exe = self.gameDirectory().absoluteFilePath(self.binaryName())
+        try:
+            product = str(mobase.getProductVersion(exe) or "").strip()
+        except Exception:  # noqa: BLE001 - the exe is missing or unreadable
+            product = ""
+        if product and all(part.isdigit() for part in product.split(".")):
+            return product
         try:
             return super().gameVersion()
         except Exception:  # noqa: BLE001 - the exe is missing or unreadable
