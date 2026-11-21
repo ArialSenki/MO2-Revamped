@@ -143,6 +143,13 @@ everything inside their own folder. The optional Steam save route still uses
 the game's own Windows save directory, and data migration only reads a folder
 you select yourself.
 
+## User guide
+
+The [user guide](docs/user-guide/README.md) covers installing and updating,
+instances, each game's support, Nexus collections and Wabbajack lists,
+Settings, Linux under Wine or Proton, and bug reports. It is also in
+[Spanish](docs/user-guide/es/README.md).
+
 ## Repository layout
 
 | Path | Contents |
