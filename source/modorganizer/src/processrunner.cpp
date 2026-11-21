@@ -903,6 +903,36 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
             .withEnabled(true));
   }
 
+  // MO2 Revamped: a DLL copied into the game folder for this run is loaded from
+  // there by the game's own imports. A forced load of the same DLL finds the
+  // mod's file through the VFS and loads it a second time under another path:
+  // two Script Extenders and two Native Mod Loaders in BG3 (their DLLs copied
+  // because bg3_dx11.exe names bg3.exe, and the plugin forcing every DLL in
+  // bin). Such a forced load is left out; the copy is what the game loads
+  if (!rootPlan.copies.empty() && !m_forcedLibraries.isEmpty()) {
+    const QDir gameDir = game->gameDirectory();
+    const QDir exeDir  = m_sp.binary.absoluteDir();
+    QSet<QString> copiedPaths;
+    QSet<QString> copiedSources;
+    for (const auto& copy : rootPlan.copies) {
+      copiedPaths.insert(QDir::cleanPath(gameDir.absoluteFilePath(copy.relativePath)).toLower());
+      copiedSources.insert(QDir::cleanPath(QDir::fromNativeSeparators(copy.source)).toLower());
+    }
+    for (auto it = m_forcedLibraries.begin(); it != m_forcedLibraries.end();) {
+      const QString path = QDir::cleanPath(
+          exeDir.absoluteFilePath(QDir::fromNativeSeparators(it->library())));
+      const QString key = path.toLower();
+      if (copiedPaths.contains(key) || copiedSources.contains(key)) {
+        log::info("root launch: {} isn't force loaded into {}, the game loads its copy "
+                  "in the game folder",
+                  it->library(), it->process());
+        it = m_forcedLibraries.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+
   // these questions come before the plugins prepare the launch: a plugin that
   // hides saves for it gives up when the game doesn't appear in a few seconds
 
