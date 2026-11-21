@@ -20155,6 +20155,10 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
       <translation>MO2 Revamped no tiene plugin para el juego de esta lista.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>La lista toma %1 de la carpeta del juego, tal como lo tenía su autor, y el tuyo falta o es otra versión. Viene con el juego, una actualización, un DLC o el Creation Kit: cuando esté, pulsa Comprobar por hash.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>El juego de la lista no está instalado, o MO2 Revamped no lo encontró.</translation>
     </message>
@@ -21164,6 +21168,10 @@ Si MO2 Revamped está instalado en una carpeta protegida como Archivos de progra
     <message>
       <source>OK</source>
       <translation>Aceptar</translation>
+    </message>
+    <message>
+      <source>%1's script extender is for version %2 of the game, and the game is %3: it will refuse to start, and the list's mods may close the game at once. The list's guide says how to get version %2 (some lists bring a downgrader for it).</source>
+      <translation>El script extender de %1 es para la versión %2 del juego, y el juego es la %3: no arrancará, y los mods de la lista pueden cerrar el juego nada más abrirlo. La guía de la lista dice cómo conseguir la versión %2 (algunas listas traen un downgrader para ello).</translation>
     </message>
     <message>
       <source>The game isn't the version %1 was made for</source>

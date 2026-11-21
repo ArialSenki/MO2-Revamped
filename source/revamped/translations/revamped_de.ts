@@ -19894,6 +19894,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>MO2 Revamped hat kein Spiel-Plugin für das Spiel dieser Liste.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>Die Liste nimmt %1 aus dem Spielordner, so wie ihr Autor es hatte, und deins fehlt oder ist eine andere Version. Es kommt mit dem Spiel, einem Update, einem DLC oder dem Creation Kit: Sobald es da ist, drücke Per Hash prüfen.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>Das Spiel der Liste ist nicht installiert, oder MO2 Revamped hat es nicht gefunden.</translation>
     </message>
@@ -20903,6 +20907,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
     <message>
       <source>OK</source>
       <translation>OK</translation>
+    </message>
+    <message>
+      <source>%1's script extender is for version %2 of the game, and the game is %3: it will refuse to start, and the list's mods may close the game at once. The list's guide says how to get version %2 (some lists bring a downgrader for it).</source>
+      <translation>Der Script Extender von %1 ist für Version %2 des Spiels, und das Spiel ist %3: Er startet nicht, und die Mods der Liste können das Spiel sofort schließen. Die Anleitung der Liste sagt, wie du Version %2 bekommst (manche Listen bringen dafür einen Downgrader mit).</translation>
     </message>
     <message>
       <source>The game isn't the version %1 was made for</source>

@@ -2,6 +2,7 @@
 
 #include "fluentdialogs.h"
 #include "organizercore.h"
+#include "profile.h"
 #include "settings.h"
 #include "wabbajackinstaller.h"
 
@@ -20,6 +21,7 @@
 #include <QDir>
 #include <QLabel>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QSet>
 #include <QSettings>
 #include <QVBoxLayout>
@@ -101,6 +103,39 @@ bool inside(const QFileInfo& binary, const QDir& folder)
   const QString base = QDir::cleanPath(folder.absolutePath());
   return dir.compare(base, Qt::CaseInsensitive) == 0 ||
          dir.startsWith(base + u'/', Qt::CaseInsensitive);
+}
+
+// MO2 Revamped: the game version the script extender in an active mod's Root
+// folder is built for, from its DLL's name (f4se_1_10_163.dll: 1.10.163);
+// empty when there's none, or several for different versions
+QString scriptExtenderRuntime(OrganizerCore& core)
+{
+  static const QRegularExpression re(
+      QStringLiteral("^(?:f4se|f4sevr|skse64|sksevr|sfse)_(\\d+)_(\\d+)_(\\d+)\\.dll$"),
+      QRegularExpression::CaseInsensitiveOption);
+  Profile* profile = core.currentProfile();
+  if (profile == nullptr) {
+    return {};
+  }
+  QSet<QString> found;
+  for (const auto& [name, path, priority] : profile->getActiveMods()) {
+    const QDir root(path + QStringLiteral("/Root"));
+    for (const QString& f : root.entryList({QStringLiteral("*.dll")}, QDir::Files)) {
+      const auto m = re.match(f);
+      if (m.hasMatch()) {
+        found.insert(m.captured(1) + u'.' + m.captured(2) + u'.' + m.captured(3));
+      }
+    }
+  }
+  return found.size() == 1 ? *found.begin() : QString();
+}
+
+// the first numbers of the game's version, as many as the script extender's
+bool sameRuntime(const QString& extender, const QString& game)
+{
+  const QList<int> x = numbers(extender);
+  const QList<int> y = numbers(game);
+  return x.isEmpty() || y.size() < x.size() || y.mid(0, x.size()) == x;
 }
 
 QLabel* richLabel(const QString& html, QWidget* parent)
@@ -210,14 +245,63 @@ void showListNotice(QWidget* parent, OrganizerCore& core)
 bool confirmGameVersion(QWidget* parent, OrganizerCore& core, const QFileInfo& binary)
 {
   const IPluginGame* game = core.managedGame();
-  if (game == nullptr || !inside(binary, game->gameDirectory())) {
+  // the game folder's programs, and those of a mod's Root folder (a list's
+  // script that starts its loader)
+  const bool fromRoot =
+      inside(binary, QDir(core.settings().paths().mods())) &&
+      QDir::cleanPath(binary.absolutePath()).contains(u"/Root", Qt::CaseInsensitive);
+  if (game == nullptr || (!inside(binary, game->gameDirectory()) && !fromRoot)) {
     return true;
   }
   const QString file = core.settings().filename();
   const QSettings ini(file, QSettings::IniFormat);
   const InstanceInfo info = readInfo(ini);
   const QString have      = game->gameVersion();
-  if (info.gameVersion.isEmpty() || have.isEmpty() || sameVersion(info.gameVersion, have)) {
+  if (have.isEmpty()) {
+    return true;
+  }
+  if (info.gameVersion.isEmpty()) {
+    // MO2 Revamped: a list that doesn't say its version: the one its script
+    // extender is built for (Horizon's F4SE for 1.10.163, with a downgrader
+    // the guide has you run first)
+    const QString runtime = info.list.isEmpty() ? QString() : scriptExtenderRuntime(core);
+    if (runtime.isEmpty() || sameRuntime(runtime, have)) {
+      return true;
+    }
+    static QSet<QString> askedRuntime;
+    const QString key = file.toLower() + u'|' + have;
+    if (askedRuntime.contains(key)) {
+      return true;
+    }
+    log::warn("wabbajack: {}'s script extender is for game version {}, the game is {}",
+              info.list, runtime, have);
+    FluentContentDialog dialog(
+        parent, QStringLiteral("WabbajackGameVersionDialog"),
+        Text::tr("The game isn't the version %1 was made for").arg(info.list),
+        Text::tr("%1's script extender is for version %2 of the game, and the game is %3: "
+                 "it will refuse to start, and the list's mods may close the game at once. "
+                 "The list's guide says how to get version %2 (some lists bring a "
+                 "downgrader for it).")
+            .arg(info.list, runtime, have));
+    if (!info.readme.isEmpty()) {
+      dialog.body()->addWidget(richLabel(
+          Text::tr("The guide: <a href=\"%1\">%2</a>.")
+              .arg(info.readme.toHtmlEscaped(), info.readme.toHtmlEscaped()),
+          &dialog));
+    }
+    auto* start  = dialog.addButton(Text::tr("Start anyway"), true);
+    auto* cancel = dialog.addButton(Text::tr("Cancel"));
+    QObject::connect(start, &QPushButton::clicked, &dialog, &QDialog::accept);
+    QObject::connect(cancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+    dialog.askFirst(cancel);
+    fit(dialog, 520);
+    if (dialog.exec() != QDialog::Accepted) {
+      return false;
+    }
+    askedRuntime.insert(key);
+    return true;
+  }
+  if (sameVersion(info.gameVersion, have)) {
     return true;
   }
 
