@@ -1159,6 +1159,21 @@ namespace Mo2RevampedSetup
                         running = ntdll != IntPtr.Zero && GetProcAddress(ntdll, "wine_get_version") != IntPtr.Zero;
                     }
                     catch { running = false; }
+                    // as MO2 does (env::runningUnderWine): Wine builds that hide
+                    // their exports from programs still have their own key
+                    if (!running.Value)
+                    {
+                        try
+                        {
+                            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.RegistryKey
+                                .OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Default)
+                                .OpenSubKey(@"Software\Wine"))
+                            {
+                                running = key != null;
+                            }
+                        }
+                        catch { running = false; }
+                    }
                 }
                 return running.Value;
             }
