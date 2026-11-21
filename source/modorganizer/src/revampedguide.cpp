@@ -477,10 +477,12 @@ std::vector<Topic> topics()
                   "files. <b>Sort</b> uses LOOT; for New Vegas and TTW it's off unless "
                   "you allow it, as most of their guides advise against it.")},
         {0xE756, Text::tr("Script extender"),
-         Text::tr("Install SKSE, F4SE or xNVSE as a mod with its loader in a "
-                  "<b>Root</b> folder, then start the game with it. For Skyrim SE and "
-                  "Fallout 4, MO2 checks that it matches the game version and that "
-                  "Address Library is installed.")},
+         Text::tr("Install SKSE, F4SE or xNVSE from its archive: MO2 offers <b>Install "
+                  "it in the game folder</b> (recommended), <b>I'll copy the files "
+                  "myself</b> or <b>Install it as a regular mod</b>, for Root Builder. "
+                  "Then the game starts through it. For Skyrim SE and Fallout 4, MO2 "
+                  "checks that it matches the game version and that Address Library is "
+                  "installed.")},
         {0xE7BA, Text::tr("Script extender plugins"),
          Text::tr("When some don't load, a notification says which and why, such as "
                   "an Address Library update or a missing DLL.")},
@@ -496,6 +498,77 @@ std::vector<Topic> topics()
          Text::tr("Add the script extender, LOOT, xEdit or other tools as programs, so "
                   "they also see the mods."),
          Text::tr("Executables"), QStringLiteral("executables")}}},
+
+      {QStringLiteral("game-witcher3"),
+       0xE7FC,
+       QStringLiteral("The Witcher 3"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xE8B7, Text::tr("Mod folders"),
+         Text::tr("Mods go to the game's Mods folder. When installing, MO2 adds a "
+                  "missing <b>mod</b> prefix, removes an extra Mods folder around the "
+                  "mod and moves its <b>dlc</b> and <b>bin</b> folders to the mod's root "
+                  "folder.")},
+        {0xE8B7, Text::tr("Root folder"),
+         Text::tr("With the plugin's <b>root_folder_to_game_folder</b>, on by default, "
+                  "each mod's root folder shows in the game folder. With Root Builder "
+                  "on, Root Builder handles it.")},
+        {0xE7BA, Text::tr("Scripts changed by several mods"),
+         Text::tr("A notification says when mods change the same scripts: run "
+                  "<b>Script Merger</b> to build mod0000_MergedFiles. MO2 adds Script "
+                  "Merger to the programs when it finds it.")},
+        {0xE7BA, Text::tr("Menus the next-gen game won't load"),
+         Text::tr("A notification names a mod's menu XML files that are missing from "
+                  "dx11filelist.txt or dx12filelist.txt; without them, the game "
+                  "doesn't load those menus.")},
+        runFromMo2(QStringLiteral("Steam, GOG")),
+        {0xE90F, Text::tr("DX11 and DX12"),
+         Text::tr("The programs include the DX12 version of the game when it is "
+                  "installed."),
+         Text::tr("Executables"), QStringLiteral("executables")}}},
+
+      {QStringLiteral("game-stardew"),
+       0xE7FC,
+       QStringLiteral("Stardew Valley"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xE756, Text::tr("SMAPI"),
+         Text::tr("Mods need SMAPI. Install it with its own installer into the game "
+                  "folder, not as a mod, then start the game with the <b>SMAPI</b> "
+                  "program. A notification says when it is missing.")},
+        {0xE8B7, Text::tr("Mod folders"),
+         Text::tr("A mod is a folder with a manifest.json. MO2 finds them up to four "
+                  "levels deep, so packs of several mods install as they come.")},
+        {0xE9D5, Text::tr("Checks before starting"),
+         Text::tr("MO2 warns when mods need mods that aren't there, newer versions of "
+                  "other mods or a newer SMAPI, and when the same mod is installed "
+                  "twice.")},
+        {0xE77B, Text::tr("Saves"),
+         Text::tr("The <b>Saves</b> tab shows the farms in "
+                  "%APPDATA%\\StardewValley\\Saves.")},
+        runFromMo2(QStringLiteral("Steam, GOG")),
+        {0xE8A5, Text::tr("Modding guide"),
+         Text::tr("The Stardew Valley wiki's guide to playing with mods."),
+         Text::tr("Open"),
+         QStringLiteral(
+             "url:https://stardewvalleywiki.com/Modding:Player_Guide/Getting_Started")}}},
+
+      {QStringLiteral("game-valheim"),
+       0xE7FC,
+       QStringLiteral("Valheim"),
+       Text::tr("What MO2 Revamped does for this game, and its usual problems."),
+       {{0xE756, Text::tr("BepInEx"),
+         Text::tr("Most mods need BepInExPack_Valheim: install it as a mod. Its loader "
+                  "loads from the mod. A notification says when it is missing.")},
+        {0xE8B7, Text::tr("Mod files"),
+         Text::tr("BepInEx plugins, InSlimVML mods, Advanced Builder .vbuild files and "
+                  ".assets files are recognized when installing.")},
+        {0xE713, Text::tr("Config files"),
+         Text::tr("With the plugin's <b>sync_overwrite</b>, on by default, BepInEx "
+                  ".cfg files that land in Overwrite move into the mod they belong to, "
+                  "when MO2 starts and after the game closes.")},
+        {0xE9D5, Text::tr("Checks before starting"),
+         Text::tr("MO2 warns when plugins need other plugins that aren't there, such as "
+                  "Jotunn, and when InSlimVML mods lack their loader.")},
+        runFromMo2(QStringLiteral("Steam"))}},
 
       {QStringLiteral("game-eldenring"),
        0xE7FC,
@@ -640,6 +713,15 @@ QString gameTopic(const MOBase::IPluginGame* game)
   }
   if (name == QLatin1String("baldursgate3")) {
     return QStringLiteral("game-bg3");
+  }
+  if (name == QLatin1String("witcher3")) {
+    return QStringLiteral("game-witcher3");
+  }
+  if (name == QLatin1String("stardewvalley")) {
+    return QStringLiteral("game-stardew");
+  }
+  if (name == QLatin1String("valheim")) {
+    return QStringLiteral("game-valheim");
   }
   if (name == QLatin1String("eldenring") || name == QLatin1String("nightreign")) {
     return QStringLiteral("game-eldenring");

@@ -12503,10 +12503,6 @@ Esempio:
       <translation>Usa la nuova interfaccia (Qt Quick) dove disponibile</translation>
     </message>
     <message>
-      <source>Shows the windows that have a new version (the Instances window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
-      <translation>Mostra con essa le finestre che hanno una nuova versione (la finestra delle istanze e la domanda sul tema di una nuova istanza), disegnate con Qt Quick. Funzionano allo stesso modo e usano un po&apos; più di memoria. Si applica al prossimo avvio di Mod Organizer.</translation>
-    </message>
-    <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>
       <translation>Disegna il testo senza i bordi colorati di Windows, che sugli schermi OLED appaiono come un alone colorato. Si applica quando Mod Organizer si riapre.</translation>
     </message>
@@ -12557,6 +12553,10 @@ Esempio:
     <message>
       <source>How smoothly tabs, switches, menus, the log panel and the Run button move. Off shows every change at once. Monitor moves them at your screen's refresh rate (up to 240 Hz); it uses a little more CPU while something moves, and none while nothing does.</source>
       <translation>Quanto si muovono fluidi schede, interruttori, menu, il pannello del log e il pulsante Avvia. Disattivate mostra ogni cambiamento subito. Monitor li muove alla frequenza del tuo schermo (fino a 240 Hz); usa un po’ più di CPU mentre qualcosa si muove, e niente quando non si muove nulla.</translation>
+    </message>
+    <message>
+      <source>Shows the parts that have a new version (the Instances window, the summary tiles of the main window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Mostra con essa le parti che hanno una nuova versione (la finestra delle istanze, il riepilogo della finestra principale e la domanda sul tema di una nuova istanza), disegnate con Qt Quick. Funzionano allo stesso modo e usano un po' più di memoria. Si applica al prossimo avvio di Mod Organizer.</translation>
     </message>
 </context>
   <context>
@@ -19667,10 +19667,6 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
       <translation>Estensore di script</translation>
     </message>
     <message>
-      <source>Install SKSE, F4SE or xNVSE as a mod with its loader in a &lt;b&gt;Root&lt;/b&gt; folder, then start the game with it. For Skyrim SE and Fallout 4, MO2 checks that it matches the game version and that Address Library is installed.</source>
-      <translation>Installa SKSE, F4SE o xNVSE come mod con il suo loader in una cartella &lt;b&gt;Root&lt;/b&gt;, poi avvia il gioco con esso. Per Skyrim SE e Fallout 4, MO2 controlla che corrisponda alla versione del gioco e che Address Library sia installata.</translation>
-    </message>
-    <message>
       <source>Script extender plugins</source>
       <translation>Plugin dell'estensore di script</translation>
     </message>
@@ -19757,6 +19753,102 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
     <message>
       <source>The game loads .archive files by name. To use the mod order instead, turn on the Cyberpunk 2077 plugin's &lt;b&gt;enforce_archive_load_order&lt;/b&gt; and &lt;b&gt;reverse_archive_load_order&lt;/b&gt; in Settings &amp;gt; Plugins: then the mod lower in the list wins. Tools &amp;gt; &lt;b&gt;Archive conflicts&lt;/b&gt; shows which .archive wins where two mods change the same files.</source>
       <translation>Il gioco carica i file .archive per nome. Per usare l'ordine delle mod, attiva &lt;b&gt;enforce_archive_load_order&lt;/b&gt; e &lt;b&gt;reverse_archive_load_order&lt;/b&gt; del plugin di Cyberpunk 2077 in Impostazioni &amp;gt; Plugin: così vince la mod più in basso nell'elenco. Strumenti &amp;gt; &lt;b&gt;Conflitti di archive&lt;/b&gt; mostra quale .archive vince dove due mod cambiano gli stessi file.</translation>
+    </message>
+    <message>
+      <source>Install SKSE, F4SE or xNVSE from its archive: MO2 offers &lt;b&gt;Install it in the game folder&lt;/b&gt; (recommended), &lt;b&gt;I'll copy the files myself&lt;/b&gt; or &lt;b&gt;Install it as a regular mod&lt;/b&gt;, for Root Builder. Then the game starts through it. For Skyrim SE and Fallout 4, MO2 checks that it matches the game version and that Address Library is installed.</source>
+      <translation>Installa SKSE, F4SE o xNVSE dal suo archivio: MO2 propone &lt;b&gt;Installarlo nella cartella del gioco&lt;/b&gt; (consigliato), &lt;b&gt;Copierò io i file&lt;/b&gt; o &lt;b&gt;Installarlo come una mod normale&lt;/b&gt;, per Root Builder. Poi il gioco si avvia con esso. Per Skyrim SE e Fallout 4, MO2 controlla che corrisponda alla versione del gioco e che Address Library sia installata.</translation>
+    </message>
+    <message>
+      <source>Mod folders</source>
+      <translation>Cartelle delle mod</translation>
+    </message>
+    <message>
+      <source>Mods go to the game's Mods folder. When installing, MO2 adds a missing &lt;b&gt;mod&lt;/b&gt; prefix, removes an extra Mods folder around the mod and moves its &lt;b&gt;dlc&lt;/b&gt; and &lt;b&gt;bin&lt;/b&gt; folders to the mod's root folder.</source>
+      <translation>Le mod vanno nella cartella Mods del gioco. Durante l'installazione, MO2 aggiunge il prefisso &lt;b&gt;mod&lt;/b&gt; mancante, toglie una cartella Mods di troppo attorno alla mod e sposta le sue cartelle &lt;b&gt;dlc&lt;/b&gt; e &lt;b&gt;bin&lt;/b&gt; nella cartella root della mod.</translation>
+    </message>
+    <message>
+      <source>With the plugin's &lt;b&gt;root_folder_to_game_folder&lt;/b&gt;, on by default, each mod's root folder shows in the game folder. With Root Builder on, Root Builder handles it.</source>
+      <translation>Con &lt;b&gt;root_folder_to_game_folder&lt;/b&gt; del plugin, attivo di default, la cartella root di ogni mod compare nella cartella del gioco. Con Root Builder attivo, se ne occupa Root Builder.</translation>
+    </message>
+    <message>
+      <source>Scripts changed by several mods</source>
+      <translation>Script cambiati da più mod</translation>
+    </message>
+    <message>
+      <source>A notification says when mods change the same scripts: run &lt;b&gt;Script Merger&lt;/b&gt; to build mod0000_MergedFiles. MO2 adds Script Merger to the programs when it finds it.</source>
+      <translation>Una notifica avvisa quando più mod cambiano gli stessi script: esegui &lt;b&gt;Script Merger&lt;/b&gt; per creare mod0000_MergedFiles. MO2 aggiunge Script Merger ai programmi quando lo trova.</translation>
+    </message>
+    <message>
+      <source>Menus the next-gen game won't load</source>
+      <translation>Menu che la versione next-gen non carica</translation>
+    </message>
+    <message>
+      <source>A notification names a mod's menu XML files that are missing from dx11filelist.txt or dx12filelist.txt; without them, the game doesn't load those menus.</source>
+      <translation>Una notifica indica i file XML di menu di una mod che mancano in dx11filelist.txt o dx12filelist.txt; senza di essi il gioco non carica quei menu.</translation>
+    </message>
+    <message>
+      <source>DX11 and DX12</source>
+      <translation>DX11 e DX12</translation>
+    </message>
+    <message>
+      <source>The programs include the DX12 version of the game when it is installed.</source>
+      <translation>I programmi includono la versione DX12 del gioco quando è installata.</translation>
+    </message>
+    <message>
+      <source>SMAPI</source>
+      <translation>SMAPI</translation>
+    </message>
+    <message>
+      <source>Mods need SMAPI. Install it with its own installer into the game folder, not as a mod, then start the game with the &lt;b&gt;SMAPI&lt;/b&gt; program. A notification says when it is missing.</source>
+      <translation>Le mod richiedono SMAPI. Installalo con il suo installer nella cartella del gioco, non come mod, poi avvia il gioco con il programma &lt;b&gt;SMAPI&lt;/b&gt;. Una notifica avvisa quando manca.</translation>
+    </message>
+    <message>
+      <source>A mod is a folder with a manifest.json. MO2 finds them up to four levels deep, so packs of several mods install as they come.</source>
+      <translation>Una mod è una cartella con un manifest.json. MO2 le trova fino a quattro livelli di profondità, quindi i pacchetti di più mod si installano così come sono.</translation>
+    </message>
+    <message>
+      <source>MO2 warns when mods need mods that aren't there, newer versions of other mods or a newer SMAPI, and when the same mod is installed twice.</source>
+      <translation>MO2 avvisa quando delle mod richiedono mod che mancano, versioni più nuove di altre mod o uno SMAPI più nuovo, e quando la stessa mod è installata due volte.</translation>
+    </message>
+    <message>
+      <source>The &lt;b&gt;Saves&lt;/b&gt; tab shows the farms in %APPDATA%\StardewValley\Saves.</source>
+      <translation>La scheda &lt;b&gt;Salvataggi&lt;/b&gt; mostra le fattorie in %APPDATA%\StardewValley\Saves.</translation>
+    </message>
+    <message>
+      <source>Modding guide</source>
+      <translation>Guida al modding</translation>
+    </message>
+    <message>
+      <source>The Stardew Valley wiki's guide to playing with mods.</source>
+      <translation>La guida del wiki di Stardew Valley per giocare con le mod (in inglese).</translation>
+    </message>
+    <message>
+      <source>BepInEx</source>
+      <translation>BepInEx</translation>
+    </message>
+    <message>
+      <source>Most mods need BepInExPack_Valheim: install it as a mod. Its loader loads from the mod. A notification says when it is missing.</source>
+      <translation>Quasi tutte le mod richiedono BepInExPack_Valheim: installalo come mod. Il suo loader si carica dalla mod. Una notifica avvisa quando manca.</translation>
+    </message>
+    <message>
+      <source>Mod files</source>
+      <translation>File delle mod</translation>
+    </message>
+    <message>
+      <source>BepInEx plugins, InSlimVML mods, Advanced Builder .vbuild files and .assets files are recognized when installing.</source>
+      <translation>Durante l'installazione vengono riconosciuti i plugin di BepInEx, le mod InSlimVML, i file .vbuild di Advanced Builder e i file .assets.</translation>
+    </message>
+    <message>
+      <source>Config files</source>
+      <translation>File di configurazione</translation>
+    </message>
+    <message>
+      <source>With the plugin's &lt;b&gt;sync_overwrite&lt;/b&gt;, on by default, BepInEx .cfg files that land in Overwrite move into the mod they belong to, when MO2 starts and after the game closes.</source>
+      <translation>Con &lt;b&gt;sync_overwrite&lt;/b&gt; del plugin, attivo di default, i file .cfg di BepInEx che finiscono in Overwrite passano alla mod a cui appartengono, all'avvio di MO2 e dopo la chiusura del gioco.</translation>
+    </message>
+    <message>
+      <source>MO2 warns when plugins need other plugins that aren't there, such as Jotunn, and when InSlimVML mods lack their loader.</source>
+      <translation>MO2 avvisa quando dei plugin richiedono altri plugin che mancano, come Jotunn, e quando alle mod InSlimVML manca il loro loader.</translation>
     </message>
 </context>
 <context>
