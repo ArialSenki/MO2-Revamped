@@ -2533,10 +2533,11 @@ NativeInitializerRequest* find_native_initializer(const wchar_t* module_path) {
 // path of the DLL in its mod; the snapshot's szExePath is that real path,
 // while GetModuleFileNameW, which usvfs hooks, gives the virtual one in the
 // game folder (alpha.68 matched only that one, and no initializer ran).
-// A DLL loaded from a path of 260 characters or more is not in the snapshot.
-NativeInitializerRequest* find_native_initializer_for(const MODULEENTRY32W& entry,
+// A DLL loaded from a path of 260 characters or more is not in the
+// snapshot: the loader's own list gives its path (loaded_long_path_modules).
+NativeInitializerRequest* find_native_initializer_for(const wchar_t* real_path,
                                                       const wchar_t* module_path) {
-  if (NativeInitializerRequest* request = find_native_initializer(entry.szExePath)) {
+  if (NativeInitializerRequest* request = find_native_initializer(real_path)) {
     return request;
   }
   return find_native_initializer(module_path);
@@ -2641,92 +2642,146 @@ DWORD WINAPI run_native_initializer(void* context) {
   return 0;
 }
 
+// One DLL of the process: real_path is the path it was loaded from (the
+// real one in its mod), base_name its file name.
+void inspect_module(HMODULE module, const wchar_t* real_path, const wchar_t* base_name) {
+  if (module == g_module) {
+    return;
+  }
+  // the path as the game sees it (virtual under usvfs)
+  std::wstring module_path(32768, L'\0');
+  const DWORD module_path_length = GetModuleFileNameW(
+      module, module_path.data(), static_cast<DWORD>(module_path.size()));
+  if (module_path_length > 0 && module_path_length < module_path.size()) {
+    module_path.resize(module_path_length);
+  } else {
+    module_path = real_path;
+  }
+  // what MO2 asked for by path counts wherever the mods folder is and
+  // whatever it is called; the folder names only sort out the rest.
+  // was_seen last: its table only has room for these
+  NativeInitializerRequest* request = find_native_initializer_for(real_path, module_path.c_str());
+  if ((request == nullptr && !has_managed_dll_path_segment(real_path) &&
+       !has_managed_dll_path_segment(module_path.c_str())) ||
+      was_seen(module)) {
+    return;
+  }
+
+  // the module list holds no reference: a DLL unloaded since would make
+  // GetProcAddress fault, so one is taken while the module is used
+  HMODULE held = nullptr;
+  if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                          reinterpret_cast<LPCWSTR>(module), &held) ||
+      held != module) {
+    if (held != nullptr) {
+      FreeLibrary(held);
+    }
+    log_line("MO2-managed DLL was unloaded before it could be inspected:", real_path);
+    return;
+  }
+
+  log_line("Found MO2-managed DLL:", real_path);
+  if (request != nullptr) {
+    request->module = module;
+    if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
+      // the reference goes to the initializer thread
+      HANDLE thread = CreateThread(nullptr, 0, run_native_initializer, request, 0, nullptr);
+      if (thread != nullptr) {
+        CloseHandle(thread);
+      } else {
+        InterlockedExchange(&request->started, 0);
+        FreeLibrary(held);
+        log_line("Could not start Revamped native initializer thread:", real_path);
+      }
+    } else {
+      FreeLibrary(held);
+    }
+    return;
+  }
+
+  const bool has_extension_export = GetProcAddress(module, "modengine_ext_init") != nullptr;
+  FreeLibrary(held);
+  if (!has_extension_export) {
+    log_line("No Mod Engine 2 initializer export:", base_name);
+    return;
+  }
+  // MO2 lists the Mod Engine 2 extensions it wants started (Seamless
+  // Co-op); others are left alone.
+  log_line("Mod Engine 2 initializer detected but not requested by MO2:", base_name);
+}
+
+struct LongPathModule {
+  HMODULE module;
+  std::wstring path;
+  std::wstring name;
+};
+
+// The DLLs loaded from a path of 260 characters or more, which the process
+// snapshot leaves out: from the loader's own list (PEB Ldr,
+// InLoadOrderModuleList), read under the loader lock and copied out.
+std::vector<LongPathModule> loaded_long_path_modules() {
+  struct LdrString {
+    USHORT Length;
+    USHORT MaximumLength;
+    PWSTR Buffer;
+  };
+  std::vector<LongPathModule> found;
+  using LockFunction = LONG(NTAPI*)(ULONG, ULONG*, ULONG_PTR*);
+  using UnlockFunction = LONG(NTAPI*)(ULONG, ULONG_PTR);
+  HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  const auto lock = reinterpret_cast<LockFunction>(
+      reinterpret_cast<void*>(GetProcAddress(ntdll, "LdrLockLoaderLock")));
+  const auto unlock = reinterpret_cast<UnlockFunction>(
+      reinterpret_cast<void*>(GetProcAddress(ntdll, "LdrUnlockLoaderLock")));
+  ULONG_PTR cookie = 0;
+  if (lock == nullptr || unlock == nullptr || lock(0, nullptr, &cookie) < 0) {
+    return found;
+  }
+  // x64 PEB: Ldr at 0x18; PEB_LDR_DATA: InLoadOrderModuleList at 0x10;
+  // LDR_DATA_TABLE_ENTRY: DllBase 0x30, FullDllName 0x48, BaseDllName 0x58
+  const auto peb = reinterpret_cast<const unsigned char*>(__readgsqword(0x60));
+  const auto ldr = *reinterpret_cast<const unsigned char* const*>(peb + 0x18);
+  if (ldr != nullptr) {
+    const auto head = reinterpret_cast<const LIST_ENTRY*>(ldr + 0x10);
+    for (const LIST_ENTRY* link = head->Flink; link != nullptr && link != head; link = link->Flink) {
+      const auto record = reinterpret_cast<const unsigned char*>(link);
+      const auto full = reinterpret_cast<const LdrString*>(record + 0x48);
+      const auto base = reinterpret_cast<const LdrString*>(record + 0x58);
+      const size_t length = full->Length / sizeof(wchar_t);
+      if (full->Buffer == nullptr || length < MAX_PATH) {
+        continue;
+      }
+      LongPathModule entry;
+      entry.module = *reinterpret_cast<HMODULE const*>(record + 0x30);
+      entry.path.assign(full->Buffer, length);
+      if (base->Buffer != nullptr) {
+        entry.name.assign(base->Buffer, base->Length / sizeof(wchar_t));
+      }
+      found.push_back(std::move(entry));
+    }
+  }
+  unlock(0, cookie);
+  return found;
+}
+
 void inspect_loaded_mods() {
   HANDLE snapshot = CreateToolhelp32Snapshot(
       TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, GetCurrentProcessId());
   if (snapshot == INVALID_HANDLE_VALUE) {
     log_line("Could not enumerate process DLLs.");
-    return;
+  } else {
+    MODULEENTRY32W entry = {};
+    entry.dwSize = sizeof(entry);
+    if (Module32FirstW(snapshot, &entry)) {
+      do {
+        inspect_module(entry.hModule, entry.szExePath, entry.szModule);
+      } while (Module32NextW(snapshot, &entry));
+    }
+    CloseHandle(snapshot);
   }
-
-  MODULEENTRY32W entry = {};
-  entry.dwSize = sizeof(entry);
-  if (Module32FirstW(snapshot, &entry)) {
-    do {
-      if (entry.hModule == g_module) {
-        continue;
-      }
-      // the path as the game sees it (virtual under usvfs)
-      std::wstring module_path(32768, L'\0');
-      const DWORD module_path_length = GetModuleFileNameW(
-          entry.hModule, module_path.data(), static_cast<DWORD>(module_path.size()));
-      if (module_path_length > 0 && module_path_length < module_path.size()) {
-        module_path.resize(module_path_length);
-      } else {
-        module_path = entry.szExePath;
-      }
-      // what MO2 asked for by path counts wherever the mods folder is and
-      // whatever it is called; the folder names only sort out the rest.
-      // was_seen last: its table only has room for these
-      NativeInitializerRequest* request =
-          find_native_initializer_for(entry, module_path.c_str());
-      if ((request == nullptr && !has_managed_dll_path_segment(entry.szExePath) &&
-           !has_managed_dll_path_segment(module_path.c_str())) ||
-          was_seen(entry.hModule)) {
-        continue;
-      }
-
-      // the snapshot holds no reference: a DLL unloaded since would make
-      // GetProcAddress fault, so one is taken while the module is used
-      HMODULE held = nullptr;
-      if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                              reinterpret_cast<LPCWSTR>(entry.hModule), &held) ||
-          held != entry.hModule) {
-        if (held != nullptr) {
-          FreeLibrary(held);
-        }
-        log_line("MO2-managed DLL was unloaded before it could be inspected:",
-                 entry.szExePath);
-        continue;
-      }
-
-      log_line("Found MO2-managed DLL:", entry.szExePath);
-      if (request != nullptr) {
-        request->module = entry.hModule;
-        if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
-          // the reference goes to the initializer thread
-          HANDLE thread = CreateThread(
-              nullptr, 0, run_native_initializer, request, 0, nullptr);
-          if (thread != nullptr) {
-            CloseHandle(thread);
-          } else {
-            InterlockedExchange(&request->started, 0);
-            FreeLibrary(held);
-            log_line("Could not start Revamped native initializer thread:",
-                     entry.szExePath);
-          }
-        } else {
-          FreeLibrary(held);
-        }
-        continue;
-      }
-
-      const bool has_extension_export =
-          GetProcAddress(entry.hModule, "modengine_ext_init") != nullptr;
-      FreeLibrary(held);
-      if (!has_extension_export) {
-        log_line("No Mod Engine 2 initializer export:", entry.szModule);
-        continue;
-      }
-      // MO2 lists the Mod Engine 2 extensions it wants started (Seamless
-      // Co-op); others are left alone.
-      log_line(
-          "Mod Engine 2 initializer detected but not requested by MO2:",
-          entry.szModule);
-    } while (Module32NextW(snapshot, &entry));
+  for (const LongPathModule& entry : loaded_long_path_modules()) {
+    inspect_module(entry.module, entry.path.c_str(), entry.name.c_str());
   }
-
-  CloseHandle(snapshot);
 }
 
 // on unless the profile turned it off
@@ -3698,7 +3753,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.73.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.74.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
