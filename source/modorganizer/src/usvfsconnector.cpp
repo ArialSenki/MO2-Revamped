@@ -48,9 +48,22 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 // usvfs appends "_1", "_2"... to the tree's name unless it already ends in
 // "_<number>", and reads that number back as an int when the tree grows: the name
 // must not end in digits. 25 characters, well under usvfs's limits.
+// MO2 Revamped: the build goes into the hash too (its git id, and the loaded
+// usvfs's version): a game left running from another build of MO2 (C:\MO2
+// Revamped-Dev and the release on the same global instance) has a memory laid
+// out by that build's usvfs, which this one mustn't open. A game started by an
+// earlier build is then not seen as running after an update.
 static std::string makeShmId(const QString& settingsFile)
 {
-  const QByteArray key = QDir::cleanPath(settingsFile).toCaseFolded().toUtf8();
+  QByteArray key = QDir::cleanPath(settingsFile).toCaseFolded().toUtf8();
+  key += '|';
+  if (qApp != nullptr) {
+    key += qApp->property("revampedBuild").toString().toUtf8();
+  }
+  key += '|';
+  if (const char* v = usvfsVersionString()) {
+    key += v;
+  }
   const QByteArray hash =
       QCryptographicHash::hash(key, QCryptographicHash::Sha1).toHex().left(16);
   return "mo2r_" + hash.toStdString() + "_vfs";
