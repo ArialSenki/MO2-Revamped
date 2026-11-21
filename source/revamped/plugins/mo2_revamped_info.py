@@ -1446,7 +1446,7 @@ class _Redactor:
         self._secrets = [
             # Nexus links and API requests: the download key and the account
             (re.compile(r"(?i)(\b(?:key|apikey|api_key|api-key|access_token|"
-                        r"refresh_token|id_token|token|password|secret|session|"
+                        r"refresh_token|id_token|token|password|cooppassword|secret|session|"
                         r"user_id|userid)\b[\"']?\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
             # a Nexus API key: base64 pieces joined by "--" ("...==--...--...=="),
             # which can hold "/" and so isn't caught below
