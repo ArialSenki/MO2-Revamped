@@ -312,6 +312,54 @@ class Environment(unittest.TestCase):
         game._restore_profile_config_environment()
         self.assertEqual(dict(os.environ), before)
 
+    @staticmethod
+    def add_convergence(organizer: FakeOrganizer, active: bool = True) -> None:
+        root = organizer.add_mod("The Convergence", ["DLLs/ErdTools.dll", "regulation.bin"], active)
+        (root / "meta.ini").write_text(
+            "[General]\ngameName=ELDEN RING\nmodid=3419\nversion=3.0.4\n", encoding="utf-8")
+
+    def save_extension(self, organizer: FakeOrganizer, nightreign: bool = False) -> str | None:
+        game = game_for(organizer, nightreign)
+        ini = organizer.write_profile_ini("[Startup]\n")
+        game._activate_profile_config_environment(ini, [])
+        try:
+            return os.environ.get(game.SaveExtensionEnvironment)
+        finally:
+            game._restore_profile_config_environment()
+
+    def test_convergence_saves_to_cnv(self):
+        # its own launcher (convergence.me3) saves to ER0000.cnv; without the
+        # bridge renaming it, it played and overwrote ER0000.sl2
+        appdata_folder()
+        organizer = FakeOrganizer()
+        self.add_convergence(organizer)
+        self.assertEqual(self.save_extension(organizer), "cnv")
+
+        by_hand = FakeOrganizer()
+        by_hand.add_mod("Convergence", ["me3/convergence.me3", "regulation.bin"])
+        self.assertEqual(self.save_extension(by_hand), "cnv")
+
+    def test_convergence_extension_only_when_it_names_the_save(self):
+        appdata_folder()
+        inactive = FakeOrganizer()
+        self.add_convergence(inactive, active=False)
+        self.assertIsNone(self.save_extension(inactive))
+        # Seamless Co-op names the saves itself (cnvco2 in Convergence's settings)
+        seamless = FakeOrganizer()
+        self.add_convergence(seamless)
+        seamless.add_mod("Seamless", ["SeamlessCoop/ersc.dll", "SeamlessCoop/ersc_settings.ini"])
+        self.assertIsNone(self.save_extension(seamless))
+        nightreign = FakeOrganizer()
+        self.add_convergence(nightreign)
+        self.assertIsNone(self.save_extension(nightreign, nightreign=True))
+
+    def test_reforged_still_saves_to_err(self):
+        appdata_folder()
+        organizer = FakeOrganizer()
+        organizer.add_mod("Reforged", ["DLLs/reforged.dll"])
+        self.add_convergence(organizer)
+        self.assertEqual(self.save_extension(organizer), "err")
+
 
 if __name__ == "__main__":
     unittest.main()
