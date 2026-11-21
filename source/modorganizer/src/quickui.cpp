@@ -122,7 +122,10 @@ public:
   {
     if (event->type() == QEvent::StyleChange || event->type() == QEvent::PaletteChange) {
       Fluent::instance()->refresh();
-      if (auto* view = qobject_cast<QQuickWidget*>(watched)) {
+      // a view that shows the window behind it (such as the main window's
+      // summary row) keeps its clear color transparent
+      if (auto* view = qobject_cast<QQuickWidget*>(watched);
+          view != nullptr && !view->property("quickSeeThrough").toBool()) {
         view->setClearColor(Fluent::instance()->window());
       }
     }
@@ -344,6 +347,15 @@ void Fluent::refresh()
   m_controlBorder       = c("#E5E5E5", "#3D3D3D");
   m_controlBorderBottom = c("#CCCCCC", "#454545");
   m_input               = c("#FFFFFF", "#2D2D2D");
+  // QLabel#fluentStatBadge, #fluentStatCaption and QPushButton#fluentStatAction
+  m_tintAccent    = c("#DCE8F5", "#1F3443");
+  m_tintCaution   = c("#FFF4CE", "#433519");
+  m_tintCritical  = c("#FDE7E9", "#442726");
+  m_tintNeutral   = c("#E5E5E5", "#3D3D3D");
+  m_onTintCaution = c("#6B4A00", "#F5D58C");
+  m_caption       = c("#6E6E6E", "#9A9A9A");
+  m_chip          = c("#FFFFFF", "#2F2F2F");
+  m_chipHover     = c("#F9F9F9", "#343434");
   m_subtleHover    = faint(m_text, 15);
   m_subtleSelected = faint(m_text, 26);
   m_subtlePressed  = faint(m_text, 10);

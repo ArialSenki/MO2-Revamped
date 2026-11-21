@@ -99,6 +99,16 @@ class Fluent : public QObject
   Q_PROPERTY(QColor subtleHover READ subtleHover NOTIFY changed)
   Q_PROPERTY(QColor subtleSelected READ subtleSelected NOTIFY changed)
   Q_PROPERTY(QColor subtlePressed READ subtlePressed NOTIFY changed)
+  // the soft badges of the summary row (an accent, caution, critical or neutral
+  // glyph on its tint), its captions, and the round chips beside them
+  Q_PROPERTY(QColor tintAccent READ tintAccent NOTIFY changed)
+  Q_PROPERTY(QColor tintCaution READ tintCaution NOTIFY changed)
+  Q_PROPERTY(QColor tintCritical READ tintCritical NOTIFY changed)
+  Q_PROPERTY(QColor tintNeutral READ tintNeutral NOTIFY changed)
+  Q_PROPERTY(QColor onTintCaution READ onTintCaution NOTIFY changed)
+  Q_PROPERTY(QColor caption READ caption NOTIFY changed)
+  Q_PROPERTY(QColor chip READ chip NOTIFY changed)
+  Q_PROPERTY(QColor chipHover READ chipHover NOTIFY changed)
 
   // fonts: the interface's, at the size the style sheet gives it, and the
   // Segoe Fluent Icons glyphs
@@ -149,6 +159,14 @@ public:
   QColor subtleHover() const { return m_subtleHover; }
   QColor subtleSelected() const { return m_subtleSelected; }
   QColor subtlePressed() const { return m_subtlePressed; }
+  QColor tintAccent() const { return m_tintAccent; }
+  QColor tintCaution() const { return m_tintCaution; }
+  QColor tintCritical() const { return m_tintCritical; }
+  QColor tintNeutral() const { return m_tintNeutral; }
+  QColor onTintCaution() const { return m_onTintCaution; }
+  QColor caption() const { return m_caption; }
+  QColor chip() const { return m_chip; }
+  QColor chipHover() const { return m_chipHover; }
   QString fontFamily() const { return m_fontFamily; }
   qreal fontSize() const { return m_fontSize; }
   QString iconFamily() const { return m_iconFamily; }
@@ -173,7 +191,8 @@ private:
       m_accent, m_critical, m_caution, m_success, m_accentFill, m_accentFillHover,
       m_accentFillPressed, m_onAccent, m_control, m_controlHover, m_controlPressed,
       m_controlDisabled, m_controlBorder, m_controlBorderBottom, m_input, m_subtleHover,
-      m_subtleSelected, m_subtlePressed;
+      m_subtleSelected, m_subtlePressed, m_tintAccent, m_tintCaution, m_tintCritical,
+      m_tintNeutral, m_onTintCaution, m_caption, m_chip, m_chipHover;
   QString m_fontFamily, m_iconFamily;
   qreal m_fontSize = 9;
 };
