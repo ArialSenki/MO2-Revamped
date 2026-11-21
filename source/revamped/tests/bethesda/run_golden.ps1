@@ -10,6 +10,15 @@ game's cases. -Record writes golden\<game>\<case>\ from the bed instead of
 comparing. The bed's ModOrganizer.ini and plugins\mo2r_golden_dump.py are
 replaced; use a bed made for tests. Needs D:\mo2build\scripts (desk.ps1,
 closepid.ps1, mo2lock.ps1).
+
+Not repeatable with the current plugins (checked 2026-11-21, same bed, two runs):
+plugins with no place from loadorder.txt (no loadorder.txt, or left out of it)
+come out in a different order each run; with New Vegas, the mods' file times
+don't decide it (the Data folder's do). So these goldens are one sample, not a
+contract: skyrimse mixed; falloutnv mtime, disagree, disagree-old, mixed,
+unicode (and big, not run twice). Stable: skyrimse big, case, unicode;
+falloutnv case. MO2 also dates every plugin, Data included, to
+2000-01-(1 + priority) on each save of the list (PluginList::saveLoadOrder).
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Work,
       [ValidateSet('skyrimse', 'falloutnv')][string]$Game = 'skyrimse',
