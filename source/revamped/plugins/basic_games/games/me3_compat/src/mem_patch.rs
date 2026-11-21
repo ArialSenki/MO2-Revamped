@@ -11,8 +11,8 @@ use std::{ffi::c_void, mem::ManuallyDrop, ptr::NonNull, slice, sync::{LazyLock, 
 
 use libmimalloc_sys::{
     mi_arena_id_t, mi_free, mi_heap_malloc_aligned, mi_heap_new_in_arena, mi_heap_realloc_aligned,
-    mi_heap_t, mi_malloc_aligned, mi_manage_os_memory_ex, mi_option_set, mi_realloc_aligned,
-    mi_usable_size,
+    mi_heap_t, mi_is_in_heap_region, mi_malloc_aligned, mi_manage_os_memory_ex, mi_option_set,
+    mi_realloc_aligned, mi_usable_size,
 };
 use me3_binary_analysis::{pe, rtti};
 use pelite::pe64::{Pe, PeObject, PeView};
@@ -214,6 +214,20 @@ unsafe extern "C" fn reallocate_aligned(
     }
 }
 unsafe extern "C" fn free(_: NonNull<DlAllocator>, ptr: *mut u8) {
+    if ptr.is_null() {
+        return;
+    }
+    // a block mimalloc never made: a mod that put memory of its own in a
+    // game structure, which the game frees at exit (NativeTweaks' rebuilt
+    // params, 2026-11-21). mi_free would read a segment that isn't there and
+    // crash; the block is left alone instead
+    if !unsafe { mi_is_in_heap_region(ptr as _) } {
+        static LOGGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        if !LOGGED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+            log::warn!("mem_patch: the game freed a block from outside mimalloc ({ptr:p}); left alone");
+        }
+        return;
+    }
     unsafe { mi_free(ptr as _) }
 }
 unsafe extern "C" fn free_all(_: NonNull<DlAllocator>) {}

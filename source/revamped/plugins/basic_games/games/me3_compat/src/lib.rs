@@ -145,7 +145,7 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
         open_log(nightreign);
         // a panic's message in the log, before it is caught or ends the game
         std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
-        log::info!("MO2 me3 compatibility 0.5.1 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
+        log::info!("MO2 me3 compatibility 0.5.3 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
         // me3's asset code reads the launched game from me3's launcher, as a
         // JSON string; under MO2 there is none, so it is set here from the
         // executable's name
