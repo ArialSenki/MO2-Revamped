@@ -4721,7 +4721,10 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         for line in text.splitlines():
             name, separator, value = line.partition("=")
             if separator and name.strip().casefold() == key:
-                return value.split(";", 1)[0].strip().strip("\"'").lstrip(".")
+                value = value.split(";", 1)[0].strip().strip("\"'").lstrip(".")
+                # MO2 Revamped: an extension, nothing else ("**" from a mod's
+                # settings broke the save list's glob, "x/../y" made odd paths)
+                return value if re.fullmatch(r"[A-Za-z0-9]{1,8}", value) else ""
         return ""
 
     # The Convergence's Nexus page, as the game plugin knows it
@@ -4752,12 +4755,15 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         """The co-op save extension Seamless gets with this Convergence, as the
         game plugin gives it (forced_loads.py, _convergence_coop_extension):
         the save_file_extension of the ersc_settings.ini it ships, unless that
-        is co2 or not a plain name, else cnvco2."""
+        isn't a short plain word or is another save's (sl2, co2, err, cnv...),
+        else cnvco2."""
+        reserved = {"sl2", "co2", "err", "cnv", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
         for settings in (folder / "DLLs" / "ersc_settings.ini", folder / "ersc_settings.ini"):
             if not settings.is_file():
                 continue
             value = EldenRingMo2SaveIsolation._settings_extension(settings, "save_file_extension")
-            if value and value.casefold() != "co2" and value.isalnum():
+            if (value and re.fullmatch(r"[a-z0-9]{2,8}", value.casefold())
+                    and value.casefold() not in reserved):
                 return value
         return "cnvco2"
 

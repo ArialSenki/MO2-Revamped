@@ -51,6 +51,14 @@ class ConvergenceCoopExtension(unittest.TestCase):
         self.assertEqual(Tool._convergence_coop_extension(co2), "cnvco2")
         odd = mod_folder({"DLLs/ersc_settings.ini": "[SAVE]\nsave_file_extension = a/b\n"})
         self.assertEqual(Tool._convergence_coop_extension(odd), "cnvco2")
+        # another save's extension, as the plugin refuses it
+        for other in ("sl2", "err", "cnv", "**"):
+            folder = mod_folder({"DLLs/ersc_settings.ini": f"[SAVE]\nsave_file_extension = {other}\n"})
+            self.assertEqual(Tool._convergence_coop_extension(folder), "cnvco2")
+
+    def test_a_glob_pattern_isnt_an_extension(self):
+        settings = mod_folder({"ersc_settings.ini": "[SAVE]\nsave_file_extension = **\n"}) / "ersc_settings.ini"
+        self.assertEqual(Tool._settings_extension(settings, "save_file_extension"), "")
 
 
 if __name__ == "__main__":
