@@ -16476,6 +16476,50 @@ Confira as opções do jogo antes de jogar.</translation>
       <source>FNIS finished with a problem</source>
       <translation>O FNIS terminou com um problema</translation>
     </message>
+    <message>
+      <source>Start %1 anyway?</source>
+      <translation>Iniciar %1 mesmo assim?</translation>
+    </message>
+    <message>
+      <source>Don&apos;t start</source>
+      <translation>Não iniciar</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Iniciar mesmo assim</translation>
+    </message>
+    <message>
+      <source>MO2 couldn&apos;t start FNIS (%1).</source>
+      <translation>O MO2 não conseguiu iniciar o FNIS (%1).</translation>
+    </message>
+    <message>
+      <source>FNIS finished with a warning. The game can still run, but some animations may be missing.</source>
+      <translation>O FNIS terminou com um aviso. O jogo ainda pode rodar, mas algumas animações podem faltar.</translation>
+    </message>
+    <message>
+      <source>FNIS stopped with a critical error, so the game&apos;s animations may be broken. Check FNIS&apos;s own window or log for what went wrong.</source>
+      <translation>O FNIS parou com um erro crítico, então as animações do jogo podem estar quebradas. Veja a janela ou o log do FNIS para saber o que deu errado.</translation>
+    </message>
+    <message>
+      <source>MO2 couldn&apos;t tell whether FNIS finished correctly.</source>
+      <translation>O MO2 não conseguiu saber se o FNIS terminou corretamente.</translation>
+    </message>
+    <message>
+      <source>FNIS finished with a warning. Keep this result, or have MO2 ask to run FNIS again before the next game start?</source>
+      <translation>O FNIS terminou com um aviso. Manter este resultado ou fazer o MO2 perguntar de novo se deve rodar o FNIS antes de iniciar o jogo?</translation>
+    </message>
+    <message>
+      <source>FNIS stopped with a critical error. Keep this result anyway, or have MO2 ask to run FNIS again before the next game start?</source>
+      <translation>O FNIS parou com um erro crítico. Manter este resultado mesmo assim ou fazer o MO2 perguntar de novo se deve rodar o FNIS antes de iniciar o jogo?</translation>
+    </message>
+    <message>
+      <source>Ask again</source>
+      <translation>Perguntar de novo</translation>
+    </message>
+    <message>
+      <source>Keep this result</source>
+      <translation>Manter este resultado</translation>
+    </message>
   </context>
   <context>
     <name>ScriptExtenderSetup</name>
@@ -22043,6 +22087,56 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
     <message>
       <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
       <translation>O leia-me pode explicar as opções da instalação. Ele fica aberto ao lado do instalador até você fechá-lo.</translation>
+    </message>
+  </context>
+  <context>
+    <name>PreviewBase</name>
+    <message>
+      <source>This picture can&apos;t be read.</source>
+      <translation>Não é possível ler esta imagem.</translation>
+    </message>
+    <message>
+      <source>%1 × %2 pixels</source>
+      <translation>%1 × %2 pixels</translation>
+    </message>
+  </context>
+  <context>
+    <name>PreviewBsa</name>
+    <message>
+      <source>MO2 can&apos;t read this archive: its format isn&apos;t one it knows, or the file is damaged.</source>
+      <translation>O MO2 não consegue ler este pacote: o formato não é um que ele conheça ou o arquivo está danificado.</translation>
+    </message>
+    <message>
+      <source>Unknown format</source>
+      <translation>Formato desconhecido</translation>
+    </message>
+    <message>
+      <source>%1 archive · %2 files · %3</source>
+      <translation>Pacote de %1 · %2 arquivos · %3</translation>
+    </message>
+    <message>
+      <source>compressed</source>
+      <translation>compactado</translation>
+    </message>
+    <message>
+      <source>not compressed</source>
+      <translation>não compactado</translation>
+    </message>
+    <message>
+      <source>Archive type %1, flags %2</source>
+      <translation>Tipo de pacote %1, sinalizadores %2</translation>
+    </message>
+    <message>
+      <source>Filter the archive&apos;s files</source>
+      <translation>Filtrar os arquivos do pacote</translation>
+    </message>
+    <message>
+      <source>Files in the archive</source>
+      <translation>Arquivos no pacote</translation>
+    </message>
+    <message>
+      <source>Filter files</source>
+      <translation>Filtrar arquivos</translation>
     </message>
   </context>
 </TS>
