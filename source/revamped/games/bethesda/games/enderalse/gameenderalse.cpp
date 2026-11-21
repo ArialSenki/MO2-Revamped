@@ -174,7 +174,7 @@ void EnderalSEGame::registerFeatures()
   BethesdaGame::registerFeatures();
   // plugins.txt opens with the game's master and SkyUI (replaces the
   // default lists)
-  registerFeature(std::make_shared<AsteriskGamePlugins>(organizer(), true, FirstActive));
+  registerFeature(std::make_shared<AsteriskGamePlugins>(organizer(), true, false, FirstActive));
 }
 
 QString EnderalSEGame::identifyGamePath() const

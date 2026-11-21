@@ -109,5 +109,11 @@ std::shared_ptr<const BethesdaSaveGame> readSkyrimSaveGame(const BethesdaGame* g
                                                            const SkyrimSaveOptions& options);
 std::shared_ptr<const BethesdaSaveGame> readFallout4SaveGame(const BethesdaGame* game,
                                                              const QString& path);
+// saves/oblivionsavegame.cpp (Oblivion, Nehrim)
+std::shared_ptr<const BethesdaSaveGame> readOblivionSaveGame(const BethesdaGame* game,
+                                                             const QString& path);
+// saves/starfieldsavegame.cpp
+std::shared_ptr<const BethesdaSaveGame> readStarfieldSaveGame(const BethesdaGame* game,
+                                                              const QString& path);
 
 }  // namespace mo2r::bethesda

@@ -386,6 +386,13 @@ std::shared_ptr<const MOBase::ISaveGame> BethesdaGame::makeSaveGame(const QStrin
     return readSkyrimSaveGame(this, path);
   case SaveFormat::Fallout4:
     return readFallout4SaveGame(this, path);
+  case SaveFormat::Oblivion:
+    return readOblivionSaveGame(this, path);
+  case SaveFormat::Starfield:
+    return readStarfieldSaveGame(this, path);
+  case SaveFormat::Custom:
+    // the game overrides makeSaveGame()
+    return nullptr;
   }
   return nullptr;
 }

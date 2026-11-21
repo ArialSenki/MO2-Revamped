@@ -28,13 +28,19 @@ public:
   explicit BethesdaDataChecker(const GameDefinition& definition);
 
   // valid with a known folder or file type at the top, or with a Root/ folder
-  // (files for the game's own folder, Root Builder's layout) and no Data/
+  // (files for the game's own folder, Root Builder's layout) and no Data/;
+  // fixable with only files starting with the definition's fixablePrefix
   CheckReturn
   dataLooksValid(std::shared_ptr<const MOBase::IFileTree> fileTree) const override;
+  // those files moved into the definition's fixFolder
+  std::shared_ptr<MOBase::IFileTree>
+  fix(std::shared_ptr<MOBase::IFileTree> fileTree) const override;
 
 private:
   std::set<QString, MOBase::FileNameComparator> m_Folders;
   std::set<QString, MOBase::FileNameComparator> m_Extensions;
+  QString m_FixablePrefix;
+  QString m_FixFolder;
 };
 
 class BethesdaDataContent : public MOBase::ModDataContent

@@ -42,7 +42,10 @@ enum class SaveFormat
   Fallout3,   // FO3SAVEGAME as Fallout 3 writes it
   FalloutNV,  // FO3SAVEGAME with New Vegas' language block
   SkyrimSE,   // TESV_SAVEGAME, the body LZ4 or zlib (Skyrim 2011's too)
-  Fallout4    // FO4_SAVEGAME
+  Fallout4,   // FO4_SAVEGAME
+  Oblivion,   // TES4SAVEGAME (Oblivion, Nehrim)
+  Starfield,  // BCPS: SFS_SAVEGAME in zlib chunks
+  Custom      // read by the game's own makeSaveGame() (Morrowind)
 };
 
 // a file in the game folder that tells the variant (store) the game is from
@@ -156,6 +159,11 @@ struct DataLayout
   Names extensions;  // or with a file of one of these
   std::uint32_t disabledContents;  // contentBit()s the game has no use for
   bool materialsContent;  // Content::Material is listed (Fallout 4)
+  // not empty: an archive with only files at its top, all starting with this
+  // (ignoring case), can be fixed by moving them into fixFolder (Oblivion's
+  // "OBSE" plugin DLLs into OBSE/Plugins)
+  QStringView fixablePrefix = {};
+  QStringView fixFolder     = {};
 };
 
 // an official plugin shown as a mod under another name (Fallout 4's DLC)

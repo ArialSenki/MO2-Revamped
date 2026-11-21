@@ -35,17 +35,24 @@ namespace mo2r::bethesda
 class AsteriskGamePlugins : public MOBase::GamePlugins
 {
 public:
-  // firstActive: lines written as active right after the header, before the
-  // plugins in load order, whatever their state (Enderal SE's plugin wrote
-  // its master and SkyUI_SE.esp so); empty: none
+  // mediumPlugins: Starfield's medium plugins. firstActive: lines written as
+  // active right after the header, before the plugins in load order, whatever
+  // their state (Enderal SE's plugin wrote its master and SkyUI_SE.esp so);
+  // empty: none
   AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins,
+                      bool mediumPlugins = false,
                       std::span<const QStringView> firstActive = {});
 
   void writePluginLists(const MOBase::IPluginList* pluginList) override;
   void readPluginLists(MOBase::IPluginList* pluginList) override;
   QStringList getLoadOrder() override;
   bool lightPluginsAreSupported() override { return m_LightPlugins; }
-  bool mediumPluginsAreSupported() override { return false; }
+  bool mediumPluginsAreSupported() override { return m_MediumPlugins; }
+
+protected:
+  // false while the game ignores plugins.txt (Starfield's sTestFile lines):
+  // plugins.txt is then neither read nor written, loadorder.txt still is
+  virtual bool pluginsTxtInUse() const { return true; }
 
 private:
   QString profileFile(const QString& name) const;
@@ -63,6 +70,7 @@ private:
 
   MOBase::IOrganizer* m_Organizer;
   bool m_LightPlugins;
+  bool m_MediumPlugins;
   std::span<const QStringView> m_FirstActive;
   QDateTime m_LastRead;
   std::map<QString, QByteArray> m_LastWritten;
