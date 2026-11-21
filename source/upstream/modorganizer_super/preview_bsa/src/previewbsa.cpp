@@ -189,10 +189,14 @@ QWidget* PreviewBsa::genBsaPreview(const QString& fileName, const QSize&)
   const bool compressed = (arch.getFlags() & 0x00000004) != 0;
   infoLabel->setText(
       // the dots are UTF-8 middle dots
-      tr("%1 archive \xC2\xB7 %2 files \xC2\xB7 %3")
-          .arg(format)
-          .arg(QLocale().toString(static_cast<qlonglong>(m_Files.size())))
-          .arg(compressed ? tr("compressed") : tr("not compressed")));
+      (m_Files.size() == 1
+           ? tr("%1 archive \xC2\xB7 1 file \xC2\xB7 %2")
+                 .arg(format)
+                 .arg(compressed ? tr("compressed") : tr("not compressed"))
+           : tr("%1 archive \xC2\xB7 %2 files \xC2\xB7 %3")
+                 .arg(format)
+                 .arg(QLocale().toString(static_cast<qlonglong>(m_Files.size())))
+                 .arg(compressed ? tr("compressed") : tr("not compressed"))));
   infoLabel->setToolTip(tr("Archive type %1, flags %2")
                             .arg(arch.getType())
                             .arg("0x" + QString::number(arch.getFlags(), 16)));

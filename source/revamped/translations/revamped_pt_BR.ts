@@ -22138,5 +22138,9 @@ Baixar o LSLib do GitHub (github.com/Norbyte/lslib)? Sem ele, esses mods ficam f
       <source>Filter files</source>
       <translation>Filtrar arquivos</translation>
     </message>
+    <message>
+      <source>%1 archive · 1 file · %2</source>
+      <translation>Pacote de %1 · 1 arquivo · %2</translation>
+    </message>
   </context>
 </TS>

@@ -22162,5 +22162,9 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <source>Filter files</source>
       <translation>Dateien filtern</translation>
     </message>
+    <message>
+      <source>%1 archive · 1 file · %2</source>
+      <translation>%1-Archiv · 1 Datei · %2</translation>
+    </message>
   </context>
 </TS>
