@@ -243,6 +243,24 @@ class NativeDlls(unittest.TestCase):
         )
         self.assertEqual(self.loads(), ["b.dll", "ersc.dll"])
 
+    def test_convergence_seamless_copy_replaces_the_profile_entry(self):
+        # the native profile lists the mod's ersc.dll; with The Convergence
+        # its copy loaded as well, two Seamless Co-op DLLs in one game
+        root = self.organizer.add_mod("The Convergence", ["DLLs/ErdTools.dll"])
+        (root / "meta.ini").write_text("[General]\ngameName=ELDEN RING\nmodid=3419\n", encoding="utf-8")
+        self.organizer.write_profile_ini(
+            "[RevampedNativeProfile]\nversion = 2\n"
+            "native_01 = SeamlessCoop/ersc.dll\nmod_01 = Seamless\nenabled_01 = true\n"
+            "native_02 = DLLs/b.dll\nmod_02 = A\nenabled_02 = true\n"
+        )
+        game = game_for(self.organizer)
+        loads = [Path(load.library()) for load in game.executableForcedLoads()]
+        seamless = [load for load in loads if load.name == "ersc.dll"]
+        self.assertEqual(len(seamless), 1)
+        self.assertEqual(seamless[0].parent.parent.name, game.ConvergenceSeamlessFolder)
+        names = [load.name for load in loads if load.name in ("ersc.dll", "b.dll", "ErdTools.dll")]
+        self.assertLess(names.index("ersc.dll"), names.index("b.dll"))
+
     def test_initializers_name_the_forced_loads(self):
         self.organizer.write_profile_ini(
             "[RevampedNativeProfile]\nversion = 2\n"

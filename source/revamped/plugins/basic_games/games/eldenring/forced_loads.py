@@ -234,6 +234,15 @@ class ForcedLoadsMixin:
         # the game runs (see _seamless_initializer); launchers such as Mod
         # Engine 2 get no initializer, so there it stays inactive
         seamless = self._seamless_load_dll() if native_loading else None
+        own_seamless = self._active_seamless_dll() if seamless is not None else None
+        if own_seamless is not None and os.path.normcase(str(own_seamless)) != os.path.normcase(str(seamless)):
+            # its copy for The Convergence loads in the mod DLL's place (the
+            # native profile lists that one): never both
+            for index, load in enumerate(forced_loads):
+                if os.path.normcase(str(Path(load.library()))) == os.path.normcase(str(own_seamless)):
+                    forced_loads[index] = mobase.ExecutableForcedLoadSetting(
+                        self.GameProcess, str(seamless)
+                    ).withEnabled(True).withForced(True)
         if seamless is not None and all(
             os.path.normcase(str(Path(load.library()))) != os.path.normcase(str(seamless))
             for load in forced_loads
