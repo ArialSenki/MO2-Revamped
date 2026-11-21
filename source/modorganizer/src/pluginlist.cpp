@@ -1231,22 +1231,22 @@ bool PluginList::setPriority(const QString& name, int newPriority)
 
 int PluginList::loadOrder(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return -1;
   } else {
-    return m_ESPs[iter->second].loadOrder;
+    return m_ESPs[i].loadOrder;
   }
 }
 
 QStringList PluginList::masters(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return QStringList();
   } else {
     QStringList result;
-    for (const QString& master : m_ESPs[iter->second].masters) {
+    for (const QString& master : m_ESPs[i].masters) {
       result.append(master);
     }
     return result;
@@ -1255,71 +1255,71 @@ QStringList PluginList::masters(const QString& name) const
 
 QString PluginList::origin(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return QString();
   } else {
-    return m_ESPs[iter->second].originName;
+    return m_ESPs[i].originName;
   }
 }
 
 bool PluginList::hasMasterExtension(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasMasterExtension;
+    return m_ESPs[i].hasMasterExtension;
   }
 }
 
 bool PluginList::hasLightExtension(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasLightExtension;
+    return m_ESPs[i].hasLightExtension;
   }
 }
 
 bool PluginList::isMasterFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isMasterFlagged;
+    return m_ESPs[i].isMasterFlagged;
   }
 }
 
 bool PluginList::isMediumFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isMediumFlagged;
+    return m_ESPs[i].isMediumFlagged;
   }
 }
 
 bool PluginList::isLightFlagged(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].isLightFlagged;
+    return m_ESPs[i].isLightFlagged;
   }
 }
 
 bool PluginList::hasNoRecords(const QString& name) const
 {
-  auto iter = m_ESPsByName.find(name);
-  if (iter == m_ESPsByName.end()) {
+  const int i = indexOfName(name);
+  if (i < 0) {
     return false;
   } else {
-    return m_ESPs[iter->second].hasNoRecords;
+    return m_ESPs[i].hasNoRecords;
   }
 }
 
