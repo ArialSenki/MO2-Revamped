@@ -19862,6 +19862,10 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <translation>O MO2 Revamped não tem plugin para o jogo desta lista.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>A lista pega %1 da pasta do jogo, como o autor tinha, e o seu está faltando ou é outra versão. Ele vem com o jogo, uma atualização, uma DLC ou o Creation Kit: quando estiver lá, clique em Verificar por hash.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>O jogo da lista não está instalado, ou o MO2 Revamped não o encontrou.</translation>
     </message>

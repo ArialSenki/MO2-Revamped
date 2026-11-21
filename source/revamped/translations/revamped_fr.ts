@@ -20050,6 +20050,10 @@ Si MO2 Revamped est installé dans un dossier protégé comme Program Files, lan
       <translation>MO2 Revamped n'a pas de plugin pour le jeu de cette liste.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>La liste prend %1 dans le dossier du jeu, tel que son auteur l'avait, et le vôtre manque ou est une autre version. Il vient avec le jeu, une mise à jour, un DLC ou le Creation Kit : une fois en place, appuyez sur Vérifier par hash.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>Le jeu de la liste n'est pas installé, ou MO2 Revamped ne l'a pas trouvé.</translation>
     </message>

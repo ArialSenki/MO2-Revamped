@@ -19886,6 +19886,10 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>MO2 Revamped hat kein Spiel-Plugin für das Spiel dieser Liste.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>Die Liste nimmt %1 aus dem Spielordner, so wie ihr Autor es hatte, und deins fehlt oder ist eine andere Version. Es kommt mit dem Spiel, einem Update, einem DLC oder dem Creation Kit: Sobald es da ist, drücke Per Hash prüfen.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>Das Spiel der Liste ist nicht installiert, oder MO2 Revamped hat es nicht gefunden.</translation>
     </message>

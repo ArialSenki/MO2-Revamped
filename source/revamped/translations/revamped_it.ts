@@ -20108,6 +20108,10 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
       <translation>MO2 Revamped non ha un plugin per il gioco di questa lista.</translation>
     </message>
     <message>
+      <source>The list takes %1 from the game folder, as its author had it, and yours is missing or another version. It comes with the game, an update, a DLC or the Creation Kit: once it's there, press Check by hash.</source>
+      <translation>La lista prende %1 dalla cartella del gioco, come lo aveva il suo autore, e il tuo manca o è un'altra versione. Arriva con il gioco, un aggiornamento, un DLC o il Creation Kit: quando c'è, premi Controlla per hash.</translation>
+    </message>
+    <message>
       <source>The list's game isn't installed, or MO2 Revamped didn't find it.</source>
       <translation>Il gioco della lista non è installato, o MO2 Revamped non l'ha trovato.</translation>
     </message>

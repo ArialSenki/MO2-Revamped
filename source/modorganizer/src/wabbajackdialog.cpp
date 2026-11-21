@@ -787,7 +787,12 @@ void WabbajackDialog::onRead()
       m_refresh->start();
     }
   });
-  connect(m_queue, &DownloadQueue::message, m_status, &QLabel::setText);
+  connect(m_queue, &DownloadQueue::message, this, [this](const QString& text) {
+    // MO2 Revamped: once the downloads are done, why Install still can't
+    // start (a game file that isn't in the game folder)
+    const QString problem = m_queue->isRunning() ? QString() : installProblem();
+    m_status->setText(problem.isEmpty() ? text : text + QStringLiteral(" ") + problem);
+  });
   connect(m_queue, &DownloadQueue::runFinished, this, &WabbajackDialog::onRunFinished);
 
   fillTree();
@@ -1227,6 +1232,10 @@ QString WabbajackDialog::installProblem() const
     return tr("The list's game isn't installed, or MO2 Revamped didn't find it.");
   }
   int missing = 0;
+  // MO2 Revamped: files of the game the list takes from the game folder and
+  // that aren't there (or are another version): no download brings them, so
+  // they're named instead of counted among the downloads
+  QStringList gameFiles;
   for (std::size_t i = 0; i < m_list->archives.size(); ++i) {
     const auto& a = m_list->archives[i];
     if (a.isModOrganizer || a.uses == 0) {
@@ -1236,13 +1245,25 @@ QString WabbajackDialog::installProblem() const
     const bool here = s == DownloadQueue::Status::Verified ||
                       s == DownloadQueue::Status::GameFound ||
                       (a.source == Source::GameFile && s == DownloadQueue::Status::Unknown);
-    if (!here) {
+    if (here) {
+      continue;
+    }
+    if (a.source == Source::GameFile && (s == DownloadQueue::Status::GameMissing ||
+                                         s == DownloadQueue::Status::GameDiffers)) {
+      gameFiles.append(QDir::toNativeSeparators(a.gameFile.isEmpty() ? a.name : a.gameFile));
+    } else {
       ++missing;
     }
   }
   if (missing > 0) {
     return tr("%n archives the list uses aren't downloaded and verified yet.", nullptr,
-              missing);
+              missing + int(gameFiles.size()));
+  }
+  if (!gameFiles.isEmpty()) {
+    return tr("The list takes %1 from the game folder, as its author had it, and yours is "
+              "missing or another version. It comes with the game, an update, a DLC or "
+              "the Creation Kit: once it's there, press Check by hash.")
+        .arg(gameFiles.join(QStringLiteral(", ")));
   }
   return {};
 }
