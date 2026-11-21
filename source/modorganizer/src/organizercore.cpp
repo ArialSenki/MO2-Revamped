@@ -1276,7 +1276,12 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
   }
 
   if (modInfo != nullptr) {
-    auto dlIdx = m_DownloadManager.indexByName(QFileInfo(archivePath).fileName());
+    // MO2 Revamped: the download of this very file first; two can share a name
+    // (foo.7z beside a paused foo.7z.unfinished, a read-only source's copy)
+    auto dlIdx = m_DownloadManager.indexByArchive(archivePath);
+    if (dlIdx == -1) {
+      dlIdx = m_DownloadManager.indexByName(QFileInfo(archivePath).fileName());
+    }
     if (dlIdx != -1) {
       int modId  = m_DownloadManager.getModID(dlIdx);
       int fileId = m_DownloadManager.getFileInfo(dlIdx)->fileID;
@@ -1285,6 +1290,18 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
     m_DownloadManager.markInstalled(archivePath);
   }
   return modInfo;
+}
+
+bool OrganizerCore::refuseUserInstall()
+{
+  if (m_InstallQueueRunning || m_InstallationManager.isRunning() ||
+      qApp->property("mo2r.collectionQuiet").toBool()) {
+    QMessageBox::information(qApp->activeWindow(), tr("Installation cancelled"),
+                             tr("Another installation is currently in progress."),
+                             QMessageBox::Ok);
+    return true;
+  }
+  return false;
 }
 
 void OrganizerCore::installDownloads(const QStringList& downloadNames, int priority)
@@ -1353,11 +1370,7 @@ void OrganizerCore::runInstallQueue(const QStringList& files, bool downloads,
   // take turns). Also for one file: dropped or picked during a collection,
   // it would install in the middle of it, its notice hidden by the
   // collection's quiet mode
-  if (m_InstallQueueRunning || m_InstallationManager.isRunning() ||
-      qApp->property("mo2r.collectionQuiet").toBool()) {
-    QMessageBox::information(qApp->activeWindow(), tr("Installation cancelled"),
-                             tr("Another installation is currently in progress."),
-                             QMessageBox::Ok);
+  if (refuseUserInstall()) {
     return;
   }
 

@@ -1205,6 +1205,11 @@ void MOApplication::resetForRestart()
   m_nexus    = {};
   m_settings = {};
   m_instance = {};
+
+  // MO2 Revamped: the instance picker that may come next loads every plugin;
+  // with the last instance's game still set, its Python side took the other
+  // games for stand-ins and the Elden Ring tools were skipped
+  setProperty("revampedInstanceGame", QVariant());
 }
 
 namespace

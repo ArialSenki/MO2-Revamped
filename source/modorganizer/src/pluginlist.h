@@ -326,6 +326,10 @@ private:
     // with the time: a tool that rewrites a plugin keeping its date (as MO2
     // sets dates for the load order in older games) still changes its size
     uint64_t size;
+    // the NTFS change time of a loose plugin in games ordered by file dates:
+    // a tool can keep a file's write time and size (Wrye Bash keeps dates),
+    // never this one. 0 where it isn't read
+    int64_t changed;
     bool mediumSupported;
     std::shared_ptr<const PluginHeader> header;
   };

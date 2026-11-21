@@ -67,6 +67,45 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 using namespace MOBase;
 using namespace MOShared;
 
+namespace
+{
+// MO2 Revamped: a loose plugin's size and NTFS change time, from one open;
+// ok is false when the file can't be opened (then its header is read again)
+struct LooseStat
+{
+  uint64_t size   = 0;
+  int64_t changed = 0;
+  bool ok         = false;
+};
+
+LooseStat statLoose(const QString& path)
+{
+  LooseStat s;
+  std::wstring native = QDir::toNativeSeparators(path).toStdWString();
+  // a path past MAX_PATH failed every time, and its header was read again on
+  // every refresh
+  if (native.size() >= MAX_PATH && native.rfind(L"\\\\", 0) != 0) {
+    native = L"\\\\?\\" + native;
+  }
+  HANDLE h = CreateFileW(native.c_str(), FILE_READ_ATTRIBUTES,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                         nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  if (h == INVALID_HANDLE_VALUE) {
+    return s;
+  }
+  FILE_BASIC_INFO basic{};
+  LARGE_INTEGER size{};
+  if (GetFileInformationByHandleEx(h, FileBasicInfo, &basic, sizeof(basic)) &&
+      GetFileSizeEx(h, &size)) {
+    s.size    = static_cast<uint64_t>(size.QuadPart);
+    s.changed = basic.ChangeTime.QuadPart;
+    s.ok      = true;
+  }
+  CloseHandle(h);
+  return s;
+}
+}  // namespace
+
 static QString TruncateString(const QString& text)
 {
   QString new_text = text;
@@ -355,22 +394,34 @@ void PluginList::refresh(const QString& profileName,
   const bool datedLoadOrder =
       game != nullptr &&
       game->loadOrderMechanism() == IPluginGame::LoadOrderMechanism::FileTime;
+  // in those games a loose plugin's change time is compared too: MO2 writes
+  // the dates itself, so write time and size alone took a plugin rewritten
+  // keeping both (an ESM flag or a master changed by Wrye Bash) for the old one
+  std::vector<LooseStat> loose(newPlugins.size());
   for (size_t i = 0; i < newPlugins.size(); ++i) {
     const FILETIME time  = (*newPlugins[i].entry)->getFileTime();
     const uint64_t known = (*newPlugins[i].entry)->getFileSize();
+    const bool isLoose   = known == MOShared::FileEntry::NoFileSize;
+    if (datedLoadOrder && isLoose) {
+      loose[i] = statLoose(newPlugins[i].fullPath);
+    }
     auto cached          = m_HeaderCache.find(newPlugins[i].fullPath);
-    const auto sameSize  = [&]() {
-      if (known != MOShared::FileEntry::NoFileSize) {
+    const auto sameFile  = [&]() {
+      if (!isLoose) {
         return cached->second.size == known;
       }
-      return !datedLoadOrder || cached->second.size == sizeOf(newPlugins[i]);
+      if (!datedLoadOrder) {
+        return true;
+      }
+      return loose[i].ok && cached->second.size == loose[i].size &&
+             cached->second.changed == loose[i].changed;
     };
     if (cached != m_HeaderCache.end() &&
-        CompareFileTime(&cached->second.time, &time) == 0 && sameSize() &&
+        CompareFileTime(&cached->second.time, &time) == 0 && sameFile() &&
         cached->second.mediumSupported == mediumPluginsAreSupported) {
       newPlugins[i].header = cached->second.header;
     } else {
-      sizes[i] = sizeOf(newPlugins[i]);
+      sizes[i] = loose[i].ok ? loose[i].size : sizeOf(newPlugins[i]);
       unread.push_back(i);
     }
   }
@@ -381,7 +432,8 @@ void PluginList::refresh(const QString& profileName,
     });
     for (size_t i : unread) {
       m_HeaderCache[newPlugins[i].fullPath] = {(*newPlugins[i].entry)->getFileTime(),
-                                               sizes[i], mediumPluginsAreSupported,
+                                               sizes[i], loose[i].changed,
+                                               mediumPluginsAreSupported,
                                                newPlugins[i].header};
     }
   }

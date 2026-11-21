@@ -1213,14 +1213,19 @@ void ModListView::setup(OrganizerCore& core, CategoryFactory& factory, MainWindo
   connect(
       m_core->modList(), &ModList::downloadArchiveDropped, this,
       [=](int row, int priority) {
-        m_core->installDownload(row, priority);
+        // MO2 Revamped: not inside a collection or the install queue
+        if (!m_core->refuseUserInstall()) {
+          m_core->installDownload(row, priority);
+        }
       },
       Qt::QueuedConnection);
   connect(
       m_core->modList(), &ModList::externalArchiveDropped, this,
       [=](const QUrl& url, int priority) {
         setWindowState(Qt::WindowActive);
-        m_core->installArchive(url.toLocalFile(), priority, false, nullptr);
+        if (!m_core->refuseUserInstall()) {
+          m_core->installArchive(url.toLocalFile(), priority, false, nullptr);
+        }
       },
       Qt::QueuedConnection);
   connect(
