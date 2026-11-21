@@ -21,6 +21,7 @@ from ..frameworks import (
     summarize,
 )
 from .. import redscript_log
+from ...revamped_shared.mod_cache import PerModCache
 from ..util import log_warning, tr
 
 GAME_NAME = "Cyberpunk 2077"
@@ -59,11 +60,9 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         # background (reading many scripts can take seconds)
         self._codeware: dict[tuple, bool] = {}
         self._scan: threading.Thread | None = None
-        # what each mod's files tell, by (name, folder): (the folder's mtime
-        # when read, the summary). The check runs on MO2's interface thread
-        # after every change; reading the file trees of every active mod each
-        # time stalled the window with a few hundred mods
-        self._summaries: dict[tuple[str, str], tuple[int, ModSummary]] = {}
+        # what each mod's files tell, read again only when its folder
+        # changes (see PerModCache: the check runs on the interface thread)
+        self._summaries: PerModCache[ModSummary] = PerModCache()
 
     # IPlugin
 
@@ -185,43 +184,14 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         self._changed()
 
     def _mod_files_changed(self, mod) -> None:
-        # an install can keep the folder's mtime (files written into an
-        # existing mod): what it tells is read again
-        name = mod if isinstance(mod, str) else mod.name()
-        for key in [key for key in self._summaries if key[0] == name]:
-            del self._summaries[key]
+        self._summaries.forget(mod)
         self._changed()
 
     def _mod_summaries(self) -> list[ModSummary]:
-        """What the active mods' files tell, in priority order: a mod's file
-        tree is read only when its folder changed since the last time."""
-        mod_list = self._organizer.modList()
-        summaries: list[ModSummary] = []
-        for name in mod_list.allModsByProfilePriority():
-            if not mod_list.state(name) & mobase.ModState.ACTIVE:
-                continue
-            mod = mod_list.getMod(name)
-            if mod is None or mod.isSeparator() or mod.isForeign() or mod.isOverwrite():
-                continue
-            path = Path(mod.absolutePath())
-            key = (name, str(path))
-            try:
-                stamp = path.stat().st_mtime_ns
-            except OSError:
-                self._summaries.pop(key, None)
-                continue
-            cached = self._summaries.get(key)
-            if cached is not None and cached[0] == stamp:
-                summaries.append(cached[1])
-                continue
-            try:
-                tree = mod.fileTree()
-            except Exception:  # noqa: BLE001 - a mod being removed
-                continue
-            summary = summarize(ModFiles(name, path, tree))
-            self._summaries[key] = (stamp, summary)
-            summaries.append(summary)
-        return summaries
+        """What the active mods' files tell, in priority order."""
+        return self._summaries.active(
+            self._organizer, lambda name, path, mod: summarize(ModFiles(name, path, mod.fileTree()))
+        )
 
     def _changed(self) -> None:
         self._report = None

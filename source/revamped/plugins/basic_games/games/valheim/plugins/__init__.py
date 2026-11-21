@@ -8,7 +8,8 @@ from pathlib import Path
 import mobase
 
 from ...revamped_shared import log_warning, translator
-from ...revamped_shared.dotnet import SHARED
+from ...revamped_shared.dotnet import SHARED, plugin_dlls
+from ...revamped_shared.mod_cache import PerModCache
 from ..checks import KNOWN, ModFolder, Report, analyze
 
 GAME_NAME = "Valheim"
@@ -42,13 +43,16 @@ class ValheimCheck(mobase.IPluginDiagnose):
     def __init__(self) -> None:
         super().__init__()
         self._report: Report | None = None
+        # each mod's plugin DLLs, walked again only when its folder changes
+        # (see PerModCache: the check runs on the interface thread)
+        self._mods: PerModCache[ModFolder] = PerModCache()
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
         mod_list = organizer.modList()
         mod_list.onModStateChanged(lambda states: self._changed())
-        mod_list.onModInstalled(lambda *_: self._changed())
-        mod_list.onModRemoved(lambda *_: self._changed())
+        mod_list.onModInstalled(lambda mod, *_: self._mod_files_changed(mod))
+        mod_list.onModRemoved(lambda name, *_: self._mod_files_changed(name))
         organizer.onProfileChanged(lambda *_: self._changed())
         mod_list.onModMoved(lambda *_: self._changed())
         # BepInEx or a plugin installed into the game folder by hand
@@ -139,6 +143,10 @@ class ValheimCheck(mobase.IPluginDiagnose):
         except Exception:  # noqa: BLE001 - MO2 not ready yet
             pass
 
+    def _mod_files_changed(self, mod) -> None:
+        self._mods.forget(mod)
+        self._changed()
+
     def _current(self) -> Report:
         if self._report is not None:
             return self._report
@@ -147,7 +155,10 @@ class ValheimCheck(mobase.IPluginDiagnose):
         if game is not None and game.gameName() == GAME_NAME:
             try:
                 game_dir = Path(game.gameDirectory().absolutePath()) if game.isInstalled() else None
-                report = analyze(active_mods(self._organizer), game_dir, SHARED)
+                mods = self._mods.active(
+                    self._organizer, lambda name, path, mod: ModFolder(name, path, plugin_dlls(path))
+                )
+                report = analyze(mods, game_dir, SHARED)
             except Exception as error:  # noqa: BLE001 - never break MO2's problem list
                 log_warning(f"Valheim mod check failed: {error}")
         self._report = report
