@@ -375,6 +375,8 @@ std::optional<CollectionLink> CollectionDialog::askLink(QWidget* parent)
   dlg.body()->addWidget(caption);
   dlg.body()->addWidget(edit);
   dlg.body()->addWidget(error);
+  // a taller window keeps the label right above its field
+  dlg.body()->addStretch(1);
 
   const QString clip = QApplication::clipboard()->text().trimmed();
   if (clip.contains(QStringLiteral("/collections/")) && parseCollectionLink(clip)) {

@@ -164,6 +164,8 @@ std::optional<QString> askText(QWidget* parent, const QString& title, const QStr
   dlg.body()->addWidget(caption);
   dlg.body()->addWidget(edit);
   dlg.body()->addWidget(error);
+  // a taller window keeps the label right above its field
+  dlg.body()->addStretch(1);
 
   auto* ok     = dlg.addButton(QObject::tr("OK"), true);
   auto* cancel = dlg.addButton(QObject::tr("Cancel"));
