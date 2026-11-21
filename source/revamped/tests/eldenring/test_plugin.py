@@ -160,8 +160,13 @@ class SaveRecovery(unittest.TestCase):
         session = self.game._hide_existing_global_save_directories()
         self.game._active_save_quarantine = None
         self.game._release_save_quarantine(session)
-        # the next MO2 puts them back from init()
-        other = game_for(FakeOrganizer())
+        # the next MO2 puts them back from init(); it waits while a game
+        # runs, so this machine's own Elden Ring must not count
+        from unittest import mock
+
+        cls = type(self.game)
+        with mock.patch.object(cls, "_elden_ring_process_state", return_value=False),                 mock.patch.object(cls, "_launcher_running", return_value=False):
+            other = game_for(FakeOrganizer())
         self.assertEqual(other._recovered_sessions, 1)
         self.assertTrue((self.account / "ER0000.sl2").is_file())
 
