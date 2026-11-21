@@ -602,6 +602,22 @@ namespace CSharp {
     dialog.body()->addLayout(row, 1);
 
     QObject::connect(list, SIGNAL(currentRowChanged(int)), pages, SLOT(setCurrentIndex(int)));
+    if (p_booSelectMany) {
+      // clicking an option's name ticks it too, as the FOMOD installer's check
+      // boxes do. A click on the box itself is ticked by Qt before
+      // itemClicked arrives, so the state at the press tells them apart and
+      // nothing toggles twice
+      constexpr int pressedState = Qt::UserRole + 1;
+      QObject::connect(list, &QListWidget::itemPressed, list, [](QListWidgetItem* item) {
+        item->setData(pressedState, static_cast<int>(item->checkState()));
+      });
+      QObject::connect(list, &QListWidget::itemClicked, list, [](QListWidgetItem* item) {
+        if (item->data(pressedState).toInt() == static_cast<int>(item->checkState())) {
+          item->setCheckState(item->checkState() == Qt::Checked ? Qt::Unchecked
+                                                                : Qt::Checked);
+        }
+      });
+    }
     if (list->count() > 0) {
       list->setCurrentRow(0);
     }
