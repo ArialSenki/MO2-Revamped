@@ -103,13 +103,15 @@ enum class Theme
 {
   Light,
   Dark,
+  // stored as Dark with InterfaceSettings::oledBackground() set
+  OledBlack,
 };
 
 // asks for a theme with a tile each; nullopt when the window is closed
 std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
                                  const QString& heading, const QString& description,
                                  const QString& lightLabel, const QString& darkLabel,
-                                 const QString& acceptLabel,
+                                 const QString& oledLabel, const QString& acceptLabel,
                                  Theme current);
 
 }  // namespace FluentChoices
