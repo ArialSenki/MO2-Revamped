@@ -379,13 +379,49 @@ class _StoreGames:
     def __get__(self, obj, owner=None):
         # one scan: a read from another thread while it runs waits for it
         # instead of scanning again
-        with _store_scan:
-            if isinstance(BasicGame.__dict__.get(self._name), _StoreGames):
-                BasicGame.setup()
+        if isinstance(BasicGame.__dict__.get(self._name), _StoreGames):
+            with _store_scan:
+                _scan_depth.count = getattr(_scan_depth, "count", 0) + 1
+                try:
+                    if isinstance(BasicGame.__dict__.get(self._name), _StoreGames):
+                        BasicGame.setup()
+                finally:
+                    _scan_depth.count -= 1
+            _report_store_errors()
         return getattr(BasicGame, self._name)
 
 
 _store_scan = threading.RLock()
+# MO2 Revamped: a game's path is detected once; a read from another thread
+# meanwhile waits for it instead of getting no path (MO2's own folder)
+_detect_lock = threading.RLock()
+# the stores that couldn't be read, said once from the GUI thread
+_store_errors: list[tuple[str, Exception]] = []
+# how deep this thread is in a scan: the message waits until it is out
+_scan_depth = threading.local()
+
+
+def _report_store_errors() -> None:
+    """MO2 Revamped: the scan can run on any thread that first asks for a
+    game's folder; a message box only from the GUI thread, and never while
+    the scan's lock is held (every other reader would wait on the box)."""
+    if not _store_errors:
+        return
+    from PyQt6.QtCore import QCoreApplication, QThread
+
+    app = QCoreApplication.instance()
+    if getattr(_scan_depth, "count", 0) or app is None or QThread.currentThread() is not app.thread():
+        return
+    errors = list(_store_errors)
+    _store_errors.clear()
+    QMessageBox.critical(
+        None,
+        "Errors loading game list",
+        (
+            "The following errors occurred while loading the list of available games:\n"
+            f"\n- {'\n\n- '.join('\n '.join(str(e) for e in messageError) for messageError in errors)}"
+        ),
+    )
 
 
 class BasicGame(mobase.IPluginGame):
@@ -403,7 +439,12 @@ class BasicGame(mobase.IPluginGame):
     @staticmethod
     def setup():
         with _store_scan:
-            BasicGame._scan_stores()
+            _scan_depth.count = getattr(_scan_depth, "count", 0) + 1
+            try:
+                BasicGame._scan_stores()
+            finally:
+                _scan_depth.count -= 1
+        _report_store_errors()
 
     @staticmethod
     def _scan_stores():
@@ -440,19 +481,12 @@ class BasicGame(mobase.IPluginGame):
                 found[name] = scan(errors)
             except Exception as error:
                 errors.append((name.split("_")[0].capitalize(), error))
-        # before the message below, whose event loop can read them again
         for name in ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games"):
             setattr(BasicGame, name, found.get(name, {}))
-
-        if errors:
-            QMessageBox.critical(
-                None,
-                "Errors loading game list",
-                (
-                    "The following errors occurred while loading the list of available games:\n"
-                    f"\n- {'\n\n- '.join('\n '.join(str(e) for e in messageError) for messageError in errors)}"
-                ),
-            )
+        # shown by _report_store_errors(), outside the lock, from the GUI thread
+        _store_errors.extend(errors)
+        for store, error in errors:
+            print(f"basic_games: {store} games couldn't be read: {error}", file=sys.stderr)
 
     # File containing the plugin:
     _fromName: str
@@ -483,8 +517,16 @@ class BasicGame(mobase.IPluginGame):
     def _gamePath(self) -> str:
         values = self.__dict__
         if values.get("_revamped_detect_pending"):
-            values["_revamped_detect_pending"] = False
-            self._detect_game_now()
+            with _detect_lock:
+                # still pending once this thread has the lock, and not this
+                # thread's own detection reading the path again
+                if values.get("_revamped_detect_pending") and not values.get("_revamped_detecting"):
+                    values["_revamped_detecting"] = True
+                    try:
+                        self._detect_game_now()
+                    finally:
+                        values["_revamped_detecting"] = False
+                        values["_revamped_detect_pending"] = False
         return values.get("_revamped_game_path", "")
 
     @_gamePath.setter

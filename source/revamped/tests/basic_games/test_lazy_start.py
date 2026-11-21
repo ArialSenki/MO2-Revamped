@@ -138,6 +138,77 @@ class LazyStart(unittest.TestCase):
         self.assertEqual(seen["second"], {"4242": self.folder})
         self.assertEqual(len(scans), 1)
 
+    def test_a_store_error_is_shown_from_the_gui_thread_only(self):
+        # a worker thread reading a list first: no message box there (Qt
+        # can't show one off the GUI thread), and none while the lock is held;
+        # the next read on the GUI thread shows it once
+        import threading
+
+        from PyQt6.QtWidgets import QMessageBox
+
+        from basic_games import steam_utils
+
+        BasicGame.setup = self.saved_setup
+        shown = []
+        saved = (steam_utils.find_games, QMessageBox.critical)
+
+        def broken():
+            raise ValueError("bad libraryfolders.vdf")
+
+        steam_utils.find_games = broken
+        QMessageBox.critical = staticmethod(lambda *args: shown.append(args[2]))
+        try:
+            worker = threading.Thread(target=lambda: BasicGame.steam_games)
+            worker.start()
+            worker.join(10)
+            self.assertEqual(shown, [])
+            self.assertEqual(BasicGame.steam_games, {})
+            basic_game._report_store_errors()
+        finally:
+            steam_utils.find_games, QMessageBox.critical = saved
+        self.assertEqual(len(shown), 1)
+        self.assertIn("bad libraryfolders.vdf", shown[0])
+
+    def test_a_path_read_during_detection_waits_for_it(self):
+        # a second thread asking for the folder while the first detects it
+        # got "" (MO2's own folder) instead of waiting
+        import threading
+
+        started, release = threading.Event(), threading.Event()
+        game = FakeGame()
+        game.detectGame()
+        real_detect = FakeGame._detect_game_now
+
+        def slow_detect(this):
+            started.set()
+            release.wait(10)
+            real_detect(this)
+
+        FakeGame._detect_game_now = slow_detect
+        seen = {}
+        try:
+            first = threading.Thread(target=lambda: seen.setdefault("first", game._gamePath))
+            first.start()
+            self.assertTrue(started.wait(10))
+            second = threading.Thread(target=lambda: seen.setdefault("second", game._gamePath))
+            second.start()
+            second.join(0.3)
+            self.assertTrue(second.is_alive())
+            release.set()
+            first.join(10)
+            second.join(10)
+        finally:
+            FakeGame._detect_game_now = real_detect
+        self.assertEqual(Path(seen["first"]), self.folder)
+        self.assertEqual(Path(seen["second"]), self.folder)
+
+    def test_init_probe_only_from_basic_games(self):
+        # the manifest is a file: a probe naming another module isn't called
+        self.assertTrue(lazy_games._init_probe_says_so("os:abort"))
+        self.assertTrue(lazy_games._init_probe_says_so("..x:y"))
+        self.assertTrue(lazy_games._init_probe_says_so(".games.missing_module:pending"))
+        self.assertFalse(lazy_games._init_probe_says_so(None))
+
     def test_detect_waits_for_the_path(self):
         game = FakeGame()
         game.detectGame()
