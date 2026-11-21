@@ -3482,6 +3482,8 @@ struct UnloadedDll {
   uintptr_t base;
   size_t size;
   wchar_t name[64];
+  // the whole path, for a second load; empty when longer
+  wchar_t path[1024];
 };
 constexpr unsigned int kUnloadedDllSlots = 16;
 UnloadedDll g_unloaded_dlls[kUnloadedDllSlots] = {};
@@ -3501,15 +3503,23 @@ void remember_unloaded_dll(const LoaderDllNotificationData* data) {
                                    static_cast<size_t>(63));
   std::memcpy(slot.name, data->BaseDllName->Buffer, length * sizeof(wchar_t));
   slot.name[length] = L'\0';
+  slot.path[0] = L'\0';
+  if (data->FullDllName != nullptr && data->FullDllName->Buffer != nullptr) {
+    const size_t path_length = data->FullDllName->Length / sizeof(wchar_t);
+    if (path_length < 1024) {
+      std::memcpy(slot.path, data->FullDllName->Buffer, path_length * sizeof(wchar_t));
+      slot.path[path_length] = L'\0';
+    }
+  }
 }
 
-const wchar_t* unloaded_dll_at(uintptr_t address) {
+const UnloadedDll* unloaded_dll_at(uintptr_t address) {
   const LONG count = InterlockedCompareExchange(&g_unloaded_dll_count, 0, 0);
   for (LONG index = count - 1; index >= 0 && index >= count - static_cast<LONG>(kUnloadedDllSlots);
        --index) {
     const UnloadedDll& slot = g_unloaded_dlls[static_cast<unsigned int>(index) % kUnloadedDllSlots];
     if (address >= slot.base && address - slot.base < slot.size) {
-      return slot.name;
+      return &slot;
     }
   }
   return nullptr;
@@ -3525,9 +3535,38 @@ using NtQueryInformationThreadFunction = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULON
 NtQueryInformationThreadFunction g_query_thread = nullptr;
 volatile LONG g_orphan_threads = 0;
 
+// Such a DLL failed its own load (the loader unloads a DLL whose start fails,
+// as Damage Competition's does now and then): it is loaded once more a
+// second later, and usually starts then. One more try per start of the
+// game, so a DLL that always fails costs one more failure and no more.
+wchar_t g_retry_path[1024] = {};
+volatile LONG g_retry_state = 0;  // 0 none, 1 path set, 2 started
+
+DWORD WINAPI load_unloaded_dll_again(void*) {
+  Sleep(1000);
+  log_line("Loading again the DLL whose load had failed:", g_retry_path);
+  HMODULE module = LoadLibraryW(g_retry_path);
+  if (module != nullptr) {
+    log_line("The DLL loaded the second time.");
+  } else {
+    wchar_t code[16] = {};
+    swprintf_s(code, L"%lu", GetLastError());
+    log_line("The DLL failed to load again; Windows error", code);
+  }
+  return 0;
+}
+
 [[noreturn]] void end_orphan_thread() {
+  const bool retry = InterlockedCompareExchange(&g_retry_state, 2, 1) == 1;
   if (InterlockedIncrement(&g_orphan_threads) <= 4) {
-    log_line("Stopped a thread whose DLL was unloaded before it started; the game goes on without that DLL.");
+    log_line(retry ? "Stopped a thread whose DLL was unloaded before it started; that DLL is loaded once more."
+                   : "Stopped a thread whose DLL was unloaded before it started; the game goes on without that DLL.");
+  }
+  if (retry) {
+    HANDLE thread = CreateThread(nullptr, 0, load_unloaded_dll_again, nullptr, 0, nullptr);
+    if (thread != nullptr) {
+      CloseHandle(thread);
+    }
   }
   ExitThread(0);
 }
@@ -3552,9 +3591,13 @@ LONG CALLBACK stop_orphan_threads(EXCEPTION_POINTERS* info) {
       (memory.State == MEM_COMMIT && memory.Type == MEM_IMAGE)) {
     return EXCEPTION_CONTINUE_SEARCH;
   }
-  const wchar_t* dll = unloaded_dll_at(address);
+  const UnloadedDll* dll = unloaded_dll_at(address);
   if (dll != nullptr) {
-    log_line("A thread started in a DLL that was already unloaded:", dll);
+    log_line("A thread started in a DLL that was already unloaded:", dll->name);
+    if (dll->path[0] != L'\0' && InterlockedCompareExchange(&g_retry_state, 0, 0) == 0) {
+      wcscpy_s(g_retry_path, dll->path);
+      InterlockedExchange(&g_retry_state, 1);
+    }
   } else {
     log_line("A thread started in code that is no longer there.");
   }
@@ -3655,7 +3698,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.69.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.70.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
