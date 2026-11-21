@@ -4724,6 +4724,43 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 return value.split(";", 1)[0].strip().strip("\"'").lstrip(".")
         return ""
 
+    # The Convergence's Nexus page, as the game plugin knows it
+    ConvergenceNexusId = "3419"
+
+    @staticmethod
+    def _is_convergence(folder: Path) -> bool:
+        """Whether a mod folder is The Convergence, as the game plugin decides
+        (environment.py, _active_convergence_root): its me3 profile, or its
+        Nexus page in meta.ini. A name with "convergence" in it isn't enough
+        (a patch for it isn't Convergence)."""
+        if (folder / "convergence.me3").is_file() or (folder / "me3" / "convergence.me3").is_file():
+            return True
+        meta = configparser.ConfigParser(interpolation=None, strict=False)
+        try:
+            meta.read(folder / "meta.ini", encoding="utf-8-sig")
+        except (OSError, UnicodeError, configparser.Error):
+            return False
+        general = meta["General"] if meta.has_section("General") else {}
+        game = str(general.get("gameName", "")).strip().casefold()
+        return (
+            str(general.get("modid", "")).strip() == EldenRingMo2SaveIsolation.ConvergenceNexusId
+            and game in {"eldenring", "elden ring"}
+        )
+
+    @staticmethod
+    def _convergence_coop_extension(folder: Path) -> str:
+        """The co-op save extension Seamless gets with this Convergence, as the
+        game plugin gives it (forced_loads.py, _convergence_coop_extension):
+        the save_file_extension of the ersc_settings.ini it ships, unless that
+        is co2 or not a plain name, else cnvco2."""
+        for settings in (folder / "DLLs" / "ersc_settings.ini", folder / "ersc_settings.ini"):
+            if not settings.is_file():
+                continue
+            value = EldenRingMo2SaveIsolation._settings_extension(settings, "save_file_extension")
+            if value and value.casefold() != "co2" and value.isalnum():
+                return value
+        return "cnvco2"
+
     def _active_mod_folders(self) -> list[tuple[str, Path]]:
         try:
             mod_list = self.__organizer.modList()
@@ -4802,11 +4839,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         # Convergence's co-op extension (cnvco2, its DLLs/ersc_settings.ini)
         if seamless_dll is not None and self._game_key == "eldenring":
             for mod_name, folder in self._active_mod_folders():
-                settings = folder / "DLLs" / "ersc_settings.ini"
-                if not (folder / "convergence.me3").is_file() and not (folder / "me3" / "convergence.me3").is_file() \
-                        and "convergence" not in mod_name.casefold():
+                if not self._is_convergence(folder):
                     continue
-                extension = (self._settings_extension(settings, "save_file_extension") if settings.is_file() else None) or "cnvco2"
+                extension = self._convergence_coop_extension(folder)
                 if extension.casefold() == seamless_extension.casefold():
                     break
                 formats.append(
