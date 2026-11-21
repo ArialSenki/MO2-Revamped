@@ -1917,6 +1917,8 @@ void OrganizerCore::updateModActiveState(int index, bool active)
 void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
                                           bool active)
 {
+  QElapsedTimer stage;
+  stage.start();
   int enabled = 0;
   for (auto index : modIndices) {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
@@ -1985,9 +1987,13 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         tr("Multiple esps/esls activated, please check that they don't conflict."),
         qApp->activeWindow());
   }
+  const qint64 tStates = stage.restart();
   m_PluginList.refreshLoadOrder();
+  const qint64 tLoadOrder = stage.restart();
   // immediately save affected lists
   m_PluginListsWriter.writeImmediately(false);
+  log::debug("plugins {}: states {} ms, load order {} ms, saved {} ms",
+             active ? "on" : "off", tStates, tLoadOrder, stage.elapsed());
 }
 
 void OrganizerCore::updateModInDirectoryStructure(unsigned int index,
@@ -2002,6 +2008,9 @@ void OrganizerCore::updateModsInDirectoryStructure(
     QMap<unsigned int, ModInfo::Ptr> modInfo)
 {
   std::vector<DirectoryRefresher::EntryInfo> entries;
+  QElapsedTimer stage;
+  stage.start();
+  qint64 tFiles = 0, tPlugins = 0, tActivate = 0, tArchiveList = 0;
 
   for (auto idx : modInfo.keys()) {
     // MO2 Revamped: as in a full refresh, a mod named like the game's folders or
@@ -2020,8 +2029,10 @@ void OrganizerCore::updateModsInDirectoryStructure(
   m_DirectoryRefresher->addMultipleModsFilesToStructure(m_DirectoryStructure, entries);
 
   DirectoryRefresher::cleanStructure(m_DirectoryStructure);
+  tFiles = stage.restart();
   // need to refresh plugin list now so we can activate esps
   refreshESPList(true);
+  tPlugins = stage.restart();
   // activate all esps of the specified mod so the bsas get activated along with
   // it
   // not after a failed refresh: the plugin list wasn't rebuilt above, and each
@@ -2031,12 +2042,14 @@ void OrganizerCore::updateModsInDirectoryStructure(
     updateModsActiveState(modInfo.keys(), true);
     m_PluginList.blockSignals(false);
   }
+  tActivate = stage.restart();
   // now we need to refresh the bsa list and save it so there is no confusion
   // about what archives are available and active
   refreshBSAList();
   if (m_UserInterface != nullptr) {
     m_UserInterface->archivesWriter().writeImmediately(false);
   }
+  tArchiveList = stage.restart();
 
   // MO2 Revamped: the archives handed over, not through setMods(), which waited
   // for a running refresh to end (the window froze when a mod was enabled then)
@@ -2056,6 +2069,9 @@ void OrganizerCore::updateModsInDirectoryStructure(
         m_CurrentProfile->getModPriority(idx), modInfo[idx]->absolutePath(),
         modInfo[idx]->archives(), archiveContext);
   }
+  log::debug("mods added: files {} ms, plugin list {} ms, plugins on {} ms, archive "
+             "list {} ms, archive contents {} ms",
+             tFiles, tPlugins, tActivate, tArchiveList, stage.elapsed());
 }
 
 void OrganizerCore::loggedInAction(QWidget* parent, std::function<void()> f)
@@ -2415,6 +2431,7 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       updateModInDirectoryStructure(index, modInfo);
     } else {
       updateModActiveState(index, false);
+      const qint64 tPlugins = stage.elapsed();
       if (ownsOriginName(modInfo) &&
           m_DirectoryStructure->originExists(ToWString(modInfo->internalName()))) {
         FilesOrigin& origin =
@@ -2424,6 +2441,8 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       if (m_UserInterface != nullptr) {
         m_UserInterface->archivesWriter().write();
       }
+      log::debug("mod disabled: plugins off {} ms, origin off {} ms", tPlugins,
+                 stage.elapsed() - tPlugins);
     }
 
     const qint64 tStructure = stage.restart();
@@ -2690,12 +2709,17 @@ void OrganizerCore::savePluginList()
           return;
         }
 
+        QElapsedTimer stage;
+        stage.start();
         m_PluginList.saveTo(m_CurrentProfile->getLockedOrderFileName());
+        const qint64 tLists = stage.restart();
 
         // MO2 Revamped: the plugins whose file time (their load order, for the
         // games using it) couldn't be set are named, once per change
         QStringList locked;
         m_PluginList.saveLoadOrder(*m_DirectoryStructure, &locked);
+        log::debug("plugin lists saved: lists {} ms, file dates {} ms", tLists,
+                   stage.elapsed());
         if (locked != m_UndatedPlugins) {
           m_UndatedPlugins = locked;
           if (!locked.isEmpty()) {
