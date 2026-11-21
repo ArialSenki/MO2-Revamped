@@ -61,6 +61,9 @@ protected slots:
   void hideWaitDialogSlot();
 
 private:
+  // createMod made a new folder (not a merge into an existing one)
+  bool mCreatedNewMod = false;
+
   __declspec(noinline) void constructorHelper();
 
   MOBase::IOrganizer* mMoInfo;

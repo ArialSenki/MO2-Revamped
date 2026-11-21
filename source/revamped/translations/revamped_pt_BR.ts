@@ -14226,6 +14226,14 @@ Se o jogo precisar dessa versão (outra edição ou versão do jogo), restaure-o
       <source>OK</source>
       <translation>OK</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Isto é um OMOD, um formato que só o instalador do Oblivion abre. Instale-o em uma instância do Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>O MO2 não pode instalar arquivos .%1: não são um arquivo compactado que ele saiba abrir.</translation>
+    </message>
   </context>
 <context>
     <name>NexusTab</name>

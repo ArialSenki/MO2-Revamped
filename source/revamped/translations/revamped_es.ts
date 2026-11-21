@@ -14452,6 +14452,14 @@ Si el juego necesita esa versión (otra edición u otra versión del juego), res
       <source>OK</source>
       <translation>Aceptar</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Esto es un OMOD, un formato que solo abre el instalador de Oblivion. Instálalo en una instancia de Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>MO2 no puede instalar archivos .%1: no son un archivo comprimido que sepa abrir.</translation>
+    </message>
   </context>
   <context>
     <name>DiagnoseBasic</name>

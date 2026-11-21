@@ -7,6 +7,7 @@ using namespace cli;
 #include <filesystem>
 
 #include <QDir>
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QTemporaryDir>
 #include <QProgressDialog>
@@ -748,17 +749,24 @@ void OMODFrameworkWrapper::pickModNameSlot(bool& successOut, MOBase::GuessedValu
 
 void OMODFrameworkWrapper::createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName)
 {
-  modInterfaceOut = mMoInfo->createMod(modName);
+  // only a folder this install made is removed if it doesn't finish: a merge
+  // into an existing mod leaves it as it was, and a replaced mod is put back
+  // by MO2 itself
+  const QString path = mMoInfo->modsPath() + "/" + QString(modName);
+  const bool existed = QFileInfo::exists(path);
+  modInterfaceOut    = mMoInfo->createMod(modName);
+  mCreatedNewMod     = modInterfaceOut != nullptr &&
+                   (!existed || QDir::cleanPath(modInterfaceOut->absolutePath())
+                                        .compare(QDir::cleanPath(path), Qt::CaseInsensitive) != 0);
 }
 
 void OMODFrameworkWrapper::removeModSlot(MOBase::IModInterface* mod)
 {
-  if (mod == nullptr)
+  if (mod == nullptr || !mCreatedNewMod)
     return;
-  // only a folder that got nothing but its meta.ini: a mod that already had
-  // files (one the install was merging into) stays as it was. The new mod
-  // isn't in MO2's list yet, so the folder itself goes; the list refresh
-  // after the install drops it.
+  // only a folder this install made and that got nothing but its meta.ini.
+  // The new mod isn't in MO2's list yet, so the folder itself goes; the next
+  // refresh drops what MO2 still holds of it.
   QDir folder(mod->absolutePath());
   const QStringList entries = folder.entryList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
   if (entries.isEmpty() || (entries.size() == 1 && entries.front().compare("meta.ini", Qt::CaseInsensitive) == 0))

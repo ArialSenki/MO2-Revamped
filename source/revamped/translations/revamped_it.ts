@@ -5889,6 +5889,14 @@ Se il gioco ha bisogno di quella versione (un'altra edizione o versione del gioc
       <source>OK</source>
       <translation>OK</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Questo è un OMOD, un formato che apre solo il programma di installazione di Oblivion. Installalo in un&apos;istanza di Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>MO2 non può installare i file .%1: non sono un archivio che sa aprire.</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
