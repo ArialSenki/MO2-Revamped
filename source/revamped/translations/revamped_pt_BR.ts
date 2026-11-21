@@ -16548,8 +16548,20 @@ Confira as opções do jogo antes de jogar.</translation>
       <translation>O %1 é para outra versão do jogo</translation>
     </message>
     <message>
-      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once. This happens after a game update: %2's download page has the build for %1.</source>
-      <translation>O jogo está na versão %1, e o %2 da pasta dele é para a %3. O jogo não vai iniciar por ele, ou fecha na hora. Isso acontece depois de uma atualização do jogo: a página de download do %2 tem a build para a %1.</translation>
+      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once.</source>
+      <translation>O jogo está na versão %1, e o %2 da pasta dele é para a %3. O jogo não vai iniciar por ele, ou fecha na hora.</translation>
+    </message>
+    <message>
+      <source>The game is version %1, and the %2 in your mods is for %3. The game won't start through it, or starts without %2 and its plugins.</source>
+      <translation>O jogo está na versão %1, e o %2 dos seus mods é para a %3. O jogo não vai iniciar por ele, ou inicia sem o %2 e os plugins dele.</translation>
+    </message>
+    <message>
+      <source>FOSE only runs on 1.7.0.3: run the Fallout Anniversary Patcher (a mod on Nexus, often in the collection) once to bring the game to that version, then start FOSE again.</source>
+      <translation>O FOSE só funciona na 1.7.0.3: execute uma vez o Fallout Anniversary Patcher (um mod do Nexus, muitas vezes na coleção) para deixar o jogo nessa versão e inicie o FOSE de novo.</translation>
+    </message>
+    <message>
+      <source>This happens after a game update: %1's download page has the build for %2, or the list's guide says how to get version %3.</source>
+      <translation>Isso acontece depois de uma atualização do jogo: a página de download do %1 tem a build para a %2, ou o guia da lista explica como obter a versão %3.</translation>
     </message>
     <message>
       <source>Start anyway</source>

@@ -16965,8 +16965,20 @@ Revisa las opciones del juego antes de jugar.</translation>
       <translation>%1 es para otra versión del juego</translation>
     </message>
     <message>
-      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once. This happens after a game update: %2's download page has the build for %1.</source>
-      <translation>El juego es la versión %1, y el %2 de su carpeta es para la %3. El juego no se iniciará con él, o se cerrará enseguida. Pasa al actualizarse el juego: en la página de descarga de %2 está la compilación para la %1.</translation>
+      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once.</source>
+      <translation>El juego es la versión %1, y el %2 de su carpeta es para la %3. El juego no se iniciará con él, o se cerrará enseguida.</translation>
+    </message>
+    <message>
+      <source>The game is version %1, and the %2 in your mods is for %3. The game won't start through it, or starts without %2 and its plugins.</source>
+      <translation>El juego es la versión %1, y el %2 de tus mods es para la %3. El juego no se iniciará con él, o arrancará sin %2 ni sus plugins.</translation>
+    </message>
+    <message>
+      <source>FOSE only runs on 1.7.0.3: run the Fallout Anniversary Patcher (a mod on Nexus, often in the collection) once to bring the game to that version, then start FOSE again.</source>
+      <translation>FOSE solo funciona en la 1.7.0.3: ejecuta una vez el Fallout Anniversary Patcher (un mod de Nexus, a menudo en la colección) para dejar el juego en esa versión y vuelve a iniciar FOSE.</translation>
+    </message>
+    <message>
+      <source>This happens after a game update: %1's download page has the build for %2, or the list's guide says how to get version %3.</source>
+      <translation>Pasa al actualizarse el juego: en la página de descarga de %1 está la compilación para la %2, o la guía de la lista dice cómo conseguir la versión %3.</translation>
     </message>
     <message>
       <source>Start anyway</source>

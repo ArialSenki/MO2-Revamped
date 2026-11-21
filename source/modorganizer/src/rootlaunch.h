@@ -63,6 +63,10 @@ struct Plan
   QString forcedLoadProcess;
   QString forcedLoadLibrary;
 
+  // MO2 Revamped: the extender's loader starts the game, but none of its
+  // runtime DLLs (fose_1_7.dll) is for the game's version
+  QStringList extenderMismatchDlls;
+
   // the import table patch of the started process
   std::vector<ImportPatch::Redirect> redirects;
   std::vector<ImportPatch::Preload> preloads;

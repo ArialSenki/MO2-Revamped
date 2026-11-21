@@ -180,17 +180,23 @@ InstallerFomodCSharp::install(MOBase::GuessedValue<QString>& modName,
     }
   }
 
-  // Show the dialog:
-  InstallerFomodPredialog dialog(modName, parentWidget());
-  if (dialog.exec() != QDialog::Accepted) {
-    if (dialog.manualRequested()) {
-      modName.update(dialog.getName(), GUESS_USER);
-      return EInstallResult::RESULT_MANUALREQUESTED;
-    } else {
-      return EInstallResult::RESULT_CANCELED;
+  // MO2 Revamped: a collection names the mod and installs it without asking;
+  // the script's own questions, if any, still come up
+  const bool collection =
+      qApp != nullptr && qApp->property("mo2r.collectionInstall").toBool();
+  if (!collection) {
+    // Show the dialog:
+    InstallerFomodPredialog dialog(modName, parentWidget());
+    if (dialog.exec() != QDialog::Accepted) {
+      if (dialog.manualRequested()) {
+        modName.update(dialog.getName(), GUESS_USER);
+        return EInstallResult::RESULT_MANUALREQUESTED;
+      } else {
+        return EInstallResult::RESULT_CANCELED;
+      }
     }
+    modName.update(dialog.getName(), GUESS_USER);
   }
-  modName.update(dialog.getName(), GUESS_USER);
 
   // Run the C# script:
   const QString scriptPath = entryToPath[scriptFile];

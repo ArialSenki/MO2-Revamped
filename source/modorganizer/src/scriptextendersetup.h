@@ -71,6 +71,18 @@ public:
   // (New Vegas) for 1.4.0.525, 1.2.416 (Oblivion) for 1.2.0.416
   static bool matchesGame(const QStringList& versions, const QString& gameVersion);
 
+  // MO2 Revamped: before the extender's loader starts the game from a mod's
+  // Root folder: its runtime DLLs there (fose_1_7.dll) aren't for the game's
+  // version; asks whether to start anyway, with the usual fix
+  static bool confirmRootLaunch(QWidget* parent, const MOBase::ScriptExtender& extender,
+                                const MOBase::IPluginGame& game,
+                                const QStringList& runtimeDlls);
+
+  // the question for both: the game folder's extender or a mod's
+  static bool confirmVersions(QWidget* parent, const MOBase::ScriptExtender& extender,
+                              const QStringList& versions, const QString& gameVersion,
+                              bool inMod);
+
   // the extender's files in the game folder
   static QStringList installedFiles(const QDir& gameDir, const QString& prefix);
 

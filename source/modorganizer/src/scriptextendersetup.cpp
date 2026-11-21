@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QLayout>
 #include <QFileInfo>
+#include <QHash>
 #include <QLabel>
 #include <QPushButton>
 #include <QRegularExpression>
@@ -131,10 +132,19 @@ QStringList ScriptExtenderSetup::runtimeVersions(const QStringList& fileNames,
       QStringLiteral("^%1(\\d+(?:_\\d+)+)\\.dll$")
           .arg(QRegularExpression::escape(prefix)),
       QRegularExpression::CaseInsensitiveOption);
+  // MO2 Revamped: the short names stand for one build: fose_1_7.dll is for
+  // 1.7.0.3 only (not Steam's 1.7.0.4), nvse_1_4.dll for 1.4.0.525
+  static const QHash<QString, QString> exact = {
+      {QStringLiteral("fose_1_7.dll"), QStringLiteral("1.7.0.3")},
+      {QStringLiteral("nvse_1_4.dll"), QStringLiteral("1.4.0.525")},
+  };
   for (const QString& name : fileNames) {
     const auto match = runtime.match(name);
     if (match.hasMatch()) {
-      versions.append(match.captured(1).replace(QLatin1Char('_'), QLatin1Char('.')));
+      const auto pinned = exact.constFind(name.toLower());
+      versions.append(pinned != exact.constEnd()
+                          ? *pinned
+                          : match.captured(1).replace(QLatin1Char('_'), QLatin1Char('.')));
     }
   }
   return versions;
@@ -559,17 +569,54 @@ bool ScriptExtenderSetup::confirmLaunch(QWidget* parent, const ScriptExtender& e
     return true;
   }
 
-  const QString name = displayName(extender);
-  log::warn("{} in the game folder is for {}, the game is {}", name,
+  log::warn("{} in the game folder is for {}, the game is {}", displayName(extender),
             versions.join(", "), gameVersion);
+  return confirmVersions(parent, extender, versions, gameVersion, false);
+}
 
-  FluentContentDialog dialog(
-      parent, QStringLiteral("ScriptExtenderVersionDialog"),
-      tr("%1 is for another version of the game").arg(name),
-      tr("The game is version %1, and the %2 in its folder is for %3. The game won't "
-         "start through it, or closes at once. This happens after a game update: %2's "
-         "download page has the build for %1.")
-          .arg(gameVersion, name, versions.join(QStringLiteral(", "))));
+bool ScriptExtenderSetup::confirmRootLaunch(QWidget* parent,
+                                            const ScriptExtender& extender,
+                                            const IPluginGame& game,
+                                            const QStringList& runtimeDlls)
+{
+  const QStringList versions = runtimeVersions(runtimeDlls, filePrefix(extender));
+  const QString gameVersion  = game.gameVersion();
+  if (versions.isEmpty() || matchesGame(versions, gameVersion)) {
+    return true;
+  }
+  log::warn("{} in a mod's Root folder is for {}, the game is {}", displayName(extender),
+            versions.join(", "), gameVersion);
+  return confirmVersions(parent, extender, versions, gameVersion, true);
+}
+
+bool ScriptExtenderSetup::confirmVersions(QWidget* parent, const ScriptExtender& extender,
+                                          const QStringList& versions,
+                                          const QString& gameVersion, bool inMod)
+{
+  const QString name = displayName(extender);
+  const QString made = versions.join(QStringLiteral(", "));
+  QString text =
+      inMod ? tr("The game is version %1, and the %2 in your mods is for %3. The game "
+                 "won't start through it, or starts without %2 and its plugins.")
+                  .arg(gameVersion, name, made)
+            : tr("The game is version %1, and the %2 in its folder is for %3. The game "
+                 "won't start through it, or closes at once.")
+                  .arg(gameVersion, name, made);
+  // the usual fix: Steam's Fallout 3 (1.7.0.4) has no FOSE of its own; the
+  // Anniversary Patcher brings it back to 1.7.0.3
+  if (filePrefix(extender).compare(QStringLiteral("fose_"), Qt::CaseInsensitive) == 0 &&
+      versions.contains(QStringLiteral("1.7.0.3"))) {
+    text += u' ' + tr("FOSE only runs on 1.7.0.3: run the Fallout Anniversary Patcher "
+                      "(a mod on Nexus, often in the collection) once to bring the game "
+                      "to that version, then start FOSE again.");
+  } else {
+    text += u' ' + tr("This happens after a game update: %1's download page has the "
+                      "build for %2, or the list's guide says how to get version %3.")
+                       .arg(name, gameVersion, made);
+  }
+
+  FluentContentDialog dialog(parent, QStringLiteral("ScriptExtenderVersionDialog"),
+                             tr("%1 is for another version of the game").arg(name), text);
   auto* start  = dialog.addButton(tr("Start anyway"), true);
   auto* cancel = dialog.addButton(tr("Cancel"));
   QObject::connect(start, &QPushButton::clicked, &dialog, &QDialog::accept);

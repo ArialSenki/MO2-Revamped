@@ -252,6 +252,35 @@ QStringList companions(const Index& index, const QString& dllKey)
     }
   }
 
+  // MO2 Revamped: a folder next to it, one or two levels down, that it names
+  // with its path (NVHR's d3dx9_38.dll loads Data\NVHR\nvhr_avx2.dll from
+  // DllMain, before usvfs hooks the game): it comes with it
+  {
+    const QDir own = QFileInfo(dll.source).absoluteDir();
+    QStringList folders;
+    QStringList needles;
+    for (const QString& a : own.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      const QDir sub(own.absoluteFilePath(a));
+      QStringList levels = {a};
+      for (const QString& b : sub.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        levels.append(a + u'/' + b);
+      }
+      for (const QString& rel : levels) {
+        if (!rel.contains(u'/')) {
+          continue;  // a single name (Data, Plugins) is too common to tell
+        }
+        folders.append(rel);
+        needles.append(QString(rel).replace(u'/', u'\\').toLower() + u'\\');
+      }
+    }
+    const QStringList named = cachedMentions(dll.source, needles);
+    for (int i = 0; i < folders.size(); ++i) {
+      if (named.contains(needles[i])) {
+        out.append(folders[i]);
+      }
+    }
+  }
+
   // never the Root folder itself, nor outside it
   QStringList kept;
   for (const QString& rel : out) {
@@ -393,7 +422,7 @@ QList<int> versionParts(const QString& s, QChar separator)
 // the extender's runtime DLL for the game's version: skse64_1_6_1170.dll for
 // 1.6.1170.0, obse_1_2_416.dll for 1.2.0.416, nvse_1_4.dll for 1.4.0.525
 QString matchRuntime(const Index& index, const QString& prefix, const QString& gameVersion,
-                     QString* why)
+                     QString* why, QStringList* mismatched = nullptr)
 {
   const QRegularExpression re(QStringLiteral("^%1_(\\d+(?:_\\d+)*)\\.dll$")
                                   .arg(QRegularExpression::escape(prefix)));
@@ -413,10 +442,21 @@ QString matchRuntime(const Index& index, const QString& prefix, const QString& g
     }
     candidates.append(index.value(key).name);
     const QList<int> parts = versionParts(m.captured(1), '_');
+    // MO2 Revamped: the short names stand for one build only: fose_1_7.dll is
+    // for 1.7.0.3 (the Steam 1.7.0.4 needs the Anniversary Patcher first, and
+    // FOSE loaded into it fails without a word), nvse_1_4.dll for 1.4.0.525.
+    // Its loader, run instead, says so
+    static const QHash<QString, QList<int>> exact = {
+        {QStringLiteral("fose_1_7.dll"), {1, 7, 0, 3}},
+        {QStringLiteral("nvse_1_4.dll"), {1, 4, 0, 525}},
+    };
+    const auto pinned = exact.constFind(key);
     const bool matches =
         !version.isEmpty() &&
-        (parts == alternate ||
-         (parts.size() <= version.size() && version.mid(0, parts.size()) == parts));
+        (pinned != exact.constEnd()
+             ? version == *pinned
+             : (parts == alternate ||
+                (parts.size() <= version.size() && version.mid(0, parts.size()) == parts)));
     if (matches && parts.size() > bestLength) {
       best       = key;
       bestLength = int(parts.size());
@@ -425,6 +465,10 @@ QString matchRuntime(const Index& index, const QString& prefix, const QString& g
 
   if (best.isEmpty() && version.isEmpty() && candidates.size() == 1) {
     return candidates.first().toLower();
+  }
+  if (best.isEmpty() && !candidates.isEmpty() && !version.isEmpty() &&
+      mismatched != nullptr) {
+    *mismatched = candidates;
   }
   if (best.isEmpty()) {
     *why = candidates.isEmpty()
@@ -547,7 +591,11 @@ Plan plan(const Input& in)
                            "a forced load runs")
                 .arg(gameExeName);
     } else {
-      runtime = matchRuntime(index, extender->prefix, in.gameVersion, &why);
+      QStringList mismatched;
+      runtime = matchRuntime(index, extender->prefix, in.gameVersion, &why, &mismatched);
+      if (runtime.isEmpty() && !mismatched.isEmpty()) {
+        p.extenderMismatchDlls = mismatched;
+      }
       if (!runtime.isEmpty() &&
           !cachedMentions(loader.source, {"start" + extender->tag}).isEmpty()) {
         why = QStringLiteral("%1 calls Start%2 after injecting %3, which a forced load "
