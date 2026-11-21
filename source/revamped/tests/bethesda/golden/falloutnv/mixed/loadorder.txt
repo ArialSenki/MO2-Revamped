@@ -10,8 +10,8 @@ CaravanPack.esm
 TribalPack.esm
 Master.esm
 MercenaryPack.esm
+Active.esp
 Inactive.esp
 Starred.esp
-Active.esp
 Dupe.esp
 Spaced.esp

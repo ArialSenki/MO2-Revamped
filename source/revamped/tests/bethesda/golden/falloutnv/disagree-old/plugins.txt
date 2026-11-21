@@ -4,6 +4,6 @@ DeadMoney.esm
 D.esm
 HonestHearts.esm
 Unlisted.esp
-C.esp
-B.esp
 A.esp
+B.esp
+C.esp

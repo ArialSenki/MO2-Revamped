@@ -11,20 +11,15 @@ comparing. The bed's ModOrganizer.ini and plugins\mo2r_golden_dump.py are
 replaced; use a bed made for tests. Needs D:\mo2build\scripts (desk.ps1,
 closepid.ps1, mo2lock.ps1).
 
-Not repeatable with the current plugins (checked 2026-11-21, same bed, two runs):
-plugins with no place from loadorder.txt (no loadorder.txt, or left out of it)
-come out in a different order each run; with New Vegas, the mods' file times
-don't decide it (the Data folder's do). So these goldens are one sample, not a
-contract: skyrimse mixed; falloutnv mtime, disagree, disagree-old, mixed,
-unicode (and big, not run twice). Stable: skyrimse big, case, unicode;
-falloutnv case. MO2 also dates every plugin, Data included, to
-2000-01-(1 + priority) on each save of the list (PluginList::saveLoadOrder).
-The cause was MO2's core, with old and new plugins alike (checked 2026-11-21):
-PluginList::fixPluginRelationships moved masters up and the other plugins
-down one at a time in m_ESPs' order, which comes from a hash map seeded per
-start. Skyrim SE mixed gave three orders over 10 runs. Since the core visits
-by priority, 10 runs gave one; golden\skyrimse\mixed is that order, so the
-bed needs a ModOrganizer.exe with that fix.
+Repeatable since the core fixes of 2026-11-21 (two New Vegas runs and three
+Skyrim SE runs, all identical): the order used to change on each start, with
+old and new plugins alike, because MO2's core walked m_ESPs, which comes from a
+hash map seeded per start. PluginList::fixPluginRelationships now visits by
+priority, fixPriorities breaks ties by name, and setLoadOrder places plugins
+with no place from loadorder.txt by their old priority, then by name. The
+goldens are that order, so the bed needs a ModOrganizer.exe with those fixes.
+MO2 also dates every plugin, Data included, to 2000-01-(1 + priority) on each
+save of the list (PluginList::saveLoadOrder).
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Work,
       [ValidateSet('skyrimse', 'falloutnv')][string]$Game = 'skyrimse',

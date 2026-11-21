@@ -3,7 +3,7 @@ FalloutNV.esm
 DeadMoney.esm
 D.esm
 HonestHearts.esm
-A.esp
 Unlisted.esp
-C.esp
+A.esp
 B.esp
+C.esp

@@ -3,14 +3,14 @@ FalloutNV.esm
 DeadMoney.esm
 D.esm
 HonestHearts.esm
-OldWorldBlues.esm
 CaravanPack.esm
 ClassicPack.esm
 GunRunnersArsenal.esm
 LonesomeRoad.esm
 MercenaryPack.esm
+OldWorldBlues.esm
 TribalPack.esm
 Unlisted.esp
-C.esp
-B.esp
 A.esp
+B.esp
+C.esp

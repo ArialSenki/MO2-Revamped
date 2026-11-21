@@ -11,7 +11,7 @@ TribalPack.esm
 MercenaryPack.esm
 Late Master.esm
 Middle Master.esm
-Alpha Patch.esp
 Zeta Patch.esp
 Middle.esp
+Alpha Patch.esp
 Early Plugin.esp
