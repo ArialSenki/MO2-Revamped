@@ -35,7 +35,9 @@ namespace
 
 BethesdaDataChecker::BethesdaDataChecker(const GameDefinition& definition)
     : m_Folders(toSet<decltype(m_Folders)>(definition.dataLayout.folders)),
-      m_Extensions(toSet<decltype(m_Extensions)>(definition.dataLayout.extensions))
+      m_Extensions(toSet<decltype(m_Extensions)>(definition.dataLayout.extensions)),
+      m_FixablePrefix(definition.dataLayout.fixablePrefix.toString()),
+      m_FixFolder(definition.dataLayout.fixFolder.toString())
 {}
 
 BethesdaDataChecker::CheckReturn BethesdaDataChecker::dataLooksValid(
@@ -57,7 +59,29 @@ BethesdaDataChecker::CheckReturn BethesdaDataChecker::dataLooksValid(
       return CheckReturn::VALID;
     }
   }
-  return CheckReturn::INVALID;
+  if (m_FixablePrefix.isEmpty()) {
+    return CheckReturn::INVALID;
+  }
+  // only files, each starting with the prefix (an empty archive too, as MO2's
+  // Oblivion plugin had it)
+  for (const auto& entry : *fileTree) {
+    if (entry->isDir() || !entry->name().startsWith(m_FixablePrefix, Qt::CaseInsensitive)) {
+      return CheckReturn::INVALID;
+    }
+  }
+  return CheckReturn::FIXABLE;
+}
+
+std::shared_ptr<MOBase::IFileTree>
+BethesdaDataChecker::fix(std::shared_ptr<MOBase::IFileTree> fileTree) const
+{
+  if (m_FixFolder.isEmpty()) {
+    return fileTree;
+  }
+  auto data   = fileTree->createOrphanTree();
+  auto folder = data->addDirectory(m_FixFolder);
+  folder->merge(fileTree);
+  return data;
 }
 
 BethesdaDataContent::BethesdaDataContent(const GameDefinition& definition,

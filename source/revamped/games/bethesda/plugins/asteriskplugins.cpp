@@ -60,8 +60,9 @@ namespace
   }
 }  // namespace
 
-AsteriskGamePlugins::AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins)
-    : m_Organizer(organizer), m_LightPlugins(lightPlugins)
+AsteriskGamePlugins::AsteriskGamePlugins(MOBase::IOrganizer* organizer, bool lightPlugins,
+                                         bool mediumPlugins)
+    : m_Organizer(organizer), m_LightPlugins(lightPlugins), m_MediumPlugins(mediumPlugins)
 {}
 
 QString AsteriskGamePlugins::profileFile(const QString& name) const
@@ -127,6 +128,10 @@ QStringList AsteriskGamePlugins::readLoadOrder(IPluginList* pluginList) const
 QStringList AsteriskGamePlugins::readPluginsTxt(IPluginList* pluginList) const
 {
   const QStringList primary = m_Organizer->managedGame()->primaryPlugins();
+  if (!pluginsTxtInUse()) {
+    // the game doesn't read it: states stay as they are
+    return complete(pluginList, primary, {});
+  }
   for (const QString& name : primary) {
     if (pluginList->state(name) != IPluginList::STATE_MISSING) {
       pluginList->setState(name, IPluginList::STATE_ACTIVE);
@@ -192,20 +197,22 @@ void AsteriskGamePlugins::writePluginLists(const IPluginList* pluginList)
 
   // the Creation Club plugins are primary ones too: the game loads them from
   // its .ccc, so they're left out like the masters
-  const WrittenList plugins = writePluginsTxt(
-      order, toWide(m_Organizer->managedGame()->primaryPlugins()), PluginsTxtStyle::Asterisk);
-  for (const std::wstring& name : plugins.unencodable) {
-    MOBase::log::error("invalid plugin name {}", QString::fromStdWString(name));
+  if (pluginsTxtInUse()) {
+    const WrittenList plugins = writePluginsTxt(
+        order, toWide(m_Organizer->managedGame()->primaryPlugins()), PluginsTxtStyle::Asterisk);
+    for (const std::wstring& name : plugins.unencodable) {
+      MOBase::log::error("invalid plugin name {}", QString::fromStdWString(name));
+    }
+    if (!plugins.unencodable.empty()) {
+      MOBase::reportError(QObject::tr(
+          "Some of your plugins have invalid names! These plugins can not be loaded by "
+          "the game. Please see mo_interface.log for a list of affected plugins and "
+          "rename them."));
+    }
+    // written even with nothing but the header, as MO2 does for these games
+    // (with every plugin inactive that is the right file)
+    commit(profileFile("plugins.txt"), plugins.bytes);
   }
-  if (!plugins.unencodable.empty()) {
-    MOBase::reportError(QObject::tr(
-        "Some of your plugins have invalid names! These plugins can not be loaded by "
-        "the game. Please see mo_interface.log for a list of affected plugins and "
-        "rename them."));
-  }
-  // written even with nothing but the header, as MO2 does for these games
-  // (with every plugin inactive that is the right file)
-  commit(profileFile("plugins.txt"), plugins.bytes);
 
   if (order.empty()) {
     MOBase::log::warn("plugin list would be empty, this is almost certainly wrong. Not "
