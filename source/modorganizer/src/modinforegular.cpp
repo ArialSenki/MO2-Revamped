@@ -14,6 +14,7 @@
 
 #include <QApplication>
 #include <QDirIterator>
+#include <QElapsedTimer>
 #include <QFileInfo>
 #include <QSettings>
 
@@ -41,9 +42,20 @@ ModInfoRegular::ModInfoRegular(const QDir& path, OrganizerCore& core)
       m_TrackedState(TrackedState::TRACKED_UNKNOWN),
       m_NexusBridge(&core.pluginContainer())
 {
-  m_CreationTime = QFileInfo(path.absolutePath()).birthTime();
+  QElapsedTimer stage;
+  stage.start();
+  if (const auto known = s_KnownCreationTimes.constFind(m_Path);
+      known != s_KnownCreationTimes.cend()) {
+    m_CreationTime = *known;
+  } else {
+    m_CreationTime = QFileInfo(m_Path).birthTime();
+  }
+  s_CreateTimes[0] += stage.nsecsElapsed();
+  stage.restart();
   // read out the meta-file for information
   readMeta();
+  s_CreateTimes[1] += stage.nsecsElapsed();
+  stage.restart();
   if (m_GameName.compare(core.managedGame()->gameShortName(), Qt::CaseInsensitive) != 0)
     if (!core.managedGame()->primarySources().contains(m_GameName, Qt::CaseInsensitive))
       m_IsAlternate = true;
@@ -53,6 +65,8 @@ ModInfoRegular::ModInfoRegular(const QDir& path, OrganizerCore& core)
   if (Settings::instance().archiveParsing()) {
     archives(true);
   }
+  s_CreateTimes[2] += stage.nsecsElapsed();
+  stage.restart();
 
   connect(&m_NexusBridge,
           SIGNAL(descriptionAvailable(QString, int, QVariant, QVariant)), this,
@@ -64,6 +78,24 @@ ModInfoRegular::ModInfoRegular(const QDir& path, OrganizerCore& core)
   connect(&m_NexusBridge,
           SIGNAL(requestFailed(QString, int, int, QVariant, int, QString)), this,
           SLOT(nxmRequestFailed(QString, int, int, QVariant, int, QString)));
+  s_CreateTimes[3] += stage.nsecsElapsed();
+}
+
+std::array<qint64, 4> ModInfoRegular::s_CreateTimes{};
+QHash<QString, QDateTime> ModInfoRegular::s_KnownCreationTimes;
+
+void ModInfoRegular::setKnownCreationTimes(QHash<QString, QDateTime> times)
+{
+  s_KnownCreationTimes = std::move(times);
+}
+
+void ModInfoRegular::logCreateTimes(qsizetype mods)
+{
+  log::debug("mods made: creation times {} ms, meta.ini values {} ms, archive lists {} "
+             "ms, the rest {} ms ({} mods)",
+             s_CreateTimes[0] / 1000000, s_CreateTimes[1] / 1000000,
+             s_CreateTimes[2] / 1000000, s_CreateTimes[3] / 1000000, mods);
+  s_CreateTimes = {};
 }
 
 ModInfoRegular::~ModInfoRegular()
