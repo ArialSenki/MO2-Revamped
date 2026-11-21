@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "vendor/minhook/MinHook.h"
+#include "eldenring_mo2_focus_guard.h"
 
 namespace {
 
@@ -503,9 +504,61 @@ void minimize_existing_game_windows() {
   }
 }
 
+// Wine and Proton export wine_get_version from their ntdll; the registry key
+// is the other sign (some Proton builds hide the export)
+bool running_under_wine() {
+  const HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  if (ntdll != nullptr &&
+      GetProcAddress(ntdll, "wine_get_version") != nullptr) {
+    return true;
+  }
+  HKEY key = nullptr;
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Wine", 0, KEY_READ, &key) ==
+      ERROR_SUCCESS) {
+    RegCloseKey(key);
+    return true;
+  }
+  return false;
+}
+
+BOOL CALLBACK restore_minimized_game_window(HWND window, LPARAM parameter) {
+  if (!is_process_top_level_window(window) || !IsWindowVisible(window) ||
+      !IsIconic(window) || g_original_show_window_async == nullptr) {
+    return TRUE;
+  }
+  // posted: the window's thread may be busy loading
+  g_original_show_window_async(window, SW_RESTORE);
+  if (g_original_set_foreground_window != nullptr) {
+    g_original_set_foreground_window(window);
+  }
+  ++*reinterpret_cast<size_t*>(parameter);
+  return TRUE;
+}
+
+// Under Wine the user's click, Alt+Tab or taskbar never reaches the guard's
+// hooks: it ends by itself and shows the game (eldenring_mo2_focus_guard.h)
+void release_focus_guard_after_wine_timeout() {
+  if (InterlockedExchange(&g_focus_guard_enabled, 0) == 0) {
+    return;
+  }
+  InterlockedExchange(&g_focus_user_release_logged, 1);
+  size_t restored = 0;
+  EnumWindows(restore_minimized_game_window, reinterpret_cast<LPARAM>(&restored));
+  log_line(restored > 0
+               ? "Startup minimization released under Wine after its time; restored the game window."
+               : "Startup minimization released under Wine after its time.");
+}
+
 DWORD WINAPI focus_switch_input_monitor(void*) {
   MSG message = {};
   PeekMessageW(&message, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
+
+  const bool wine = running_under_wine();
+  const ULONGLONG guard_start = GetTickCount64();
+  ULONGLONG first_show = 0;
+  if (wine) {
+    log_line("Startup minimization under Wine: the game is shown by itself after a while.");
+  }
 
   HHOOK taskbar_mouse_hook = SetWindowsHookExW(
       WH_MOUSE_LL, focus_taskbar_mouse_hook, g_module, 0);
@@ -529,6 +582,17 @@ DWORD WINAPI focus_switch_input_monitor(void*) {
     if (tab_down && (alt_down || windows_down)) {
       InterlockedExchange64(&g_last_focus_switch_tick,
                             static_cast<LONG64>(GetTickCount64()));
+    }
+    if (wine) {
+      const ULONGLONG now = GetTickCount64();
+      if (first_show == 0 &&
+          InterlockedCompareExchange(&g_focus_guard_show_seen, 0, 0) != 0) {
+        first_show = now;
+      }
+      if (mo2_focus_guard::release_by_timeout(true, guard_start, first_show, now)) {
+        release_focus_guard_after_wine_timeout();
+        break;
+      }
     }
     Sleep(10);
   }
@@ -3796,7 +3860,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.75.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.76.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's

@@ -76,7 +76,7 @@ class EldenRingMo2Game(
 
     Version = "0.5.0-alpha.97"
 
-    NativeBridgeVersion = "0.5.0-alpha.75"
+    NativeBridgeVersion = "0.5.0-alpha.76"
 
     GameName = "ELDEN RING"
 
