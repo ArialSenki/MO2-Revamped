@@ -501,6 +501,9 @@ public slots:
   // after mods were enabled or disabled: the plugin list is only rebuilt when
   // enabling them didn't already rebuild it
   void refreshListsAfterToggle(bool pluginsRebuilt);
+  // whether the plugin list still says each plugin of these mods comes from
+  // the mod the structure has it from now
+  bool pluginOriginsCurrent(const std::vector<unsigned int>& mods);
 
   ModInfo::Ptr installDownload(int downloadIndex, int priority = -1);
   // MO2 Revamped: several downloads or archives, one after another. Each one's

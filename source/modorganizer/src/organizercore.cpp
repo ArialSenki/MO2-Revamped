@@ -1885,6 +1885,38 @@ void OrganizerCore::refreshBSAList()
   }
 }
 
+bool OrganizerCore::pluginOriginsCurrent(const std::vector<unsigned int>& mods)
+{
+  for (unsigned int index : mods) {
+    const ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
+    for (const QString& plugin :
+         QDir(modInfo->absolutePath())
+             .entryList({QStringLiteral("*.esm"), QStringLiteral("*.esl"),
+                         QStringLiteral("*.esp")},
+                        QDir::Files)) {
+      const FileEntryPtr file = m_DirectoryStructure->findFile(ToWString(plugin));
+      if (file.get() == nullptr) {
+        continue;
+      }
+      if (file->getOrigin() < 0) {
+        return false;
+      }
+      // the name the plugin list gives a plugin's origin: its mod's, or the
+      // structure's for the game folder and the like
+      QString originName = ToQString(
+          m_DirectoryStructure->getOriginByID(file->getOrigin()).getName());
+      const unsigned int modIndex = ModInfo::getIndex(originName);
+      if (modIndex != UINT_MAX) {
+        originName = ModInfo::getByIndex(modIndex)->name();
+      }
+      if (m_PluginList.origin(plugin) != originName) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 void OrganizerCore::refreshListsAfterToggle(bool pluginsRebuilt)
 {
   if (!pluginsRebuilt) {
@@ -2446,13 +2478,15 @@ void OrganizerCore::modStatusChanged(unsigned int index)
     }
 
     const qint64 tStructure = stage.restart();
-    syncOriginPriorities({index});
+    const bool moved         = syncOriginPriorities({index});
     const qint64 tPriorities = stage.restart();
 
     // MO2 Revamped: enabling already rebuilt the plugin list from the updated
     // structure (and activated the mod's plugins); a second rebuild cost as
-    // much as the first, ~0.3-0.7 s with a list of thousands of plugins
-    refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore);
+    // much as the first, ~0.3-0.7 s with a list of thousands of plugins. Not
+    // when the priorities synced after it changed which mod a plugin comes from
+    refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore && !moved &&
+                            pluginOriginsCurrent({index}));
     const qint64 tLists = stage.restart();
     clearCaches({index});
     m_ModList.notifyModStateChanged({index});
@@ -2504,12 +2538,13 @@ void OrganizerCore::modStatusChanged(QList<unsigned int> index)
       }
     }
 
-    syncOriginPriorities(vindices);
+    const bool moved = syncOriginPriorities(vindices);
 
     // only enabled ones: a mod disabled after the rebuild above still has to
     // leave the plugin list
     refreshListsAfterToggle(modsToDisable.isEmpty() &&
-                            m_ESPListRebuilds != rebuildsBefore);
+                            m_ESPListRebuilds != rebuildsBefore && !moved &&
+                            pluginOriginsCurrent(vindices));
     clearCaches(vindices);
     m_ModList.notifyModStateChanged(index);
 
