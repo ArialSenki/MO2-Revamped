@@ -121,10 +121,15 @@ void viewGone()
     if (QQmlEngine* engine = engineHolder().data()) {
       engineHolder().clear();
       if (quitting()) {
-        delete engine;
-      } else {
-        engine->deleteLater();
+        // MO2 Revamped: this runs from the view's destroyed(), inside its
+        // ~QObject: its QQmlComponent and its offscreen window go after it.
+        // Deleting the engine here tore them down against a dead engine; the
+        // process is ending, so the engine is left to it. The icons go now,
+        // not as statics after QApplication
+        icons().clear();
+        return;
       }
+      engine->deleteLater();
     }
     icons().clear();
   }
