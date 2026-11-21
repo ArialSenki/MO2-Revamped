@@ -224,13 +224,27 @@ bool isLocalAddress(const QUrl& url)
 
 bool isLocalAddressImpl(const QUrl& url)
 {
-  const QString host = url.host().toLower();
+  QString host = url.host().toLower();
+  // "localhost." is localhost
+  while (host.endsWith(u'.')) {
+    host.chop(1);
+  }
   if (host.isEmpty() || host == u"localhost" || host.endsWith(u".localhost") ||
       host.endsWith(u".local")) {
     return true;
   }
   QHostAddress address;
   if (!address.setAddress(host)) {
+    // MO2 Revamped: Windows also reads "127.1", "2130706433", "0x7f000001" and
+    // "0177.0.0.1" as numbers QHostAddress refuses; a host of only digits,
+    // dots and hex is no name a list's server has
+    // (a public name ends in a label with letters: "cafe.be" stays a name)
+    static const QRegularExpression numeric(QStringLiteral("^[0-9a-fx.]+$"));
+    static const QRegularExpression digitsOrHex(QStringLiteral("^([0-9]+|0x[0-9a-f]+)$"));
+    if (numeric.match(host).hasMatch() &&
+        (!host.contains(u'.') || digitsOrHex.match(host.section(u'.', -1)).hasMatch())) {
+      return true;
+    }
     return false;  // a name
   }
   bool v4          = false;

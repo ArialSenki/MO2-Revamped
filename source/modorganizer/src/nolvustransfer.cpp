@@ -495,6 +495,113 @@ bool copyFiles(const std::vector<std::pair<QString, QString>>& files,
   return !failed && !progress.cancel;
 }
 
+// MO2 Revamped: the record is a file in the instance folder, and an instance
+// can come from elsewhere (a portable instance copied from another PC or a
+// forum): what it says isn't trusted for the places an undo writes to. A move
+// only goes back into the folders of the live Nolvus installation the record
+// names (never Nolvus' own MO2), a settings restore only to this instance's
+// own ini from its backup, and a meta entry only touches a mod's meta.ini.
+// What an undo takes away or moves back (a copy, a moved folder) has to be
+// in the instance or the data and downloads folders its ini names, never a
+// drive or the user's own folder; removals go to the Recycle Bin.
+bool insideFolder(const QString& path, const QString& folder)
+{
+  const QString p = QDir::cleanPath(QDir::fromNativeSeparators(path));
+  const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder));
+  return !f.isEmpty() && (p.compare(f, Qt::CaseInsensitive) == 0 ||
+                          p.startsWith(f + QLatin1Char('/'), Qt::CaseInsensitive));
+}
+
+std::vector<QJsonObject> trustedUndoEntries(const std::vector<QJsonObject>& entries,
+                                            const QString& instanceDir,
+                                            QStringList* skipped)
+{
+  QString source;
+  for (const auto& e : entries) {
+    if (e.value(QStringLiteral("op")).toString() == QLatin1String("begin")) {
+      source = e.value(QStringLiteral("from")).toString();
+      break;
+    }
+  }
+  QStringList nolvusFolders;
+  QString nolvusMo2;
+  if (!source.isEmpty()) {
+    for (const auto& info : findInstances()) {
+      if (samePaths(info.installPath, source)) {
+        nolvusFolders << info.installPath << info.archivePath << info.modsPath
+                      << info.stockGame;
+        nolvusMo2 = info.mo2Path;
+        break;
+      }
+    }
+  }
+  const QString iniPath = InstanceManager::singleton().iniPath(instanceDir);
+  // where the transfer put things: the instance, and its data and downloads
+  // folders (the transfer can put those on another drive)
+  QStringList instanceFolders{instanceDir};
+  {
+    const QSettings ini(iniPath, QSettings::IniFormat);
+    QString base = ini.value(QStringLiteral("Settings/base_directory")).toString();
+    if (base.isEmpty()) {
+      base = instanceDir;
+    }
+    instanceFolders << base;
+    QString downloads = ini.value(QStringLiteral("Settings/download_directory")).toString();
+    downloads.replace(QStringLiteral("%BASE_DIR%"), base, Qt::CaseInsensitive);
+    if (!downloads.isEmpty()) {
+      instanceFolders << downloads;
+    }
+  }
+  const QString home = QDir::cleanPath(QDir::homePath());
+  const auto broad   = [&](const QString& folder) {
+    const QString f = QDir::cleanPath(QDir::fromNativeSeparators(folder));
+    return f.isEmpty() || QDir(f).isRoot() || f.compare(home, Qt::CaseInsensitive) == 0 ||
+           insideFolder(home, f);
+  };
+  const auto inInstance = [&](const QString& path) {
+    return !path.isEmpty() &&
+           std::any_of(instanceFolders.begin(), instanceFolders.end(), [&](const QString& f) {
+             return !broad(f) && insideFolder(path, f);
+           });
+  };
+
+  std::vector<QJsonObject> kept;
+  for (const auto& e : entries) {
+    const QString kind = e.value(QStringLiteral("op")).toString();
+    const QString from = e.value(QStringLiteral("from")).toString();
+    const QString to   = e.value(QStringLiteral("to")).toString();
+    bool ok            = true;
+    const auto inNolvus = [&](const QString& path) {
+      // Nolvus' own MO2 only where its data folder is inside it
+      return !path.isEmpty() &&
+             std::any_of(nolvusFolders.begin(), nolvusFolders.end(),
+                         [&](const QString& f) { return insideFolder(path, f); }) &&
+             !(nolvusMo2.size() > 0 && insideFolder(path, nolvusMo2) &&
+               !insideFolder(path, nolvusFolders.value(2)));
+    };
+    if (kind == QLatin1String("move")) {
+      ok = inNolvus(from) && inInstance(to);
+    } else if (kind == QLatin1String("copy") || kind == QLatin1String("created") ||
+               kind == QLatin1String("mkdir")) {
+      ok = inInstance(to);
+    } else if (kind == QLatin1String("ini")) {
+      ok = samePaths(to, iniPath) && samePaths(from, iniPath + QStringLiteral(".linked-backup"));
+    } else if (kind == QLatin1String("meta")) {
+      ok = to.endsWith(QStringLiteral("/meta.ini"), Qt::CaseInsensitive) && inInstance(to);
+    }
+    if (ok) {
+      kept.push_back(e);
+    } else {
+      log::warn("Nolvus transfer undo: '{}' entry for '{}' isn't a place this transfer "
+                "could have used; left alone",
+                kind, QDir::toNativeSeparators(kind == QLatin1String("move") ? from : to));
+      *skipped << Text::tr("%1 was left alone: it isn't a place a Nolvus transfer uses")
+                      .arg(QDir::toNativeSeparators(kind == QLatin1String("move") ? from : to));
+    }
+  }
+  return kept;
+}
+
 }  // namespace
 
 // why the data folder can't be used, or empty: it must be a full path, and
@@ -1209,7 +1316,10 @@ bool undoTransfer(const QString& instanceDir, QString* error, QWidget* parent)
       undo.push_back(e);
     }
   }
-  const QStringList problems = applyUndo(undo, true, parent);
+  QStringList skipped;
+  undo = trustedUndoEntries(undo, instanceDir, &skipped);
+  QStringList problems = applyUndo(undo, true, parent);
+  problems = skipped + problems;
 
   Manifest manifest(path);
   manifest.open();

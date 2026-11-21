@@ -9592,6 +9592,10 @@ Verschiebe alles, was du behalten willst, vorher in eine Mod.</translation>
   <context>
     <name>Nolvus</name>
     <message>
+      <source>%1 was left alone: it isn't a place a Nolvus transfer uses</source>
+      <translation>%1 wurde nicht angerührt: Das ist kein Ort, den eine Nolvus-Übertragung nutzt</translation>
+    </message>
+    <message>
       <source>%1 (Nolvus archives)</source>
       <translation>%1 (Nolvus-Archive)</translation>
     </message>

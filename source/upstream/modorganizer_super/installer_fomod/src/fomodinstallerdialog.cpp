@@ -52,6 +52,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -71,6 +72,47 @@ using namespace MOBase;
 
 // an option's name as the FOMOD wrote it; the button's text doubles every '&'
 // so Qt doesn't take it for a keyboard shortcut and hide it
+// MO2 Revamped: an option's description is the mod author's HTML. Its pictures
+// come only from the extracted FOMOD folder (the "mo2r.root" property) or a
+// data: address: an <img src="file://server/share/x.png"> or "\\server\..."
+// made Windows send the password hash to that server, and a "../" path read
+// any picture on the disk
+class FomodDescriptionBrowser : public QTextBrowser
+{
+public:
+  using QTextBrowser::QTextBrowser;
+
+protected:
+  QVariant loadResource(int type, const QUrl& name) override
+  {
+    if (name.scheme().compare(QLatin1String("data"), Qt::CaseInsensitive) == 0) {
+      return QTextBrowser::loadResource(type, name);
+    }
+    const QString root = property("mo2r.root").toString();
+    if (root.isEmpty() || !name.host().isEmpty() ||
+        !(name.scheme().isEmpty() ||
+          name.scheme().compare(QLatin1String("file"), Qt::CaseInsensitive) == 0)) {
+      return QByteArray();
+    }
+    const QString path = name.isLocalFile() ? name.toLocalFile() : name.path();
+    if (path.startsWith(QLatin1String("//")) || path.startsWith(QLatin1String("\\\\"))) {
+      return QByteArray();
+    }
+    const QString rootPath = QFileInfo(root).canonicalFilePath();
+    const QString file =
+        QFileInfo(QDir(root).absoluteFilePath(path)).canonicalFilePath();
+    if (rootPath.isEmpty() || file.isEmpty() ||
+        !file.startsWith(rootPath + QLatin1Char('/'), Qt::CaseInsensitive)) {
+      return QByteArray();
+    }
+    QFile f(file);
+    if (!f.open(QIODevice::ReadOnly) || f.size() > 64 * 1024 * 1024) {
+      return QByteArray();
+    }
+    return f.readAll();
+  }
+};
+
 static QString optionName(const QAbstractButton* button)
 {
   const QVariant name = button->property("optionName");
@@ -212,7 +254,7 @@ void FomodInstallerDialog::buildUi()
   ui->optionName->setTextFormat(Qt::PlainText);
   ui->optionName->setWordWrap(true);
   details->addWidget(ui->optionName);
-  ui->descriptionText = new QTextBrowser(ui->details);
+  ui->descriptionText = new FomodDescriptionBrowser(ui->details);
   ui->descriptionText->setObjectName(QStringLiteral("fomodDescription"));
   ui->descriptionText->setAccessibleName(tr("Option description"));
   // only web links, opened in the browser: a FOMOD's description could link
@@ -924,6 +966,7 @@ void FomodInstallerDialog::highlightControl(QAbstractButton* button)
   // a description's own pictures (<img src="fomod/images/...">) come from the
   // extracted archive; 2.5.2 showed a broken picture
   ui->descriptionText->setSearchPaths({QDir::tempPath() + "/" + m_FomodPath});
+  ui->descriptionText->setProperty("mo2r.root", QDir::tempPath() + "/" + m_FomodPath);
   ui->descriptionText->setText(button->property("description").toString());
   RevampedFluent::adaptRichText(ui->descriptionText);
 }

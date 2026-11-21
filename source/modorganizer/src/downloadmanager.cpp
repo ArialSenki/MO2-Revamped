@@ -2688,6 +2688,18 @@ bool ServerByPreference(const ServerList::container& preferredServers,
 
 int DownloadManager::startDownloadURLs(const QStringList& urls)
 {
+  // MO2 Revamped: web addresses only. A link dragged onto the window from a
+  // page can be file://server/share/x.7z, which made Windows send the
+  // password hash to that server, or read a local file into Downloads
+  for (const QString& url : urls) {
+    const QUrl u(url);
+    const QString scheme = u.scheme().toLower();
+    if ((scheme != "http" && scheme != "https") || u.host().isEmpty()) {
+      log::warn("download not started, not a web address: '{}'",
+                scheme.isEmpty() ? QString("?") : scheme);
+      return -1;
+    }
+  }
   ModRepositoryFileInfo info;
   const int before = static_cast<int>(m_ActiveDownloads.size());
   // MO2 Revamped: none when its file couldn't be opened, or when the user said

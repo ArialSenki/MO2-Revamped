@@ -5161,6 +5161,22 @@ void MainWindow::onDirectoryStructureChanged()
   // of on the next start, and saved so plugins reading the instance's
   // executables see it too
   if (const auto* game = m_OrganizerCore.managedGame()) {
+    // MO2 Revamped: a program from a mod's Root folder only from a mod enabled
+    // in this profile
+    // (the list belongs to the core, which outlives this window)
+    m_OrganizerCore.executablesList()->setRootModFilter(
+        [core = &m_OrganizerCore](const QString& mod) {
+          const Profile* profile   = core->currentProfile();
+          const unsigned int index = ModInfo::getIndex(mod);
+          if (profile == nullptr || index == UINT_MAX || index >= profile->numMods()) {
+            return false;
+          }
+          try {
+            return profile->modEnabled(index);
+          } catch (const std::exception&) {
+            return false;
+          }
+        });
     // MO2 Revamped: not the ones the user removed or renamed in Edit programs
     if (m_OrganizerCore.executablesList()->addMissingFromPlugin(
             game, m_OrganizerCore.settings().removedPluginExecutables(),

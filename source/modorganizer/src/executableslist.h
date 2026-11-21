@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "executableinfo.h"
 
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -140,6 +141,12 @@ public:
                        const QStringList& skippedTitles, const QString& modsPath);
 
   /**
+   * @brief which mods' Root folders addFromModRoots() may take a program from:
+   *        the ones enabled in the profile in use. Without one, none is
+   **/
+  void setRootModFilter(std::function<bool(const QString& mod)> enabled);
+
+  /**
    * returns the executables provided by the game plugin
    **/
   std::vector<Executable> getPluginExecutables(MOBase::IPluginGame const* game) const;
@@ -212,6 +219,7 @@ public:
   std::optional<QString> makeNonConflictingTitle(const QString& prefix);
 
 private:
+  std::function<bool(const QString&)> m_RootModEnabled;
   enum SetFlags
   {
     // executables having the same name as existing ones are ignored

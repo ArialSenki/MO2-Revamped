@@ -7,6 +7,7 @@
 #include <QDate>
 #include <QFile>
 #include <QFileInfo>
+#include <QScopeGuard>
 #include <QScopedArrayPointer>
 #include <QTime>
 
@@ -20,6 +21,10 @@
 
 #include "gamegamebryo.h"
 #include "imoinfo.h"
+
+// MO2 Revamped: the most a save body may decompress to (the biggest are
+// tens of MB)
+static constexpr qint64 MaxSaveBody = qint64(512) * 1024 * 1024;
 
 #define CHUNK 16384
 
@@ -216,6 +221,13 @@ bool GamebryoSaveGame::FileWrapper::expandLz4()
 
   const qint64 position = m_Data->device()->pos();
 
+  // MO2 Revamped: both sizes come from the file: the compressed body has to be
+  // in it, and no save body is near the cap
+  if (m_Lz4Offset < 0 || m_Lz4Offset + qint64(m_Lz4CompressedSize) > m_File.size() ||
+      m_Lz4FullSize > MaxSaveBody ||
+      qint64(m_Lz4FullSize) > qint64(m_Lz4CompressedSize) * 255 + 16) {
+    return false;
+  }
   QByteArray compressed;
   compressed.resize(m_Lz4CompressedSize);
   if (!m_File.seek(m_Lz4Offset) ||
@@ -345,6 +357,10 @@ QImage GamebryoSaveGame::FileWrapper::readImage(unsigned long width,
   if (width > 8192 || height > 8192) {
     throw std::runtime_error("invalid screenshot size");
   }
+  // nor more than is left of the file (the picture is before the compressed body)
+  if (qint64(width) * height * bpp > m_File.size() - m_File.pos()) {
+    throw std::runtime_error("invalid screenshot size");
+  }
   QScopedArrayPointer<unsigned char> buffer(new unsigned char[width * height * bpp]);
   read(buffer.data(), width * height * bpp);
   // MO2 Revamped: the rows are packed (width * bpp bytes each); without the
@@ -459,6 +475,15 @@ bool GamebryoSaveGame::FileWrapper::readNextChunk()
     delete m_Data;
     m_Data = nullptr;
   }
+  // MO2 Revamped: a damaged chunk left m_Data null, and the next read through
+  // it crashed MO2 on a save from the internet: it is an empty stream instead
+  // (reads then fail, the save shows without details)
+  const auto keepStream = qScopeGuard([this] {
+    if (m_Data == nullptr) {
+      m_Data = new QDataStream(QByteArray());
+    }
+  });
+  const qint64 maxOutput = MaxSaveBody;
   z_stream stream{};
   try {
     stream.zalloc   = Z_NULL;
@@ -489,10 +514,16 @@ bool GamebryoSaveGame::FileWrapper::readNextChunk()
         zlibRet          = inflate(&stream, Z_NO_FLUSH);
         if ((zlibRet != Z_OK) && (zlibRet != Z_STREAM_END) &&
             (zlibRet != Z_BUF_ERROR)) {
+          inflateEnd(&stream);
           return false;
         }
         have = CHUNK - stream.avail_out;
         finalData += QByteArray::fromRawData(outBuffer.get(), have);
+        // MO2 Revamped: a zlib bomb stops at the cap
+        if (finalData.size() > maxOutput) {
+          inflateEnd(&stream);
+          return false;
+        }
       } while (stream.avail_out == 0);
       read -= stream.avail_in;
     } while (zlibRet != Z_STREAM_END);

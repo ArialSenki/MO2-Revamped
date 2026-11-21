@@ -9976,6 +9976,10 @@ Sposta in una mod ciò che vuoi conservare prima di continuare.</translation>
   <context>
     <name>Nolvus</name>
     <message>
+      <source>%1 was left alone: it isn't a place a Nolvus transfer uses</source>
+      <translation>%1 non è stato toccato: non è un posto che usa un trasferimento di Nolvus</translation>
+    </message>
+    <message>
       <source>%1 (Nolvus archives)</source>
       <translation>%1 (archivi di Nolvus)</translation>
     </message>
