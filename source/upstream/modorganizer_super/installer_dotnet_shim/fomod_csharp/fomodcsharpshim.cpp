@@ -152,7 +152,11 @@ FomodCSharpShim::EInstallResult FomodCSharpShim::install(GuessedValue<QString>& 
 {
   IPluginInstallerSimple* plugin = real();
   if (plugin == nullptr) {
-    return RESULT_FAILED;
+    // .NET couldn't load (a Wine prefix without .NET Framework): the other
+    // installers get the archive, as when the real plugin didn't load at all
+    log::warn("the C# FOMOD installer isn't available, the archive goes to the "
+              "other installers");
+    return RESULT_NOTATTEMPTED;
   }
   return plugin->install(modName, tree, version, modID);
 }
