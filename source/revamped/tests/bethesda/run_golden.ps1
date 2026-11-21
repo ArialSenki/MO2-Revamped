@@ -19,10 +19,12 @@ contract: skyrimse mixed; falloutnv mtime, disagree, disagree-old, mixed,
 unicode (and big, not run twice). Stable: skyrimse big, case, unicode;
 falloutnv case. MO2 also dates every plugin, Data included, to
 2000-01-(1 + priority) on each save of the list (PluginList::saveLoadOrder).
-The new plugins don't repeat those either (checked 2026-11-21): MO2's
-PluginList::setLoadOrder puts the plugins the game plugin doesn't place (not
-in loadorder.txt, or not yet dated) in its own internal order, which changes
-between runs. With the new plugins every Skyrim SE golden is byte-identical.
+The cause was MO2's core, with old and new plugins alike (checked 2026-11-21):
+PluginList::fixPluginRelationships moved masters up and the other plugins
+down one at a time in m_ESPs' order, which comes from a hash map seeded per
+start. Skyrim SE mixed gave three orders over 10 runs. Since the core visits
+by priority, 10 runs gave one; golden\skyrimse\mixed is that order, so the
+bed needs a ModOrganizer.exe with that fix.
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Work,
       [ValidateSet('skyrimse', 'falloutnv')][string]$Game = 'skyrimse',
