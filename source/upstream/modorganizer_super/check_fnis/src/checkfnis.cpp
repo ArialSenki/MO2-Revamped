@@ -5,13 +5,15 @@
 #include "report.h"
 #include "scopeguard.h"
 #include "questionboxmemory.h"
+#include "fluentcontentdialog.h"
+#include <QApplication>
+#include <QPushButton>
 
 #include <QCryptographicHash>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QMessageBox>
 #include <QStringList>
 #include <QVariant>
 
@@ -191,6 +193,21 @@ QString CheckFNIS::getFnisPath() const
   return fnisBinaryList.at(0);
 }
 
+// MO2 Revamped: FNIS didn't finish cleanly; ask whether to start the game
+// anyway, as a content dialog. Not starting is the default
+static bool startAnyway(const QString& application, const QString& reason)
+{
+  RevampedFluent::ContentDialog dialog(
+      QApplication::activeWindow(), QStringLiteral("fnisStartAnyway"),
+      CheckFNIS::tr("Start %1 anyway?").arg(application), reason);
+  dialog.setMinimumWidth(460);
+  QPushButton* dontStart = dialog.addButton(CheckFNIS::tr("Don't start"), true);
+  QPushButton* start     = dialog.addButton(CheckFNIS::tr("Start anyway"));
+  QObject::connect(dontStart, &QPushButton::clicked, &dialog, &QDialog::reject);
+  QObject::connect(start, &QPushButton::clicked, &dialog, &QDialog::accept);
+  return dialog.exec() == QDialog::Accepted;
+}
+
 bool CheckFNIS::fnisCheck(const QString &application)
 {
 
@@ -224,23 +241,23 @@ bool CheckFNIS::fnisCheck(const QString &application)
     HANDLE process = m_MOInfo->startApplication(fnisApp);
     bool cont = true;
     if (process == INVALID_HANDLE_VALUE) {
-      reportError(tr("Failed to start %1").arg(fnisApp));
+      reportError(tr("MO2 couldn't start FNIS (%1).").arg(fnisApp));
     } else {
       DWORD exitCodeU;
       if (m_MOInfo->waitForApplication(process, &exitCodeU)) {
         int exitCode = static_cast<int>(exitCodeU);
         if (exitCode != 0) {
-          cont = QMessageBox::question(nullptr, tr("Start %1?").arg(QFileInfo(application).fileName()),
-                                       tr("FNIS reported a %1, do you want to run the application "
-                                          "anyway?").arg(exitCode < 0 ? tr("warning")
-                                                                      : tr("critical error")),
-                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+          cont = startAnyway(
+              QFileInfo(application).fileName(),
+              exitCode < 0
+                  ? tr("FNIS finished with a warning. The game can still run, but some "
+                       "animations may be missing.")
+                  : tr("FNIS stopped with a critical error, so the game's animations may "
+                       "be broken. Check FNIS's own window or log for what went wrong."));
         }
       } else {
-        cont = QMessageBox::question(nullptr, tr("Start %1?").arg(QFileInfo(application).fileName()),
-                                     tr("Failed to determine FNIS exit code, do you want to run the application "
-                                        "anyway?"),
-                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+        cont = startAnyway(QFileInfo(application).fileName(),
+                           tr("MO2 couldn't tell whether FNIS finished correctly."));
       }
       if (cont) {
         m_MOInfo->setPersistent(name(), m_MOInfo->profileName(), newHash);
@@ -261,12 +278,22 @@ void CheckFNIS::fnisEndCheck(const QString &application, unsigned int code)
     bool update = true;
     int exitCode = static_cast<int>(code);
     if (exitCode != 0) {
-      // MO2 Revamped: FNIS has already run here; 2.5.2 asked "Start …?"
-      update = QMessageBox::question(nullptr, tr("FNIS finished with a problem"),
-                                     tr("FNIS reported a %1. Do you want to assume it worked?"
-                                       ).arg(exitCode < 0 ? tr("warning")
-                                                          : tr("critical error")),
-                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+      // MO2 Revamped: FNIS has already run here (started by hand); 2.5.2
+      // asked "Start …?". Keeping the result means MO2 won't ask to run FNIS
+      // again before the game until its source data changes
+      RevampedFluent::ContentDialog dialog(
+          QApplication::activeWindow(), QStringLiteral("fnisFinishedWithProblem"),
+          tr("FNIS finished with a problem"),
+          exitCode < 0 ? tr("FNIS finished with a warning. Keep this result, or have MO2 "
+                            "ask to run FNIS again before the next game start?")
+                       : tr("FNIS stopped with a critical error. Keep this result anyway, "
+                            "or have MO2 ask to run FNIS again before the next game start?"));
+      dialog.setMinimumWidth(460);
+      QPushButton* again = dialog.addButton(tr("Ask again"), true);
+      QPushButton* keep  = dialog.addButton(tr("Keep this result"));
+      QObject::connect(again, &QPushButton::clicked, &dialog, &QDialog::reject);
+      QObject::connect(keep, &QPushButton::clicked, &dialog, &QDialog::accept);
+      update = dialog.exec() == QDialog::Accepted;
     }
     if (update) {
       m_MOInfo->setPersistent(name(), m_MOInfo->profileName(), generateIdentifier());
