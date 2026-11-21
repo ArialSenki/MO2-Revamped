@@ -1,7 +1,8 @@
 # Settings
 
 **Settings** (Ctrl+S) has these pages. The **Help** button opens the in-app
-guide at the page you are looking at.
+guide: its page for Appearance, Plugins or Developer, and the Settings overview
+for the other pages.
 
 - [General](#general)
 - [Appearance](#appearance)

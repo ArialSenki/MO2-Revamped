@@ -50,7 +50,8 @@ still applies.
 The same steps are in the app: **…** > **MO2 Revamped guide**. A new instance
 with no mods offers them once. When the current game has its own page in the
 guide, **…** > **Help for <game>** opens it, and the **Help** button in
-Settings opens the guide at the page you are looking at.
+Settings opens the guide's page for Appearance, Plugins or Developer, and the
+Settings overview for the other pages.
 
 ## The main window
 

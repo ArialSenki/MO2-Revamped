@@ -8,8 +8,8 @@ Premium, MO2 downloads them on its own.
 
 ### Find a collection
 
-- Tools (or the **Nexus** button) > **Nexus collections** > **Browse
-  collections…** searches Nexus' collections, with a game filter, sorting
+- Tools > **Nexus collections** > **Browse collections…** (also directly in
+  the **Nexus** button's menu) searches Nexus' collections, with a game filter, sorting
   (**Most endorsed**, **Most downloaded**, **Recently updated**) and **Adult
   content**. **Open the collection** opens the one you chose.
 - **Download a Nexus collection…** takes a collection link.
@@ -58,8 +58,9 @@ to click with a free account. You can start anyway and fix them later.
   collection is offered again on the next start: **Continue**, **Not now** or
   **Don't ask again**.
 - Notices wait while a collection installs.
-- When there is a new revision, **Update to revision <N>** updates it. Mods
-  that are no longer in the collection go to the Recycle Bin.
+- When there is a new revision, **Update to revision <N>** updates it. MO2
+  offers to move mods that are no longer in the collection to the Recycle
+  Bin.
 
 ## Wabbajack lists
 

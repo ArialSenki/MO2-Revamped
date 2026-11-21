@@ -67,10 +67,11 @@ To make it a normal instance instead, **transfer** it:
 
 - **Move** (same drive only): the list's folders move into the instance in
   seconds, but the Nolvus Dashboard can no longer update that installation.
-- **Copy**: the folders are copied; Nolvus keeps working, and its updates only
-  reach its own copy.
-- **In place**: the instance uses and owns the folders where they are;
-  nothing is moved.
+- **Copy** (the default): the folders are copied; Nolvus keeps working, and
+  its updates only reach its own copy. It needs the free space shown.
+- **Keep in place**: the instance uses and owns the folders where they are.
+  Its profiles are Nolvus' own, so Nolvus' MO2 and Dashboard see what you
+  change.
 
 Every step of a transfer is written to `nolvus-transfer.jsonl` in the instance
 folder first, so a failed or interrupted transfer can be put back, and a

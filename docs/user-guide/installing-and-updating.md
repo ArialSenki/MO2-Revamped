@@ -35,11 +35,18 @@ can run into permission problems.
 
 - **Open MO2 when finished** (on by default).
 - A Start Menu shortcut (on) and a desktop shortcut (off).
-- **Open Nexus `nxm://` links with this MO2** (off). Turn it on if this is the
-  MO2 that should receive the **Mod manager download** buttons from Nexus. MO2
-  can also register itself later in Settings > Nexus.
+- **Open Nexus links (nxm://) with this MO2**: on, unless another program
+  (another MO2, Vortex) already receives the links; the setup then names it and
+  leaves the box clear. These links are the **Mod manager download** buttons on
+  Nexus. MO2 can also register itself later in Settings > Nexus.
 - **Force-close MO2 in this folder if it is still running.** Without it, the
   setup names the programs that still use the files and waits.
+
+### Visual C++ runtime
+
+MO2 needs Microsoft's Visual C++ 2015-2022 runtime. When it is missing or older
+than 14.44, the setup downloads Microsoft's signed installer and runs it (x64,
+and x86 for 32-bit games). Windows may then ask for a restart.
 
 ## Updating
 

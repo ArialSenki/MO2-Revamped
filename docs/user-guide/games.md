@@ -204,7 +204,8 @@ Nehrim use MO2's Bethesda plugins, with MO2 Revamped's changes.
 - **DLC and Creation Club** content shows in the mod list as
   "Creation Club: name"; order their plugins in the Plugins tab.
 - **Borderless window**, in the arrow menu of **Run**, for Skyrim, Skyrim SE,
-  Enderal, Fallout 3, New Vegas, TTW, Fallout 4 and Oblivion.
+  Enderal, Enderal SE, Fallout 3, New Vegas, TTW, Fallout 4, Oblivion and
+  Nehrim.
 - Saves in local time, Fallout 3 co-saves, GOG and any-Steam-library
   detection.
 
@@ -225,8 +226,9 @@ mods yet, and TTW, Enderal and the VR versions haven't been tried.
 ## Elden Ring and Nightreign
 
 Elden Ring and Elden Ring Nightreign have MO2 Revamped's own tools. Mods go to
-the game's `Game` folder. The program is **ELDEN RING (MO2)**, plus **ELDEN RING
-Reforged (online)** when that mod is on. The full guide is in the app: **…** >
+the game's `Game` folder. The program is **ELDEN RING (MO2)**, or **ELDEN RING
+NIGHTREIGN (MO2)** for Nightreign, plus **ELDEN RING Reforged (online)** when
+that mod is on. The full guide is in the app: **…** >
 **Elden Ring guide** (or **Nightreign guide**).
 
 **Archive installer.** When installing, choose **Organize for MO2

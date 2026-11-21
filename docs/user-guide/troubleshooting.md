@@ -106,8 +106,8 @@ Please don't attach game saves, account details or unrelated personal files.
 
 | What | Where |
 | --- | --- |
-| MO2's log | `<instance>\logs\mo_interface.log` (the last five are kept) |
-| Virtual file system logs | `<instance>\logs\usvfs-*.log` |
+| MO2's log | `<instance>\logs\mo_interface.log` (replaced at each start) |
+| Virtual file system logs | `<instance>\logs\usvfs-*.log` (the last five are kept) |
 | Crash dumps | `<instance>\crashDumps` |
 | Startup and memory diagnostics | `<MO2 folder>\logs`, or `%TEMP%` |
 | Instance settings | `<instance>\ModOrganizer.ini` |

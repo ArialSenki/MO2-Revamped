@@ -28,8 +28,9 @@ Windows.
 
 ## When it doesn't start
 
-1. Look for `logs\startup_diagnostics.log` next to `ModOrganizer.exe` (or in
-   `%TEMP%` when that folder can't be written). The last lines show how far it
+1. Look for `logs\startup_diagnostics.log` next to `ModOrganizer.exe` (or
+   `%TEMP%\ModOrganizer-startup_diagnostics.log` when that folder can't be
+   written). The last lines show how far it
    got.
 2. If there is no startup log at all, a DLL failed to load before MO2 could
    write anything, usually the Visual C++ runtime. Run the game or MO2 with
