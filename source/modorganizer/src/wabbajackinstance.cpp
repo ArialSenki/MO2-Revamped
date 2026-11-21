@@ -15,6 +15,7 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDirIterator>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QTemporaryFile>
 #include <QUrl>
@@ -95,6 +96,19 @@ bool sameVersion(const QString& a, const QString& b)
   const QList<int> y = numbers(b);
   // a version that can't be read isn't a difference worth a question
   return x.isEmpty() || y.isEmpty() || x == y;
+}
+
+// Wabbajack records the game exe's numeric file version; a game plugin can
+// give another (Cyberpunk's gives the patch players know, 2.5, where the file
+// version is 3.0.88.46235): either one matching is the same game
+bool sameGameVersion(const QString& listVersion, const IPluginGame* game)
+{
+  if (sameVersion(listVersion, game->gameVersion())) {
+    return true;
+  }
+  const QString exe = game->gameDirectory().absoluteFilePath(game->binaryName());
+  const QString file = QFileInfo::exists(exe) ? getFileVersion(exe) : QString();
+  return !file.isEmpty() && sameVersion(listVersion, file);
 }
 
 bool inside(const QFileInfo& binary, const QDir& folder)
@@ -202,7 +216,7 @@ void showListNotice(QWidget* parent, OrganizerCore& core)
                  .arg(folders.join(QStringLiteral(", ")));
   }
   if (!info.gameVersion.isEmpty() && !have.isEmpty()) {
-    if (sameVersion(info.gameVersion, have)) {
+    if (sameGameVersion(info.gameVersion, game)) {
       items << Text::tr("The list was made for version %1 of the game, the version you "
                            "have.")
                    .arg(info.gameVersion.toHtmlEscaped());
@@ -301,7 +315,7 @@ bool confirmGameVersion(QWidget* parent, OrganizerCore& core, const QFileInfo& b
     askedRuntime.insert(key);
     return true;
   }
-  if (sameVersion(info.gameVersion, have)) {
+  if (sameGameVersion(info.gameVersion, game)) {
     return true;
   }
 

@@ -2983,9 +2983,9 @@ static QString overwriteGameRoot(const Settings& settings, const IPluginGame* ga
                     : settings.paths().overwrite() + QStringLiteral("/Root");
 }
 
-RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
-                                               const QFileInfo& binary,
-                                               const QString& arguments)
+RootLaunch::Plan OrganizerCore::planRootLaunch(
+    const QString& profileName, const QFileInfo& binary, const QString& arguments,
+    const QList<MOBase::ExecutableForcedLoadSetting>& forcedLibraries)
 {
   const IPluginGame* game = managedGame();
   if (game == nullptr || m_PluginContainer == nullptr ||
@@ -3042,10 +3042,16 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
   in.gameBinary   = game->binaryName();
   in.gameVersion  = game->gameVersion();
   in.runBinary    = binary.absoluteFilePath();
-  // MO2 Revamped: the DLLs the game plugin has usvfs load from the game folder
+  // MO2 Revamped: the DLLs usvfs loads from the game folder in this run
   // (Cyberpunk's CET and RED4ext loaders): the VFS serves them there from
-  // Root, under the path they check for themselves
-  for (const auto& load : game->executableForcedLoads()) {
+  // Root, under the path they check for themselves. Only those this run
+  // really forces into the program started: with forced loads off for it, or
+  // the entry unticked, the import patch is what loads them
+  for (const auto& load : forcedLibraries) {
+    if (!load.enabled() ||
+        load.process().compare(binary.fileName(), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
     const QString rel =
         QDir(gameDir).relativeFilePath(QDir::cleanPath(load.library()));
     if (!rel.isEmpty() && !rel.startsWith(QStringLiteral(".."))) {

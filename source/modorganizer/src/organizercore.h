@@ -316,8 +316,11 @@ public:
 
   // MO2 Revamped: how the files of the mods' Root folders that the VFS can't
   // serve reach the program (rootlaunch.h); empty when Root/ isn't mapped
-  RootLaunch::Plan planRootLaunch(const QString& profileName, const QFileInfo& binary,
-                                  const QString& arguments);
+  // forcedLibraries are the run's own (what usvfs will load, see ProcessRunner)
+  RootLaunch::Plan
+  planRootLaunch(const QString& profileName, const QFileInfo& binary,
+                 const QString& arguments,
+                 const QList<MOBase::ExecutableForcedLoadSetting>& forcedLibraries);
 
   // the copy fallback for a run; its result says what failed (a game folder
   // that can't be written to also shows one notice per session)

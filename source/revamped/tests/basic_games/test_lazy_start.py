@@ -101,6 +101,43 @@ class LazyStart(unittest.TestCase):
         self.assertEqual(len(shown), 1)
         self.assertIn("bad libraryfolders.vdf", shown[0])
 
+    def test_a_read_during_the_scan_waits_for_it(self):
+        # the real setup(): another thread reading a list while a store is
+        # being scanned gets the scanned list, not an empty one, and no second scan
+        import threading
+
+        from basic_games import steam_utils
+
+        BasicGame.setup = self.saved_setup
+        started, release = threading.Event(), threading.Event()
+        scans = []
+        saved = steam_utils.find_games
+
+        def slow_steam():
+            scans.append(1)
+            started.set()
+            release.wait(10)
+            return {"4242": self.folder}
+
+        steam_utils.find_games = slow_steam
+        seen = {}
+        try:
+            first = threading.Thread(target=lambda: seen.setdefault("first", BasicGame.steam_games))
+            first.start()
+            self.assertTrue(started.wait(10))
+            second = threading.Thread(target=lambda: seen.setdefault("second", BasicGame.steam_games))
+            second.start()
+            second.join(0.3)
+            self.assertTrue(second.is_alive())  # waiting for the scan
+            release.set()
+            first.join(10)
+            second.join(10)
+        finally:
+            steam_utils.find_games = saved
+        self.assertEqual(seen["first"], {"4242": self.folder})
+        self.assertEqual(seen["second"], {"4242": self.folder})
+        self.assertEqual(len(scans), 1)
+
     def test_detect_waits_for_the_path(self):
         game = FakeGame()
         game.detectGame()

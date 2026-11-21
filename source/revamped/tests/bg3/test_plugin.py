@@ -153,6 +153,20 @@ class PluginTest(PluginBase):
         self.organizer.add_mod("SE", ["bin/DWrite.dll"])
         self.assertTrue(self.game.has_script_extender())
 
+    def test_root_bin_in_overwrite_counts(self):
+        # the data tree leaves Root/ out here, so the Root folders are read from
+        # disk: Overwrite's as well as the mods'
+        self.install()
+        root_bin = Path(self.organizer.overwritePath()) / "Root" / "bin"
+        root_bin.mkdir(parents=True, exist_ok=True)
+        self.assertFalse(self.game.has_script_extender())
+        (root_bin / "DWrite.dll").write_bytes(b"")
+        (root_bin / "NativeMods").mkdir(exist_ok=True)
+        (root_bin / "NativeMods" / "Over.dll").write_bytes(b"")
+        self.assertTrue(self.game.has_script_extender())
+        self.assertEqual(sorted(d.casefold() for d in self.game.forced_dlls()),
+                         ["dwrite.dll", "nativemods/over.dll"])
+
     # load order at start
 
     def test_start_writes_the_order_and_reads_each_pak_once(self):

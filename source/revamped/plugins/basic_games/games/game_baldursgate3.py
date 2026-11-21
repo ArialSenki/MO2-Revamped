@@ -253,19 +253,27 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         # the active mods' folders, highest priority first, whatever the data
         # tree lists
         if not root_builder_enabled(self._organizer):
-            mods = self._organizer.modList()
-            for name in reversed(list(mods.allModsByProfilePriority())):
-                if not mods.state(name) & mobase.ModState.ACTIVE:
-                    continue
-                mod = mods.getMod(name)
-                if mod is None:
-                    continue
-                root_bin = Path(mod.absolutePath()) / "Root" / "bin"
+            for root in self._root_folders():
+                root_bin = root / "bin"
                 if not root_bin.is_dir():
                     continue
                 for dll in root_bin.rglob("*.dll"):
                     add(dll.relative_to(root_bin).as_posix())
         return list(libs.values())
+
+    def _root_folders(self) -> list[Path]:
+        """The Root folders the game gets, highest priority first: Overwrite's,
+        then the active mods'. Read from their folders: the data tree leaves
+        Root/ out where the data folder is the game folder."""
+        folders = [Path(self._organizer.overwritePath()) / "Root"]
+        mods = self._organizer.modList()
+        for name in reversed(list(mods.allModsByProfilePriority())):
+            if not mods.state(name) & mobase.ModState.ACTIVE:
+                continue
+            mod = mods.getMod(name)
+            if mod is not None:
+                folders.append(Path(mod.absolutePath()) / "Root")
+        return folders
 
     def base_dlls(self) -> set[str]:
         if self._base_dlls is None:
@@ -284,15 +292,9 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         tree = self._organizer.virtualFileTree()
         if tree.find("bin/DWrite.dll") is not None:
             return True
-        # a mod's Root/bin, from its folder, whatever the data tree lists
-        mods = self._organizer.modList()
-        for name in mods.allModsByProfilePriority():
-            if not mods.state(name) & mobase.ModState.ACTIVE:
-                continue
-            mod = mods.getMod(name)
-            if mod is not None and (Path(mod.absolutePath()) / "Root" / "bin" / "DWrite.dll").is_file():
-                return True
-        return False
+        # a Root/bin (a mod's or Overwrite's), from its folder, whatever the
+        # data tree lists
+        return any((root / "bin" / "DWrite.dll").is_file() for root in self._root_folders())
 
     def loadOrderMechanism(self) -> mobase.LoadOrderMechanism:
         return mobase.LoadOrderMechanism.PLUGINS_TXT

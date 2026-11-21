@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import sys
+import threading
 from pathlib import Path
 from typing import Callable, Generic, TypeVar
 
@@ -376,8 +377,15 @@ class _StoreGames:
         self._name = name
 
     def __get__(self, obj, owner=None):
-        BasicGame.setup()
+        # one scan: a read from another thread while it runs waits for it
+        # instead of scanning again
+        with _store_scan:
+            if isinstance(BasicGame.__dict__.get(self._name), _StoreGames):
+                BasicGame.setup()
         return getattr(BasicGame, self._name)
+
+
+_store_scan = threading.RLock()
 
 
 class BasicGame(mobase.IPluginGame):
@@ -394,10 +402,17 @@ class BasicGame(mobase.IPluginGame):
 
     @staticmethod
     def setup():
-        # MO2 Revamped: the lists replace the lazy attributes before the scan,
-        # so a scan that fails half way isn't tried again at each read
-        for name in ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games"):
-            setattr(BasicGame, name, {})
+        with _store_scan:
+            BasicGame._scan_stores()
+
+    @staticmethod
+    def _scan_stores():
+        # MO2 Revamped: the stores are scanned into these, and the lists replace
+        # the lazy attributes only when the scan is done: a read from another
+        # thread meanwhile waits for the scan (see _StoreGames) rather than
+        # finding an empty list and leaving its game without a folder. A store
+        # that fails gives an empty list, so it isn't tried again at each read
+        found: dict[str, dict[str, Path]] = {}
 
         from .eadesktop_utils import find_games as find_eadesktop_games
         from .epic_utils import find_games as find_epic_games
@@ -417,14 +432,17 @@ class BasicGame(mobase.IPluginGame):
             ("origin_games", find_origin_games),
         ):
             try:
-                setattr(BasicGame, name, scan())
+                found[name] = scan()
             except Exception as error:
                 errors.append((name.split("_")[0].capitalize(), error))
         for name, scan in (("epic_games", find_epic_games), ("eadesktop_games", find_eadesktop_games)):
             try:
-                setattr(BasicGame, name, scan(errors))
+                found[name] = scan(errors)
             except Exception as error:
                 errors.append((name.split("_")[0].capitalize(), error))
+        # before the message below, whose event loop can read them again
+        for name in ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games"):
+            setattr(BasicGame, name, found.get(name, {}))
 
         if errors:
             QMessageBox.critical(

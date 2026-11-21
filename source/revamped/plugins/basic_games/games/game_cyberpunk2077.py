@@ -375,13 +375,15 @@ class Cyberpunk2077Game(BasicGame):
             in_root: set[str] = set()
             if not root_builder:
                 mods = self._organizer.modList()
+                # Overwrite's root/ too, as the data tree used to include it
+                bases = [Path(self._organizer.overwritePath())]
                 for name in mods.allModsByProfilePriority():
                     if not mods.state(name) & mobase.ModState.ACTIVE:
                         continue
                     mod = mods.getMod(name)
-                    if mod is None:
-                        continue
-                    base = Path(mod.absolutePath())
+                    if mod is not None:
+                        bases.append(Path(mod.absolutePath()))
+                for base in bases:
                     for relative in self._forced_loaders:
                         if (base / "root" / relative).is_file():
                             in_root.add(relative)
