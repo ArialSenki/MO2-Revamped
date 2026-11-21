@@ -345,6 +345,9 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     std::for_each(std::execution::par, order.begin(), order.end(), [&](std::size_t i) {
       parsed[i] = std::make_unique<QSettings>(modPaths[i] + QStringLiteral("/meta.ini"),
                                               QSettings::IniFormat);
+      // Qt turns a section's text into values the first time it's read, and
+      // reading the mod lists the groups, which does every section: do it here
+      parsed[i]->childGroups();
     });
 
     tParse = stage.restart();
