@@ -233,21 +233,38 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         tree = self._organizer.virtualFileTree()
         libs: dict[str, str] = {}
         base = self.base_dlls()
-        bin_paths = ["bin"] if root_builder_enabled(self._organizer) else ["bin", "Root/bin"]
-        for bin_path in bin_paths:
-            folder = tree.find(bin_path)
-            if not isinstance(folder, mobase.IFileTree):
-                continue
+        def add(relpath: str) -> None:
+            folded = relpath.casefold()
+            if folded not in base and folded != "bink2w64_original.dll":
+                libs.setdefault(folded, relpath)
+
+        folder = tree.find("bin")
+        if isinstance(folder, mobase.IFileTree):
 
             def visit(_: Any, entry: mobase.FileTreeEntry, folder=folder) -> mobase.IFileTree.WalkReturn:
                 relpath = entry.pathFrom(folder).replace("\\", "/")
                 if relpath and entry.hasSuffix("dll"):
-                    folded = relpath.casefold()
-                    if folded not in base and folded != "bink2w64_original.dll":
-                        libs.setdefault(folded, relpath)
+                    add(relpath)
                 return mobase.IFileTree.WalkReturn.CONTINUE
 
             folder.walk(visit)
+
+        # a mod's Root/bin (Wabbajack lists made with Root Builder): read from
+        # the active mods' folders, highest priority first. The data tree
+        # leaves Root/ out where the data folder is the game folder
+        if not root_builder_enabled(self._organizer):
+            mods = self._organizer.modList()
+            for name in reversed(list(mods.allModsByProfilePriority())):
+                if not mods.state(name) & mobase.ModState.ACTIVE:
+                    continue
+                mod = mods.getMod(name)
+                if mod is None:
+                    continue
+                root_bin = Path(mod.absolutePath()) / "Root" / "bin"
+                if not root_bin.is_dir():
+                    continue
+                for dll in root_bin.rglob("*.dll"):
+                    add(dll.relative_to(root_bin).as_posix())
         return list(libs.values())
 
     def base_dlls(self) -> set[str]:
@@ -265,8 +282,16 @@ class BG3Game(BasicGame, mobase.IPluginFileMapper):
         if Path(self.gameDirectory().absoluteFilePath("bin/DWrite.dll")).exists():
             return True
         tree = self._organizer.virtualFileTree()
-        for path in ("bin/DWrite.dll", "Root/bin/DWrite.dll"):
-            if tree.find(path) is not None:
+        if tree.find("bin/DWrite.dll") is not None:
+            return True
+        # a mod's Root/bin, from its folder: the data tree leaves Root/ out
+        # where the data folder is the game folder
+        mods = self._organizer.modList()
+        for name in mods.allModsByProfilePriority():
+            if not mods.state(name) & mobase.ModState.ACTIVE:
+                continue
+            mod = mods.getMod(name)
+            if mod is not None and (Path(mod.absolutePath()) / "Root" / "bin" / "DWrite.dll").is_file():
                 return True
         return False
 
