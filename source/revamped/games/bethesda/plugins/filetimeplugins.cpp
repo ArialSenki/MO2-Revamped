@@ -140,8 +140,15 @@ QStringList FileTimeGamePlugins::readActiveAndFileTimes(IPluginList* pluginList)
     const QDir folder = mod != nullptr ? QDir(mod->absolutePath()) : data;
     times.insert(name, QFileInfo(folder.absoluteFilePath(name)).lastModified());
   }
+  // same time: by name, so the order is the same on every read (MO2's own
+  // plugins left ties in whatever order the plugin list gave them)
   std::sort(plugins.begin(), plugins.end(), [&](const QString& a, const QString& b) {
-    return times.value(a) < times.value(b);
+    const QDateTime ta = times.value(a);
+    const QDateTime tb = times.value(b);
+    if (ta != tb) {
+      return ta < tb;
+    }
+    return a.compare(b, Qt::CaseInsensitive) < 0;
   });
 
   // the active ones from plugins.txt; MO2 always writes its header there, so
