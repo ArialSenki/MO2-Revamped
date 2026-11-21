@@ -613,9 +613,28 @@ void PluginList::fixPluginRelationships()
     }
   }
 
+  // MO2 Revamped: the plugins are visited by priority, not in m_ESPs' order.
+  // m_ESPs comes from a hash map whose seed changes on every start, and each
+  // move depends on the ones before it, so the same lists gave a different
+  // order on each start. By priority it's the result the old way gave most
+  // often (checked on the Skyrim SE "mixed" golden over every visiting order).
+  const auto byPriority = [this] {
+    std::vector<int> rows(m_ESPs.size());
+    for (int i = 0; i < static_cast<int>(rows.size()); ++i) {
+      rows[i] = i;
+    }
+    std::sort(rows.begin(), rows.end(), [this](int a, int b) {
+      if (m_ESPs[a].priority != m_ESPs[b].priority) {
+        return m_ESPs[a].priority < m_ESPs[b].priority;
+      }
+      return m_ESPs[a].name.compare(m_ESPs[b].name, Qt::CaseInsensitive) < 0;
+    });
+    return rows;
+  };
+
   bool moved = false;
   // Ensure masters are up top and normal plugins are down below
-  for (int i = 0; i < m_ESPs.size(); i++) {
+  for (int i : byPriority()) {
     ESPInfo& plugin = m_ESPs[i];
     if (plugin.hasLightExtension || plugin.hasMasterExtension ||
         plugin.isMasterFlagged) {
@@ -634,7 +653,7 @@ void PluginList::fixPluginRelationships()
   }
 
   // Ensure master/child relationships are observed
-  for (int i = 0; i < m_ESPs.size(); i++) {
+  for (int i : byPriority()) {
     ESPInfo& plugin = m_ESPs[i];
     int newPriority = plugin.priority;
     for (const auto& master : plugin.masters) {
