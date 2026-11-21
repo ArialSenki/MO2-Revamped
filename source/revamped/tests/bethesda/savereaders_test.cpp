@@ -10,8 +10,9 @@
 // one that can't be read fails the test.
 // /DMO2R_LZ4_ORACLE (and liblz4.lib, its DLL next to the exe) also checks the
 // LZ4 decoder against liblz4's LZ4_decompress_safe_partial.
-// Fuzzing: the same files with /DMO2R_FUZZ and /fsanitize=fuzzer (no /EHsc
-// needed) build a libFuzzer target over every reader.
+// Fuzzing: the same files with /DMO2R_FUZZ and /fsanitize=fuzzer build a
+// libFuzzer target over every reader; `savereaders_test --write-seeds <dir>`
+// writes it a corpus to start from.
 #include "saves/fallout3save.h"
 #include "saves/fallout4save.h"
 #include "saves/lz4block.h"
@@ -178,7 +179,7 @@ static const std::vector<std::string> SsePlugins = {"Skyrim.esm", "Update.esm", 
                                                     "Unofficial Skyrim Special Edition Patch.esp"};
 static const std::vector<std::string> SseLight   = {"ccBGSSSE001-Fish.esm", "Light.esp"};
 
-static Bytes skyrimBody(std::uint8_t formVersion, const std::vector<std::string>& plugins,
+[[maybe_unused]] static Bytes skyrimBody(std::uint8_t formVersion, const std::vector<std::string>& plugins,
                         const std::vector<std::string>& light, std::size_t padding = 64)
 {
   Writer lists;
@@ -199,7 +200,7 @@ static Bytes skyrimBody(std::uint8_t formVersion, const std::vector<std::string>
 }
 
 // compression: 0 none, 1 zlib, 2 LZ4; version 9 is Skyrim 2011's (RGB, no field)
-static Bytes skyrimSave(std::uint32_t version, std::uint16_t compression, const Bytes& body,
+[[maybe_unused]] static Bytes skyrimSave(std::uint32_t version, std::uint16_t compression, const Bytes& body,
                         std::uint32_t width = 4, std::uint32_t height = 3)
 {
   Writer h;
@@ -223,7 +224,7 @@ static Bytes skyrimSave(std::uint32_t version, std::uint16_t compression, const 
   return f.b;
 }
 
-static std::optional<SkyrimSaveData> readSkyrim(const Bytes& file, std::size_t limit = 1 << 20)
+[[maybe_unused]] static std::optional<SkyrimSaveData> readSkyrim(const Bytes& file, std::size_t limit = 1 << 20)
 {
   const auto info = readSkyrimSaveInfo(view(file));
   if (!info) {
@@ -240,7 +241,7 @@ static const std::vector<std::string> Fo4Plugins = {"Fallout4.esm", "DLCRobot.es
                                                     "Unofficial Fallout 4 Patch.esp"};
 static const std::vector<std::string> Fo4Light   = {"ccBGSFO4044-HellfirePowerArmor.esl"};
 
-static Bytes fallout4Save(std::uint8_t formVersion, std::uint32_t width = 5,
+[[maybe_unused]] static Bytes fallout4Save(std::uint8_t formVersion, std::uint32_t width = 5,
                           std::uint32_t height = 2, std::size_t lightCount = 1)
 {
   Writer h;
@@ -267,7 +268,7 @@ static Bytes fallout4Save(std::uint8_t formVersion, std::uint32_t width = 5,
   return f.b;
 }
 
-static Bytes fallout3Save(bool newVegas, std::uint32_t width = 3, std::uint32_t height = 2)
+[[maybe_unused]] static Bytes fallout3Save(bool newVegas, std::uint32_t width = 3, std::uint32_t height = 2)
 {
   Writer f;
   f.raw("FO3SAVEGAME").v(std::uint32_t{0x53}).v(std::uint32_t{0x30}).raw("|");
@@ -307,9 +308,14 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
           reinterpret_cast<const char*>(in.data()), reinterpret_cast<char*>(ref.data()),
           static_cast<int>(in.size()), static_cast<int>(ref.size()),
           static_cast<int>(ref.size()));
-      // what liblz4 decodes, ours decodes the same
-      if (r >= 0 && (!n || *n != static_cast<std::size_t>(r) ||
-                     std::memcmp(out.data(), ref.data(), static_cast<std::size_t>(r)) != 0)) {
+      // what both decode is the same. They part only on damage: ours refuses
+      // an offset of 0 (the format forbids it, liblz4 lets it through),
+      // gives the start of a cut block where liblz4 gives an error, and
+      // decodes a block that ends in a match (against the format's end
+      // rules), where liblz4 stops earlier; valid blocks give the same size
+      // (the unit tests check that)
+      const std::size_t common = n ? std::min(*n, static_cast<std::size_t>(r)) : 0;
+      if (r >= 0 && n && std::memcmp(out.data(), ref.data(), common) != 0) {
         std::abort();
       }
     }
@@ -789,8 +795,40 @@ static bool readReal(const std::string& kind, const char* path)
   return true;
 }
 
+// the fuzzer's seeds: a target byte, the output size / 4 (16 bits), the input
+static void writeSeeds(const std::string& dir)
+{
+  int n          = 0;
+  const auto put = [&](std::uint8_t target, std::size_t outSize, const Bytes& input) {
+    Writer w;
+    w.v(target).v(static_cast<std::uint16_t>(std::min<std::size_t>(outSize / 4, 0xFFFF)));
+    w.raw(input);
+    std::ofstream f(dir + "/seed" + std::to_string(n++), std::ios::binary);
+    f.write(reinterpret_cast<const char*>(w.b.data()), static_cast<std::streamsize>(w.b.size()));
+  };
+  const Bytes text = randomBytes(3000, 11, 6);
+  put(0, text.size(), lz4Compress(text));
+  put(0, 512, lz4Compress(Bytes(2000, std::byte{1})));
+  put(1, text.size(), zlibCompress(text));
+  const Bytes body = skyrimBody(78, SsePlugins, SseLight);
+  for (const std::uint16_t c : {std::uint16_t{0}, std::uint16_t{1}, std::uint16_t{2}}) {
+    put(2, 0, skyrimSave(12, c, body));
+  }
+  put(2, 0, skyrimSave(9, 0, skyrimBody(74, SsePlugins, {})));
+  put(3, 0, body);
+  put(4, 0, fallout4Save(68));
+  put(4, 0, fallout4Save(67));
+  put(5, 0, fallout3Save(false));
+  put(5, 0, fallout3Save(true));
+  std::printf("%d seeds in %s\n", n, dir.c_str());
+}
+
 int main(int argc, char** argv)
 {
+  if (argc == 3 && std::string(argv[1]) == "--write-seeds") {
+    writeSeeds(argv[2]);
+    return 0;
+  }
   testLz4();
   testZlib();
   testSkyrim();
