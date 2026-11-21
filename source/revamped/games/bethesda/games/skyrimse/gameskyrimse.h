@@ -7,6 +7,7 @@
 #pragma once
 
 #include "core/bethesdagame.h"
+#include "diagnose/extenderdiagnose.h"
 
 #include <iplugindiagnose.h>
 
@@ -38,6 +39,8 @@ private:
   // the old plugin's keys
   static constexpr unsigned int ProblemExtenderVersion = 1;
   static constexpr unsigned int ProblemAddressLibrary  = 2;
+
+  ExtenderDiagnose m_ExtenderDiagnose;
 };
 
 }  // namespace mo2r::bethesda

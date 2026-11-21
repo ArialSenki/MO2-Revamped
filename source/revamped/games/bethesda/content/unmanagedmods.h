@@ -25,7 +25,8 @@ public:
   explicit DataFolderMods(const BethesdaGame* game) : m_Game(game) {}
 
   QStringList mods(bool onlyOfficial) const override;
-  QString displayName(const QString& modName) const override { return modName; }
+  // the definition's name for it (Fallout 4's DLC), else the plugin's
+  QString displayName(const QString& modName) const override;
   QFileInfo referenceFile(const QString& modName) const override;
   QStringList secondaryFiles(const QString& modName) const override;
 

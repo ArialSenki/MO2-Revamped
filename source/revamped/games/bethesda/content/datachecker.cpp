@@ -62,7 +62,10 @@ BethesdaDataChecker::CheckReturn BethesdaDataChecker::dataLooksValid(
 
 BethesdaDataContent::BethesdaDataContent(const GameDefinition& definition,
                                          const MOBase::IGameFeatures* gameFeatures)
-    : m_Disabled(definition.dataLayout.disabledContents), m_GameFeatures(gameFeatures)
+    : m_Disabled(definition.dataLayout.disabledContents |
+                 (definition.dataLayout.materialsContent ? 0u
+                                                         : contentBit(bethesda::Content::Material))),
+      m_GameFeatures(gameFeatures)
 {}
 
 bool BethesdaDataContent::enabled(int content) const
@@ -91,7 +94,9 @@ std::vector<BethesdaDataContent::Content> BethesdaDataContent::getAllContents() 
       {id(bethesda::Content::Ini), QT_TR_NOOP("INI Files"), ":/MO/gui/content/inifile"},
       {id(bethesda::Content::FaceGen), QT_TR_NOOP("FaceGen Data"), ":/MO/gui/content/facegen"},
       {id(bethesda::Content::ModGroup), QT_TR_NOOP("ModGroup Files"),
-       ":/MO/gui/content/modgroup"}};
+       ":/MO/gui/content/modgroup"},
+      // Fallout 4's, last; its old plugin never had the name translated
+      {id(bethesda::Content::Material), "Materials", ":/MO/gui/content/material"}};
   std::vector<Content> out;
   for (const Content& c : all) {
     if (enabled(c.id())) {
@@ -161,6 +166,15 @@ std::vector<int> BethesdaDataContent::getContentsFor(
             break;
           }
         }
+      }
+    }
+  }
+
+  if (on(C::Material)) {
+    for (const auto& e : *fileTree) {
+      if (e->compare("materials") == 0) {
+        contents.push_back(id(C::Material));
+        break;
       }
     }
   }

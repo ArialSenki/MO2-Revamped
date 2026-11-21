@@ -8,6 +8,7 @@
 #include "util/winfolders.h"
 
 #include <log.h>
+#include <steamutility.h>
 
 #include <QDir>
 #include <QFile>
@@ -107,6 +108,13 @@ QString findSteamInstall(const QString& appId, const QString& folder)
     return {};
   }
   MOBase::log::debug("bethesda: Steam app {}: '{}'", appId, path);
+  return path;
+}
+
+QString findSteamFolder(const QString& folder, const QString& validFile)
+{
+  const QString path = MOBase::findSteamGame(folder, validFile);
+  MOBase::log::debug("bethesda: Steam folder '{}' with {}: '{}'", folder, validFile, path);
   return path;
 }
 

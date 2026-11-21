@@ -6,6 +6,7 @@
 
 #include "archives/bsainvalidation.h"
 #include "archives/iniarchives.h"
+#include "archives/resourcedirsinvalidation.h"
 #include "content/datachecker.h"
 #include "content/unmanagedmods.h"
 #include "detection/stores.h"
@@ -163,6 +164,8 @@ void BethesdaGame::registerFeatures()
   registerFeature(archives);
   if (!m_Def.archives.invalidationBsa.isEmpty()) {
     registerFeature(std::make_shared<DummyBsaInvalidation>(archives.get(), this));
+  } else if (!m_Def.archives.resourceDirsIni.isEmpty()) {
+    registerFeature(std::make_shared<ResourceDirsInvalidation>(this));
   }
   registerFeature(std::make_shared<BethesdaSaveGameInfo>(this));
   registerFeature(std::make_shared<IniLocalSavegames>(this));
@@ -206,6 +209,15 @@ QString BethesdaGame::identifyGamePath() const
       break;
     case Store::Steam:
       path = findSteamInstall(s.steamAppId.toString(), s.steamFolder.toString());
+      if (path.isEmpty() && !s.steamValidFile.isEmpty()) {
+        path = findSteamFolder(s.steamFolder.toString(), s.steamValidFile.toString());
+      }
+      for (const SteamApp& app : s.moreSteamApps) {
+        if (!path.isEmpty()) {
+          break;
+        }
+        path = findSteamInstall(app.appId.toString(), app.folder.toString());
+      }
       break;
     case Store::Epic:
       path = findEpicInstall(toList(s.epicAppNames));
@@ -303,6 +315,10 @@ void BethesdaGame::initializeProfile(const QDir& directory, ProfileSettings sett
   if (settings.testFlag(IPluginGame::MODS)) {
     copyIfMissing(localAppFolder() + "/" + variantFolder(), directory, "plugins.txt",
                   "plugins.txt");
+    if (m_Def.profileGetsLoadOrderTxt) {
+      copyIfMissing(localAppFolder() + "/" + variantFolder(), directory, "loadorder.txt",
+                    "loadorder.txt");
+    }
   }
 
   if (settings.testFlag(IPluginGame::CONFIGURATION) && !m_Def.iniFiles.empty()) {
@@ -388,6 +404,9 @@ QList<MOBase::ExecutableInfo> BethesdaGame::executables() const
     switch (e.kind) {
     case ExecutableKind::GameFolder:
       binary = findInGameFolder(e.binary.toString());
+      break;
+    case ExecutableKind::Launcher:
+      binary = findInGameFolder(getLauncherName());
       break;
     case ExecutableKind::ScriptExtender: {
       // the extender MO2 has for the game (a plugin may replace ours)

@@ -87,11 +87,22 @@ bool addressLibraryMissing(const BethesdaGame* game, QString* expected)
   if (organizer->findFiles(folder, QStringList{"*.dll"}).isEmpty()) {
     return false;
   }
-  if (organizer->findFiles(folder, QStringList{"versionlib-*.bin", "version-*.bin"})
-          .isEmpty()) {
+  QStringList prefixes;
+  for (const QStringView p : game->definition().extender.addressLibraryPrefixes) {
+    prefixes.append(p.toString());
+  }
+  if (prefixes.isEmpty()) {
+    prefixes = {"versionlib-", "version-"};
+  }
+  QStringList anyVersion;
+  QStringList names;
+  for (const QString& p : prefixes) {
+    anyVersion.append(p + "*.bin");
+    names.append(p + version + ".bin");
+  }
+  if (organizer->findFiles(folder, anyVersion).isEmpty()) {
     return false;
   }
-  const QStringList names = {"versionlib-" + version + ".bin", "version-" + version + ".bin"};
   if (expected != nullptr) {
     *expected = folder + "/" + names.first();
   }

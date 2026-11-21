@@ -5,7 +5,6 @@
 // instances, Nexus, Wabbajack and Nolvus already know the game by.
 #include "gameskyrimse.h"
 
-#include "extender/extenderchecks.h"
 
 #include <imoinfo.h>
 
@@ -82,6 +81,24 @@ namespace
                                          "the Address Library is missing"),
        true}};
 
+  constexpr ExtenderProblemTexts ExtenderTexts{
+      QT_TRANSLATE_NOOP("GameSkyrimSE", "SKSE doesn't match the game version"),
+      QT_TRANSLATE_NOOP("GameSkyrimSE",
+                        "<p>The game folder has SKSE's loader, but not %1, the SKSE runtime "
+                        "for this game version (%2). Started through SKSE, the game won't "
+                        "run, or will run without SKSE and its plugins.</p>"
+                        "<p>Install the SKSE build for this game version from its official "
+                        "site into the game folder, or change the game back to the version "
+                        "that matches your SKSE.</p>"),
+      QT_TRANSLATE_NOOP("GameSkyrimSE", "Address Library for SKSE Plugins is missing"),
+      QT_TRANSLATE_NOOP("GameSkyrimSE",
+                        "<p>Some active mods have SKSE plugins, but no mod has %1, the "
+                        "Address Library for this game version (%2). Most SKSE plugins "
+                        "need it, and without it they don't load or the game closes at "
+                        "start.</p>"
+                        "<p>Install \"Address Library for SKSE Plugins\" from Nexus (the "
+                        "file for your game version) and activate it.</p>")};
+
   constexpr GameDefinition SkyrimSE{
       .pluginName          = u"Skyrim Special Edition Support Plugin",
       .translationContext  = "GameSkyrimSE",
@@ -145,7 +162,10 @@ namespace
       .settings    = Settings};
 }  // namespace
 
-SkyrimSEGame::SkyrimSEGame() : BethesdaGame(SkyrimSE) {}
+SkyrimSEGame::SkyrimSEGame()
+    : BethesdaGame(SkyrimSE),
+      m_ExtenderDiagnose(this, ProblemExtenderVersion, ProblemAddressLibrary, ExtenderTexts)
+{}
 
 QStringList SkyrimSEGame::validShortNames() const
 {
@@ -159,55 +179,18 @@ QStringList SkyrimSEGame::validShortNames() const
 std::vector<unsigned int> SkyrimSEGame::activeProblems() const
 {
   std::vector<unsigned int> problems;
-  if (organizer() == nullptr || organizer()->managedGame() != this ||
-      !organizer()->pluginSetting(name(), "script_extender_checks").toBool()) {
-    return problems;
-  }
-  if (extenderRuntimeMissing(this, nullptr)) {
-    problems.push_back(ProblemExtenderVersion);
-  }
-  if (addressLibraryMissing(this, nullptr)) {
-    problems.push_back(ProblemAddressLibrary);
-  }
+  m_ExtenderDiagnose.addActiveProblems(problems);
   return problems;
 }
 
 QString SkyrimSEGame::shortDescription(unsigned int key) const
 {
-  switch (key) {
-  case ProblemExtenderVersion:
-    return translate("SKSE doesn't match the game version");
-  case ProblemAddressLibrary:
-    return translate("Address Library for SKSE Plugins is missing");
-  }
-  return {};
+  return m_ExtenderDiagnose.shortDescription(key);
 }
 
 QString SkyrimSEGame::fullDescription(unsigned int key) const
 {
-  QString expected;
-  switch (key) {
-  case ProblemExtenderVersion:
-    extenderRuntimeMissing(this, &expected);
-    return translate(
-               "<p>The game folder has SKSE's loader, but not %1, the SKSE runtime for "
-               "this game version (%2). Started through SKSE, the game won't run, or "
-               "will run without SKSE and its plugins.</p>"
-               "<p>Install the SKSE build for this game version from its official site "
-               "into the game folder, or change the game back to the version that "
-               "matches your SKSE.</p>")
-        .arg(expected, gameVersion());
-  case ProblemAddressLibrary:
-    addressLibraryMissing(this, &expected);
-    return translate(
-               "<p>Some active mods have SKSE plugins, but no mod has %1, the Address "
-               "Library for this game version (%2). Most SKSE plugins need it, and "
-               "without it they don't load or the game closes at start.</p>"
-               "<p>Install \"Address Library for SKSE Plugins\" from Nexus (the file for "
-               "your game version) and activate it.</p>")
-        .arg(expected, gameVersion());
-  }
-  return {};
+  return m_ExtenderDiagnose.fullDescription(key);
 }
 
 }  // namespace mo2r::bethesda

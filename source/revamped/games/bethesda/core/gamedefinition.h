@@ -59,12 +59,26 @@ struct VariantFolder
   QStringView folder;
 };
 
+// a Steam app the game may be installed as, besides the main one (Fallout 3's
+// first release next to its Game of the Year edition)
+struct SteamApp
+{
+  QStringView appId;
+  QStringView folder;  // under steamapps/common
+};
+
 struct StoreLocations
 {
   std::span<const Store> order;  // tried in this order; the first found wins
   QStringView bethesdaKey;
   QStringView steamAppId;
   QStringView steamFolder;  // under steamapps/common
+  // tried after steamAppId, in this order
+  std::span<const SteamApp> moreSteamApps;
+  // not empty: if no Steam library lists the app, a library's
+  // steamapps/common/<steamFolder> with this file is taken too (MO2's
+  // findSteamGame, how Fallout 4's plugin looked)
+  QStringView steamValidFile;
   Names gogIds;  // tried in this order
   Names epicAppNames;
   // the Epic install location holds the game in a subfolder matching this
@@ -82,6 +96,10 @@ struct ExtenderDefinition
   // in Data: where the Address Library for the extender's plugins goes
   // ("SKSE/Plugins"); empty: no check
   QStringView addressLibraryFolder;
+  // the Address Library's file names start with one of these, the first is
+  // the one named in the warning ("version-" for F4SE); empty: "versionlib-"
+  // (Skyrim SE 1.6) and "version-"
+  Names addressLibraryPrefixes;
 };
 
 struct ArchiveDefinition
@@ -96,6 +114,9 @@ struct ArchiveDefinition
   Names vanilla;
   QStringView invalidationBsa;      // empty: no BSA invalidation
   std::uint32_t invalidationBsaVersion;  // 0x67 Oblivion, 0x68 the others
+  // not empty: invalidation without a BSA (Fallout 4): bInvalidateOlderFiles=1
+  // and an empty sResourceDataDirsFinal in this INI
+  QStringView resourceDirsIni;
 };
 
 // MO2's content ids for Bethesda games (the mod list's content column and
@@ -117,6 +138,7 @@ enum class Content : int
   Ini,
   FaceGen,
   ModGroup,
+  Material,  // Fallout 4's (its old plugin's CONTENT_NEXT_VALUE)
   Count
 };
 
@@ -130,11 +152,26 @@ struct DataLayout
   Names folders;     // a mod with one of these at its top is data
   Names extensions;  // or with a file of one of these
   std::uint32_t disabledContents;  // contentBit()s the game has no use for
+  bool materialsContent;  // Content::Material is listed (Fallout 4)
+};
+
+// an official plugin shown as a mod under another name (Fallout 4's DLC)
+struct ModDisplayName
+{
+  QStringView mod;  // the plugin's name without its extension
+  QStringView name;
+};
+
+struct UnmanagedDefinition
+{
+  QStringView archiveExtension;  // the mods' archives; ".bsa" when empty
+  std::span<const ModDisplayName> displayNames;  // matched ignoring case
 };
 
 enum class ExecutableKind
 {
   GameFolder,      // binary is relative to the game folder
+  Launcher,        // getLauncherName(), in the game folder
   ScriptExtender,  // the script extender's loader
   Loot             // LOOT, wherever it's installed
 };
@@ -187,6 +224,9 @@ struct GameDefinition
   // folder when the variant has its own (New Vegas' Epic edition); otherwise
   // only to the variant's
   bool listsAlsoInDefaultAppData;
+  // a new profile gets the AppData loadorder.txt too, not only plugins.txt
+  // (Fallout 3)
+  bool profileGetsLoadOrderTxt;
   Names iniFiles;            // the first is the game's main INI
   QStringView defaultIni;    // in the game folder: the main INI's defaults
   Names primaryPlugins;
@@ -207,6 +247,7 @@ struct GameDefinition
   ExtenderDefinition extender;
   ArchiveDefinition archives;
   DataLayout dataLayout;
+  UnmanagedDefinition unmanaged;
   std::span<const ExecutableDefinition> executables;
   StoreLocations stores;
   std::span<const BoolSetting> settings;

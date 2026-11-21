@@ -80,12 +80,24 @@ QFileInfo DataFolderMods::referenceFile(const QString& modName) const
 
 QStringList DataFolderMods::secondaryFiles(const QString& modName) const
 {
+  const QStringView extension = m_Game->definition().unmanaged.archiveExtension;
   QStringList out;
   const QDir data = m_Game->dataDirectory();
-  for (const QString& name : matching(modName, ".bsa")) {
+  for (const QString& name :
+       matching(modName, extension.isEmpty() ? QStringLiteral(".bsa") : extension.toString())) {
     out.append(data.absoluteFilePath(name));
   }
   return out;
+}
+
+QString DataFolderMods::displayName(const QString& modName) const
+{
+  for (const ModDisplayName& n : m_Game->definition().unmanaged.displayNames) {
+    if (modName.compare(n.mod, Qt::CaseInsensitive) == 0) {
+      return n.name.toString();
+    }
+  }
+  return modName;
 }
 
 }  // namespace mo2r::bethesda

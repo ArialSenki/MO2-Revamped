@@ -27,4 +27,10 @@ QString findEpicInstall(const QStringList& appNames);
 // in Steam's libraryfolders.vdf, if that folder exists
 QString findSteamInstall(const QString& appId, const QString& folder);
 
+// steamapps/common/<folder> in the first Steam library (Steam's own folder,
+// then those in steamapps/libraryfolders.vdf) where it has validFile: MO2's
+// findSteamGame, which Fallout 4's plugin used, for a library that doesn't
+// list the app
+QString findSteamFolder(const QString& folder, const QString& validFile);
+
 }  // namespace mo2r::bethesda
