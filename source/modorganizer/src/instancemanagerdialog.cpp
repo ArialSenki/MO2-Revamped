@@ -369,6 +369,8 @@ QString getInstanceName(QWidget* parent, const QString& title, const QString& mo
   dlg.body()->addWidget(caption);
   dlg.body()->addWidget(text);
   dlg.body()->addWidget(error);
+  // a taller window keeps the label right above its field
+  dlg.body()->addStretch(1);
 
   auto* ok     = dlg.addButton(okText.isEmpty() ? QObject::tr("Rename") : okText, true);
   auto* cancel = dlg.addButton(QObject::tr("Cancel"));

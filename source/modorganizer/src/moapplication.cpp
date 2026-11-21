@@ -948,19 +948,28 @@ int MOApplication::run(MOMultiProcess& multiProcess)
           Settings::defaultInterfaceStyleName());
 
       using FluentChoices::Theme;
-      const Theme currentChoice =
-          currentTheme == "Light.qss" ? Theme::Light : Theme::Dark;
+      // OLED Black is dark.qss with a setting of its own
+      const bool currentOled = interfaceSettings.oledBackground() &&
+                               currentTheme.compare(UserTheme::baseFileName(true),
+                                                    Qt::CaseInsensitive) == 0;
+      const Theme currentChoice = currentTheme == "Light.qss" ? Theme::Light
+                                  : currentOled               ? Theme::OledBlack
+                                                              : Theme::Dark;
       const auto selectedChoice = FluentChoices::chooseTheme(
           &mainWindow, tr("MO2 Revamped"), tr("Choose a theme for this instance."),
           tr("You can change it later in Settings > Appearance."), tr("Light"), tr("Dark"),
-          tr("Use this theme"), currentChoice);
+          QCoreApplication::translate("QObject", "OLED Black"), tr("Use this theme"),
+          currentChoice);
       const QString selectedTheme =
-          !selectedChoice                ? currentTheme
+          !selectedChoice                   ? currentTheme
           : *selectedChoice == Theme::Light ? QStringLiteral("Light.qss")
                                             : QStringLiteral("dark.qss");
+      const bool selectedOled =
+          selectedChoice ? *selectedChoice == Theme::OledBlack : currentOled;
 
-      if (selectedTheme != currentTheme) {
+      if (selectedTheme != currentTheme || selectedOled != currentOled) {
         interfaceSettings.setStyleName(selectedTheme);
+        interfaceSettings.setOledBackground(selectedOled);
         setStyleFile(selectedTheme);
       }
 

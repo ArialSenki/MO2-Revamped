@@ -5418,6 +5418,14 @@ I salvataggi che stava sostituendo sono conservati in:
       <translation>Cerca plugin</translation>
     </message>
     <message>
+      <source>Search mods</source>
+      <translation>Cerca mod</translation>
+    </message>
+    <message>
+      <source>Group mods by</source>
+      <translation>Raggruppa le mod per</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Cerca download</translation>
     </message>
@@ -12501,6 +12509,10 @@ Esempio:
     <message>
       <source>Use the new interface (Qt Quick) where available</source>
       <translation>Usa la nuova interfaccia (Qt Quick) dove disponibile</translation>
+    </message>
+    <message>
+      <source>Draws the parts that have a new version with Qt Quick: the Instances window, the theme question of a new instance and the summary row of the main window. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Disegna con Qt Quick le parti che hanno una nuova versione: la finestra delle istanze, la domanda sul tema di una nuova istanza e la riga di riepilogo della finestra principale. Funzionano allo stesso modo e usano un po&apos; più di memoria. Si applica al prossimo avvio di Mod Organizer.</translation>
     </message>
     <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>

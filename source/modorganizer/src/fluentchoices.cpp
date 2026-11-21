@@ -75,6 +75,10 @@ FluentThemeCard::Colors themeColors(FluentChoices::Theme theme)
   case FluentChoices::Theme::Dark:
     return {QColor(0x202226), QColor(0x2B2B2B), QColor(0x363636), QColor(0xFFFFFF),
             QColor(0xC5C5C5), QColor(0x4CC2FF), QColor(Qt::black)};
+  case FluentChoices::Theme::OledBlack:
+    // UserTheme's OLED Black colors
+    return {QColor(0, 0, 0), QColor(0x0B0B0B), QColor(0x262626), QColor(0xE6E6E6),
+            QColor(0xA3A3A3), QColor(0x5AA9D6), QColor(Qt::black)};
   }
   return {};
 }
@@ -433,14 +437,15 @@ FluentOptionCard* addOption(FluentContentDialog& dialog, char16_t glyph,
 std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
                                  const QString& heading, const QString& description,
                                  const QString& lightLabel, const QString& darkLabel,
-                                 const QString& acceptLabel,
+                                 const QString& oledLabel, const QString& acceptLabel,
                                  Theme current)
 {
   // MO2 Revamped: the Qt Quick version, when it is on (QuickUi)
   if (QuickUi::enabled()) {
     QVariantList themes;
     for (const auto& [theme, label] :
-         {std::pair{Theme::Light, lightLabel}, std::pair{Theme::Dark, darkLabel}}) {
+         {std::pair{Theme::Light, lightLabel}, std::pair{Theme::Dark, darkLabel},
+          std::pair{Theme::OledBlack, oledLabel}}) {
       const auto c = themeColors(theme);
       themes.push_back(QVariantMap{{QStringLiteral("name"), label},
                                    {QStringLiteral("background"), c.background},
@@ -453,11 +458,11 @@ std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
     }
     std::optional<int> chosen;
     if (QuickUi::chooseTheme(parent, windowTitle, heading, description, acceptLabel, themes,
-                             current == Theme::Light ? 0 : 1, chosen)) {
-      if (!chosen) {
+                             static_cast<int>(current), chosen)) {
+      if (!chosen || *chosen < 0 || *chosen > static_cast<int>(Theme::OledBlack)) {
         return std::nullopt;
       }
-      return *chosen == 0 ? Theme::Light : Theme::Dark;
+      return static_cast<Theme>(*chosen);
     }
   }
 
@@ -480,6 +485,7 @@ std::optional<Theme> chooseTheme(QWidget* parent, const QString& windowTitle,
   const Entry entries[] = {
       {Theme::Light, lightLabel},
       {Theme::Dark, darkLabel},
+      {Theme::OledBlack, oledLabel},
   };
 
   FluentThemeCard* chosen = nullptr;

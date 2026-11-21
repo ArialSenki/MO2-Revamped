@@ -5314,6 +5314,14 @@ Las partidas que estaba reemplazando se guardan en:
       <translation>Buscar plugins</translation>
     </message>
     <message>
+      <source>Search mods</source>
+      <translation>Buscar mods</translation>
+    </message>
+    <message>
+      <source>Group mods by</source>
+      <translation>Agrupar mods por</translation>
+    </message>
+    <message>
       <source>Search downloads</source>
       <translation>Buscar descargas</translation>
     </message>
@@ -12147,6 +12155,10 @@ Ejemplo:
     <message>
       <source>Use the new interface (Qt Quick) where available</source>
       <translation>Usar la nueva interfaz (Qt Quick) donde esté disponible</translation>
+    </message>
+    <message>
+      <source>Draws the parts that have a new version with Qt Quick: the Instances window, the theme question of a new instance and the summary row of the main window. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
+      <translation>Dibuja con Qt Quick las partes que tienen una versión nueva: la ventana de instancias, la pregunta del tema de una instancia nueva y la fila de resumen de la ventana principal. Funcionan igual y usan un poco más de memoria. Se aplica cuando Mod Organizer se vuelve a abrir.</translation>
     </message>
     <message>
       <source>Draws text without Windows' coloured edges, which show as a coloured halo on OLED screens. It applies when Mod Organizer starts again.</source>

@@ -1058,8 +1058,9 @@ QFrame#overwriteIntroPanel { background-color: transparent; border: none; }
 QFrame#notificationListCard,
 QFrame#notificationDetailsCard {
     color: #FFFFFF;
-    background-color: #2D2D2D;
-    border: 1px solid #454545;
+    /* the other cards' colours, so OLED Black maps them to its own */
+    background-color: #2B2B2B;
+    border: 1px solid #363636;
     border-radius: 8px;
 }
 

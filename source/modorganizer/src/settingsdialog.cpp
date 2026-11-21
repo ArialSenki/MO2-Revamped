@@ -121,6 +121,8 @@ SettingsDialog::SettingsDialog(PluginContainer* pluginContainer, Settings& setti
   QPushButton* help = ui->buttonBox->addButton(tr("Help"), QDialogButtonBox::HelpRole);
   help->setObjectName(QStringLiteral("settingsHelpButton"));
   help->setAutoDefault(false);
+  // F1, as Windows programs use for help
+  help->setShortcut(QKeySequence::HelpContents);
   help->setToolTip(tr("What this page's settings do, in the MO2 Revamped guide."));
   connect(ui->buttonBox, &QDialogButtonBox::helpRequested, this, [this] {
     QWidget* page = ui->tabWidget->currentWidget();
