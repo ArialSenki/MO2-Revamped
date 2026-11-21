@@ -47,10 +47,13 @@ signals:
 
 private:
   QList<QPointer<FluentStatTile>> m_tiles;
+  QPointer<QQuickWidget> m_view;
   QVariantList m_rows;
   bool m_syncQueued = false;
 
   void sync();
+  // a Tab stop only while a tile has a button to reach
+  void updateFocus();
 };
 
 #endif  // MO2R_SUMMARYQUICKBRIDGE_H

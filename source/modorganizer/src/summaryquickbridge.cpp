@@ -7,6 +7,7 @@
 #include <QHelpEvent>
 #include <QPushButton>
 #include <QQuickWidget>
+#include <QQuickWindow>
 #include <QTimer>
 #include <QWhatsThis>
 
@@ -88,14 +89,22 @@ QQuickWidget* SummaryQuickBridge::createView(QWidget* parent)
   // the main window shows through between the tiles, whatever paints it (the
   // theme, Mica, OLED Black)
   view->setProperty("quickSeeThrough", true);
-  view->setAttribute(Qt::WA_AlwaysStackOnTop);
   view->setClearColor(Qt::transparent);
+  // drawn on the GPU (MO2R_QUICK_BACKEND), the view is a texture the window
+  // composes, which needs this to be see-through; in software it is painted
+  // like any widget and needs nothing
+  if (QQuickWindow::graphicsApi() != QSGRendererInterface::Software) {
+    view->setAttribute(Qt::WA_AlwaysStackOnTop);
+  }
   view->setFixedHeight(RowHeight);
   view->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
   // Tab moves through the tile buttons inside the view; the view itself takes
   // no click focus, as the Widgets row has nothing focusable but its buttons
-  view->setFocusPolicy(Qt::TabFocus);
+  // (and none at all while every button is hidden: see sync())
+  m_view = view;
   view->installEventFilter(new TileHelp(view, this));
+  sync();
+  updateFocus();
   // the view goes first when the window closes, and the bridge with it
   setParent(view);
   return view;
@@ -118,6 +127,15 @@ void SummaryQuickBridge::sync()
   QVariantList rows;
   for (const auto& tile : m_tiles) {
     if (tile.isNull()) {
+      // a blank tile keeps the others where the view and act() expect them
+      rows.append(QVariantMap{{QStringLiteral("glyph"), QString()},
+                              {QStringLiteral("caption"), QString()},
+                              {QStringLiteral("value"), QString()},
+                              {QStringLiteral("tone"), QString()},
+                              {QStringLiteral("help"), QString()},
+                              {QStringLiteral("action"), QString()},
+                              {QStringLiteral("actionName"), QString()},
+                              {QStringLiteral("actionVisible"), false}});
       continue;
     }
     QPushButton* action = tile->action();
@@ -139,7 +157,20 @@ void SummaryQuickBridge::sync()
   if (rows != m_rows) {
     m_rows = rows;
     emit tilesChanged();
+    updateFocus();
   }
+}
+
+void SummaryQuickBridge::updateFocus()
+{
+  if (m_view.isNull()) {
+    return;
+  }
+  bool anyAction = false;
+  for (const QVariant& row : std::as_const(m_rows)) {
+    anyAction = anyAction || row.toMap().value(QStringLiteral("actionVisible")).toBool();
+  }
+  m_view->setFocusPolicy(anyAction ? Qt::TabFocus : Qt::NoFocus);
 }
 
 void SummaryQuickBridge::act(int index)

@@ -13,13 +13,8 @@ Item {
     readonly property int count: Math.max(1, bridge.tiles.length)
     readonly property real tileWidth: (width - (count - 1) * spacing) / count
 
-    // the first numbers appear as they are; later changes move a little
-    property bool settled: false
-    Timer { interval: 800; running: true; onTriggered: root.settled = true }
-
-    Row {
-        spacing: root.spacing
-        height: parent.height
+    Item {
+        anchors.fill: parent
 
         Repeater {
             // a count, not the list: the tiles stay when their values change,
@@ -32,14 +27,22 @@ Item {
                 required property int index
                 readonly property var modelData: root.bridge.tiles[index] ?? ({})
 
-                width: root.tileWidth
+                // whole pixels, as a Widgets layout gives them: a tile at a
+                // fraction of a pixel draws soft borders
+                x: Math.round(index * (root.tileWidth + root.spacing))
+                width: Math.round((index + 1) * (root.tileWidth + root.spacing) - root.spacing) - x
                 height: root.height
                 radius: 8
                 color: Fluent.surface
                 border.width: 1
                 border.color: Fluent.surfaceBorder
 
-                readonly property string tone: modelData.tone
+                readonly property string tone: modelData.tone ?? ""
+
+                // a tile's first value and tone appear as they are, once it has
+                // one; later changes move a little
+                property bool settled: false
+                onToneChanged: if (tone !== "") Qt.callLater(() => tile.settled = true)
 
                 Accessible.role: Accessible.StaticText
                 Accessible.name: modelData.caption + ": " + modelData.value
@@ -56,7 +59,7 @@ Item {
                          : tile.tone === "caution" ? Fluent.tintCaution
                          : tile.tone === "critical" ? Fluent.tintCritical
                          : Fluent.tintNeutral
-                    Behavior on color { ColorAnimation { duration: Fluent.normal } }
+                    Behavior on color { enabled: tile.settled; ColorAnimation { duration: Fluent.normal } }
 
                     Text {
                         anchors.centerIn: parent
@@ -68,7 +71,7 @@ Item {
                              : tile.tone === "caution" ? Fluent.onTintCaution
                              : tile.tone === "critical" ? Fluent.critical
                              : Fluent.muted
-                        Behavior on color { ColorAnimation { duration: Fluent.normal } }
+                        Behavior on color { enabled: tile.settled; ColorAnimation { duration: Fluent.normal } }
                         Accessible.ignored: true
                     }
                 }
@@ -96,7 +99,7 @@ Item {
 
                         // a new value rises into place, as Windows 11 counters do
                         transform: Translate { id: rise }
-                        onTextChanged: if (root.settled && Fluent.animated) arrive.restart()
+                        onTextChanged: if (tile.settled && Fluent.animated) arrive.restart()
                         ParallelAnimation {
                             id: arrive
                             NumberAnimation {
@@ -157,9 +160,10 @@ Item {
                         onClicked: root.bridge.act(tile.index)
                     }
 
-                    Keys.onSpacePressed: root.bridge.act(tile.index)
-                    Keys.onReturnPressed: root.bridge.act(tile.index)
-                    Keys.onEnterPressed: root.bridge.act(tile.index)
+                    // once per press, as a button: a held key doesn't repeat it
+                    Keys.onSpacePressed: event => { if (!event.isAutoRepeat) root.bridge.act(tile.index) }
+                    Keys.onReturnPressed: event => { if (!event.isAutoRepeat) root.bridge.act(tile.index) }
+                    Keys.onEnterPressed: event => { if (!event.isAutoRepeat) root.bridge.act(tile.index) }
 
                     Accessible.role: Accessible.Button
                     Accessible.name: tile.modelData.actionName

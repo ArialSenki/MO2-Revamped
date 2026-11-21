@@ -62,9 +62,10 @@ public:
 };
 
 // one engine for the views that are open: the QML types and the compiled files
-// load once for them. It goes when the last view does, so the memory comes
-// back while MO2 runs (the startup Instances window, then the game), and is
-// made again for the next view
+// load once for them. It goes when the last view does, so the memory of the
+// dialogs comes back while MO2 runs (the startup Instances window, then the
+// game), and is made again for the next view. The main window's summary row
+// keeps it for as long as that window is open
 QPointer<QQmlEngine>& engineHolder()
 {
   static QPointer<QQmlEngine> engine;
@@ -75,6 +76,14 @@ int& openViews()
 {
   static int count = 0;
   return count;
+}
+
+// the event loop has ended: an engine still in use goes with its last view,
+// at once, as nothing runs a deleteLater() any more
+bool& quitting()
+{
+  static bool done = false;
+  return done;
 }
 
 QQmlEngine* sharedEngine()
@@ -89,8 +98,13 @@ QQmlEngine* sharedEngine()
     // gone before the application is: the engine first, then what it read
     static const bool once = [] {
       QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
-        delete engineHolder().data();
-        icons().clear();
+        quitting() = true;
+        // the main window (and its summary row) is closed after the loop
+        // ends: its items must not outlive the engine they run on
+        if (openViews() == 0) {
+          delete engineHolder().data();
+          icons().clear();
+        }
       });
       return true;
     }();
@@ -106,7 +120,11 @@ void viewGone()
     // theme question right after the startup Instances window) gets a new one
     if (QQmlEngine* engine = engineHolder().data()) {
       engineHolder().clear();
-      engine->deleteLater();
+      if (quitting()) {
+        delete engine;
+      } else {
+        engine->deleteLater();
+      }
     }
     icons().clear();
   }
@@ -360,7 +378,12 @@ void Fluent::refresh()
   m_subtleSelected = faint(m_text, 26);
   m_subtlePressed  = faint(m_text, 10);
 
-  m_fontFamily = QStringLiteral("Segoe UI");
+  // as the Fluent v4 layer: QWidget { font-family: "Segoe UI Variable Text", "Segoe UI" }
+  static const QString family =
+      QFontDatabase::hasFamily(QStringLiteral("Segoe UI Variable Text"))
+          ? QStringLiteral("Segoe UI Variable Text")
+          : QStringLiteral("Segoe UI");
+  m_fontFamily = family;
   m_fontSize   = 9;
   m_dark       = dark;
   m_oled       = oled;
