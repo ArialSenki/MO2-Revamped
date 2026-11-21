@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -60,6 +61,20 @@ class RedscriptLogTest(unittest.TestCase):
             [(e.script, e.line) for e in redscript_log.parse(log, GAME)],
             [("r6/scripts/Broken Mod/main.reds", 7)],
         )
+
+    def test_long_lines_finish_fast(self) -> None:
+        for filler in ("//" * 40000, " a" * 40000, "C:\\" * 30000, "x " * 40000):
+            log = "[ERROR - Fri, 20 Nov 2026 04:17:00 +0100] " + filler + "\n" + filler + "\n" * 3
+            log = log * 30
+            start = time.monotonic()
+            redscript_log.parse(log, GAME)
+            redscript_log.failed(log)
+            self.assertLess(time.monotonic() - start, 2)
+
+    def test_long_log_keeps_its_tail(self) -> None:
+        log = "[INFO - Fri, 20 Nov 2026 04:16:58 +0100] start\n" * 60000 + FAILED
+        self.assertTrue(redscript_log.failed(log))
+        self.assertEqual(len(redscript_log.parse(log, GAME)), 2)
 
     def test_passed_log(self) -> None:
         self.assertFalse(redscript_log.failed(PASSED))

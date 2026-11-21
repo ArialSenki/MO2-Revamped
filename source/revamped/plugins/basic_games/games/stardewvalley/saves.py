@@ -70,7 +70,9 @@ def read_info(path: Path) -> dict[str, str]:
     except (ValueError, IndexError):
         pass
     played = _text(root, "millisecondsPlayed")
-    if played.isdigit():
+    # MO2 Revamped: a plain number; int() of thousands of digits (or of a
+    # digit like "²") raises
+    if played.isascii() and played.isdigit() and len(played) <= 12:
         minutes = int(played) // 60000
         info["Play Time"] = f"{minutes // 60:02}:{minutes % 60:02}"
     return info

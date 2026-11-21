@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -54,6 +55,30 @@ class ManifestTest(unittest.TestCase):
         # wrong types are read as missing, never fail the manifest
         odd = manifests.parse('{"UniqueID": "Me.Odd", "Name": null, "Dependencies": 5, "Version": 2}')
         self.assertEqual((odd.name, odd.dependencies, odd.version), ("Me.Odd", [], ""))
+
+    def test_comments_and_commas_in_strings_stay(self) -> None:
+        text = '{"UniqueID": "Me.A", "Name": "a /* b */ // c, }", /* x */ "Version": "1", // t' + "\n}"
+        parsed = manifests.parse(text)
+        self.assertEqual((parsed.unique_id, parsed.name, parsed.version), ("me.a", "a /* b */ // c, }", "1"))
+        self.assertEqual(manifests.loads('[1, 2, /* c */ ]'), [1, 2])
+        self.assertEqual(manifests.loads('{"a": [1,\n 2 , // x\n ], }'), {"a": [1, 2]})
+
+    def test_crafted_manifests_finish_fast(self) -> None:
+        for text in ("{" + "/* " * 80000, '{"UniqueID": "a", ' + '"' * 100000, '{"a": 1' + "," * 100000, "x" * 300000):
+            start = time.monotonic()
+            self.assertIsNone(manifests.parse(text))
+            self.assertLess(time.monotonic() - start, 2)
+
+    def test_big_manifest_is_unreadable(self) -> None:
+        tmp = Path(tempfile.mkdtemp(prefix="sdv-manifest-"))
+        try:
+            padding = " " * (manifests.MAX_SIZE + 1)
+            (tmp / "manifest.json").write_text('{"UniqueID": "Me.A"}' + padding, encoding="utf-8")
+            self.assertIsNone(manifests.read(tmp / "manifest.json"))
+            (tmp / "manifest.json").write_text('{"UniqueID": "Me.A"}', encoding="utf-8")
+            self.assertEqual(manifests.read(tmp / "manifest.json").unique_id, "me.a")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
 
     def test_versions(self) -> None:
         self.assertTrue(manifests.older("1.9.9", "2.0.0"))
@@ -172,6 +197,18 @@ class SavesTest(unittest.TestCase):
             self.assertEqual(info["Date"], "Fall 12, Year 3")
             self.assertEqual(info["Play Time"], "01:30")
             self.assertEqual(read_info(tmp / "Rocky_456/SaveGameInfo"), {})
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_absurd_play_time_is_left_out(self) -> None:
+        tmp = Path(tempfile.mkdtemp(prefix="sdv-saves-"))
+        try:
+            for played in ("9" * 5000, "²"):
+                path = tmp / "SaveGameInfo"
+                path.write_text(f"<Farmer><name>Ana</name><millisecondsPlayed>{played}</millisecondsPlayed></Farmer>", encoding="utf-8")
+                info = read_info(path)
+                self.assertEqual(info["Farmer"], "Ana")
+                self.assertNotIn("Play Time", info)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 

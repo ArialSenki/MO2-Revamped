@@ -6,6 +6,7 @@ from __future__ import annotations
 import shutil
 import struct
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -204,6 +205,41 @@ class DotnetTest(unittest.TestCase):
     def test_not_dotnet(self) -> None:
         for path in (Path(r"C:\Windows\System32\winhttp.dll"), Path(__file__)):
             self.assertEqual(dotnet.read_assembly(path), dotnet.EMPTY)
+
+    @staticmethod
+    def metadata(attribute_rows: int = 1, padding: int = 0) -> tuple[bytes, bytes, bytes]:
+        """#~, #Strings and #Blob streams of a one-attribute assembly:
+        [BepInPlugin("abc")] on a TypeRef/MemberRef pair; `attribute_rows`
+        claims that many CustomAttribute rows, `padding` zeros follow the
+        tables."""
+        head = bytes(6) + bytes([0, 1]) + struct.pack("<QQ", 1 << 1 | 1 << 0x0A | 1 << 0x0C, 0)
+        head += struct.pack("<III", 1, 1, attribute_rows)
+        type_ref = struct.pack("<HHH", 0, 9, 1)
+        member_ref = struct.pack("<HHH", (1 << 3) | 1, 0, 0)
+        attribute = struct.pack("<HHH", 0, (1 << 3) | 3, 1)
+        tables = head + type_ref + member_ref + attribute * min(attribute_rows, 1) + bytes(padding)
+        return tables, b"\0BepInEx\0BepInPlugin\0", b"\0" + bytes([8]) + b"\x01\x00\x03abc\x00\x00"
+
+    def test_synthetic_plugin(self) -> None:
+        plugins, required = dotnet.bepinex_attributes(*self.metadata())
+        self.assertEqual((plugins, required), ({"abc"}, set()))
+
+    def test_crafted_tables_finish_fast(self) -> None:
+        # a few MB of zeros claiming a million attribute rows: the tables
+        # run past the stream
+        tables, strings, blobs = self.metadata(attribute_rows=1_000_000, padding=4 * 1024 * 1024)
+        start = time.monotonic()
+        with self.assertRaises(ValueError):
+            dotnet.bepinex_attributes(tables, strings, blobs)
+        self.assertLess(time.monotonic() - start, 2)
+
+    def test_many_attribute_rows_are_capped(self) -> None:
+        # rows that do fit in the stream, more than the cap: still fast
+        count = dotnet._ATTRIBUTE_ROWS_LIMIT * 3
+        tables, strings, blobs = self.metadata(attribute_rows=count, padding=count * 6)
+        start = time.monotonic()
+        dotnet.bepinex_attributes(tables, strings, blobs)
+        self.assertLess(time.monotonic() - start, 2)
 
     def test_encodings(self) -> None:
         self.assertEqual(dotnet._packed(bytes([0x03]), 0), (3, 1))

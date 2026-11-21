@@ -38,6 +38,11 @@ _ENTRY18 = struct.Struct("<256sIHBBII")
 # ArchivePart, Flags, Crc, Unknown
 _ENTRY15 = struct.Struct("<256sQQQIIII")
 _SOLID = 0x04
+# MO2 Revamped: limits for a crafted pak (a 400 KB file could claim 400,000
+# files and build hundreds of MB of entries)
+_MAX_FILES = 500_000
+_MAX_INDEX = 128 * 1024 * 1024
+_MAX_FILE = 64 * 1024 * 1024
 _METHOD_NONE, _METHOD_ZLIB, _METHOD_LZ4 = 0, 1, 2
 
 
@@ -161,6 +166,8 @@ class Package:
                 or list_offset + 8 + compressed_size > file_size
                 # LZ4 can't expand more than 255 times
                 or num_files * entry_struct.size > compressed_size * 255 + 16
+                or num_files > _MAX_FILES
+                or num_files * entry_struct.size > _MAX_INDEX
             ):
                 raise Damaged("bad file list")
             data = f.read(compressed_size)
@@ -186,13 +193,15 @@ class Package:
                 return e
         return None
 
-    def read_file(self, file_name: str) -> bytes | None:
+    def read_file(self, file_name: str, max_size: int = _MAX_FILE) -> bytes | None:
         entry = self.find(file_name)
-        return None if entry is None else self.read(entry)
+        return None if entry is None else self.read(entry, max_size)
 
-    def read(self, entry: Entry) -> bytes:
+    def read(self, entry: Entry, max_size: int = _MAX_FILE) -> bytes:
         if entry.part != 0:
             raise Unsupported("file in another part")
+        if entry.size > max_size or entry.size_on_disk > max_size:
+            raise Damaged("file too big to be what it says")
         with open(self.path, "rb") as f:
             if entry.offset + entry.size_on_disk > os.fstat(f.fileno()).st_size:
                 raise Damaged("file past the end of the package")

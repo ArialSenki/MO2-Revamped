@@ -92,7 +92,7 @@ def save_info(lsv: Path) -> dict[str, Any] | None:
     try:
         from . import lspk
 
-        data = lspk.Package(lsv).read_file("SaveInfo.json")
+        data = lspk.Package(lsv).read_file("SaveInfo.json", max_size=16 * 1024 * 1024)
         if data:
             info = json.loads(data.decode("utf-8-sig", "replace"))
             if not isinstance(info, dict):

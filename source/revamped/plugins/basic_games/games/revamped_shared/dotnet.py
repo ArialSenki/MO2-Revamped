@@ -23,8 +23,12 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
-# a stream bigger than this isn't read (no real plugin has one)
-_STREAM_LIMIT = 64 * 1024 * 1024
+# a stream bigger than this isn't read (no real plugin has one; the biggest
+# #~ stream of a plugin is a few hundred KB)
+_STREAM_LIMIT = 16 * 1024 * 1024
+# MO2 Revamped: custom attribute rows looked at (a crafted DLL can claim
+# millions; a real plugin has a few thousand)
+_ATTRIBUTE_ROWS_LIMIT = 200_000
 
 
 @dataclass(frozen=True)
@@ -109,11 +113,16 @@ class _Tables:
             if valid >> table & 1:
                 self.rows[table] = struct.unpack_from("<I", data, at)[0]
                 at += 4
+        # MO2 Revamped: widths and row sizes once, not per row
+        self._column_widths = {table: self._widths(table) for table in self._COLUMNS}
+        self._row_sizes = {table: sum(w) for table, w in self._column_widths.items()}
         self.offsets = {}
         for table in range(0x0D):
             self.offsets[table] = at
             if table in self.rows:
-                at += self.rows[table] * self.row_size(table)
+                at += self.rows[table] * self._row_sizes[table]
+                if at > len(data):
+                    raise ValueError("table past the metadata stream")
 
     def _width(self, column) -> int:
         if column == "u2":
@@ -137,13 +146,13 @@ class _Tables:
         return [self._width(column) for column in self._COLUMNS[table]]
 
     def row_size(self, table: int) -> int:
-        return sum(self._widths(table))
+        return self._row_sizes[table]
 
     def read_row(self, table: int, index: int) -> list[int]:
         """Row `index` (1-based) of a table, as its columns' values."""
-        at = self.offsets[table] + (index - 1) * self.row_size(table)
+        at = self.offsets[table] + (index - 1) * self._row_sizes[table]
         values = []
-        for width in self._widths(table):
+        for width in self._column_widths[table]:
             values.append(struct.unpack_from("<H" if width == 2 else "<I", self.data, at)[0])
             at += width
         return values
@@ -173,7 +182,7 @@ def bepinex_attributes(tables: bytes, strings: bytes, blobs: bytes) -> tuple[set
     plugins: set[str] = set()
     required: set[str] = set()
     reader = _Tables(tables)
-    for row in range(1, reader.rows.get(0x0C, 0) + 1):
+    for row in range(1, min(reader.rows.get(0x0C, 0), _ATTRIBUTE_ROWS_LIMIT) + 1):
         _parent, kind, value = reader.read_row(0x0C, row)
         table, index = reader.coded("CustomAttributeType", kind)
         if table != 0x0A or index < 1 or index > reader.rows.get(0x0A, 0):
