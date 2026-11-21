@@ -341,8 +341,9 @@ void ThemeSettingsTab::addDisplayCard()
     m_quickUi->setObjectName(QStringLiteral("quickInterfaceBox"));
     m_quickUi->setChecked(QuickUi::stored());
     m_quickUi->setToolTip(QObject::tr(
-        "Shows the windows that have a new version (the Instances window and the "
-        "theme question of a new instance) in it, drawn with Qt Quick. They work "
+        "Shows the parts that have a new version (the Instances window, the "
+        "summary tiles of the main window and the theme question of a new "
+        "instance) in it, drawn with Qt Quick. They work "
         "the same and use a little more memory. It applies when Mod Organizer "
         "starts again."));
     box->addWidget(m_quickUi);
