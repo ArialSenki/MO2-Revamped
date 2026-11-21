@@ -650,9 +650,16 @@ void FluentDashboard::refreshLastPlayed()
   watcher->setFuture(QtConcurrent::run([path] {
     QDateTime newest;
     int seen = 0;
+    // Steam, script extenders and the games leave logs and sync files next to
+    // the saves; those change without the player saving
+    static const QStringList notSaves = {"vdf", "log", "txt", "ini", "json",
+                                         "xml", "tmp", "bak", "dll", "exe"};
     QDirIterator saves(path, QDir::Files, QDirIterator::Subdirectories);
     while (saves.hasNext() && seen++ < 2000) {
       saves.next();
+      if (notSaves.contains(saves.fileInfo().suffix(), Qt::CaseInsensitive)) {
+        continue;
+      }
       const QDateTime modified = saves.fileInfo().lastModified();
       if (!newest.isValid() || modified > newest) {
         newest = modified;
