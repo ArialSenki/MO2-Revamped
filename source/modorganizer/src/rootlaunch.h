@@ -48,6 +48,10 @@ struct Input
   // the program to start, absolute, and its arguments
   QString runBinary;
   QString runArguments;
+  // MO2 Revamped: DLLs the game plugin has usvfs load (forced loads), relative
+  // to gameDir and in lower case (bin/x64/version.dll): left to the VFS,
+  // which serves them under the game folder's path, as they expect
+  QStringList forcedByGame;
 };
 
 struct Plan

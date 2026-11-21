@@ -3042,6 +3042,16 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(const QString& profileName,
   in.gameBinary   = game->binaryName();
   in.gameVersion  = game->gameVersion();
   in.runBinary    = binary.absoluteFilePath();
+  // MO2 Revamped: the DLLs the game plugin has usvfs load from the game folder
+  // (Cyberpunk's CET and RED4ext loaders): the VFS serves them there from
+  // Root, under the path they check for themselves
+  for (const auto& load : game->executableForcedLoads()) {
+    const QString rel =
+        QDir(gameDir).relativeFilePath(QDir::cleanPath(load.library()));
+    if (!rel.isEmpty() && !rel.startsWith(QStringLiteral(".."))) {
+      in.forcedByGame.append(rel.toLower());
+    }
+  }
   in.runArguments = arguments;
   return RootLaunch::plan(in);
 }

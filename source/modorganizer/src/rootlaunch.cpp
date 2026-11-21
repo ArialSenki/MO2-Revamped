@@ -702,6 +702,16 @@ Plan plan(const Input& in)
         if (!dlls.contains(imported)) {
           continue;
         }
+        // MO2 Revamped: one the game plugin has usvfs load from the game
+        // folder (Cyberpunk's CET version.dll): loaded from the mod's path by
+        // the import patch as well, CET found two and stopped ("Failed to get
+        // ...\bin\x64\version.dll handle")
+        if (in.forcedByGame.contains(join(exeDir, imported).toLower())) {
+          info(QStringLiteral("root launch: %1 is left to the game plugin's forced load "
+                              "through the VFS")
+                   .arg(imported));
+          continue;
+        }
         const Entry proxy = index.value(imported);
         const QStringList deps = reach(index, {proxy.source}, true, {imported});
         QStringList group      = QStringList{imported} + deps;

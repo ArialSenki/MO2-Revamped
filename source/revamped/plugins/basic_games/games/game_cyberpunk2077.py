@@ -369,12 +369,24 @@ class Cyberpunk2077Game(BasicGame):
             root_builder = root_builder_enabled(self._organizer)
             tree = self._organizer.virtualFileTree()
             process = Path(self.binaryName()).name
+            # a mod's root/ is the game folder too (Wabbajack lists made with
+            # Root Builder keep the loaders in root/bin/x64). Read from the
+            # active mods' folders: the data tree leaves root/ out here
+            in_root: set[str] = set()
+            if not root_builder:
+                mods = self._organizer.modList()
+                for name in mods.allModsByProfilePriority():
+                    if not mods.state(name) & mobase.ModState.ACTIVE:
+                        continue
+                    mod = mods.getMod(name)
+                    if mod is None:
+                        continue
+                    base = Path(mod.absolutePath())
+                    for relative in self._forced_loaders:
+                        if (base / "root" / relative).is_file():
+                            in_root.add(relative)
             for relative in self._forced_loaders:
-                # a mod's root/ is the game folder too (Wabbajack lists made
-                # with Root Builder keep the loaders in root/bin/x64)
-                if tree.find(relative) is not None or (
-                    not root_builder and tree.find(f"root/{relative}") is not None
-                ):
+                if tree.find(relative) is not None or relative in in_root:
                     loads.append(
                         mobase.ExecutableForcedLoadSetting(
                             process, self.gameDirectory().absoluteFilePath(relative)
