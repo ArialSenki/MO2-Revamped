@@ -2968,6 +2968,27 @@ QFuture<void> MainWindow::checkForProblemsAsync()
   m_ProblemChecks.removeIf([](const QFuture<void>& f) {
     return f.isFinished();
   });
+  // MO2 Revamped: the Python plugins' checks run here, on the interface thread.
+  // On the worker one held the GIL while it asked for the mod list
+  // (ModInfo's lock), while this thread held that lock refreshing a mod just
+  // installed and waited for the GIL: a collection stopped for good after a
+  // few dozen mods
+  std::size_t proxied = 0;
+  for (QObject* pluginObj : m_PluginContainer.plugins<QObject>()) {
+    IPlugin* plugin = qobject_cast<IPlugin*>(pluginObj);
+    if (plugin == nullptr || m_PluginContainer.requirements(plugin).proxy() == nullptr ||
+        !m_PluginContainer.isEnabled(plugin)) {
+      continue;
+    }
+    if (auto* diagnose = qobject_cast<IPluginDiagnose*>(pluginObj)) {
+      try {
+        proxied += diagnose->activeProblems().size();
+      } catch (const std::exception& e) {
+        log::warn("problem check of {} failed: {}", plugin->name(), e.what());
+      }
+    }
+  }
+  m_ProxiedProblems = proxied;
   auto future = QtConcurrent::run([this]() {
     checkForProblemsImpl();
   });
@@ -2985,9 +3006,13 @@ void MainWindow::checkForProblemsImpl()
   if (m_ProblemsCheckRequired) {
     m_ProblemsCheckRequired = false;
     TimeThis tt("MainWindow::checkForProblemsImpl()");
-    size_t numProblems = 0;
+    // the Python plugins' count, made on the interface thread
+    size_t numProblems = m_ProxiedProblems;
     for (QObject* pluginObj : m_PluginContainer.plugins<QObject>()) {
       IPlugin* plugin = qobject_cast<IPlugin*>(pluginObj);
+      if (plugin != nullptr && m_PluginContainer.requirements(plugin).proxy() != nullptr) {
+        continue;
+      }
       if (plugin == nullptr || m_PluginContainer.isEnabled(plugin)) {
         IPluginDiagnose* diagnose = qobject_cast<IPluginDiagnose*>(pluginObj);
         if (diagnose != nullptr)
