@@ -10,7 +10,16 @@ import mobase
 
 from PyQt6.QtCore import QTimer
 
-from ..frameworks import FRAMEWORKS, CodewareCandidate, ModFiles, Report, analyze, scan_codeware
+from ..frameworks import (
+    FRAMEWORKS,
+    CodewareCandidate,
+    ModFiles,
+    ModSummary,
+    Report,
+    analyze,
+    scan_codeware,
+    summarize,
+)
 from .. import redscript_log
 from ..util import log_warning, tr
 
@@ -50,6 +59,11 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         # background (reading many scripts can take seconds)
         self._codeware: dict[tuple, bool] = {}
         self._scan: threading.Thread | None = None
+        # what each mod's files tell, by (name, folder): (the folder's mtime
+        # when read, the summary). The check runs on MO2's interface thread
+        # after every change; reading the file trees of every active mod each
+        # time stalled the window with a few hundred mods
+        self._summaries: dict[tuple[str, str], tuple[int, ModSummary]] = {}
 
     # IPlugin
 
@@ -58,8 +72,8 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         mod_list = organizer.modList()
         # MO2 2.5's form: one call with every changed mod
         mod_list.onModStateChanged(self._states_changed)
-        mod_list.onModInstalled(lambda *_: self._changed())
-        mod_list.onModRemoved(lambda *_: self._changed())
+        mod_list.onModInstalled(lambda mod, *_: self._mod_files_changed(mod))
+        mod_list.onModRemoved(lambda name, *_: self._mod_files_changed(name))
         organizer.onProfileChanged(lambda *_: self._changed())
         # the game compiles the scripts as it starts: read its log once it closes
         organizer.onFinishedRun(lambda *_: self._changed())
@@ -170,6 +184,45 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
     def _states_changed(self, states: dict) -> None:
         self._changed()
 
+    def _mod_files_changed(self, mod) -> None:
+        # an install can keep the folder's mtime (files written into an
+        # existing mod): what it tells is read again
+        name = mod if isinstance(mod, str) else mod.name()
+        for key in [key for key in self._summaries if key[0] == name]:
+            del self._summaries[key]
+        self._changed()
+
+    def _mod_summaries(self) -> list[ModSummary]:
+        """What the active mods' files tell, in priority order: a mod's file
+        tree is read only when its folder changed since the last time."""
+        mod_list = self._organizer.modList()
+        summaries: list[ModSummary] = []
+        for name in mod_list.allModsByProfilePriority():
+            if not mod_list.state(name) & mobase.ModState.ACTIVE:
+                continue
+            mod = mod_list.getMod(name)
+            if mod is None or mod.isSeparator() or mod.isForeign() or mod.isOverwrite():
+                continue
+            path = Path(mod.absolutePath())
+            key = (name, str(path))
+            try:
+                stamp = path.stat().st_mtime_ns
+            except OSError:
+                self._summaries.pop(key, None)
+                continue
+            cached = self._summaries.get(key)
+            if cached is not None and cached[0] == stamp:
+                summaries.append(cached[1])
+                continue
+            try:
+                tree = mod.fileTree()
+            except Exception:  # noqa: BLE001 - a mod being removed
+                continue
+            summary = summarize(ModFiles(name, path, tree))
+            self._summaries[key] = (stamp, summary)
+            summaries.append(summary)
+        return summaries
+
     def _changed(self) -> None:
         self._report = None
         self._redscript_cache = None
@@ -187,7 +240,7 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
             try:
                 game_dir = Path(game.gameDirectory().absolutePath()) if game.isInstalled() else None
                 report = analyze(
-                    active_mod_files(self._organizer),
+                    self._mod_summaries(),
                     self._organizer.virtualFileTree(),
                     game_dir,
                     self._codeware_users,
