@@ -9,9 +9,12 @@
 
 #include <QColor>
 #include <QIcon>
+#include <QRectF>
 
 class QAbstractButton;
+class QLabel;
 class QMenu;
+class QPainter;
 
 namespace FluentIcons
 {
@@ -36,6 +39,25 @@ QColor builtInColor(Tone tone);
 
 // the Segoe Fluent Icons font, Segoe MDL2 Assets on Windows 10
 QFont font(int pixelSize);
+
+// whether either font is installed. A Wine prefix has neither, and they can't
+// be shipped: glyphs are then drawn from SVGs of Fluent UI System Icons bundled
+// in the resources (":/MO/glyphs/<code point>"). MO2R_GLYPH_SVG=1 forces that
+// on Windows, to check it
+bool hasGlyphFont();
+
+// draws one glyph in the rectangle, pixelSize tall: in the font when it is
+// installed, else its SVG in the ink. What draws glyphs as text goes through
+// this, or through setGlyph() for a widget that shows one as its text
+void drawGlyph(QPainter& painter, const QRectF& rect, char16_t codepoint,
+               const QColor& ink, int pixelSize, Qt::Alignment alignment = Qt::AlignCenter);
+
+// a label or button that shows a glyph as its text (its font set in code or a
+// style sheet): the glyph as text with the font, its SVG as the pixmap or icon
+// without it
+void setGlyph(QLabel* label, char16_t codepoint, int pixelSize, Tone tone = Tone::Ink);
+void setGlyph(QAbstractButton* button, char16_t codepoint, int pixelSize,
+              Tone tone = Tone::Ink);
 
 // a glyph icon; it picks its color when it is painted, so it follows theme
 // changes on its own

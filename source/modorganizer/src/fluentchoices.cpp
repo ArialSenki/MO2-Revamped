@@ -255,19 +255,18 @@ void FluentOptionCard::paintEvent(QPaintEvent*)
 
   // glyph, in the accent for the recommended choice
   if (m_glyph != 0) {
-    p.setFont(FluentIcons::font(16));
-    p.setPen(FluentIcons::color(m_recommended ? FluentIcons::Tone::Accent
-                                              : FluentIcons::Tone::Ink));
-    p.drawText(QRectF(card.left() + OptionPadLeft, card.top(), OptionGlyph, card.height()),
-               Qt::AlignCenter, QString(QChar(m_glyph)));
+    FluentIcons::drawGlyph(
+        p, QRectF(card.left() + OptionPadLeft, card.top(), OptionGlyph, card.height()),
+        m_glyph,
+        FluentIcons::color(m_recommended ? FluentIcons::Tone::Accent : FluentIcons::Tone::Ink),
+        16);
   }
 
   // the chevron that says the card goes on
-  p.setFont(FluentIcons::font(12));
-  p.setPen(FluentIcons::color(FluentIcons::Tone::Muted));
-  p.drawText(QRectF(card.right() - OptionPadRight - OptionChevron, card.top(),
-                    OptionChevron, card.height()),
-             Qt::AlignCenter, QString(QChar(ChevronRightGlyph)));
+  FluentIcons::drawGlyph(p,
+                         QRectF(card.right() - OptionPadRight - OptionChevron, card.top(),
+                                OptionChevron, card.height()),
+                         ChevronRightGlyph, FluentIcons::color(FluentIcons::Tone::Muted), 12);
 
   // title and description, centered as a block
   const int w          = textWidth(width());
@@ -401,9 +400,7 @@ void FluentThemeCard::paintEvent(QPaintEvent*)
     p.setPen(Qt::NoPen);
     p.setBrush(accent);
     p.drawEllipse(circle);
-    p.setFont(FluentIcons::font(11));
-    p.setPen(onAccent(accent));
-    p.drawText(circle, Qt::AlignCenter, QString(QChar(CheckGlyph)));
+    FluentIcons::drawGlyph(p, circle, CheckGlyph, onAccent(accent), 11);
   }
 }
 

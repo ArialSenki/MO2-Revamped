@@ -1198,7 +1198,9 @@ private:
   void updateChevron()
   {
     // ChevronUp folds, ChevronDown unfolds
-    m_Chevron->setText(QString(QChar(m_Expanded ? 0xE70E : 0xE70D)));
+    // 8 pt in the style sheet, about 11 px
+    FluentIcons::setGlyph(m_Chevron, m_Expanded ? 0xE70E : 0xE70D, 11,
+                          FluentIcons::Tone::Muted);
     const QString action = m_Expanded ? QObject::tr("Collapse log")
                                       : QObject::tr("Expand log");
     m_Chevron->setToolTip(action);

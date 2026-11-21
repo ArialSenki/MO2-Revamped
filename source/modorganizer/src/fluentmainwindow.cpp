@@ -163,11 +163,12 @@ void MainWindow::setupFluentLayout()
   m_moreActionsButton = new QToolButton(ui->layoutWidget);
   m_moreActionsButton->setObjectName(QStringLiteral("moreActionsBtn"));
   m_moreActionsButton->setFont(FluentIcons::font(15));
-  m_moreActionsButton->setText(QString(QChar(MoreGlyph)));
   m_moreActionsButton->setToolTip(tr("Mod list actions, backups, and folders"));
   m_moreActionsButton->setAccessibleName(tr("More actions"));
   m_moreActionsButton->setPopupMode(QToolButton::InstantPopup);
   m_moreActionsButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  // after the style: without the icon font it shows the glyph as its icon
+  FluentIcons::setGlyph(m_moreActionsButton, MoreGlyph, 15);
 
   const int gearIndex = ui->horizontalLayout_6->indexOf(ui->listOptionsBtn);
   ui->horizontalLayout_6->insertWidget(gearIndex, m_moreActionsButton);

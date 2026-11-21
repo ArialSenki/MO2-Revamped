@@ -1,4 +1,5 @@
 #include "fluentscrollbar.h"
+#include "fluenticons.h"
 #include "fluentmotion.h"
 
 #include <QApplication>
@@ -216,16 +217,13 @@ void FluentScrollBarPainter::paintEvent(QPaintEvent*)
         m_bar->style()->subControlRect(QStyle::CC_ScrollBar, &option, QStyle::SC_ScrollBarSubLine, m_bar);
     const QRect more =
         m_bar->style()->subControlRect(QStyle::CC_ScrollBar, &option, QStyle::SC_ScrollBarAddLine, m_bar);
-    QFont glyphs;
-    glyphs.setFamilies({QStringLiteral("Segoe Fluent Icons"), QStringLiteral("Segoe MDL2 Assets")});
-    glyphs.setPixelSize(ArrowPixels);
-    painter.setFont(glyphs);
-    painter.setPen(withAlpha(ink, (dark ? 0.62 : 0.55) * t));
+    const QColor arrow = withAlpha(ink, (dark ? 0.62 : 0.55) * t);
     if (less.isValid() && !less.isEmpty()) {
-      painter.drawText(less, Qt::AlignCenter, QString(QChar(vertical ? CaretUp : CaretLeft)));
+      FluentIcons::drawGlyph(painter, less, vertical ? CaretUp : CaretLeft, arrow, ArrowPixels);
     }
     if (more.isValid() && !more.isEmpty()) {
-      painter.drawText(more, Qt::AlignCenter, QString(QChar(vertical ? CaretDown : CaretRight)));
+      FluentIcons::drawGlyph(painter, more, vertical ? CaretDown : CaretRight, arrow,
+                             ArrowPixels);
     }
   }
 }

@@ -241,14 +241,11 @@ public:
       painter->drawRoundedRect(row, 4, 4);
     }
 
-    QFont glyphs;
-    glyphs.setFamilies({QStringLiteral("Segoe Fluent Icons"),
-                        QStringLiteral("Segoe MDL2 Assets")});
-    glyphs.setPixelSize(16);
-    painter->setFont(glyphs);
-    painter->setPen(text);
     const QRectF glyphRect(row.left() + 14, row.top(), 20, row.height());
-    painter->drawText(glyphRect, Qt::AlignCenter, index.data(GlyphRole).toString());
+    const QString glyph = index.data(GlyphRole).toString();
+    if (!glyph.isEmpty()) {
+      FluentIcons::drawGlyph(*painter, glyphRect, glyph.at(0).unicode(), text, 16);
+    }
 
     QFont label = option.font;
     label.setWeight(selected ? QFont::DemiBold : QFont::Normal);
