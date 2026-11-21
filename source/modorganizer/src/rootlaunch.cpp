@@ -252,6 +252,35 @@ QStringList companions(const Index& index, const QString& dllKey)
     }
   }
 
+  // MO2 Revamped: a folder next to it, one or two levels down, that it names
+  // with its path (NVHR's d3dx9_38.dll loads Data\NVHR\nvhr_avx2.dll from
+  // DllMain, before usvfs hooks the game): it comes with it
+  {
+    const QDir own = QFileInfo(dll.source).absoluteDir();
+    QStringList folders;
+    QStringList needles;
+    for (const QString& a : own.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+      const QDir sub(own.absoluteFilePath(a));
+      QStringList levels = {a};
+      for (const QString& b : sub.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        levels.append(a + u'/' + b);
+      }
+      for (const QString& rel : levels) {
+        if (!rel.contains(u'/')) {
+          continue;  // a single name (Data, Plugins) is too common to tell
+        }
+        folders.append(rel);
+        needles.append(QString(rel).replace(u'/', u'\\').toLower() + u'\\');
+      }
+    }
+    const QStringList named = cachedMentions(dll.source, needles);
+    for (int i = 0; i < folders.size(); ++i) {
+      if (named.contains(needles[i])) {
+        out.append(folders[i]);
+      }
+    }
+  }
+
   // never the Root folder itself, nor outside it
   QStringList kept;
   for (const QString& rel : out) {
