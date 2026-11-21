@@ -711,7 +711,9 @@ namespace Mo2RevampedSetup
             try
             {
                 string powershell = Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe");
-                if (!File.Exists(powershell)) return false;
+                // Wine's powershell.exe is a stub that runs nothing: started, it
+                // looked like a helper and the fallback was skipped
+                if (!File.Exists(powershell) || WineHost.IsRunning) return false;
                 string escaped = (directory ?? "").Replace("'", "''");
                 // Clear-Tree empties a folder bottom-up and never goes through a
                 // junction or link: those are removed (or queued) as links only.
