@@ -104,6 +104,15 @@ class PluginTest(unittest.TestCase):
         loads = sorted(Path(load.library()).name for load in self.game.executableForcedLoads())
         self.assertEqual(loads, ["version.dll", "winmm.dll"])
 
+    def test_forced_loader_in_overwrite_root(self) -> None:
+        # root/ is read from disk (the data tree leaves it out): Overwrite's too
+        self.install()
+        loader = self.organizer.overwrite / "root/bin/x64/winmm.dll"
+        loader.parent.mkdir(parents=True, exist_ok=True)
+        loader.write_bytes(b"")
+        loads = [Path(load.library()).name for load in self.game.executableForcedLoads()]
+        self.assertEqual(loads, ["winmm.dll"])
+
     # archive load order
 
     def test_archive_load_order(self) -> None:
