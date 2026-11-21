@@ -28,6 +28,7 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QScreen>
+#include <QShortcut>
 #include <QSignalBlocker>
 #include <QTimer>
 #include <QTreeWidgetItemIterator>
@@ -204,6 +205,16 @@ CollectionBrowser::CollectionBrowser(std::vector<Game> games,
   m_search->setPlaceholderText(tr("Search collections"));
   m_search->setClearButtonEnabled(true);
   m_search->setAccessibleName(m_search->placeholderText());
+  // as in Instances and Categories: Ctrl+F finds, F5 reads the gallery again
+  auto* findKey = new QShortcut(QKeySequence::Find, this);
+  connect(findKey, &QShortcut::activated, this, [this] {
+    m_search->setFocus(Qt::ShortcutFocusReason);
+    m_search->selectAll();
+  });
+  auto* reloadKey = new QShortcut(QKeySequence::Refresh, this);
+  connect(reloadKey, &QShortcut::activated, this, [this] {
+    refresh();
+  });
   m_game = new QComboBox(this);
   m_game->setAccessibleName(tr("Game"));
   // as wide as a usual game's name: a long one is cut in the box, not in the list

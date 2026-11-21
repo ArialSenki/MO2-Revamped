@@ -34,6 +34,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QShortcut>
 #include <QTimer>
 #include <QTreeWidget>
 #include <QVBoxLayout>
@@ -251,6 +252,18 @@ void ListBrowser::setupUi()
   m_search->setPlaceholderText(tr("Search lists, authors and tags"));
   m_search->setClearButtonEnabled(true);
   m_search->setAccessibleName(m_search->placeholderText());
+  // as in Instances and Categories: Ctrl+F finds, F5 reads the gallery again
+  auto* findKey = new QShortcut(QKeySequence::Find, this);
+  connect(findKey, &QShortcut::activated, this, [this] {
+    m_search->setFocus(Qt::ShortcutFocusReason);
+    m_search->selectAll();
+  });
+  auto* reloadKey = new QShortcut(QKeySequence::Refresh, this);
+  connect(reloadKey, &QShortcut::activated, this, [this] {
+    if (m_refresh->isEnabled()) {
+      loadGallery(true);
+    }
+  });
   m_game = new QComboBox(this);
   m_game->setAccessibleName(tr("Game"));
   m_game->setSizeAdjustPolicy(QComboBox::AdjustToContents);
