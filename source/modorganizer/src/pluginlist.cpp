@@ -345,16 +345,28 @@ void PluginList::refresh(const QString& profileName,
   };
   std::vector<size_t> unread;
   std::vector<uint64_t> sizes(newPlugins.size());
+  // MO2 Revamped: the size is asked from the disk only in the games whose load
+  // order is the plugins' dates, where MO2 and other tools rewrite those dates
+  // and the write time can't tell a changed file. Elsewhere a stat per loose
+  // plugin on every refresh cost ~0.15-0.25 s for Nolvus' 3,400 plugins, and
+  // the write time tells a changed file (the scan only knows the sizes of
+  // files inside archives)
+  const auto* game = m_Organizer.managedGame();
+  const bool datedLoadOrder =
+      game != nullptr &&
+      game->loadOrderMechanism() == IPluginGame::LoadOrderMechanism::FileTime;
   for (size_t i = 0; i < newPlugins.size(); ++i) {
-    const FILETIME time = (*newPlugins[i].entry)->getFileTime();
-    // MO2 Revamped: the size only when the structure knows it; asking the
-    // disk for it cost a stat per plugin on every refresh (~0.15-0.25 s for
-    // Nolvus' 3,400 plugins), and the write time already tells a changed file
+    const FILETIME time  = (*newPlugins[i].entry)->getFileTime();
     const uint64_t known = (*newPlugins[i].entry)->getFileSize();
     auto cached          = m_HeaderCache.find(newPlugins[i].fullPath);
+    const auto sameSize  = [&]() {
+      if (known != MOShared::FileEntry::NoFileSize) {
+        return cached->second.size == known;
+      }
+      return !datedLoadOrder || cached->second.size == sizeOf(newPlugins[i]);
+    };
     if (cached != m_HeaderCache.end() &&
-        CompareFileTime(&cached->second.time, &time) == 0 &&
-        (known == MOShared::FileEntry::NoFileSize || cached->second.size == known) &&
+        CompareFileTime(&cached->second.time, &time) == 0 && sameSize() &&
         cached->second.mediumSupported == mediumPluginsAreSupported) {
       newPlugins[i].header = cached->second.header;
     } else {
