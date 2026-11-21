@@ -508,6 +508,9 @@ public slots:
   // rebuilding every row, unless one of them now comes from another mod or
   // the priorities moved (moved)
   void refreshListsAfterDisable(const std::vector<unsigned int>& mods, bool moved);
+  // whether a plugin still in the list (another mod's) loads an INI or an
+  // archive these mods have, so its row would keep them after they leave
+  bool pluginsUseFilesOf(const std::vector<unsigned int>& mods) const;
 
   ModInfo::Ptr installDownload(int downloadIndex, int priority = -1);
   // MO2 Revamped: several downloads or archives, one after another. Each one's

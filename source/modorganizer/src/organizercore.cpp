@@ -1959,12 +1959,43 @@ void OrganizerCore::refreshListsAfterDisable(const std::vector<unsigned int>& mo
   // another mod's (that row would keep the old mod's file)
   const unsigned int updatesBefore = m_ESPListUpdates;
   refreshESPList(false);
-  if (moved || m_ESPListUpdates == updatesBefore || !pluginOriginsCurrent(mods)) {
+  if (moved || m_ESPListUpdates == updatesBefore || !pluginOriginsCurrent(mods) ||
+      pluginsUseFilesOf(mods)) {
     refreshESPList(true);
   } else {
     m_PluginList.notifyStatesChanged();
   }
   refreshBSAList();
+}
+
+bool OrganizerCore::pluginsUseFilesOf(const std::vector<unsigned int>& mods) const
+{
+  // a row knows its INI (same name) and its archives (names starting with the
+  // plugin's) only from when it was made, so these keep it from going stale
+  QStringList files;
+  for (unsigned int index : mods) {
+    files += QDir(ModInfo::getByIndex(index)->absolutePath())
+                 .entryList({QStringLiteral("*.ini"), QStringLiteral("*.bsa"),
+                             QStringLiteral("*.ba2")},
+                            QDir::Files);
+  }
+  if (files.isEmpty()) {
+    return false;
+  }
+  std::vector<QString> baseNames;
+  for (const QString& plugin : m_PluginList.pluginNames()) {
+    baseNames.push_back(QFileInfo(plugin).completeBaseName().toLower());
+  }
+  for (const QString& file : files) {
+    const QString lower = file.toLower();
+    const bool ini      = lower.endsWith(QLatin1String(".ini"));
+    for (const QString& base : baseNames) {
+      if (ini ? lower == base + QLatin1String(".ini") : lower.startsWith(base)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void OrganizerCore::refreshLists()
