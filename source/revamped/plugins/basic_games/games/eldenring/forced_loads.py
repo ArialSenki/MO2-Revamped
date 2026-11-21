@@ -7,7 +7,9 @@ whose EldenRingMo2Game takes it as a mixin.
 
 from __future__ import annotations
 
+import configparser
 import os
+import shutil
 from pathlib import Path
 
 import mobase
@@ -231,7 +233,7 @@ class ForcedLoadsMixin:
         # started by the bridge through its Mod Engine 2 entry point once
         # the game runs (see _seamless_initializer); launchers such as Mod
         # Engine 2 get no initializer, so there it stays inactive
-        seamless = self._active_seamless_dll() if native_loading else None
+        seamless = self._seamless_load_dll() if native_loading else None
         if seamless is not None and all(
             os.path.normcase(str(Path(load.library()))) != os.path.normcase(str(seamless))
             for load in forced_loads
@@ -310,10 +312,130 @@ class ForcedLoadsMixin:
         runs its own code, as Mod Engine 2 and me3 do."""
         if not bool(self._organizer.pluginSetting(self.name(), self.NativeDllSetting)):
             return []
-        seamless = self._active_seamless_dll()
+        seamless = self._seamless_load_dll()
         if seamless is None:
             return []
         return [{"library": seamless, "initializer": "modengine_ext_init"}]
+
+    # where Seamless Co-op runs from with The Convergence, in the instance
+    ConvergenceSeamlessFolder = "Elden Ring MO2 - Seamless for The Convergence"
+
+    def _seamless_load_dll(self) -> Path | None:
+        """The Seamless Co-op DLL this run loads. With The Convergence it is a
+        copy of Seamless's folder in the instance whose settings save to
+        Convergence's extension (cnvco2, from the ersc_settings.ini it ships
+        for its own launcher), so Convergence's co-op saves don't share
+        ER0000.co2 with Seamless's without Convergence. Seamless reads its
+        settings next to its DLL, a real file the VFS doesn't change; the copy
+        keeps everything else of the user's settings (the password). Without
+        Convergence, or when the copy can't be made, the mod's own DLL."""
+        seamless = self._active_seamless_dll()
+        if seamless is None or self.GameShortName != "eldenring":
+            return seamless
+        extension = self._convergence_coop_extension()
+        if extension is None:
+            return seamless
+        try:
+            copy = self._convergence_seamless_copy(seamless, extension)
+        except (OSError, UnicodeError) as error:
+            self._log_when_changed("convergence-seamless", [(
+                qWarning,
+                f"Elden Ring MO2: Seamless Co-op can't get The Convergence's save "
+                f"extension ({error}); it saves to its own, shared with Seamless "
+                "without Convergence.",
+            )])
+            return seamless
+        self._log_when_changed("convergence-seamless", [(
+            _module_qinfo,
+            f"Elden Ring MO2: The Convergence is active; Seamless Co-op runs from "
+            f"'{copy.parent}' and saves to ER0000.{extension}, as with "
+            "Convergence's own launcher.",
+        )])
+        return copy
+
+    def _convergence_coop_extension(self) -> str | None:
+        """The co-op save extension of the active The Convergence: the
+        save_file_extension of the ersc_settings.ini it ships (DLLs/), else
+        cnvco2. None when Convergence isn't active."""
+        root = self._active_convergence_root()
+        if root is None:
+            return None
+        for settings in (root / "DLLs" / "ersc_settings.ini", root / "ersc_settings.ini"):
+            if not settings.is_file():
+                continue
+            value = self._ini_value(settings, "SAVE", "save_file_extension")
+            if value and value.casefold() != "co2" and value.isalnum():
+                return value
+        return self.ConvergenceCoopSaveExtension
+
+    @staticmethod
+    def _ini_value(path: Path, section: str, key: str) -> str | None:
+        config = configparser.ConfigParser(interpolation=None, strict=False)
+        try:
+            config.read(path, encoding="utf-8-sig")
+            return config.get(section, key, fallback="").strip() or None
+        except (OSError, UnicodeError, configparser.Error):
+            return None
+
+    def _convergence_seamless_copy(self, seamless: Path, extension: str) -> Path:
+        """Seamless's folder copied into the instance (only what changed), with
+        its settings file saving to the given extension."""
+        source_dir = seamless.parent
+        target_dir = Path(self._organizer.basePath()) / self.ConvergenceSeamlessFolder / source_dir.name
+        settings_name = f"{seamless.stem}_settings.ini".casefold()
+        for source in source_dir.rglob("*"):
+            relative = source.relative_to(source_dir)
+            target = target_dir / relative
+            if source.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            if str(relative).casefold() == settings_name:
+                continue
+            info = source.stat()
+            try:
+                current = target.stat()
+                if current.st_size == info.st_size and int(current.st_mtime) == int(info.st_mtime):
+                    continue
+            except OSError:
+                pass
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+        # files only in the copy stay: Seamless may write its own there
+        settings_source = seamless.with_name(f"{seamless.stem}_settings.ini")
+        text = settings_source.read_text(encoding="utf-8-sig") if settings_source.is_file() else ""
+        settings_target = target_dir / settings_source.name
+        new_text = self._with_save_extension(text, extension)
+        try:
+            unchanged = settings_target.read_text(encoding="utf-8") == new_text
+        except (OSError, UnicodeError):
+            unchanged = False
+        if not unchanged:
+            target_dir.mkdir(parents=True, exist_ok=True)
+            settings_target.write_text(new_text, encoding="utf-8")
+        return target_dir / seamless.name
+
+    @staticmethod
+    def _with_save_extension(text: str, extension: str) -> str:
+        """Seamless's settings with save_file_extension set in [SAVE], the
+        rest as the user wrote it."""
+        lines = text.splitlines()
+        section = None
+        save_section = None
+        for index, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                section = stripped[1:-1].strip().casefold()
+                if section == "save":
+                    save_section = index
+                continue
+            if section == "save" and stripped.split("=", 1)[0].strip().casefold() == "save_file_extension":
+                lines[index] = f"save_file_extension = {extension}"
+                return "\n".join(lines) + "\n"
+        if save_section is None:
+            lines += ["[SAVE]", f"save_file_extension = {extension}"]
+        else:
+            lines.insert(save_section + 1, f"save_file_extension = {extension}")
+        return "\n".join(lines) + "\n"
 
     @classmethod
     def _is_other_game_seamless(cls, name: str) -> bool:

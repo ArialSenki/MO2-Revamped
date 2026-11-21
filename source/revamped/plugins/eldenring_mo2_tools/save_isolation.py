@@ -4798,6 +4798,27 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
                 "available": seamless_dll is not None,
             }
         )
+        # The Convergence with Seamless Co-op: the game plugin gives Seamless
+        # Convergence's co-op extension (cnvco2, its DLLs/ersc_settings.ini)
+        if seamless_dll is not None and self._game_key == "eldenring":
+            for mod_name, folder in self._active_mod_folders():
+                settings = folder / "DLLs" / "ersc_settings.ini"
+                if not (folder / "convergence.me3").is_file() and not (folder / "me3" / "convergence.me3").is_file() \
+                        and "convergence" not in mod_name.casefold():
+                    continue
+                extension = (self._settings_extension(settings, "save_file_extension") if settings.is_file() else None) or "cnvco2"
+                if extension.casefold() == seamless_extension.casefold():
+                    break
+                formats.append(
+                    {
+                        "key": "convergence_seamless",
+                        "name": _tr("Convergence with Seamless Co-op"),
+                        "source": _tr("From the mod {mod}").format(mod=mod_name),
+                        "extension": extension,
+                        "available": True,
+                    }
+                )
+                break
         alt_saves = None
         for mod_name, folder in self._active_mod_folders():
             candidates = [folder / "altsaves.toml"]

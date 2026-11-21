@@ -381,6 +381,10 @@ class EldenRingMo2Game(
     # renaming the save it played and overwrote ER0000.sl2, the save of
     # the game without mods
     ConvergenceSaveExtension = "cnv"
+    # and with Seamless Co-op, ER0000.cnvco2 (the ersc_settings.ini it ships
+    # for its launcher); without it Seamless's own .co2 would be shared with
+    # Seamless played without Convergence
+    ConvergenceCoopSaveExtension = "cnvco2"
 
     # "1" when an active mod brings its own regulation.bin: the compatibility
     # DLL then keeps the raw regulation out of the saves, as me3 does for every
@@ -413,13 +417,14 @@ class EldenRingMo2Game(
 
     def listSaves(self, folder: QDir) -> list[mobase.ISaveGame]:
         # only the saves the game reads: <account>/ER0000.sl2, a Seamless
-        # Co-op .co2, a Convergence .cnv or an ELDEN RING Reforged .err. A recursive search would also
+        # Co-op .co2, a Convergence .cnv (.cnvco2 with Seamless) or an ELDEN
+        # RING Reforged .err. A recursive search would also
         # list the named save profiles and backups kept inside the shared
         # route.
         return [
             BasicGameSaveGame(file)
             for file in self._route_save_files(Path(folder.absolutePath()))
-            if file.suffix.casefold() in {".sl2", ".co2", ".cnv", ".err"}
+            if file.suffix.casefold() in {".sl2", ".co2", ".cnv", ".cnvco2", ".err"}
         ]
 
     def executables(self) -> list[mobase.ExecutableInfo]:
