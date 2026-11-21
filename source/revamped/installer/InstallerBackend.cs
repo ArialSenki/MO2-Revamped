@@ -711,7 +711,9 @@ namespace Mo2RevampedSetup
             try
             {
                 string powershell = Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe");
-                if (!File.Exists(powershell)) return false;
+                // Wine's powershell.exe is a stub that runs nothing: started, it
+                // looked like a helper and the fallback was skipped
+                if (!File.Exists(powershell) || WineHost.IsRunning) return false;
                 string escaped = (directory ?? "").Replace("'", "''");
                 // Clear-Tree empties a folder bottom-up and never goes through a
                 // junction or link: those are removed (or queued) as links only.
@@ -1159,6 +1161,21 @@ namespace Mo2RevampedSetup
                         running = ntdll != IntPtr.Zero && GetProcAddress(ntdll, "wine_get_version") != IntPtr.Zero;
                     }
                     catch { running = false; }
+                    // as MO2 does (env::runningUnderWine): Wine builds that hide
+                    // their exports from programs still have their own key
+                    if (!running.Value)
+                    {
+                        try
+                        {
+                            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.RegistryKey
+                                .OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Default)
+                                .OpenSubKey(@"Software\Wine"))
+                            {
+                                running = key != null;
+                            }
+                        }
+                        catch { running = false; }
+                    }
                 }
                 return running.Value;
             }

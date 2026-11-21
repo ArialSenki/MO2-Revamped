@@ -2876,7 +2876,9 @@ namespace Mo2RevampedSetup
         private static bool StartPostExitCleanup(string executable, string restoreCopy, string emptyDirectory, string stopAt)
         {
             string powershell = Path.Combine(Environment.SystemDirectory, @"WindowsPowerShell\v1.0\powershell.exe");
-            if (!File.Exists(powershell)) return false;
+            // Wine's powershell.exe is a stub that runs nothing: started, it
+            // looked like a helper and the fallback below was skipped
+            if (!File.Exists(powershell) || WineHost.IsRunning) return false;
 #if INSTALLER_TEST
             string script = String.Empty;
 #else

@@ -9,6 +9,8 @@
 #include <QApplication>
 #include <QCache>
 #include <QFileInfo>
+#include <QFontDatabase>
+#include <log.h>
 #include <QHash>
 #include <QIconEngine>
 #include <QImage>
@@ -510,9 +512,22 @@ QIcon icon(const QString& resource)
     return *cached;
   }
 
+  // without the glyph fonts (a Wine prefix has neither, and they can't be
+  // shipped) a glyph would paint as an empty box: the resource's own image
+  // is drawn instead
+  static const bool glyphFont = [] {
+    const bool found = QFontDatabase::hasFamily(QStringLiteral("Segoe Fluent Icons")) ||
+                       QFontDatabase::hasFamily(QStringLiteral("Segoe MDL2 Assets"));
+    if (!found) {
+      MOBase::log::warn("neither Segoe Fluent Icons nor Segoe MDL2 Assets is installed: "
+                        "icons with an image of their own use it");
+    }
+    return found;
+  }();
+
   const auto& table = glyphTable();
   auto it           = table.find(resource);
-  if (it != table.end()) {
+  if (it != table.end() && glyphFont) {
     return *glyphs.insert(resource, glyph(it->codepoint, it->tone));
   }
 
