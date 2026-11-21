@@ -32,7 +32,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$version = '1.1.0-beta.15'
+$version = '1.1.0-beta.16'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..'))
 $runtimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory).TrimEnd('\')
 $organizerPath = [System.IO.Path]::GetFullPath($OrganizerExecutable)
