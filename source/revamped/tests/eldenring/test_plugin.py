@@ -119,6 +119,11 @@ class Checker(unittest.TestCase):
         valid, fixable, invalid = self.checker.VALID, self.checker.FIXABLE, self.checker.INVALID
         cases = [
             (["SeamlessCoop/ersc.dll", "ersc_launcher.exe"], valid),
+            # Seamless Co-op 2.0.3 as MO2 installs it (MO2 flagged it as
+            # having no game data while this wasn't VALID)
+            (["SeamlessCoop/ersc.dll", "SeamlessCoop/ersc_settings.ini",
+              "SeamlessCoop/locale/english.json", "SeamlessCoop/crashpad/crashpad_handler.exe",
+              "ersc_launcher.exe", "meta.ini"], valid),
             (["parts/a.dcx", "notes.txt"], valid),
             (["Wrapper/parts/a.dcx"], fixable),
             (["parts/sub/x.dll", "parts/a.dcx"], valid),  # assets are never walked
