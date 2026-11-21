@@ -11,6 +11,7 @@ again (an install can write into an existing folder without changing it).
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Callable, Generic, TypeVar
 
@@ -40,20 +41,27 @@ class PerModCache(Generic[T]):
         the last time when the mod's folder is as it was. A mod whose read
         gives None (or raises) is left out and read again next time."""
         mod_list = organizer.modList()
-        results: list[T] = []
+        mods = []
         for name in mod_list.allModsByProfilePriority():
             if not mod_list.state(name) & mobase.ModState.ACTIVE:
                 continue
             mod = mod_list.getMod(name)
             if mod is None or mod.isSeparator() or mod.isForeign() or mod.isOverwrite():
                 continue
-            path = Path(mod.absolutePath())
-            key = (name, str(path))
-            try:
-                stamp = path.stat().st_mtime_ns
-            except OSError:
-                self._entries.pop(key, None)
-                continue
+            mods.append((name, mod.absolutePath(), mod))
+        stamps = _folder_stamps(os.path.dirname(os.path.normpath(folder)) for _, folder, _ in mods)
+
+        results: list[T] = []
+        for name, folder, mod in mods:
+            key = (name, folder)
+            stamp = stamps.get(os.path.normcase(os.path.normpath(folder)))
+            if stamp is None:
+                try:
+                    stamp = os.stat(folder).st_mtime_ns
+                except OSError:
+                    self._entries.pop(key, None)
+                    continue
+            path = Path(folder)
             cached = self._entries.get(key)
             if cached is not None and cached[0] == stamp:
                 results.append(cached[1])
@@ -68,3 +76,22 @@ class PerModCache(Generic[T]):
             self._entries[key] = (stamp, value)
             results.append(value)
         return results
+
+
+def _folder_stamps(parents) -> dict[str, int]:
+    """The mtime of every folder in the given folders (the mods folder,
+    usually one), by its normalized path. One listing gives them all: on
+    Windows a stat of each of ~400 mod folders took ~150 ms, more than the
+    check this saves."""
+    stamps: dict[str, int] = {}
+    for parent in set(parents):
+        try:
+            with os.scandir(parent) as entries:
+                for entry in entries:
+                    if entry.is_dir(follow_symlinks=False):
+                        stamps[os.path.normcase(os.path.normpath(entry.path))] = entry.stat(
+                            follow_symlinks=False
+                        ).st_mtime_ns
+        except OSError:
+            continue
+    return stamps

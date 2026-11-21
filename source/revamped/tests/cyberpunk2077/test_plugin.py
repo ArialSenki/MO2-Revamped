@@ -367,6 +367,17 @@ class FrameworkTest(unittest.TestCase):
             return saved(mod)
 
         fake_organizer.FakeMod.fileTree = counted
+        # the folders' own mtimes: the directory listing the cache reads them
+        # from is updated lazily by NTFS, which folders made a moment ago show
+        from basic_games.games.revamped_shared import mod_cache
+
+        saved_stamps = mod_cache._folder_stamps
+        mod_cache._folder_stamps = lambda parents: {
+            os.path.normcase(os.path.normpath(entry.path)): os.stat(entry.path).st_mtime_ns
+            for parent in set(parents)
+            for entry in os.scandir(parent)
+            if entry.is_dir()
+        }
         try:
             organizer = FakeOrganizer(tmp / "instance")
             organizer.game_dir = make_game_dir(tmp)
@@ -400,6 +411,23 @@ class FrameworkTest(unittest.TestCase):
             self.assertEqual(sorted(reads), ["Mod 3", "Mod 7"])
         finally:
             fake_organizer.FakeMod.fileTree = saved
+            mod_cache._folder_stamps = saved_stamps
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_folder_stamps_from_one_listing(self) -> None:
+        from basic_games.games.revamped_shared import mod_cache
+
+        tmp = Path(tempfile.mkdtemp(prefix="cp77-stamps-"))
+        try:
+            (tmp / "A").mkdir()
+            (tmp / "B").mkdir()
+            (tmp / "file.txt").write_text("x")
+            stamps = mod_cache._folder_stamps([str(tmp), str(tmp)])
+            self.assertEqual(
+                sorted(stamps), sorted(os.path.normcase(str(tmp / n)) for n in ("A", "B"))
+            )
+            self.assertEqual(mod_cache._folder_stamps([str(tmp / "missing")]), {})
+        finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
 
