@@ -3524,7 +3524,10 @@ bool MainWindow::canExit()
 
   // MO2 Revamped: a collection's install extracts with no window of its own
   // in front, so the main window can be closed in the middle of it
-  if (m_OrganizerCore.installationManager()->isRunning()) {
+  // a collection's step on a worker (a bundled mod extracted, files hashed)
+  // too: quitting then ended its wait loop and froze the window on the join
+  if (m_OrganizerCore.installationManager()->isRunning() ||
+      (m_CollectionDialog && m_CollectionDialog->isWaiting())) {
     QMessageBox::information(this, tr("Installation in progress"),
                              tr("A mod is being installed. Close Mod Organizer once "
                                 "it has finished."));

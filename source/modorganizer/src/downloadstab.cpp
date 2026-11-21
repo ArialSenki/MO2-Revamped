@@ -47,7 +47,14 @@ DownloadsTab::DownloadsTab(OrganizerCore& core, Ui::MainWindow* mwui)
   connect(ui.refresh, &QPushButton::clicked, [&] {
     refresh();
   });
-  connect(ui.list, SIGNAL(installDownload(int)), &m_core, SLOT(installDownload(int)));
+  // MO2 Revamped: one download goes through the same check as several: during
+  // a collection it went in midway, its notice hidden by the quiet mode
+  connect(ui.list, &DownloadListView::installDownload, &m_core,
+          [&core = m_core](int index) {
+            if (!core.refuseUserInstall()) {
+              core.installDownload(index);
+            }
+          });
   // MO2 Revamped: several, one after another (after the menu or the click
   // that asked for it has closed)
   connect(

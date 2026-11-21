@@ -52,6 +52,8 @@ public:
   void setUpdateFrom(int revision);
 
   const Collections::CollectionLink& link() const { return m_session->link(); }
+  // inside a step that runs on a worker thread (extracting, hashing)
+  bool isWaiting() const { return m_session->waiting(); }
   bool isRunning() const;
 
   // MO2 Revamped: before an action that would break a running collection

@@ -514,6 +514,9 @@ public slots:
   // each an archive's path (DownloadManager::getArchivePath()), which finds
   // that very download, or a download's name
   void installDownloads(const QStringList& downloadNames, int priority = -1);
+  // MO2 Revamped: true, after telling the user, when an install the user asks
+  // for now would run inside another one (the install queue, a collection)
+  bool refuseUserInstall();
   void installArchives(const QStringList& archivePaths, int priority = -1);
   ModInfo::Ptr installArchive(const QString& archivePath, int priority = -1,
                               bool reinstallation     = false,
