@@ -42,6 +42,10 @@ class Launch:
     def __init__(self, game) -> None:
         self._game = game
         self.unread: list[Path] = []
+        # paks the background read couldn't read, by path, size and date: not
+        # cached, so each check listed them as unread again and read them
+        # again, forever (a damaged pak, one that needs LSLib)
+        self._unreadable: set[tuple[str, int, int]] = set()
         self._background: Worker | None = None
         self.cache = PakCache(game.plugin_data_path / "pak_cache.json")
         self.last_plan: Plan | None = None
@@ -437,10 +441,12 @@ class Launch:
         if self._background is not None and self._background.is_alive():
             return True
         self._background = None
-        if not self.unread:
+        paks = [p for p in self.unread if _stamp(p) not in self._unreadable]
+        self.unread = []
+        if not paks:
             return False
-        paks, self.unread = list(self.unread), []
-        self._background = Worker(lambda: _read_paks(self.cache, paks))
+        unreadable = self._unreadable
+        self._background = Worker(lambda: _read_paks(self.cache, paks, unreadable))
         self._background.start()
         return True
 
@@ -461,12 +467,25 @@ class Launch:
         return plan
 
 
-def _read_paks(cache: PakCache, paks: list[Path]) -> None:
+def _stamp(pak: Path) -> tuple[str, int, int] | None:
+    try:
+        st = pak.stat()
+    except OSError:
+        return None
+    return (str(pak).lower(), st.st_size, st.st_mtime_ns)
+
+
+def _read_paks(
+    cache: PakCache, paks: list[Path], unreadable: set[tuple[str, int, int]]
+) -> None:
     for pak in paks:
         try:
             cache.info(pak, None)
         except Exception:  # noqa: BLE001 - read again when the game starts
-            pass
+            stamp = _stamp(pak)
+            if stamp is not None:
+                # read again only once it changes (or when the game starts)
+                unreadable.add(stamp)
     cache.save()
 
 
