@@ -21,13 +21,80 @@ along with Base Preview plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QFileInfo>
 #include <QImageReader>
+#include <QBuffer>
+#include <QFontDatabase>
 #include <QLabel>
+#include <QMovie>
+#include <QPainter>
+#include <QPlainTextEdit>
 #include <QScreen>
-#include <QTextEdit>
+#include <QVBoxLayout>
 #include <QtPlugin>
 #include <utility.h>
 
 using namespace MOBase;
+
+namespace
+{
+
+// MO2 Revamped: the picture scaled to fit the preview with its proportions,
+// never above its own size, so a large picture never makes the window grow and
+// a small one stays sharp. An animated GIF plays
+class ImageView : public QWidget
+{
+public:
+  ImageView(const QString& fileName, const QByteArray& fileData, QWidget* parent)
+      : QWidget(parent)
+  {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    if (!fileData.isNull()) {
+      m_buffer.setData(fileData);
+      m_buffer.open(QIODevice::ReadOnly);
+      m_movie.setDevice(&m_buffer);
+    } else {
+      m_movie.setFileName(fileName);
+    }
+    if (m_movie.isValid() && m_movie.frameCount() > 1) {
+      QObject::connect(&m_movie, &QMovie::frameChanged, this, [this] {
+        m_picture = m_movie.currentPixmap();
+        update();
+      });
+      m_movie.start();
+      m_picture = m_movie.currentPixmap();
+    } else if (!fileData.isNull()) {
+      m_picture.loadFromData(fileData);
+    } else {
+      m_picture.load(fileName);
+    }
+  }
+
+  QSize pictureSize() const { return m_picture.size(); }
+
+  QSize sizeHint() const override { return m_picture.size().boundedTo(QSize(800, 600)); }
+  QSize minimumSizeHint() const override { return {64, 64}; }
+
+protected:
+  void paintEvent(QPaintEvent*) override
+  {
+    if (m_picture.isNull()) {
+      return;
+    }
+    const QSize size = m_picture.size().scaled(rect().size(), Qt::KeepAspectRatio)
+                           .boundedTo(m_picture.size());
+    QRect target(QPoint(0, 0), size);
+    target.moveCenter(rect().center());
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, size != m_picture.size());
+    painter.drawPixmap(target, m_picture);
+  }
+
+private:
+  QBuffer m_buffer;
+  QMovie m_movie;
+  QPixmap m_picture;
+};
+
+}  // namespace
 
 PreviewBase::PreviewBase() : m_MOInfo(nullptr) {}
 
@@ -145,38 +212,41 @@ QWidget* PreviewBase::genDataPreview(const QByteArray& fileData,
 QWidget* PreviewBase::genImagePreview(const QString& fileName, const QSize&,
                                       const QByteArray& fileData) const
 {
-  QLabel* label = new QLabel();
-  QPixmap pic;
-  if (fileData == nullptr) {
-    pic = QPixmap(fileName);
-  } else {
-    pic.loadFromData(fileData);
-  }
-  // MO2 Revamped: Wine/Proton can have no screen
-  const QScreen* screen = QApplication::primaryScreen();
-  QSize screenSize = screen != nullptr ? screen->geometry().size() : QSize(1920, 1080);
-  // ensure the output image is no more than 80% of the screen height.
-  // If the aspect ratio is higher than that of the screen this would still allow the
-  // image to extend beyond the screen but it ensures you can drag the window and close
-  // it
-  int maxHeight = static_cast<int>(screenSize.height() * 0.8f);
-  if (pic.size().height() > maxHeight) {
-    pic = pic.scaledToHeight(maxHeight, Qt::SmoothTransformation);
-  }
-  label->setPixmap(pic);
-  return label;
+  // MO2 Revamped: the picture fits the window (2.5.2 showed it at full size,
+  // only capped to 80% of the screen's height), with its size below it
+  auto* wrapper = new QWidget();
+  auto* layout  = new QVBoxLayout(wrapper);
+  layout->setContentsMargins(12, 12, 12, 8);
+  layout->setSpacing(8);
+  auto* view = new ImageView(fileName, fileData, wrapper);
+  layout->addWidget(view, 1);
+  auto* size = new QLabel(wrapper);
+  size->setAlignment(Qt::AlignCenter);
+  size->setText(view->pictureSize().isEmpty()
+                    ? tr("This picture can't be read.")
+                    : tr("%1 \xC3\x97 %2 pixels")  // "%1 × %2 pixels" in UTF-8
+                          .arg(view->pictureSize().width())
+                          .arg(view->pictureSize().height()));
+  layout->addWidget(size);
+  return wrapper;
 }
 
 QWidget* PreviewBase::genTxtPreview(const QString& fileName, const QSize&,
                                     const QByteArray& fileData) const
 {
-  QTextEdit* edit = new QTextEdit();
-  if (fileData == nullptr) {
-    edit->setText(MOBase::readFileText(fileName));
-  } else {
-    edit->setText(MOBase::decodeTextData(fileData));
-  }
+  // MO2 Revamped: plain text. 2.5.2's QTextEdit::setText read a file that
+  // looked like HTML as HTML. Settings, logs and scripts in a fixed-width font
+  // without wrapping, so their columns line up; a .txt wraps like prose
+  auto* edit = new QPlainTextEdit();
   edit->setReadOnly(true);
+  edit->setPlainText(fileData.isNull() ? MOBase::readFileText(fileName)
+                                       : MOBase::decodeTextData(fileData));
+  if (QFileInfo(fileName).suffix().compare("txt", Qt::CaseInsensitive) != 0) {
+    // a rule of its own: the theme's font for text fields would win over setFont()
+    edit->setStyleSheet(QStringLiteral("QPlainTextEdit { font-family: \"%1\"; }")
+                            .arg(QFontDatabase::systemFont(QFontDatabase::FixedFont).family()));
+    edit->setLineWrapMode(QPlainTextEdit::NoWrap);
+  }
   return edit;
 }
 
