@@ -16741,6 +16741,50 @@ Controlla le opzioni del gioco prima di giocare.</translation>
       <source>FNIS finished with a problem</source>
       <translation>FNIS è terminato con un problema</translation>
     </message>
+    <message>
+      <source>Start %1 anyway?</source>
+      <translation>Avviare comunque %1?</translation>
+    </message>
+    <message>
+      <source>Don&apos;t start</source>
+      <translation>Non avviare</translation>
+    </message>
+    <message>
+      <source>Start anyway</source>
+      <translation>Avvia comunque</translation>
+    </message>
+    <message>
+      <source>MO2 couldn&apos;t start FNIS (%1).</source>
+      <translation>MO2 non è riuscito ad avviare FNIS (%1).</translation>
+    </message>
+    <message>
+      <source>FNIS finished with a warning. The game can still run, but some animations may be missing.</source>
+      <translation>FNIS è terminato con un avviso. Il gioco può funzionare, ma alcune animazioni potrebbero mancare.</translation>
+    </message>
+    <message>
+      <source>FNIS stopped with a critical error, so the game&apos;s animations may be broken. Check FNIS&apos;s own window or log for what went wrong.</source>
+      <translation>FNIS si è fermato con un errore critico, quindi le animazioni del gioco potrebbero essere rotte. Controlla la finestra o il registro di FNIS per capire cosa è andato storto.</translation>
+    </message>
+    <message>
+      <source>MO2 couldn&apos;t tell whether FNIS finished correctly.</source>
+      <translation>MO2 non è riuscito a capire se FNIS è terminato correttamente.</translation>
+    </message>
+    <message>
+      <source>FNIS finished with a warning. Keep this result, or have MO2 ask to run FNIS again before the next game start?</source>
+      <translation>FNIS è terminato con un avviso. Tenere questo risultato, o far proporre a MO2 di eseguire di nuovo FNIS prima del prossimo avvio del gioco?</translation>
+    </message>
+    <message>
+      <source>FNIS stopped with a critical error. Keep this result anyway, or have MO2 ask to run FNIS again before the next game start?</source>
+      <translation>FNIS si è fermato con un errore critico. Tenere comunque questo risultato, o far proporre a MO2 di eseguire di nuovo FNIS prima del prossimo avvio del gioco?</translation>
+    </message>
+    <message>
+      <source>Ask again</source>
+      <translation>Chiedi di nuovo</translation>
+    </message>
+    <message>
+      <source>Keep this result</source>
+      <translation>Tieni questo risultato</translation>
+    </message>
   </context>
   <context>
     <name>ScriptExtenderSetup</name>
@@ -22289,6 +22333,60 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
     <message>
       <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
       <translation>Il leggimi può spiegare le opzioni dell&apos;installazione. Resta aperto accanto al programma di installazione finché non lo chiudi.</translation>
+    </message>
+  </context>
+  <context>
+    <name>PreviewBase</name>
+    <message>
+      <source>This picture can&apos;t be read.</source>
+      <translation>Impossibile leggere questa immagine.</translation>
+    </message>
+    <message>
+      <source>%1 × %2 pixels</source>
+      <translation>%1 × %2 pixel</translation>
+    </message>
+  </context>
+  <context>
+    <name>PreviewBsa</name>
+    <message>
+      <source>MO2 can&apos;t read this archive: its format isn&apos;t one it knows, or the file is damaged.</source>
+      <translation>MO2 non riesce a leggere questo archivio: il formato non è tra quelli che conosce o il file è danneggiato.</translation>
+    </message>
+    <message>
+      <source>Unknown format</source>
+      <translation>Formato sconosciuto</translation>
+    </message>
+    <message>
+      <source>%1 archive · %2 files · %3</source>
+      <translation>Archivio %1 · %2 file · %3</translation>
+    </message>
+    <message>
+      <source>compressed</source>
+      <translation>compresso</translation>
+    </message>
+    <message>
+      <source>not compressed</source>
+      <translation>non compresso</translation>
+    </message>
+    <message>
+      <source>Archive type %1, flags %2</source>
+      <translation>Tipo di archivio %1, flag %2</translation>
+    </message>
+    <message>
+      <source>Filter the archive&apos;s files</source>
+      <translation>Filtra i file dell&apos;archivio</translation>
+    </message>
+    <message>
+      <source>Files in the archive</source>
+      <translation>File nell&apos;archivio</translation>
+    </message>
+    <message>
+      <source>Filter files</source>
+      <translation>Filtra file</translation>
+    </message>
+    <message>
+      <source>%1 archive · 1 file · %2</source>
+      <translation>Archivio %1 · 1 file · %2</translation>
     </message>
   </context>
 </TS>

@@ -26,6 +26,7 @@ along with Bsa Preview plugin.  If not, see <http://www.gnu.org/licenses/>.
 #include <QImageReader>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QScreen>
 #include <QStandardItemModel>
 #include <QTextEdit>
@@ -142,55 +143,83 @@ void PreviewBsa::readFiles(const BSA::Folder::Ptr archiveFolder)
 QWidget* PreviewBsa::genBsaPreview(const QString& fileName, const QSize&)
 {
   m_Files.clear();
+  // MO2 Revamped: a short line about the archive above its files, the filter
+  // above the list (2.5.2 put it below, under a long line of raw fields), and a
+  // message when the archive can't be read (2.5.2 set it on a label it never
+  // showed, so the preview was empty)
   QWidget* wrapper    = new QWidget();
-  QVBoxLayout* layout = new QVBoxLayout();
+  QVBoxLayout* layout = new QVBoxLayout(wrapper);
+  layout->setContentsMargins(12, 10, 12, 12);
+  layout->setSpacing(8);
 
-  QLabel* infoLabel = new QLabel();
+  QLabel* infoLabel = new QLabel(wrapper);
+  infoLabel->setWordWrap(true);
+  infoLabel->setTextFormat(Qt::PlainText);
+  layout->addWidget(infoLabel);
+
   BSA::Archive arch;  // bs_archive_auto is easier to use, but is less performant when
                       // working with memory
   // MO2 Revamped: the wide path, so names outside the system code page work
-  BSA::EErrorCode res = arch.read(
-      std::filesystem::path(QDir::toNativeSeparators(fileName).toStdWString()), true);
+  // bsatk throws for a file that isn't an archive at all ("not a bsa or ba2
+  // file"), which MO2 showed as a bare error box
+  BSA::EErrorCode res = BSA::ERROR_INVALIDDATA;
+  try {
+    res = arch.read(
+        std::filesystem::path(QDir::toNativeSeparators(fileName).toStdWString()), true);
+  } catch (const std::exception& e) {
+    log::error("invalid bsa '{}': {}", fileName, e.what());
+  }
   if ((res != BSA::ERROR_NONE) && (res != BSA::ERROR_INVALIDHASHES)) {
     log::error("invalid bsa '{}', error {}", fileName, res);
-    infoLabel->setText("Unable to parse archive. Unrecognized format.");
+    infoLabel->setText(tr("MO2 can't read this archive: its format isn't one it knows, "
+                          "or the file is damaged."));
+    layout->addStretch(1);
     arch.close();
     return wrapper;
   }
   const BSA::Folder::Ptr archiveDir = arch.getRoot();
   readFiles(archiveDir);
-  QString infoString =
-      tr("Archive Format: %1 , Compression: %2 , File count: %3 , Version: %4 , "
-         "Archive type: %5 , Archive flags: %6");
-  // tr("Archive Format: %1 , Compression: %2 , File count: %3 , Version: %4 , "
-  //    "Archive type: %5 , Archive flags: %6 , Contents flags: %7");
-  infoString = infoString.arg(getFormat(arch.getType()))
-                   .arg((arch.getFlags() & 0x00000004) ? tr("yes") : tr("no"))
-                   .arg(m_Files.size())
-                   .arg(getVersion(arch.getType()))
-                   .arg(arch.getType())
-                   .arg("0x" + QString::number(arch.getFlags(), 16));
-  //.arg("0x" + QString::number(arch.get_file_flags(), 16));
-  infoLabel->setText(infoString);
-  layout->addWidget(infoLabel);
 
-  QTreeView* view            = new QTreeView();
+  QString format;
+  try {
+    format = getFormat(arch.getType());
+  } catch (const std::exception&) {
+    format = tr("Unknown format");
+  }
+  const bool compressed = (arch.getFlags() & 0x00000004) != 0;
+  infoLabel->setText(
+      // the dots are UTF-8 middle dots
+      (m_Files.size() == 1
+           ? tr("%1 archive \xC2\xB7 1 file \xC2\xB7 %2")
+                 .arg(format)
+                 .arg(compressed ? tr("compressed") : tr("not compressed"))
+           : tr("%1 archive \xC2\xB7 %2 files \xC2\xB7 %3")
+                 .arg(format)
+                 .arg(QLocale().toString(static_cast<qlonglong>(m_Files.size())))
+                 .arg(compressed ? tr("compressed") : tr("not compressed"))));
+  infoLabel->setToolTip(tr("Archive type %1, flags %2")
+                            .arg(arch.getType())
+                            .arg("0x" + QString::number(arch.getFlags(), 16)));
+
+  QLineEdit* lineEdit = new QLineEdit(wrapper);
+  lineEdit->setAccessibleName(tr("Filter the archive's files"));
+  layout->addWidget(lineEdit);
+
+  QTreeView* view = new QTreeView(wrapper);
+  view->setAccessibleName(tr("Files in the archive"));
   // MO2 Revamped: from MO2 79cdca3
   SimpleFileTreeModel* model = new SimpleFileTreeModel(m_Files, view);
 
   view->setModel(model);
-  layout->addWidget(view);
-
-  QLineEdit* lineEdit = new QLineEdit();
-  layout->addWidget(lineEdit);
+  layout->addWidget(view, 1);
 
   model->setFilterWidgetEdit(lineEdit);
   model->setFilterWidgetList(view);
+  lineEdit->setPlaceholderText(tr("Filter files"));
 
   view->setSortingEnabled(true);
   view->sortByColumn(0, Qt::SortOrder::AscendingOrder);
 
-  wrapper->setLayout(layout);
   arch.close();
   return wrapper;
 }
