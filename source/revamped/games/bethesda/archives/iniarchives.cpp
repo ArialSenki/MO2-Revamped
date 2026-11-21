@@ -34,14 +34,19 @@ QString IniDataArchives::iniPath(const MOBase::IProfile* profile) const
 QStringList IniDataArchives::archives(const MOBase::IProfile* profile) const
 {
   const ArchiveDefinition& a = m_Game->definition().archives;
-  const QString value = iniValue(QDir::toNativeSeparators(iniPath(profile)), "Archive",
-                                 a.listKey.toString(), "", a.maxListLength);
+  const QString ini          = QDir::toNativeSeparators(iniPath(profile));
   QStringList out;
-  if (value.isEmpty()) {
-    return out;
-  }
-  for (const QString& name : value.split(',')) {
-    out.append(name.trimmed());
+  for (const QStringView key : {a.listKey, a.listKey2}) {
+    if (key.isEmpty()) {
+      continue;
+    }
+    const QString value = iniValue(ini, "Archive", key.toString(), "", a.maxListLength);
+    if (value.isEmpty()) {
+      continue;
+    }
+    for (const QString& name : value.split(',')) {
+      out.append(name.trimmed());
+    }
   }
   return out;
 }
@@ -71,11 +76,23 @@ void IniDataArchives::removeArchive(MOBase::IProfile* profile, const QString& ar
 
 void IniDataArchives::write(MOBase::IProfile* profile, const QStringList& archives)
 {
-  const QString ini = iniPath(profile);
-  if (!setIniValue(ini, "Archive", m_Game->definition().archives.listKey.toString(),
-                   archives.join(", "))) {
-    MOBase::log::warn("failed to set archives in \"{}\"", ini);
+  const ArchiveDefinition& a = m_Game->definition().archives;
+  const QString ini          = iniPath(profile);
+  const auto set             = [&ini](QStringView key, const QString& value) {
+    if (!setIniValue(ini, "Archive", key.toString(), value)) {
+      MOBase::log::warn("failed to set archives in \"{}\"", ini);
+    }
+  };
+  const QString list = archives.join(", ");
+  if (a.listKey2.isEmpty() || list.length() <= a.splitLength) {
+    // a second key keeps what it had (MO2's rule; the list is read from both)
+    set(a.listKey, list);
+    return;
   }
+  // split after the last name that fits, as MO2 does
+  const qsizetype split = list.lastIndexOf(',', a.splitLength + 1);
+  set(a.listKey, list.mid(0, split));
+  set(a.listKey2, list.mid(split + 2));
 }
 
 }  // namespace mo2r::bethesda

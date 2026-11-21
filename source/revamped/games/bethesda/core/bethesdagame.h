@@ -93,6 +93,8 @@ public:  // IPluginGame
   QString gameNexusName() const override;
   QStringList iniFiles() const override;
   QStringList DLCPlugins() const override;
+  // from the definition's ccFile, read again when it changes
+  QStringList CCPlugins() const override;
   LoadOrderMechanism loadOrderMechanism() const override;
   SortMechanism sortMechanism() const override;
   int nexusModOrganizerID() const override;
@@ -130,6 +132,7 @@ private:
   const GameDefinition& m_Def;
   MOBase::IOrganizer* m_Organizer = nullptr;
   FileCache<QString> m_VersionCache;
+  FileCache<QStringList> m_CcCache;
 };
 
 }  // namespace mo2r::bethesda

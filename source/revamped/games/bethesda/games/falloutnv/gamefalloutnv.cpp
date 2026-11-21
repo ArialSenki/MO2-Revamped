@@ -61,6 +61,7 @@ namespace
   // 4fa3d8d9b2cb4714a19a38d1a598be8f, Gun Runners' Arsenal
   // 7dcfb9cd9d134728b2646466c34c7b3b, Courier's Stash ee9a44b4530942499ef1c8c390731fce)
   constexpr QStringView EpicApps[]    = {u"5daeb974a22a435988892319b3a4f476"};
+  constexpr QStringView GogIds[]      = {u"1454587428"};
 
   constexpr BoolSetting Settings[] = {
       {u"enable_loot_sorting",
@@ -89,11 +90,14 @@ namespace
       .dataFolder         = u"data",
       .myGamesFolder      = u"FalloutNV",
       .variantFolders     = Folders,
+      // MO2's game_falloutNV maps them to FalloutNV on every variant
+      .listsAlsoInDefaultAppData = true,
       .iniFiles           = IniFiles,
       .defaultIni         = u"fallout_default.ini",
       .primaryPlugins     = Primary,
       .dlcPlugins         = Dlc,
       .loadOrder          = LoadOrderKind::FileTime,
+      .lightPlugins       = false,
       .lootSortingSetting = u"enable_loot_sorting",
 
       .saveFormat    = SaveFormat::Fallout3,
@@ -118,7 +122,7 @@ namespace
                       .bethesdaKey   = u"Software\\Bethesda Softworks\\FalloutNV",
                       .steamAppId    = u"22380",
                       .steamFolder   = u"Fallout New Vegas",
-                      .gogId         = u"1454587428",
+                      .gogIds        = GogIds,
                       .epicAppNames  = EpicApps,
                       .epicSubfolder = u"Fallout New Vegas*"},
       .settings    = Settings};

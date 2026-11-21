@@ -63,4 +63,13 @@ std::vector<std::wstring> readLoadOrderTxt(std::string_view bytes);
 
 bool sameName(std::wstring_view a, std::wstring_view b);
 
+// the load order MO2 is given: the primary plugins, then the listed ones
+// (each once, primary ones skipped), then the present plugins no list placed,
+// by name (ignoring case, then as written) so they're in the same order on
+// every read. MO2's own plugins left those in whatever order the plugin list
+// had them, which changes between runs.
+std::vector<std::wstring> completeLoadOrder(const std::vector<std::wstring>& primary,
+                                            const std::vector<std::wstring>& listed,
+                                            const std::vector<std::wstring>& present);
+
 }  // namespace mo2r::bethesda

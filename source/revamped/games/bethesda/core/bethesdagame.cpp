@@ -12,7 +12,9 @@
 #include "extender/bethesdaextender.h"
 #include "ini/inifiles.h"
 #include "ini/localsavegames.h"
+#include "plugins/asteriskplugins.h"
 #include "plugins/filetimeplugins.h"
+#include "plugins/loadorderfiles.h"
 #include "saves/bethesdasavegame.h"
 #include "saves/savegameinfo.h"
 #include "util/peheader.h"
@@ -30,6 +32,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QFile>
 #include <QIcon>
 
 #include <cwchar>
@@ -170,8 +173,7 @@ void BethesdaGame::registerFeatures()
     registerFeature(std::make_shared<FileTimeGamePlugins>(m_Organizer));
     break;
   case LoadOrderKind::PluginsTxtStar:
-    // phase 2 of the framework (Skyrim SE); no game uses it yet
-    MOBase::log::error("{}: plugins.txt with '*' is not supported yet", name());
+    registerFeature(std::make_shared<AsteriskGamePlugins>(m_Organizer, m_Def.lightPlugins));
     break;
   }
   registerFeature(std::make_shared<DataFolderMods>(this));
@@ -195,7 +197,12 @@ QString BethesdaGame::identifyGamePath() const
       path = findBethesdaInstall(s.bethesdaKey.toString());
       break;
     case Store::Gog:
-      path = findGogInstall(s.gogId.toString());
+      for (const QStringView id : s.gogIds) {
+        path = findGogInstall(id.toString());
+        if (!path.isEmpty()) {
+          break;
+        }
+      }
       break;
     case Store::Steam:
       path = findSteamInstall(s.steamAppId.toString(), s.steamFolder.toString());
@@ -338,6 +345,9 @@ std::vector<std::shared_ptr<const MOBase::ISaveGame>>
 BethesdaGame::listSaves(QDir folder) const
 {
   std::vector<std::shared_ptr<const MOBase::ISaveGame>> saves;
+  if (m_Def.saveFormat == SaveFormat::None) {
+    return saves;
+  }
   const QStringList filter{"*." + m_Def.saveExtension.toString()};
   for (const QFileInfo& info : folder.entryInfoList(filter, QDir::Files)) {
     if (auto save = makeSaveGame(info.filePath())) {
@@ -350,6 +360,8 @@ BethesdaGame::listSaves(QDir folder) const
 std::shared_ptr<const MOBase::ISaveGame> BethesdaGame::makeSaveGame(const QString& path) const
 {
   switch (m_Def.saveFormat) {
+  case SaveFormat::None:
+    return nullptr;
   case SaveFormat::Fallout3:
     return readFallout3SaveGame(this, path);
   }
@@ -392,6 +404,9 @@ QList<MOBase::ExecutableInfo> BethesdaGame::executables() const
     }
     if (epic && e.epicPortal) {
       info.withArgument("-EpicPortal");
+    }
+    if (!e.steamAppId.isEmpty()) {
+      info.withSteamAppId(e.steamAppId.toString());
     }
     out.append(info);
   }
@@ -470,7 +485,41 @@ QStringList BethesdaGame::iniFiles() const
 
 QStringList BethesdaGame::primaryPlugins() const
 {
-  return toList(m_Def.primaryPlugins);
+  // the Creation Club plugins load right after the game's own masters
+  QStringList out = toList(m_Def.primaryPlugins);
+  out.append(CCPlugins());
+  return out;
+}
+
+QStringList BethesdaGame::CCPlugins() const
+{
+  if (m_Def.ccFile.isEmpty()) {
+    return {};
+  }
+  // read again only when the file changes: MO2 asks for the primary plugins
+  // many times per refresh
+  const QString path = gameDirectory().filePath(m_Def.ccFile.toString());
+  return m_CcCache.get(path, [&path] {
+    QStringList plugins;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      return plugins;
+    }
+    // a few KB with every Creation Club item; anything far larger isn't one
+    constexpr qint64 MaxCcFile = 1024 * 1024;
+    if (file.size() > MaxCcFile) {
+      MOBase::log::error("'{}' is {} bytes, not read", path, file.size());
+      return plugins;
+    }
+    const QByteArray bytes = file.readAll();
+    // one name per line, UTF-8; comments, blank lines and repeats (ignoring
+    // case) skipped, as MO2 has read it
+    for (const std::wstring& name :
+         readLoadOrderTxt(std::string_view(bytes.constData(), bytes.size()))) {
+      plugins.append(QString::fromStdWString(name));
+    }
+    return plugins;
+  });
 }
 
 QStringList BethesdaGame::DLCPlugins() const
@@ -520,14 +569,17 @@ MappingType BethesdaGame::mappings() const
   if (m_Organizer == nullptr) {
     return result;
   }
-  // the profile's lists where the game reads them; a variant with its own
-  // AppData folder (Epic) gets them there too
+  // the profile's lists where the game reads them: the variant's AppData
+  // folder, and for some games the default one as well
   const QString appData = localAppFolder();
   const QString own     = variantFolder();
+  const QString base    = m_Def.myGamesFolder.toString();
   for (const QString file : {QStringLiteral("plugins.txt"), QStringLiteral("loadorder.txt")}) {
     const QString source = m_Organizer->profilePath() + "/" + file;
-    result.push_back({source, appData + "/" + gameShortName() + "/" + file, false, false});
-    if (own != gameShortName()) {
+    if (m_Def.listsAlsoInDefaultAppData) {
+      result.push_back({source, appData + "/" + base + "/" + file, false, false});
+    }
+    if (!m_Def.listsAlsoInDefaultAppData || own != base) {
       result.push_back({source, appData + "/" + own + "/" + file, false, false});
     }
   }

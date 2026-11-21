@@ -52,12 +52,18 @@ QStringList DataFolderMods::matching(const QString& prefix, const QString& suffi
 
 QStringList DataFolderMods::mods(bool onlyOfficial) const
 {
-  const QStringList dlc     = m_Game->DLCPlugins();
-  const QStringList primary = m_Game->primaryPlugins();
+  // the DLC and Creation Club plugins are mods of their own (official ones),
+  // even where they count as primary plugins; the game's masters aren't
+  QStringList official = m_Game->DLCPlugins();
+  official.append(m_Game->CCPlugins());
+  QStringList masters = m_Game->primaryPlugins();
+  masters.removeIf([&official](const QString& name) {
+    return official.contains(name, Qt::CaseInsensitive);
+  });
   QStringList out;
   for (const QString& name : dataFiles()) {
-    if (isPlugin(name) && !primary.contains(name, Qt::CaseInsensitive) &&
-        (!onlyOfficial || dlc.contains(name, Qt::CaseInsensitive))) {
+    if (isPlugin(name) && !masters.contains(name, Qt::CaseInsensitive) &&
+        (!onlyOfficial || official.contains(name, Qt::CaseInsensitive))) {
       out.append(name.chopped(4));
     }
   }

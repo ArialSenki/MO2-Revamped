@@ -38,6 +38,7 @@ enum class LoadOrderKind
 
 enum class SaveFormat
 {
+  None,     // not read yet: the Saves tab stays empty (Skyrim SE until phase 3)
   Fallout3  // FO3SAVEGAME: Fallout 3 and New Vegas
 };
 
@@ -61,7 +62,7 @@ struct StoreLocations
   QStringView bethesdaKey;
   QStringView steamAppId;
   QStringView steamFolder;  // under steamapps/common
-  QStringView gogId;
+  Names gogIds;  // tried in this order
   Names epicAppNames;
   // the Epic install location holds the game in a subfolder matching this
   QStringView epicSubfolder;
@@ -72,13 +73,23 @@ struct ExtenderDefinition
   QStringView loader;           // in the game folder: "nvse_loader.exe"
   QStringView pluginPath;       // in Data: "nvse/plugins"
   QStringView coSaveExtension;  // next to each save: "nvse"
+  // the runtime DLL the loader looks for is this + the game version
+  // ("skse64_" -> skse64_1_6_1170.dll); empty: no check
+  QStringView runtimePrefix;
+  // in Data: where the Address Library for the extender's plugins goes
+  // ("SKSE/Plugins"); empty: no check
+  QStringView addressLibraryFolder;
 };
 
 struct ArchiveDefinition
 {
   QStringView iniFile;  // the profile or My Games INI with the [Archive] lists
   QStringView listKey;  // "SArchiveList"
-  int maxListLength;    // characters read from the key
+  int maxListLength;    // characters read from each key
+  // a second key the list goes on in once it's longer than splitLength
+  // (Skyrim SE: SResourceArchiveList2 after 255 characters); empty: one key
+  QStringView listKey2;
+  int splitLength;
   Names vanilla;
   QStringView invalidationBsa;      // empty: no BSA invalidation
   std::uint32_t invalidationBsaVersion;  // 0x67 Oblivion, 0x68 the others
@@ -133,6 +144,7 @@ struct ExecutableDefinition
   QStringView argument;
   bool epicPortal;  // gets -EpicPortal on the Epic variant
   bool notOnEpic;   // left out on the Epic variant
+  QStringView steamAppId = {};  // Steam starts it as this app (the Creation Kit)
 };
 
 struct BoolSetting
@@ -168,11 +180,19 @@ struct GameDefinition
   QStringView dataFolder;     // in the game folder
   QStringView myGamesFolder;  // also the AppData folder with plugins.txt
   std::span<const VariantFolder> variantFolders;
+  // the profile's plugin lists are also mapped to the myGamesFolder AppData
+  // folder when the variant has its own (New Vegas' Epic edition); otherwise
+  // only to the variant's
+  bool listsAlsoInDefaultAppData;
   Names iniFiles;            // the first is the game's main INI
   QStringView defaultIni;    // in the game folder: the main INI's defaults
   Names primaryPlugins;
   Names dlcPlugins;
+  // in the game folder: the Creation Club plugins, one per line; they load
+  // after the primary ones and count as such ("Skyrim.ccc"); empty: none
+  QStringView ccFile;
   LoadOrderKind loadOrder;
+  bool lightPlugins;  // .esl and the ESL flag (Skyrim SE, Fallout 4)
   QStringView lootSortingSetting;  // LOOT sorting only when this setting is on
 
   // --- saves ---

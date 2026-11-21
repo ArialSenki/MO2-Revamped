@@ -3,7 +3,9 @@
 //
 // MO2's DataArchives feature: the BSAs the game loads by itself are listed in
 // its INI ([Archive] SArchiveList for Fallout 3 and New Vegas), comma
-// separated. The profile's INI with local settings, the My Games one without.
+// separated; Skyrim SE splits it over SResourceArchiveList and
+// SResourceArchiveList2. The profile's INI with local settings, the My Games
+// one without.
 #pragma once
 
 #include <dataarchives.h>

@@ -4,7 +4,9 @@
 
 #include <Windows.h>
 
+#include <algorithm>
 #include <unordered_set>
+#include <utility>
 
 namespace mo2r::bethesda
 {
@@ -103,6 +105,40 @@ namespace
 bool sameName(std::wstring_view a, std::wstring_view b)
 {
   return a.size() == b.size() && folded(a) == folded(b);
+}
+
+std::vector<std::wstring> completeLoadOrder(const std::vector<std::wstring>& primary,
+                                            const std::vector<std::wstring>& listed,
+                                            const std::vector<std::wstring>& present)
+{
+  std::vector<std::wstring> out;
+  out.reserve(primary.size() + listed.size() + present.size());
+  std::unordered_set<std::wstring> placed;
+  const auto place = [&](const std::wstring& name) {
+    if (placed.insert(folded(name)).second) {
+      out.push_back(name);
+    }
+  };
+  for (const auto& name : primary) {
+    place(name);
+  }
+  for (const auto& name : listed) {
+    place(name);
+  }
+  std::vector<std::pair<std::wstring, std::wstring>> rest;  // (folded, name)
+  for (const auto& name : present) {
+    std::wstring key = folded(name);
+    if (!placed.contains(key)) {
+      rest.emplace_back(std::move(key), name);
+    }
+  }
+  std::sort(rest.begin(), rest.end());
+  for (const auto& [key, name] : rest) {
+    if (placed.insert(key).second) {
+      out.push_back(name);
+    }
+  }
+  return out;
 }
 
 WrittenList writePluginsTxt(const std::vector<PluginState>& order,
