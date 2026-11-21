@@ -912,6 +912,18 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
     return Error;
   }
 
+  // MO2 Revamped: the loader of a mod's Root folder with no runtime DLL for
+  // the game's version (FOSE on Steam's Fallout 3 1.7.0.4): asked here, instead
+  // of a game without its extender and plugins
+  if (!rootPlan.extenderMismatchDlls.isEmpty()) {
+    if (const auto extender = m_core.gameFeatures().gameFeature<ScriptExtender>()) {
+      if (!ScriptExtenderSetup::confirmRootLaunch(parent, *extender, *game,
+                                                  rootPlan.extenderMismatchDlls)) {
+        return Error;
+      }
+    }
+  }
+
   // MO2 Revamped: the script extender's loader with a DLL for another game
   // version (the game updated) doesn't start the game; asked before Steam starts
   if (const auto extender = m_core.gameFeatures().gameFeature<ScriptExtender>()) {

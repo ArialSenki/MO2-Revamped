@@ -16743,8 +16743,20 @@ Vérifiez les options du jeu avant de jouer.</translation>
       <translation>%1 est pour une autre version du jeu</translation>
     </message>
     <message>
-      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once. This happens after a game update: %2's download page has the build for %1.</source>
-      <translation>Le jeu est en version %1, et le %2 de son dossier est pour la %3. Le jeu ne démarrera pas avec lui, ou se fermera aussitôt. Cela arrive après une mise à jour du jeu : la page de téléchargement de %2 propose le build pour la %1.</translation>
+      <source>The game is version %1, and the %2 in its folder is for %3. The game won't start through it, or closes at once.</source>
+      <translation>Le jeu est en version %1, et le %2 de son dossier est pour la %3. Le jeu ne démarrera pas avec lui, ou se fermera aussitôt.</translation>
+    </message>
+    <message>
+      <source>The game is version %1, and the %2 in your mods is for %3. The game won't start through it, or starts without %2 and its plugins.</source>
+      <translation>Le jeu est en version %1, et le %2 de vos mods est pour la %3. Le jeu ne démarrera pas avec lui, ou démarrera sans %2 ni ses plugins.</translation>
+    </message>
+    <message>
+      <source>FOSE only runs on 1.7.0.3: run the Fallout Anniversary Patcher (a mod on Nexus, often in the collection) once to bring the game to that version, then start FOSE again.</source>
+      <translation>FOSE ne fonctionne qu'en 1.7.0.3 : lancez une fois le Fallout Anniversary Patcher (un mod sur Nexus, souvent dans la collection) pour mettre le jeu dans cette version, puis relancez FOSE.</translation>
+    </message>
+    <message>
+      <source>This happens after a game update: %1's download page has the build for %2, or the list's guide says how to get version %3.</source>
+      <translation>Cela arrive après une mise à jour du jeu : la page de téléchargement de %1 propose le build pour la %2, ou le guide de la liste explique comment obtenir la version %3.</translation>
     </message>
     <message>
       <source>Start anyway</source>
