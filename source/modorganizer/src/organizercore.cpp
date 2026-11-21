@@ -3185,7 +3185,9 @@ RootLaunch::Plan OrganizerCore::planRootLaunch(
     }
     const QString rel =
         QDir(gameDir).relativeFilePath(QDir::cleanPath(load.library()));
-    if (!rel.isEmpty() && !rel.startsWith(QStringLiteral(".."))) {
+    // a DLL on another drive comes back as an absolute path: not in the game folder
+    if (!rel.isEmpty() && !rel.startsWith(QStringLiteral("..")) &&
+        QDir::isRelativePath(rel)) {
       in.forcedByGame.append(rel.toLower());
     }
   }
