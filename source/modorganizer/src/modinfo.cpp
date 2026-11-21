@@ -321,10 +321,15 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     mods.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
     QDirIterator modIter(mods);
     std::vector<QString> modPaths;
+    // MO2 Revamped: the listing already carries each folder's creation time
+    // (Windows hands it over with the name), so the mods take it from here
+    // rather than each asking the disk again; ~300 ms on ~3600 mods cold
+    QHash<QString, QDateTime> creationTimes;
     while (modIter.hasNext()) {
-      const QString modPath = modIter.next();
-      if (modIter.fileName() != QLatin1String(MOShared::ReplacedModsFolder)) {
-        modPaths.push_back(modPath);
+      const QFileInfo info = modIter.nextFileInfo();
+      if (info.fileName() != QLatin1String(MOShared::ReplacedModsFolder)) {
+        modPaths.push_back(info.filePath());
+        creationTimes.insert(QDir(info.filePath()).absolutePath(), info.birthTime());
       }
     }
 
@@ -340,13 +345,19 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     std::for_each(std::execution::par, order.begin(), order.end(), [&](std::size_t i) {
       parsed[i] = std::make_unique<QSettings>(modPaths[i] + QStringLiteral("/meta.ini"),
                                               QSettings::IniFormat);
+      // Qt turns a section's text into values the first time it's read, and
+      // reading the mod lists the groups, which does every section: do it here
+      parsed[i]->childGroups();
     });
 
     tParse = stage.restart();
+    ModInfoRegular::setKnownCreationTimes(std::move(creationTimes));
     for (const QString& modPath : modPaths) {
       createFrom(QDir(modPath), core);
     }
+    ModInfoRegular::setKnownCreationTimes({});
     tCreate = stage.restart();
+    ModInfoRegular::logCreateTimes(static_cast<qsizetype>(modPaths.size()));
 
     std::for_each(std::execution::par, parsed.begin(), parsed.end(), [](auto& settings) {
       settings.reset();

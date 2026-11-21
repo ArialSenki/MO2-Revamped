@@ -1,6 +1,9 @@
 #ifndef MODINFOREGULAR_H
 #define MODINFOREGULAR_H
 
+#include <array>
+#include <QDateTime>
+#include <QHash>
 #include <limits>
 
 #include "modinfowithconflictinfo.h"
@@ -22,6 +25,15 @@ class ModInfoRegular : public ModInfoWithConflictInfo
 
 public:
   ~ModInfoRegular();
+
+  // MO2 Revamped: logs where making the mods spent its time since the last
+  // call, and starts counting again
+  static void logCreateTimes(qsizetype mods);
+
+  // MO2 Revamped: creation times the mods folder listing already gave, by the
+  // mod's absolute path; mods made while it is set take theirs from it instead
+  // of asking the disk once per mod (interface thread only, cleared with {})
+  static void setKnownCreationTimes(QHash<QString, QDateTime> times);
 
   virtual bool isRegular() const override { return true; }
 
@@ -443,6 +455,10 @@ protected:
   virtual std::set<int> doGetContents() const override;
 
   ModInfoRegular(const QDir& path, OrganizerCore& core);
+  // time spent making mods: creation times, meta.ini values, archive lists and
+  // the rest, in nanoseconds (interface thread only)
+  static std::array<qint64, 4> s_CreateTimes;
+  static QHash<QString, QDateTime> s_KnownCreationTimes;
 
 private:
   QString m_Name;
