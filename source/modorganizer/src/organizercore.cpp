@@ -2,6 +2,7 @@
 #include "nolvus.h"
 #include "collectionmanifest.h"
 #include <QDateTime>
+#include <QElapsedTimer>
 #include "categoriesdialog.h"
 #include "delayedfilewriter.h"
 #include "directoryrefresher.h"
@@ -2399,6 +2400,8 @@ bool OrganizerCore::syncOriginPriorities(const std::vector<unsigned int>& change
 void OrganizerCore::modStatusChanged(unsigned int index)
 {
   TimeThis tt("OrganizerCore::modStatusChanged()");
+  QElapsedTimer stage;
+  stage.start();
   // the structure in use now is replaced when the refresh ends
   if (m_DirectoryUpdate) {
     m_RefreshPending = true;
@@ -2423,14 +2426,20 @@ void OrganizerCore::modStatusChanged(unsigned int index)
       }
     }
 
+    const qint64 tStructure = stage.restart();
     syncOriginPriorities({index});
+    const qint64 tPriorities = stage.restart();
 
     // MO2 Revamped: enabling already rebuilt the plugin list from the updated
     // structure (and activated the mod's plugins); a second rebuild cost as
     // much as the first, ~0.3-0.7 s with a list of thousands of plugins
     refreshListsAfterToggle(enabled && m_ESPListRebuilds != rebuildsBefore);
+    const qint64 tLists = stage.restart();
     clearCaches({index});
     m_ModList.notifyModStateChanged({index});
+    log::debug("mod toggle: structure {} ms, priorities {} ms, lists {} ms, caches and "
+               "view {} ms",
+               tStructure, tPriorities, tLists, stage.elapsed());
 
   } catch (const std::exception& e) {
     reportError(tr("failed to update mod list: %1").arg(e.what()));
