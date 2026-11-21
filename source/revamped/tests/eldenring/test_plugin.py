@@ -353,6 +353,28 @@ class Environment(unittest.TestCase):
         self.add_convergence(nightreign)
         self.assertIsNone(self.save_extension(nightreign, nightreign=True))
 
+    def test_regulation_fix_with_a_mod_regulation(self):
+        # Convergence's regulation.bin doesn't fit in a save: the game said
+        # "Failed to save game. Save data is corrupted" without the fix
+        appdata_folder()
+        organizer = FakeOrganizer()
+        self.add_convergence(organizer)
+        game = game_for(organizer)
+        ini = organizer.write_profile_ini("[Startup]\n")
+        game._activate_profile_config_environment(ini, [])
+        self.assertEqual(os.environ.get(game.RegulationFixEnvironment), "1")
+        game._restore_profile_config_environment()
+        self.assertIsNone(os.environ.get(game.RegulationFixEnvironment))
+
+        plain = FakeOrganizer()
+        plain.add_mod("Loose", ["parts/am_m_0000.partsbnd.dcx"])
+        game = game_for(plain)
+        game._activate_profile_config_environment(plain.write_profile_ini("[Startup]\n"), [])
+        try:
+            self.assertIsNone(os.environ.get(game.RegulationFixEnvironment))
+        finally:
+            game._restore_profile_config_environment()
+
     def test_reforged_still_saves_to_err(self):
         appdata_folder()
         organizer = FakeOrganizer()

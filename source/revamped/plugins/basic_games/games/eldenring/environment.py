@@ -98,6 +98,7 @@ class EnvironmentMixin:
                 self.SaveExtensionAcceptedEnvironment,
                 self.SoundFoldersEnvironment,
                 self.BootBoostEnvironment,
+                self.RegulationFixEnvironment,
             )
         }
         # the compatibility DLL also runs with Reforged: it skips BootBoost
@@ -132,6 +133,10 @@ class EnvironmentMixin:
             )
         else:
             os.environ.pop(self.SaveExtensionEnvironment, None)
+        if self._active_regulation_mod() is not None:
+            os.environ[self.RegulationFixEnvironment] = "1"
+        else:
+            os.environ.pop(self.RegulationFixEnvironment, None)
         sound_folders = self._active_sound_folders()
         if sound_folders:
             os.environ[self.SoundFoldersEnvironment] = ";".join(sound_folders)
@@ -234,6 +239,15 @@ class EnvironmentMixin:
             return self.ReforgedSaveExtension, "ELDEN RING Reforged"
         if self._active_convergence():
             return self.ConvergenceSaveExtension, "The Convergence"
+        return None
+
+    def _active_regulation_mod(self) -> str | None:
+        """The active mod whose regulation.bin the game reads, if any."""
+        if self.GameShortName != "eldenring":
+            return None
+        for name, root, active in reversed(self._mod_folders()):
+            if active and (root / "regulation.bin").is_file():
+                return name
         return None
 
     def _active_convergence(self) -> bool:

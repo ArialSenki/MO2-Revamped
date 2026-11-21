@@ -3158,6 +3158,40 @@ void save_extension_failed(const char* message, const wchar_t* detail = nullptr)
   TerminateProcess(GetCurrentProcess(), 1);
 }
 
+wchar_t* g_save_literal = nullptr;
+wchar_t g_save_extension[4] = {};
+
+// A mod DLL can write its own extension over the literal after the bridge
+// did: The Convergence's ErdTools.dll writes its save_extension ("sl2" as it
+// ships; its me3 launch saves to ER0000.cnv through me3 instead), and the game
+// then played and overwrote ER0000.sl2. MO2's extension is put back for as
+// long as such a DLL starts, before and while the game reads its saves.
+DWORD WINAPI keep_save_extension(LPVOID) {
+  bool told = false;
+  for (int round = 0; round < 12000; ++round) {
+    if (memcmp(g_save_literal + 1, g_save_extension, 3 * sizeof(wchar_t)) != 0) {
+      wchar_t found[4] = {g_save_literal[1], g_save_literal[2], g_save_literal[3], 0};
+      DWORD old_protection = 0;
+      if (VirtualProtect(g_save_literal, 4 * sizeof(wchar_t), PAGE_READWRITE, &old_protection)) {
+        for (int character = 0; character < 3; ++character) {
+          g_save_literal[character + 1] = g_save_extension[character];
+        }
+        DWORD unused = 0;
+        VirtualProtect(g_save_literal, 4 * sizeof(wchar_t), old_protection, &unused);
+        if (!told) {
+          told = true;
+          log_line("Save extension: a mod DLL set the saves to this extension; MO2's put back:", found);
+        }
+      } else if (!told) {
+        told = true;
+        log_line("Save extension: a mod DLL changed it and it could not be put back:", found);
+      }
+    }
+    Sleep(10);
+  }
+  return 0;
+}
+
 // The game names every save from one ".sl2" literal (ER0000.sl2, its .bak).
 // MO2 asks for another extension through ELDENRING_MO2_SAVE_EXTENSION (three
 // letters, "err" for ELDEN RING Reforged, as its me3 launch saves), and the
@@ -3246,6 +3280,15 @@ void apply_save_extension_setting() {
   DWORD unused = 0;
   VirtualProtect(found, kPatternSize, old_protection, &unused);
   log_line("Saves use the extension MO2 asked for:", literal);
+  g_save_literal = literal;
+  for (int character = 0; character < 3; ++character) {
+    g_save_extension[character] = extension[character];
+  }
+  // a thread started under the loader lock runs once DllMain returns
+  HANDLE keeper = CreateThread(nullptr, 0, keep_save_extension, nullptr, 0, nullptr);
+  if (keeper != nullptr) {
+    CloseHandle(keeper);
+  }
 }
 
 // Whether [address, address + 8) lies in a writable data section of the image.
@@ -3753,7 +3796,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.74.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.75.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's

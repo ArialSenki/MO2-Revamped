@@ -13,7 +13,10 @@
 //!
 //! MO2 loads it for every Elden Ring start for me3's BootBoost (see
 //! boot_boost.rs); the rest only runs with ELDEN RING Reforged, whose natives
-//! read the ME3_ATTACH_CONFIG that MO2 sets for them.
+//! read the ME3_ATTACH_CONFIG that MO2 sets for them. The regulation fix also
+//! runs when MO2 sets ELDENRING_MO2_REGULATION_FIX=1 (a mod with its own
+//! regulation.bin, such as The Convergence: without it the game can't create
+//! or write its save, "Failed to save game. Save data is corrupted").
 
 mod boot_boost;
 mod mem_patch;
@@ -145,7 +148,7 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
         open_log(nightreign);
         // a panic's message in the log, before it is caught or ends the game
         std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
-        log::info!("MO2 me3 compatibility 0.5.3 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
+        log::info!("MO2 me3 compatibility 0.5.4 (dearxan 0.5.6, from-singleton 3.0.1, me3's mem_patch and BootBoost) loaded");
         // me3's asset code reads the launched game from me3's launcher, as a
         // JSON string; under MO2 there is none, so it is set here from the
         // executable's name
@@ -159,10 +162,22 @@ pub extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mu
         if nightreign || std::env::var_os("ME3_ATTACH_CONFIG").is_none() {
             // not Reforged: Arxan stays as it is, and only BootBoost runs,
             // once the game's code is readable, before its main
-            log::info!("ELDEN RING Reforged is not active: BootBoost only");
+            let regulation_fix = !nightreign
+                && std::env::var("ELDENRING_MO2_REGULATION_FIX").is_ok_and(|value| value == "1");
+            if regulation_fix {
+                log::info!("ELDEN RING Reforged is not active: BootBoost and the regulation fix");
+            } else {
+                log::info!("ELDEN RING Reforged is not active: BootBoost only");
+            }
             unsafe {
-                dearxan::disabler::schedule_after_arxan(|_, _| {
-                    without_panics("BootBoost", || install_boot_boost(None))
+                dearxan::disabler::schedule_after_arxan(move |_, _| {
+                    without_panics("BootBoost", || install_boot_boost(None));
+                    // the game's code is decrypted now: the singleton scan is safe
+                    if regulation_fix {
+                        if let Err(error) = std::thread::Builder::new().spawn(keep_regulation_out_of_saves) {
+                            log::error!("the regulation fix could not start: {error}");
+                        }
+                    }
                 });
             }
             return 1;

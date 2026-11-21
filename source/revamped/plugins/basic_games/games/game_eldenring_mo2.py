@@ -381,6 +381,13 @@ class EldenRingMo2Game(
     # renaming the save it played and overwrote ER0000.sl2, the save of
     # the game without mods
     ConvergenceSaveExtension = "cnv"
+
+    # "1" when an active mod brings its own regulation.bin: the compatibility
+    # DLL then keeps the raw regulation out of the saves, as me3 does for every
+    # mod (its oversized_regulation_fix). A regulation larger than the game's
+    # (The Convergence's) no longer fits in a save, and the game reported
+    # "Failed to save game. Save data is corrupted" and saved nothing.
+    RegulationFixEnvironment = "ELDENRING_MO2_REGULATION_FIX"
     ConvergenceNexusId = "3419"
 
     # me3's BootBoost for every Elden Ring start (the archive headers the game
