@@ -10,10 +10,16 @@ from PyQt6.QtCore import QDir, QFileInfo, QStandardPaths
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMessageBox  # MO2 Revamped: from MO2 9e30d7d
 
-from .basic_features.basic_save_game_info import (
-    BasicGameSaveGame,
-    BasicGameSaveGameInfo,
-)
+
+def __getattr__(name: str):
+    # MO2 Revamped: basic_features is imported when a game needs it (its init(),
+    # its saves), not at each start for the games MO2 doesn't manage; the game
+    # modules that import these names from here still get them
+    if name in ("BasicGameSaveGame", "BasicGameSaveGameInfo"):
+        from .basic_features import basic_save_game_info
+
+        return getattr(basic_save_game_info, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def replace_variables(value: str, game: BasicGame) -> str:
@@ -361,20 +367,38 @@ class BasicGameMappings:
         )
 
 
+class _StoreGames:
+    """MO2 Revamped: BasicGame.steam_games and the others scan the stores the
+    first time they are read (BasicGame.setup() replaces these with the lists),
+    so a start whose games don't ask scans nothing."""
+
+    def __set_name__(self, owner, name):
+        self._name = name
+
+    def __get__(self, obj, owner=None):
+        BasicGame.setup()
+        return getattr(BasicGame, self._name)
+
+
 class BasicGame(mobase.IPluginGame):
     """This class implements some methods from mobase.IPluginGame
     to make it easier to create game plugins without having to implement
     all the methods of mobase.IPluginGame."""
 
     # List of steam, GOG, origin and Epic games:
-    steam_games: dict[str, Path]
-    gog_games: dict[str, Path]
-    origin_games: dict[str, Path]
-    epic_games: dict[str, Path]
-    eadesktop_games: dict[str, Path]
+    steam_games: dict[str, Path] = _StoreGames()  # type: ignore[assignment]
+    gog_games: dict[str, Path] = _StoreGames()  # type: ignore[assignment]
+    origin_games: dict[str, Path] = _StoreGames()  # type: ignore[assignment]
+    epic_games: dict[str, Path] = _StoreGames()  # type: ignore[assignment]
+    eadesktop_games: dict[str, Path] = _StoreGames()  # type: ignore[assignment]
 
     @staticmethod
     def setup():
+        # MO2 Revamped: the lists replace the lazy attributes before the scan,
+        # so a scan that fails half way isn't tried again at each read
+        for name in ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games"):
+            setattr(BasicGame, name, {})
+
         from .eadesktop_utils import find_games as find_eadesktop_games
         from .epic_utils import find_games as find_epic_games
         from .gog_utils import find_games as find_gog_games
@@ -405,8 +429,7 @@ class BasicGame(mobase.IPluginGame):
     # Organizer obtained in init:
     _organizer: mobase.IOrganizer
 
-    # Path to the game, as set by MO2:
-    _gamePath: str
+    # Path to the game, as set by MO2 (MO2 Revamped: a property, see below)
 
     def __init__(self):
         super(BasicGame, self).__init__()
@@ -421,26 +444,74 @@ class BasicGame(mobase.IPluginGame):
     def _register_feature(self, feature: mobase.GameFeature) -> bool:
         return self._organizer.gameFeatures().registerFeature(self, feature, 0, True)
 
+    # MO2 Revamped: MO2 calls detectGame() on every game plugin at each start;
+    # the stores are scanned and the folder looked up the first time the path
+    # is read, and a path MO2 or the game sets first makes that unnecessary.
+    # The store ids of a path are likewise looked up when asked for.
+    @property
+    def _gamePath(self) -> str:
+        values = self.__dict__
+        if values.get("_revamped_detect_pending"):
+            values["_revamped_detect_pending"] = False
+            self._detect_game_now()
+        return values.get("_revamped_game_path", "")
+
+    @_gamePath.setter
+    def _gamePath(self, value: str) -> None:
+        self.__dict__["_revamped_detect_pending"] = False
+        self.__dict__["_revamped_game_path"] = value
+
+    def _match_store_ids(self) -> None:
+        _ = self._gamePath  # a pending detection sets the path first
+        path = self.__dict__.pop("_revamped_store_path", None)
+        if path is None:
+            return
+        # Check if we have a matching steam, GOG, Origin or EA Desktop id and set the
+        # index accordingly:
+        for steamid, steampath in BasicGame.steam_games.items():
+            if steampath == path:
+                self._mappings.steamAPPId.set_value(steamid)
+        for gogid, gogpath in BasicGame.gog_games.items():
+            if gogpath == path:
+                # MO2 Revamped: from MO2 c5d39b8
+                self._mappings.gogAPPId.set_value(gogid)
+        for originid, originpath in BasicGame.origin_games.items():
+            if originpath == path:
+                self._mappings.originManifestIds.set_value(originid)
+        for epicid, epicpath in BasicGame.epic_games.items():
+            if epicpath == path:
+                self._mappings.epicAPPId.set_value(epicid)
+        for eadesktopid, eadesktoppath in BasicGame.eadesktop_games.items():
+            if eadesktoppath == path:
+                self._mappings.eaDesktopContentId.set_value(eadesktopid)
+
     # Specific to BasicGame:
     def is_steam(self) -> bool:
+        self._match_store_ids()
         return self._mappings.steamAPPId.has_value()
 
     def is_gog(self) -> bool:
+        self._match_store_ids()
         return self._mappings.gogAPPId.has_value()
 
     def is_origin(self) -> bool:
+        self._match_store_ids()
         return self._mappings.originManifestIds.has_value()
 
     def is_epic(self) -> bool:
+        self._match_store_ids()
         return self._mappings.epicAPPId.has_value()
 
     def is_eadesktop(self) -> bool:
+        self._match_store_ids()
         return self._mappings.eaDesktopContentId.has_value()
 
     # IPlugin interface:
 
     def init(self, organizer: mobase.IOrganizer) -> bool:
         self._organizer = organizer
+
+        from .basic_features.basic_save_game_info import BasicGameSaveGameInfo
 
         self._register_feature(BasicGameSaveGameInfo())
 
@@ -495,6 +566,10 @@ class BasicGame(mobase.IPluginGame):
     # IPluginGame interface:
 
     def detectGame(self):
+        # MO2 Revamped: done when the path is first read, see _gamePath
+        self.__dict__["_revamped_detect_pending"] = True
+
+    def _detect_game_now(self) -> None:
         for steam_id in self._mappings.steamAPPId.get():
             if steam_id in BasicGame.steam_games:
                 self.setGamePath(BasicGame.steam_games[steam_id])
@@ -544,15 +619,19 @@ class BasicGame(mobase.IPluginGame):
         return self._mappings.nexusGameId.get()
 
     def steamAPPId(self) -> str:
+        self._match_store_ids()
         return self._mappings.steamAPPId.current()
 
     def gogAPPId(self) -> str:
+        self._match_store_ids()
         return self._mappings.gogAPPId.current()
 
     def epicAPPId(self) -> str:
+        self._match_store_ids()
         return self._mappings.epicAPPId.current()
 
     def eaDesktopContentId(self) -> str:
+        self._match_store_ids()
         return self._mappings.eaDesktopContentId.current()
 
     def binaryName(self) -> str:
@@ -590,6 +669,8 @@ class BasicGame(mobase.IPluginGame):
         return []
 
     def listSaves(self, folder: QDir) -> list[mobase.ISaveGame]:
+        from .basic_features.basic_save_game_info import BasicGameSaveGame
+
         ext = self._mappings.savegameExtension.get()
         return [
             BasicGameSaveGame(path)
@@ -639,26 +720,9 @@ class BasicGame(mobase.IPluginGame):
     def setGamePath(self, path: Path | str) -> None:
         self._gamePath = str(path)
 
-        path = Path(path)
-
-        # Check if we have a matching steam, GOG, Origin or EA Desktop id and set the
-        # index accordingly:
-        for steamid, steampath in BasicGame.steam_games.items():
-            if steampath == path:
-                self._mappings.steamAPPId.set_value(steamid)
-        for gogid, gogpath in BasicGame.gog_games.items():
-            if gogpath == path:
-                # MO2 Revamped: from MO2 c5d39b8
-                self._mappings.gogAPPId.set_value(gogid)
-        for originid, originpath in BasicGame.origin_games.items():
-            if originpath == path:
-                self._mappings.originManifestIds.set_value(originid)
-        for epicid, epicpath in BasicGame.epic_games.items():
-            if epicpath == path:
-                self._mappings.epicAPPId.set_value(epicid)
-        for eadesktopid, eadesktoppath in BasicGame.eadesktop_games.items():
-            if eadesktoppath == path:
-                self._mappings.eaDesktopContentId.set_value(eadesktopid)
+        # MO2 Revamped: the store ids of the folder are looked up when asked for
+        # (_match_store_ids), not at each start
+        self.__dict__["_revamped_store_path"] = Path(path)
 
     def documentsDirectory(self) -> QDir:
         return self._mappings.documentsDirectory.get()
