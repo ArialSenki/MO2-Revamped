@@ -40,22 +40,6 @@ struct NativeInitializerRequest {
 
 std::vector<NativeInitializerRequest> g_native_initializer_requests;
 
-// Native initializers run before the game makes its first window: a mod
-// such as RenderBridge patches the game's DXGI imports in its initializer,
-// and once the window is there the game has made its factory and swap chain
-// already. Only when MO2 asked for initializers; set when they have all
-// returned, or are not all there, or after 5 s at the window.
-HANDLE g_native_initializers_done = nullptr;
-volatile LONG g_native_initializers_pending = 0;
-volatile LONG g_window_waited = 0;
-
-void release_window_wait() {
-  if (g_native_initializers_done != nullptr) {
-    SetEvent(g_native_initializers_done);
-  }
-}
-
-
 struct EldenRingLocalWString {
   void* unknown;
   wchar_t* string;
@@ -1141,27 +1125,11 @@ void finish_initial_game_window(HWND window, DWORD requested_style) {
   }
 }
 
-void wait_for_native_initializers_before_window(HWND parent_window) {
-  if (g_native_initializers_done == nullptr || parent_window != nullptr ||
-      InterlockedExchange(&g_window_waited, 1) != 0) {
-    return;
-  }
-  const ULONGLONG started = GetTickCount64();
-  const DWORD result = WaitForSingleObject(g_native_initializers_done, 5000);
-  wchar_t waited[32] = {};
-  swprintf_s(waited, L"%llu ms", GetTickCount64() - started);
-  log_line(result == WAIT_OBJECT_0
-               ? "The game's first window waited for the native initializers:"
-               : "The game's first window went on after 5 s without every native initializer:",
-           waited);
-}
-
 HWND WINAPI create_window_ex_a_hook(DWORD extended_style, LPCSTR class_name,
                                     LPCSTR window_name, DWORD style, int x,
                                     int y, int width, int height,
                                     HWND parent_window, HMENU menu,
                                     HINSTANCE instance, LPVOID parameter) {
-  wait_for_native_initializers_before_window(parent_window);
   const DWORD guarded_style = deferred_startup_style(style);
   HWND window = g_original_create_window_ex_a(
       extended_style, class_name, window_name, guarded_style, x, y, width,
@@ -1175,7 +1143,6 @@ HWND WINAPI create_window_ex_w_hook(DWORD extended_style, LPCWSTR class_name,
                                     int y, int width, int height,
                                     HWND parent_window, HMENU menu,
                                     HINSTANCE instance, LPVOID parameter) {
-  wait_for_native_initializers_before_window(parent_window);
   const DWORD guarded_style = deferred_startup_style(style);
   HWND window = g_original_create_window_ex_w(
       extended_style, class_name, window_name, guarded_style, x, y, width,
@@ -1368,8 +1335,7 @@ bool install_startup_window_hooks() {
     }
     install_focus_activation_hooks_for_existing_threads();
   }
-  if (!focus_guard_enabled && !black_background_enabled &&
-      g_native_initializers_done == nullptr) {
+  if (!focus_guard_enabled && !black_background_enabled) {
     return false;
   }
 
@@ -2672,9 +2638,6 @@ DWORD WINAPI run_native_initializer(void* context) {
   }
   call_native_initializer(request);
   FreeLibrary(request->module);
-  if (InterlockedDecrement(&g_native_initializers_pending) == 0) {
-    release_window_wait();
-  }
   return 0;
 }
 
@@ -3367,11 +3330,6 @@ DWORD WINAPI bridge_worker(void*) {
   }
   schedule_skip_intro_logos();
   read_native_initializer_requests();
-  InterlockedExchange(&g_native_initializers_pending,
-                      static_cast<LONG>(g_native_initializer_requests.size()));
-  if (g_native_initializer_requests.empty()) {
-    release_window_wait();
-  }
   const std::wstring executable_path = game_executable_path();
   if (!executable_path.empty()) {
     log_line("MO2 bridge executable:", executable_path.c_str());
@@ -3405,9 +3363,6 @@ DWORD WINAPI bridge_worker(void*) {
         break;
       }
       Sleep(250);
-    }
-    if (!all_native_initializers_started()) {
-      release_window_wait();
     }
   }
 
@@ -3743,15 +3698,12 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.71.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.73.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
     // main thread. From the worker thread they raced the game's first window,
     // so "start minimized" and the black background only applied sometimes.
-    if (GetEnvironmentVariableW(L"ELDENRING_MO2_NATIVE_INITIALIZERS", nullptr, 0) > 0) {
-      g_native_initializers_done = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    }
     install_startup_window_hooks();
     // before the game's main thread runs: it reads the saves early
     apply_save_extension_setting();

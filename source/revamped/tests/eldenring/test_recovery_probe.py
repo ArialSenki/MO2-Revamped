@@ -27,11 +27,28 @@ class RecoveryProbe(unittest.TestCase):
         session.mkdir(parents=True)
         self.assertTrue(recovery_probe.pending(str(self.appdata)))
 
+    def test_only_unrouted_output(self):
+        # seen on 2026-11-21: a session of another install, restored, that
+        # still kept the game's output from outside the route
+        session = self.appdata / ".MO2RevampedSaveRecovery" / "abc" / "0123"
+        (session / "unrouted-global" / "76561198000000001").mkdir(parents=True)
+        (session / "session.json").write_text('{"version": 1}', encoding="utf-8")
+        self.assertFalse(recovery_probe.pending(str(self.appdata)))
+        # a swap whose saves are still in the Steam folder
+        (session / "session.json").write_text('{"swap": {"returned": false}}', encoding="utf-8")
+        self.assertTrue(recovery_probe.pending(str(self.appdata)))
+        # an account folder set aside
+        (session / "session.json").write_text('{"version": 1}', encoding="utf-8")
+        (session / "76561198000000001").mkdir()
+        self.assertTrue(recovery_probe.pending(str(self.appdata)))
+
     def test_matches_the_plugin(self):
         from basic_games.games.game_eldenring_mo2 import EldenRingMo2Game
 
         self.assertEqual(recovery_probe.RECOVERY_FOLDER, EldenRingMo2Game.SaveRecoveryDirectoryName)
         self.assertIn(EldenRingMo2Game.SaveFolderName, recovery_probe.SAVE_FOLDERS)
+        self.assertEqual(recovery_probe.UNROUTED_FOLDER, EldenRingMo2Game.UnroutedSaveDirectoryName)
+        self.assertEqual(recovery_probe.MANIFEST, EldenRingMo2Game.SaveRecoveryManifestName)
         module, function = EldenRingMo2Game.ManifestInitProbe.split(":")
         self.assertEqual(module, ".games.eldenring.recovery_probe")
         self.assertTrue(callable(getattr(recovery_probe, function)))
