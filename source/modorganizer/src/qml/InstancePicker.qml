@@ -11,9 +11,10 @@ Rectangle {
     readonly property var s: bridge.state
 
     color: Fluent.window
-    focus: true
 
     Keys.onEscapePressed: bridge.press("close")
+
+    property int shownRow: -2
 
     // the selected instance in view, as the Widgets list scrolls to it
     function showCurrent() {
@@ -24,7 +25,12 @@ Rectangle {
     Connections {
         target: root.bridge
         function onSearchRequested() { search.focusAndSelect() }
-        function onStateChanged() { root.showCurrent() }
+        function onStateChanged() {
+            if (root.bridge.currentRow !== root.shownRow) {
+                root.shownRow = root.bridge.currentRow
+                root.showCurrent()
+            }
+        }
         function onRowsChanged() { Qt.callLater(root.showCurrent) }
     }
 
@@ -143,10 +149,37 @@ Rectangle {
                 root.bridge.rowMenu(root.bridge.rows[index].row, p.x, p.y)
             }
 
+            // typing jumps to the next instance whose name starts with what was
+            // typed in the last second, as in the Widgets list
+            property string typed: ""
+            Timer { id: typedReset; interval: 1000; onTriggered: list.typed = "" }
+            function seek(text) {
+                const rows = root.bridge.rows
+                const from = Math.max(0, root.bridge.currentRow)
+                for (let k = 0; k < rows.length; ++k) {
+                    const i = (from + (text.length > 1 ? 0 : 1) + k) % rows.length
+                    if (!rows[i].header && rows[i].text.toLowerCase().startsWith(text)) {
+                        root.bridge.selectRow(rows[i].row)
+                        return
+                    }
+                }
+            }
+
             Keys.onUpPressed: step(-1)
             Keys.onDownPressed: step(1)
             Keys.onPressed: event => {
-                if (event.key === Qt.Key_Home) { edge(false); event.accepted = true }
+                if (event.key === Qt.Key_PageUp || event.key === Qt.Key_PageDown) {
+                    const page = Math.max(1, Math.floor(list.height / 60) - 1)
+                    for (let k = 0; k < page; ++k)
+                        step(event.key === Qt.Key_PageUp ? -1 : 1)
+                    event.accepted = true
+                } else if (event.text.length === 1 && event.text > " " &&
+                           !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
+                    typed += event.text.toLowerCase()
+                    typedReset.restart()
+                    seek(typed)
+                    event.accepted = true
+                } else if (event.key === Qt.Key_Home) { edge(false); event.accepted = true }
                 else if (event.key === Qt.Key_End) { edge(true); event.accepted = true }
                 else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                     if (root.bridge.currentRow >= 0)

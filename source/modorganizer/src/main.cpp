@@ -5,6 +5,7 @@
 #include "instancemanager.h"
 #include "loglist.h"
 #include "moapplication.h"
+#include "quickui.h"
 #include "multiprocess.h"
 #include "organizercore.h"
 #include "shared/util.h"
@@ -689,6 +690,9 @@ int run(int argc, char* argv[])
   setStartupDiagnosticPhase("startup.qapplication.construct");
   MOApplication app(argc, argv);
   writeStartupDiagnosticEvent("startup.qapplication.ready");
+
+  // MO2 Revamped: what Qt Quick draws with, before any window (quickui.h)
+  QuickUi::initialize();
 
   // MO2 Revamped: Qt has read it; programs started from here (LOOT, Qt tools)
   // and MO2 itself after a restart mustn't inherit our size as the user's

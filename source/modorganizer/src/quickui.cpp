@@ -18,6 +18,8 @@
 #include <QQuickImageProvider>
 #include <QQuickWidget>
 #include <QQuickWindow>
+#include <QSGRendererInterface>
+#include <memory>
 #include <QToolTip>
 #include <QUrl>
 
@@ -100,7 +102,10 @@ QQmlEngine* sharedEngine()
 void viewGone()
 {
   if (--openViews() == 0) {
-    if (auto& engine = engineHolder()) {
+    // out of the holder first: a view made before the deletion runs (the
+    // theme question right after the startup Instances window) gets a new one
+    if (QQmlEngine* engine = engineHolder().data()) {
+      engineHolder().clear();
       engine->deleteLater();
     }
     icons().clear();
@@ -125,6 +130,43 @@ public:
   }
 };
 
+// what Qt Quick draws with in this run (see initialize())
+QSGRendererInterface::GraphicsApi viewApi()
+{
+  static const QSGRendererInterface::GraphicsApi api = [] {
+    const QByteArray wanted = qgetenv("MO2R_QUICK_BACKEND").toLower();
+    if (wanted == "d3d11") {
+      return QSGRendererInterface::Direct3D11;
+    } else if (wanted == "opengl") {
+      return QSGRendererInterface::OpenGL;
+    } else if (wanted == "default") {
+      return QSGRendererInterface::Unknown;
+    }
+    return QSGRendererInterface::Software;
+  }();
+  return api;
+}
+
+QString apiName(QSGRendererInterface::GraphicsApi api)
+{
+  switch (api) {
+  case QSGRendererInterface::Software:
+    return QStringLiteral("software");
+  case QSGRendererInterface::Direct3D11:
+    return QStringLiteral("d3d11");
+  case QSGRendererInterface::Direct3D12:
+    return QStringLiteral("d3d12");
+  case QSGRendererInterface::OpenGL:
+    return QStringLiteral("opengl");
+  case QSGRendererInterface::Vulkan:
+    return QStringLiteral("vulkan");
+  case QSGRendererInterface::Unknown:
+    return QStringLiteral("default");
+  default:
+    return QString::number(static_cast<int>(api));
+  }
+}
+
 QColor faint(QColor color, int alpha)
 {
   color.setAlpha(alpha);
@@ -132,6 +174,20 @@ QColor faint(QColor color, int alpha)
 }
 
 }  // namespace
+
+void initialize()
+{
+  if (!enabled()) {
+    return;
+  }
+  // Qt keeps the first choice for the whole run, for every Qt Quick user (the
+  // web views too), so it is made here, before any of them
+  const auto api = viewApi();
+  if (api != QSGRendererInterface::Unknown) {
+    QQuickWindow::setGraphicsApi(api);
+  }
+  log::debug("qt quick: on, drawing with {}", apiName(api));
+}
 
 bool enabled()
 {
@@ -207,6 +263,16 @@ QQuickWidget* createView(QWidget* parent, const QString& name, const QVariantMap
     delete view;
     return nullptr;
   }
+
+  // which one it really draws with, once
+  auto* window  = view->quickWindow();
+  auto logged   = std::make_shared<QMetaObject::Connection>();
+  *logged = QObject::connect(window, &QQuickWindow::afterRendering, view, [window, name, logged] {
+    QObject::disconnect(*logged);
+    const auto* ri = window->rendererInterface();
+    log::debug("qt quick: {} draws with {}", name,
+               apiName(ri != nullptr ? ri->graphicsApi() : QSGRendererInterface::Unknown));
+  });
 
   log::debug("qt quick: {} made in {} ms", name, timer.elapsed());
   return view;

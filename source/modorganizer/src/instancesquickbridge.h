@@ -42,6 +42,9 @@ public:
   // Ctrl+F: the search shows and takes the focus
   void openSearch();
 
+  // the window filled its list again (updateList())
+  void listRefilled();
+
   Q_INVOKABLE void selectRow(int row);
   // Enter or a double click
   Q_INVOKABLE void activateRow(int row);
