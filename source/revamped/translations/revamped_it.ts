@@ -5889,6 +5889,14 @@ Se il gioco ha bisogno di quella versione (un'altra edizione o versione del gioc
       <source>OK</source>
       <translation>OK</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Questo è un OMOD, un formato che apre solo il programma di installazione di Oblivion. Installalo in un&apos;istanza di Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>MO2 non può installare i file .%1: non sono un archivio che sa aprire.</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
@@ -22083,6 +22091,14 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
       <source>Cancel</source>
       <translation>Annulla</translation>
     </message>
+    <message>
+      <source>Yes to all</source>
+      <translation>Sì a tutto</translation>
+    </message>
+    <message>
+      <source>No to all</source>
+      <translation>No a tutto</translation>
+    </message>
   </context>
   <context>
     <name>RevampedInstallerSettings</name>
@@ -22129,6 +22145,17 @@ Scaricare LSLib da GitHub (github.com/Norbyte/lslib)? Senza, questi mod restano 
     <message>
       <source>The order in which MO2 tries this installer: a higher number goes first</source>
       <translation>L&apos;ordine in cui MO2 prova questo programma di installazione: un numero più alto viene prima</translation>
+    </message>
+  </context>
+  <context>
+    <name>OMODFrameworkWrapper</name>
+    <message>
+      <source>Show the readme?</source>
+      <translation>Mostrare il leggimi?</translation>
+    </message>
+    <message>
+      <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
+      <translation>Il leggimi può spiegare le opzioni dell&apos;installazione. Resta aperto accanto al programma di installazione finché non lo chiudi.</translation>
     </message>
   </context>
 </TS>

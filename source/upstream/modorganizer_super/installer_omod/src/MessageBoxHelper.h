@@ -2,6 +2,12 @@
 
 #include <QMessageBox>
 
+// MO2 Revamped: a message or question as MO2's content dialog, in place of
+// QMessageBox's; on the GUI thread
+QMessageBox::StandardButton omodQuestion(QWidget* parent, const QString& title, const QString& text,
+                                         QMessageBox::StandardButtons buttons = QMessageBox::Ok,
+                                         QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
+
 class MessageBoxHelper : public QObject
 {
   Q_OBJECT

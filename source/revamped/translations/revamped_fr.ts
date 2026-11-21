@@ -5733,6 +5733,14 @@ Si le jeu a besoin de cette version (une autre édition ou version du jeu), rest
       <source>OK</source>
       <translation>OK</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Ceci est un OMOD, un format que seul l&apos;installateur d&apos;Oblivion ouvre. Installez-le dans une instance d&apos;Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>MO2 ne peut pas installer les fichiers .%1 : ce ne sont pas des archives qu&apos;il sait ouvrir.</translation>
+    </message>
   </context>
   <context>
     <name>InstanceManagerDialog</name>
@@ -22025,6 +22033,14 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
       <source>Cancel</source>
       <translation>Annuler</translation>
     </message>
+    <message>
+      <source>Yes to all</source>
+      <translation>Oui pour tout</translation>
+    </message>
+    <message>
+      <source>No to all</source>
+      <translation>Non pour tout</translation>
+    </message>
   </context>
   <context>
     <name>RevampedInstallerSettings</name>
@@ -22071,6 +22087,17 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
     <message>
       <source>The order in which MO2 tries this installer: a higher number goes first</source>
       <translation>L&apos;ordre dans lequel MO2 essaie cet installateur : un nombre plus élevé passe en premier</translation>
+    </message>
+  </context>
+  <context>
+    <name>OMODFrameworkWrapper</name>
+    <message>
+      <source>Show the readme?</source>
+      <translation>Afficher le fichier lisez-moi ?</translation>
+    </message>
+    <message>
+      <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
+      <translation>Le lisez-moi peut expliquer les options de l&apos;installation. Il reste ouvert à côté de l&apos;installateur jusqu&apos;à ce que vous le fermiez.</translation>
     </message>
   </context>
 </TS>

@@ -1208,7 +1208,15 @@ InstallationResult InstallationManager::install(const QString& fileName,
 
   QFileInfo fileInfo(fileName);
   if (!getSupportedExtensions().contains(fileInfo.suffix(), Qt::CaseInsensitive)) {
-    reportError(tr("File format \"%1\" not supported").arg(fileInfo.suffix()));
+    // MO2 Revamped: what the file is and where it can be installed; 2.5.2
+    // said only 'File format "omod" not supported'
+    if (fileInfo.suffix().compare(QLatin1String("omod"), Qt::CaseInsensitive) == 0) {
+      reportError(tr("This is an OMOD, a format only Oblivion's installer opens. Install it "
+                     "in an Oblivion instance."));
+    } else {
+      reportError(tr("MO2 can't install .%1 files: they aren't an archive it can open.")
+                      .arg(fileInfo.suffix()));
+    }
     return InstallationResult(IPluginInstaller::RESULT_FAILED);
   }
 

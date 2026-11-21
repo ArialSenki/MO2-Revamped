@@ -14452,6 +14452,14 @@ Si el juego necesita esa versión (otra edición u otra versión del juego), res
       <source>OK</source>
       <translation>Aceptar</translation>
     </message>
+    <message>
+      <source>This is an OMOD, a format only Oblivion&apos;s installer opens. Install it in an Oblivion instance.</source>
+      <translation>Esto es un OMOD, un formato que solo abre el instalador de Oblivion. Instálalo en una instancia de Oblivion.</translation>
+    </message>
+    <message>
+      <source>MO2 can&apos;t install .%1 files: they aren&apos;t an archive it can open.</source>
+      <translation>MO2 no puede instalar archivos .%1: no son un archivo comprimido que sepa abrir.</translation>
+    </message>
   </context>
   <context>
     <name>DiagnoseBasic</name>
@@ -22122,6 +22130,14 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
       <source>Cancel</source>
       <translation>Cancelar</translation>
     </message>
+    <message>
+      <source>Yes to all</source>
+      <translation>Sí a todo</translation>
+    </message>
+    <message>
+      <source>No to all</source>
+      <translation>No a todo</translation>
+    </message>
   </context>
   <context>
     <name>RevampedInstallerSettings</name>
@@ -22168,6 +22184,17 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
     <message>
       <source>The order in which MO2 tries this installer: a higher number goes first</source>
       <translation>El orden en que MO2 prueba este instalador: un número más alto va antes</translation>
+    </message>
+  </context>
+  <context>
+    <name>OMODFrameworkWrapper</name>
+    <message>
+      <source>Show the readme?</source>
+      <translation>¿Mostrar el léame?</translation>
+    </message>
+    <message>
+      <source>The readme may explain the installation&apos;s options. It stays open beside the installer until you close it.</source>
+      <translation>El léame puede explicar las opciones de la instalación. Se queda abierto junto al instalador hasta que lo cierres.</translation>
     </message>
   </context>
 </TS>
