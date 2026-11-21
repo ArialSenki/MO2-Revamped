@@ -7,6 +7,7 @@ whose EldenRingMo2Game takes it as a mixin.
 
 from __future__ import annotations
 
+import codecs
 import configparser
 import os
 import shutil
@@ -411,16 +412,19 @@ class ForcedLoadsMixin:
             shutil.copy2(source, target)
         # files only in the copy stay: Seamless may write its own there
         settings_source = seamless.with_name(f"{seamless.stem}_settings.ini")
-        text = settings_source.read_text(encoding="utf-8-sig") if settings_source.is_file() else ""
+        # bytes that aren't UTF-8 (a password saved in the system's code
+        # page) go back as they were
+        raw = settings_source.read_bytes() if settings_source.is_file() else b""
+        text = raw.removeprefix(codecs.BOM_UTF8).decode("utf-8", errors="surrogateescape")
         settings_target = target_dir / settings_source.name
-        new_text = self._with_save_extension(text, extension)
+        new_data = self._with_save_extension(text, extension).encode("utf-8", errors="surrogateescape")
         try:
-            unchanged = settings_target.read_text(encoding="utf-8") == new_text
-        except (OSError, UnicodeError):
+            unchanged = settings_target.read_bytes() == new_data
+        except OSError:
             unchanged = False
         if not unchanged:
             target_dir.mkdir(parents=True, exist_ok=True)
-            settings_target.write_text(new_text, encoding="utf-8")
+            settings_target.write_bytes(new_data)
         return target_dir / seamless.name
 
     @staticmethod

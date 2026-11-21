@@ -352,6 +352,18 @@ class ConvergenceWithSeamless(unittest.TestCase):
         self.assertIn("cooppassword = other", text)
         self.assertIn("save_file_extension = cnvco2", text)
 
+    def test_settings_in_the_system_code_page(self):
+        # a password with "ñ" saved by Notepad in Windows-1252 isn't UTF-8:
+        # the copy failed and Seamless saved to the shared ER0000.co2
+        self.add_convergence()
+        own = self.seamless_root / "SeamlessCoop" / "ersc_settings.ini"
+        own.write_bytes(self.SEAMLESS_INI.replace("secret", "contraseña").encode("cp1252"))
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertNotEqual(dll.parent, self.seamless_root / "SeamlessCoop")
+        data = (dll.parent / "ersc_settings.ini").read_bytes()
+        self.assertIn("cooppassword = contraseña".encode("cp1252"), data)
+        self.assertIn(b"save_file_extension = cnvco2", data)
+
     def test_save_section_added_when_missing(self):
         cls = type(game_for(self.organizer))
         text = cls._with_save_extension("[PASSWORD]\ncooppassword = x\n", "cnvco2")
