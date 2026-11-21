@@ -259,8 +259,31 @@ class PluginTest(unittest.TestCase):
         self.assertEqual(info["Quest"], "Misión")
         self.assertIsNone(plugin_module.parse_cyberpunk_save_metadata(saves / "AutoSave-0", listed[0]))
 
+    def test_absurd_save_numbers_are_unreadable_not_a_crash(self) -> None:
+        saves = self.tmp / "saves"
+        folder = saves / "QuickSave-9"
+        folder.mkdir(parents=True)
+        (folder / "sav.dat").write_bytes(b"x")
+        listed = self.game.listSaves(QDir(str(saves)))
+        for body in ('{"Data": {"metadata": {"name": "Q", "playthroughTime": 1e999}}}',
+                     '{"Data": {"metadata": {"name": "Q", "level": 1e999}}}',
+                     '{"Data": {"metadata": {"name": "Q", "level": "' + "9" * 5000 + '"}}}'):
+            (folder / "metadata.9.json").write_text(body, encoding="utf-8")
+            self.assertIsNone(plugin_module.parse_cyberpunk_save_metadata(folder, listed[0]))
+
 
 class FrameworkTest(unittest.TestCase):
+    def test_codeware_import_regex(self) -> None:
+        found = frameworks._CODEWARE_IMPORT.search
+        self.assertTrue(found(b"// x\nimport Codeware.UI.*\n"))
+        self.assertTrue(found(b"\n  \timport   Codeware\n"))
+        self.assertFalse(found(b"importCodeware\n"))
+        self.assertFalse(found(b"import CodewareX\n"))
+        # a block of blank lines used to make each line start scan to the end
+        start = time.monotonic()
+        self.assertFalse(found(b"\n" * 20000 + b"import Other\n"))
+        self.assertLess(time.monotonic() - start, 2)
+
     def test_needs(self) -> None:
         tree = make_tree([
             "r6/scripts/M/a.reds", "r6/tweaks/M/a.yaml", "archive/pc/mod/a.archive.xl",

@@ -402,7 +402,10 @@ void Fluent::showToolTip(const QString& text, qreal globalX, qreal globalY)
     QToolTip::hideText();
     return;
   }
-  QToolTip::showText(QPoint(qRound(globalX), qRound(globalY)), text);
+  // MO2 Revamped: plain text, always: the tips carry instance notes and Nolvus
+  // names, and a tooltip takes <img src="\\server\..."> as rich text
+  QToolTip::showText(QPoint(qRound(globalX), qRound(globalY)),
+                     Qt::convertFromPlainText(text, Qt::WhiteSpaceNormal));
 }
 
 void Fluent::hideToolTip()

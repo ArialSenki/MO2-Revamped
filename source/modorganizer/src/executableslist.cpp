@@ -214,11 +214,15 @@ static bool sameFileInRenamedMod(const QString& before, const QString& after,
 // MO2 Revamped: a program of the game plugin's that isn't in the game folder
 // but in a mod's Root folder (a collection puts the script extender there,
 // as Vortex does): that file, which a root launch runs as the game folder's;
-// empty when no mod has it
+// empty when no mod has it. Only mods enabled in the profile in use count, and
+// only when exactly one of them has it: a disabled mod (one the user turned
+// off because it looked wrong) or two mods disagreeing never give the toolbar
+// a program to run
 static QString rootCopyOf(const MOBase::IPluginGame* game, const QFileInfo& binary,
-                          const QString& modsPath)
+                          const QString& modsPath,
+                          const std::function<bool(const QString&)>& enabled)
 {
-  if (modsPath.isEmpty() || binary.fileName().isEmpty()) {
+  if (modsPath.isEmpty() || binary.fileName().isEmpty() || !enabled) {
     return {};
   }
   const QDir gameDir = game->gameDirectory();
@@ -227,13 +231,25 @@ static QString rootCopyOf(const MOBase::IPluginGame* game, const QFileInfo& bina
     return {};
   }
   const QDir mods(modsPath);
+  QString found;
   for (const QString& mod : mods.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    if (!enabled(mod)) {
+      continue;
+    }
     const QString candidate = mods.absoluteFilePath(mod + QStringLiteral("/Root/") + rel);
     if (QFileInfo(candidate).isFile()) {
-      return candidate;
+      if (!found.isEmpty()) {
+        return {};
+      }
+      found = candidate;
     }
   }
-  return {};
+  return found;
+}
+
+void ExecutablesList::setRootModFilter(std::function<bool(const QString& mod)> enabled)
+{
+  m_RootModEnabled = std::move(enabled);
 }
 
 bool ExecutablesList::addFromModRoots(MOBase::IPluginGame const* game,
@@ -247,7 +263,7 @@ bool ExecutablesList::addFromModRoots(MOBase::IPluginGame const* game,
         find(info.title()) != end()) {
       continue;
     }
-    const QString root = rootCopyOf(game, info.binary(), modsPath);
+    const QString root = rootCopyOf(game, info.binary(), modsPath, m_RootModEnabled);
     if (root.isEmpty()) {
       continue;
     }

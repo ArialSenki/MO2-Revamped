@@ -9580,6 +9580,10 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
   <context>
     <name>Nolvus</name>
     <message>
+      <source>%1 was left alone: it isn't a place a Nolvus transfer uses</source>
+      <translation>%1 não foi alterado: não é um lugar que uma transferência do Nolvus usa</translation>
+    </message>
+    <message>
       <source>%1 (Nolvus archives)</source>
       <translation>%1 (arquivos do Nolvus)</translation>
     </message>

@@ -26,10 +26,15 @@ GUSTAVX = {
 }
 
 
+# MO2 Revamped: characters XML 1.0 can't hold (a control code in a mod's name
+# or a lone surrogate) make the game reject the whole file
+_XML_BAD = re.compile("[^\t\n\r\u0020-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
+
+
 def _xml(value: Any) -> str:
     # "Tattoo & Makeup" broke the file the game reads
     return (
-        str(value)
+        _XML_BAD.sub("", str(value))
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

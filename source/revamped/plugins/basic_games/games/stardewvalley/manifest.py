@@ -29,17 +29,51 @@ KNOWN = {
 # the mods SMAPI's installer puts in the game's Mods folder
 BUNDLED = {"smapi.consolecommands", "smapi.savebackup"}
 
-_COMMENT = re.compile(r'"(?:\\.|[^"\\])*"|//[^\n]*|/\*.*?\*/', re.DOTALL)
-_TRAILING_COMMA = re.compile(r'"(?:\\.|[^"\\])*"|,(\s*[}\]])', re.DOTALL)
+# a real manifest is a few KB; a bigger file is not read
+MAX_SIZE = 256 * 1024
+
+# MO2 Revamped: one linear scan. A string (an open one runs to the end), a //
+# comment, the start of a /* comment, a comma, a closing bracket, a run of
+# anything else, or one stray character
+_TOKEN = re.compile(r'"(?:[^"\\]|\\.)*"?|//[^\n]*|/\*|[,\]}]|[^"/,\]}]+|.', re.DOTALL)
+
+
+def strip_json(text: str) -> str:
+    """The text without // and /* */ comments and trailing commas (strings
+    left as they are). An unclosed /* is an error, as it is for Json.NET."""
+    out: list[str] = []
+    comma = -1  # where in `out` a comma waits for what follows it
+    skip_to = 0
+    for match in _TOKEN.finditer(text):
+        if match.start() < skip_to:
+            continue
+        token = match.group(0)
+        if token == "/*":
+            end = text.find("*/", match.end())
+            if end < 0:
+                raise ValueError("unclosed comment")
+            skip_to = end + 2
+            continue
+        if token.startswith("//"):
+            continue
+        if token in ("}", "]") and comma >= 0:
+            out[comma] = ""
+        if token == ",":
+            out.append(token)
+            comma = len(out) - 1
+            continue
+        if not token.isspace():
+            comma = -1
+        out.append(token)
+    return "".join(out)
 
 
 def loads(text: str):
     """json.loads that also takes what Json.NET takes: a BOM, // and /* */
     comments, trailing commas."""
-    text = text.lstrip("\ufeff")
-    text = _COMMENT.sub(lambda m: m.group(0) if m.group(0).startswith('"') else "", text)
-    text = _TRAILING_COMMA.sub(lambda m: m.group(0) if m.group(0).startswith('"') else m.group(1), text)
-    return json.loads(text)
+    if len(text) > MAX_SIZE:
+        raise ValueError("manifest too big")
+    return json.loads(strip_json(text.lstrip("﻿")))
 
 
 @dataclass(frozen=True)
@@ -122,6 +156,8 @@ def parse(text: str) -> Manifest | None:
 
 def read(path: Path) -> Manifest | None:
     try:
+        if path.stat().st_size > MAX_SIZE:
+            return None
         return parse(path.read_text(encoding="utf-8-sig", errors="replace"))
     except OSError:
         return None

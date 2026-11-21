@@ -102,7 +102,7 @@ def parse_cyberpunk_save_metadata(save_path: Path, save: mobase.ISaveGame):
         if "bodyGender" in meta:
             info["Gender"] = f'{meta["bodyGender"]} / {meta.get("brainGender", "")}'
         return info
-    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError):
         # a save the game is still writing, or another version's format
         return None
 

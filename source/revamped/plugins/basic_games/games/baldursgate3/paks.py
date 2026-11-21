@@ -135,9 +135,16 @@ def _short_desc(attrs: dict[str, str]) -> dict[str, Any]:
     }
 
 
+# MO2 Revamped: every part is bounded, a malformed meta.lsx full of
+# `<attribute id="a" ` without a ">" made the lazy scan quadratic (360 KB took
+# over a minute)
 _attr_re = re.compile(
-    r'<attribute\s+id="(?P<id>[^"]+)"[^>]*?\svalue="(?P<value>[^"]*)"', re.I
+    r'<attribute\s+id="(?P<id>[^"]{1,64})"[^>]{0,512}?\svalue="(?P<value>[^"]{0,1024})"',
+    re.I,
 )
+# a real meta.lsx is a few KB; anything bigger is not read
+_META_LIMIT = 4 * 1024 * 1024
+_META_READ_LIMIT = 16 * 1024 * 1024
 
 
 def parse_meta_lsx(data: bytes) -> dict[str, Any] | None:
@@ -147,6 +154,8 @@ def parse_meta_lsx(data: bytes) -> dict[str, Any] | None:
     mod from the load order."""
     from xml.etree import ElementTree
 
+    if len(data) > _META_LIMIT:
+        return None
     text = data.decode("utf-8-sig", "replace")
     try:
         root = ElementTree.fromstring(text)
@@ -238,7 +247,13 @@ def read_pak(path: Path, divine: Callable[[Path], tuple[list[str], bytes | None]
         package = lspk.Package(path)
         names = package.names
         entry = package.find("meta.lsx")
-        meta = package.read(entry) if entry is not None else None
+        meta = (
+            package.read(entry, max_size=_META_READ_LIMIT)
+            if entry is not None
+            else None
+        )
+        if meta is not None and len(meta) > _META_LIMIT:
+            raise lspk.Damaged("meta.lsx is far too big")
     except lspk.Damaged as e:
         raise DamagedPak(f"{path.name}: {e}") from e
     except lspk.Unsupported as e:

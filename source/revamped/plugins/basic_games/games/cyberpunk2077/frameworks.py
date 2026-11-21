@@ -48,7 +48,7 @@ REDMOD_BINARY = "tools/redmod/bin/redMod.exe"
 # MO2 Revamped maps to the game folder)
 PREFIXES = ("", "root/")
 
-_CODEWARE_IMPORT = re.compile(rb"^\s*import\s+Codeware\b", re.MULTILINE)
+_CODEWARE_IMPORT = re.compile(rb"^[ \t]*import[ \t]+Codeware\b", re.MULTILINE)
 # bytes read of one script: redscript puts its imports at the top of a file,
 # before any declaration
 _CODEWARE_READ_LIMIT = 8 * 1024

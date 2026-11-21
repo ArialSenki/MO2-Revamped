@@ -14,8 +14,14 @@ from dataclasses import dataclass
 LOG = "r6/logs/redscript_rCURRENT.log"
 _HEADER = re.compile(r"^\[(ERROR|WARN|INFO|DEBUG)[^\]]*\]\s?(.*)$")
 # redscript names the scripts in r6/scripts relative to it ("Mod\main.reds")
-_RELATIVE_SCRIPT = re.compile(r"(?:^|\s)([^\s:\\/][^\r\n:]*?\.reds):(\d+)", re.IGNORECASE)
-_SCRIPT = re.compile(r"([A-Za-z]:[\\/][^\r\n:]*?\.reds|[\\/]{2}[^\r\n:]*?\.reds)(?::(\d+))?", re.IGNORECASE)
+_RELATIVE_SCRIPT = re.compile(r"(?:^|\s)([^\s:\\/][^\r\n:]{0,260}?\.reds):(\d+)", re.IGNORECASE)
+_SCRIPT = re.compile(r"([A-Za-z]:[\\/][^\r\n:]{0,260}?\.reds|[\\/]{2}[^\r\n:]{0,260}?\.reds)(?::(\d+))?", re.IGNORECASE)
+# MO2 Revamped: the paths above are bounded (260 characters is the most a
+# Windows path has), so a long line of repeated starts can't make the lazy
+# scans quadratic. A real log is a few KB: only its last 1 MB is read, each
+# line cut to 1000 characters
+_LOG_LIMIT = 1024 * 1024
+_LINE_LIMIT = 1000
 # text kept of one error
 _MESSAGE_LIMIT = 300
 
@@ -41,11 +47,15 @@ def _relative(path: str, game_dir: str) -> str:
     return normalized
 
 
+def _lines(text: str) -> list[str]:
+    return [line[:_LINE_LIMIT] for line in text[-_LOG_LIMIT:].splitlines()]
+
+
 def parse(text: str, game_dir: str) -> list[ScriptError]:
     """The errors of a compile log, one per script and line."""
     blocks: list[list[str]] = []
     current: list[str] | None = None
-    for raw in text.splitlines():
+    for raw in _lines(text):
         header = _HEADER.match(raw)
         if header:
             current = [header.group(2)] if header.group(1) == "ERROR" else None
@@ -81,7 +91,7 @@ def parse(text: str, game_dir: str) -> list[ScriptError]:
 
 def failed(text: str) -> bool:
     """Whether the log ends with a failed compilation."""
-    for raw in reversed(text.splitlines()):
+    for raw in reversed(_lines(text)):
         header = _HEADER.match(raw)
         if header:
             if "compilation" in header.group(2).casefold() or header.group(1) == "ERROR":

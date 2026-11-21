@@ -9812,6 +9812,10 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
   <context>
     <name>Nolvus</name>
     <message>
+      <source>%1 was left alone: it isn't a place a Nolvus transfer uses</source>
+      <translation>%1 n'a pas été touché : ce n'est pas un endroit qu'utilise un transfert Nolvus</translation>
+    </message>
+    <message>
       <source>%1 (Nolvus archives)</source>
       <translation>%1 (archives Nolvus)</translation>
     </message>
