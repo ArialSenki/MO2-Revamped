@@ -93,6 +93,56 @@ int main(int argc, char** argv)
   const auto bad = writePluginsTxt({{L"\x4E2D.esp", true}}, {}, PluginsTxtStyle::Asterisk);
   CHECK(bad.unencodable.size() == 1 && bad.bytes == std::string(MO2Header) + "\r\n");
 
+  // the order MO2 is given: primary, listed, then the rest by name; the rest
+  // comes out the same whatever order the plugin list has them in
+  {
+    const std::vector<std::wstring> prim   = {L"Skyrim.esm", L"Update.esm"};
+    const std::vector<std::wstring> listed = {L"update.ESM", L"B.esp", L"Gone.esp", L"b.esp",
+                                              L"A.esp"};
+    const std::vector<std::wstring> one = {L"zeta.esp", L"A.esp", L"Skyrim.esm", L"alpha.esp",
+                                           L"B.esp", L"Beta.esl", L"Update.esm", L"Ñandú.esp"};
+    std::vector<std::wstring> two(one.rbegin(), one.rend());
+    const std::vector<std::wstring> expected = {L"Skyrim.esm", L"Update.esm", L"B.esp",
+                                                L"Gone.esp",   L"A.esp",      L"alpha.esp",
+                                                L"Beta.esl",   L"zeta.esp",   L"Ñandú.esp"};
+    const auto first  = completeLoadOrder(prim, listed, one);
+    const auto second = completeLoadOrder(prim, listed, two);
+    CHECK(first == expected);
+    CHECK(first == second);
+    // nothing listed (no plugins.txt): primary, then all by name
+    const auto none = completeLoadOrder(prim, {}, {L"c.esp", L"B.esp", L"a.esp"});
+    CHECK((none ==std::vector<std::wstring>{L"Skyrim.esm", L"Update.esm", L"a.esp", L"B.esp",
+                                          L"c.esp"}));
+    CHECK(completeLoadOrder({}, {}, {}).empty());
+  }
+
+  // Skyrim SE: plugins.txt read back gives the order it was written from
+  // (primary plugins left out of the file, put first again)
+  {
+    const std::vector<PluginState> order = {{L"Skyrim.esm", true},   {L"Update.esm", true},
+                                            {L"Dawnguard.esm", true}, {L"HearthFires.esm", true},
+                                            {L"Dragonborn.esm", true}, {L"ccFish.esm", true},
+                                            {L"Master.esm", true},   {L"Off.esp", false},
+                                            {L"On.esl", true}};
+    std::vector<std::wstring> prim = primary;
+    prim.push_back(L"ccFish.esm");
+    const auto written = writePluginsTxt(order, prim, PluginsTxtStyle::Asterisk);
+    CHECK(written.bytes == std::string(MO2Header) + "*Master.esm\r\nOff.esp\r\n*On.esl\r\n");
+    std::vector<std::wstring> listed;
+    for (const auto& entry : readPluginsTxt(written.bytes, PluginsTxtStyle::Asterisk)) {
+      listed.push_back(entry.name);
+    }
+    std::vector<std::wstring> present;
+    for (const auto& p : order) {
+      present.push_back(p.name);
+    }
+    std::vector<std::wstring> names;
+    for (const auto& p : order) {
+      names.push_back(p.name);
+    }
+    CHECK(completeLoadOrder(prim, listed, present) == names);
+  }
+
   std::printf(failures ? "%d failures\n" : "all passed\n", failures);
   return failures ? 1 : 0;
 }
