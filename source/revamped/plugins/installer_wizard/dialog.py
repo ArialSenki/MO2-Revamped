@@ -259,6 +259,9 @@ class SelectPage(Page):
         self.optionName = _plain_label(details, "instanceDetailName")
         details_layout.addWidget(self.optionName)
         self.description = _read_only_text(details, tr("Option description"))
+        # the description reads as text on the card, lined up with the option's name
+        self.description.setStyleSheet("QTextBrowser { background: transparent; border: none; padding: 0px; }")
+        self.description.document().setDocumentMargin(0)
         details_layout.addWidget(self.description, 2)
         layout.addWidget(details, 3)
 
@@ -442,6 +445,15 @@ def _list(parent: QWidget, name: str) -> QListWidget:
     return items
 
 
+def _add_inset(card: QWidget, widget: QWidget) -> None:
+    """Puts a list in a card so its items line up with the card's title (the
+    items bring their own padding, so the left inset is smaller)."""
+    box = QVBoxLayout()
+    box.setContentsMargins(6, 0, 16, 14)
+    box.addWidget(widget)
+    cast(QVBoxLayout, card.layout()).addLayout(box)
+
+
 class CompletePage(Page):
     """What the script chose: the sub-packages, which plugins start enabled,
     the INI tweaks it writes and its notes."""
@@ -494,7 +506,7 @@ class CompletePage(Page):
             package_list = _list(packages, tr("Sub-packages"))
             for name in self._subpackages:
                 package_list.addItem(QListWidgetItem(fluent.glyph_icon(fluent.GLYPH_FOLDER), name))
-            packages.layout().addWidget(package_list)
+            _add_inset(packages, package_list)
             left.addWidget(packages, 1)
             self._focus.append(package_list)
 
@@ -512,7 +524,7 @@ class CompletePage(Page):
                     else tr("Goes into the mod's optional folder; the game won't see it")
                 )
                 plugin_list.addItem(item)
-            plugin_card.layout().addWidget(plugin_list)
+            _add_inset(plugin_card, plugin_list)
             left.addWidget(plugin_card, 1)
 
         if not self._subpackages and not self._plugins:
