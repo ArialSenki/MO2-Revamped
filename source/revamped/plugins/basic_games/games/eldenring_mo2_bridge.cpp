@@ -2432,6 +2432,10 @@ bool was_seen(HMODULE module) {
 }
 
 std::wstring normalize_module_path(std::wstring path) {
+  // a long path loaded as \\?\C:\... is the same file as C:\...
+  if (path.size() > 6 && path.compare(0, 4, L"\\\\?\\") == 0 && path[5] == L':') {
+    path.erase(0, 4);
+  }
   for (wchar_t& character : path) {
     if (character == L'/') {
       character = L'\\';
@@ -2523,6 +2527,19 @@ NativeInitializerRequest* find_native_initializer(const wchar_t* module_path) {
     }
   }
   return nullptr;
+}
+
+// The initializer for a module in the process snapshot. MO2 gives the real
+// path of the DLL in its mod; the snapshot's szExePath is that real path,
+// while GetModuleFileNameW, which usvfs hooks, gives the virtual one in the
+// game folder (alpha.68 matched only that one, and no initializer ran).
+// A DLL loaded from a path of 260 characters or more is not in the snapshot.
+NativeInitializerRequest* find_native_initializer_for(const MODULEENTRY32W& entry,
+                                                      const wchar_t* module_path) {
+  if (NativeInitializerRequest* request = find_native_initializer(entry.szExePath)) {
+    return request;
+  }
+  return find_native_initializer(module_path);
 }
 
 bool all_native_initializers_started() {
@@ -2639,8 +2656,7 @@ void inspect_loaded_mods() {
       if (entry.hModule == g_module) {
         continue;
       }
-      // the module's whole path: the snapshot's szExePath stops at 259
-      // characters, and an initializer must match the path MO2 gave
+      // the path as the game sees it (virtual under usvfs)
       std::wstring module_path(32768, L'\0');
       const DWORD module_path_length = GetModuleFileNameW(
           entry.hModule, module_path.data(), static_cast<DWORD>(module_path.size()));
@@ -2653,8 +2669,9 @@ void inspect_loaded_mods() {
       // whatever it is called; the folder names only sort out the rest.
       // was_seen last: its table only has room for these
       NativeInitializerRequest* request =
-          find_native_initializer(module_path.c_str());
-      if ((request == nullptr && !has_managed_dll_path_segment(module_path.c_str())) ||
+          find_native_initializer_for(entry, module_path.c_str());
+      if ((request == nullptr && !has_managed_dll_path_segment(entry.szExePath) &&
+           !has_managed_dll_path_segment(module_path.c_str())) ||
           was_seen(entry.hModule)) {
         continue;
       }
@@ -2669,11 +2686,11 @@ void inspect_loaded_mods() {
           FreeLibrary(held);
         }
         log_line("MO2-managed DLL was unloaded before it could be inspected:",
-                 module_path.c_str());
+                 entry.szExePath);
         continue;
       }
 
-      log_line("Found MO2-managed DLL:", module_path.c_str());
+      log_line("Found MO2-managed DLL:", entry.szExePath);
       if (request != nullptr) {
         request->module = entry.hModule;
         if (InterlockedCompareExchange(&request->started, 1, 0) == 0) {
@@ -2686,7 +2703,7 @@ void inspect_loaded_mods() {
             InterlockedExchange(&request->started, 0);
             FreeLibrary(held);
             log_line("Could not start Revamped native initializer thread:",
-                     module_path.c_str());
+                     entry.szExePath);
           }
         } else {
           FreeLibrary(held);
@@ -3638,7 +3655,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
     DisableThreadLibraryCalls(instance);
     open_log();
     log_line("MO2 native bridge started.");
-    log_line("MO2 native bridge version: 0.5.0-alpha.68.");
+    log_line("MO2 native bridge version: 0.5.0-alpha.69.");
     register_dll_notifications();
     install_orphan_thread_guard();
     // Install the startup window hooks while the loader still holds the game's
