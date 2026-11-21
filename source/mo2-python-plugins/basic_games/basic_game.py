@@ -407,11 +407,24 @@ class BasicGame(mobase.IPluginGame):
 
         # MO2 Revamped: from MO2 9e30d7d
         errors: list[tuple[str, Exception]] = []
-        BasicGame.steam_games = find_steam_games()
-        BasicGame.gog_games = find_gog_games()
-        BasicGame.origin_games = find_origin_games()
-        BasicGame.epic_games = find_epic_games(errors)
-        BasicGame.eadesktop_games = find_eadesktop_games(errors)
+        # MO2 Revamped: the scan now runs when a game first asks (the instance
+        # window's game list, a launch), so a store whose files can't be read
+        # is reported with the others instead of raising there, and the other
+        # stores are still scanned
+        for name, scan in (
+            ("steam_games", find_steam_games),
+            ("gog_games", find_gog_games),
+            ("origin_games", find_origin_games),
+        ):
+            try:
+                setattr(BasicGame, name, scan())
+            except Exception as error:
+                errors.append((name.split("_")[0].capitalize(), error))
+        for name, scan in (("epic_games", find_epic_games), ("eadesktop_games", find_eadesktop_games)):
+            try:
+                setattr(BasicGame, name, scan(errors))
+            except Exception as error:
+                errors.append((name.split("_")[0].capitalize(), error))
 
         if errors:
             QMessageBox.critical(

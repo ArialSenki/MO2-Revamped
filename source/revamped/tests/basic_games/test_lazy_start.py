@@ -14,6 +14,10 @@ from basic_games.basic_game import BasicGame
 
 STORES = ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games")
 
+# as the package left them when it was imported (run_tests imports nothing
+# else of basic_games first): nothing scanned yet
+LAZY_AFTER_IMPORT = all(isinstance(vars(BasicGame)[name], basic_game._StoreGames) for name in STORES)
+
 
 def entry(**attributes):
     values = {
@@ -68,6 +72,34 @@ class LazyStart(unittest.TestCase):
 
     def tearDown(self):
         BasicGame.setup = self.saved_setup
+
+    def test_import_scans_nothing(self):
+        self.assertTrue(LAZY_AFTER_IMPORT)
+
+    def test_a_failing_store_is_reported(self):
+        # the real setup(), with Steam's library files unreadable: the error
+        # goes to the message box with the others, the other stores are scanned
+        from PyQt6.QtWidgets import QMessageBox
+
+        from basic_games import gog_utils, steam_utils
+
+        BasicGame.setup = self.saved_setup
+        shown = []
+        saved = (steam_utils.find_games, gog_utils.find_games, QMessageBox.critical)
+
+        def broken():
+            raise ValueError("bad libraryfolders.vdf")
+
+        steam_utils.find_games = broken
+        gog_utils.find_games = lambda: {"1": self.folder}
+        QMessageBox.critical = staticmethod(lambda *args: shown.append(args[2]))
+        try:
+            self.assertEqual(BasicGame.gog_games, {"1": self.folder})
+            self.assertEqual(BasicGame.steam_games, {})
+        finally:
+            steam_utils.find_games, gog_utils.find_games, QMessageBox.critical = saved
+        self.assertEqual(len(shown), 1)
+        self.assertIn("bad libraryfolders.vdf", shown[0])
 
     def test_detect_waits_for_the_path(self):
         game = FakeGame()
@@ -125,12 +157,20 @@ class LazyStart(unittest.TestCase):
 
         made = []
         saved_init = module.BlackAndWhite2Game.__init__
+        saved_detect = module.BlackAndWhite2Game.detectGame
+        folder = self.folder
 
         def counting_init(game):
             made.append(game)
             saved_init(game)
 
+        def detect_from_shortcut(game):
+            # what its shortcut reading finds on a machine with the game
+            BasicGame.detectGame(game)
+            game.setGamePath(str(folder))
+
         module.BlackAndWhite2Game.__init__ = counting_init
+        module.BlackAndWhite2Game.detectGame = detect_from_shortcut
         try:
             stub_entry = entry(Name="Black & White 2 Support Plugin", GameName="Black & White 2",
                                GameShortName="BW2", GameBinary="white.exe")
@@ -140,16 +180,19 @@ class LazyStart(unittest.TestCase):
             stub.init(None)
             stub.detectGame()
             self.assertEqual(made, [])
-            installed = stub.isInstalled()
+            # the path its own detection found reaches the stub
+            self.assertTrue(stub.isInstalled())
             self.assertEqual(len(made), 1)
             self.assertIs(stub._real_game, made[0])
-            self.assertEqual(installed, made[0].isInstalled())
+            self.assertEqual(Path(stub.gameDirectory().absolutePath()), folder)
             # asked again: the same real object
             stub.isInstalled()
             stub.gameDirectory()
             self.assertEqual(len(made), 1)
+            self.assertEqual(self.scans, 0)
         finally:
             module.BlackAndWhite2Game.__init__ = saved_init
+            module.BlackAndWhite2Game.detectGame = saved_detect
 
     def test_save_game_names_still_importable(self):
         # not a name of the module until a game module asks for it
