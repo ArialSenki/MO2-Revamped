@@ -27,6 +27,8 @@ $port = (Get-Content $portFile).Trim()
 "server on port $port"
 
 while (Get-Process ModOrganizer -ErrorAction SilentlyContinue) { Start-Sleep 20 }
+# the user's rule: RAM under 80%; waits until it's under 70%
+& powershell -NoProfile -ExecutionPolicy Bypass -File "$tools\memguard.ps1"
 & "$tools\mo2lock.ps1" take -Owner audit-stability -WaitSeconds 7200 | Out-Null
 if ($LASTEXITCODE -ne 0) { Stop-Process -Id $server.Id -Force; throw 'no MO2 lock' }
 try {
