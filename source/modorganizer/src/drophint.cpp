@@ -214,10 +214,12 @@ void DropHintOverlay::paintEvent(QPaintEvent*)
   const qreal iconSize   = 16;
   const qreal padH       = 16, gap = 8;
   const qreal pillHeight = snap(std::max(metrics.height(), iconSize) + 16, dpr);
-  const qreal maxText    = std::max<qreal>(0, frame.width() - 32 - 2 * padH - iconSize - gap);
+  // without an icon the text takes its place
+  const qreal iconBlock  = m_icon.isNull() ? 0 : iconSize + gap;
+  const qreal maxText    = std::max<qreal>(0, frame.width() - 32 - 2 * padH - iconBlock);
   const QString text     = metrics.elidedText(m_text, Qt::ElideRight, maxText);
   const qreal textWidth  = std::ceil(metrics.horizontalAdvance(text));
-  const qreal pillWidth  = snap(2 * padH + iconSize + gap + textWidth, dpr);
+  const qreal pillWidth  = snap(2 * padH + iconBlock + textWidth, dpr);
 
   // centred across, a third of the way down: the window the files come from
   // usually covers the lower half, and Windows draws the dragged file's image
@@ -241,7 +243,7 @@ void DropHintOverlay::paintEvent(QPaintEvent*)
   const QColor ink = inkOn(accent);
 
   // icon and text as one block in the middle of the pill
-  const qreal content = iconSize + gap + textWidth;
+  const qreal content = iconBlock + textWidth;
   const qreal left    = snap(pill.center().x() - content / 2.0, dpr);
   const QRectF iconRect(left, snap(pill.center().y() - iconSize / 2.0, dpr), iconSize,
                         iconSize);
@@ -257,6 +259,6 @@ void DropHintOverlay::paintEvent(QPaintEvent*)
   }
 
   p.setPen(ink);
-  const QRectF textRect(iconRect.right() + gap, pill.top(), textWidth + 1, pill.height());
+  const QRectF textRect(left + iconBlock, pill.top(), textWidth + 1, pill.height());
   p.drawText(textRect, Qt::AlignLeft | Qt::AlignVCenter, text);
 }
