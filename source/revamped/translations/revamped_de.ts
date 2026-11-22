@@ -12217,7 +12217,7 @@ p, li { white-space: pre-wrap; }
       <translation>Ordnerpfad</translation>
     </message>
     <message>
-      <source>Delete...</source>
+      <source>Delete…</source>
       <translation>Löschen…</translation>
     </message>
     <message>

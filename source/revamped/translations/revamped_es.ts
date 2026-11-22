@@ -12379,7 +12379,7 @@ p, li { white-space: pre-wrap; }
       <translation>Ruta de la carpeta</translation>
     </message>
     <message>
-      <source>Delete...</source>
+      <source>Delete…</source>
       <translation>Eliminar…</translation>
     </message>
     <message>

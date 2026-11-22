@@ -12574,7 +12574,7 @@ p, li { white-space: pre-wrap; }
       <translation>Chemin du dossier</translation>
     </message>
     <message>
-      <source>Delete...</source>
+      <source>Delete…</source>
       <translation>Supprimer…</translation>
     </message>
     <message>
