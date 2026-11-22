@@ -18,6 +18,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "downloadmanager.h"
+#include "downloadurl.h"
 
 #include "bbcode.h"
 #include "envfs.h"
@@ -60,20 +61,13 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <regex>
 
 using namespace MOBase;
+using DownloadUrl::fileNameFromDisposition;
+using DownloadUrl::withoutQuery;
 
 // TODO limit number of downloads, also display download during nxm requests, store
 // modid/fileid with downloads
 
 static const char UNFINISHED[] = ".unfinished";
-
-// MO2 Revamped: download links carry a short-lived key in their query
-// (?md5=...&expires=..., ?key=...); it stays out of the log and the messages.
-// Also used on errorString(), which quotes the url
-static QString withoutQuery(QString text)
-{
-  static const QRegularExpression query(R"(\?[^\s"']*)");
-  return text.replace(query, QString());
-}
 
 static int httpStatus(QNetworkReply* reply)
 {
@@ -84,41 +78,6 @@ static int httpStatus(QNetworkReply* reply)
 static bool isLinkRefused(int status)
 {
   return status == 401 || status == 403 || status == 410;
-}
-
-// MO2 Revamped: the file name of a Content-Disposition value: filename*=UTF-8''...
-// (RFC 6266) first, then filename="..." up to its closing quote, or unquoted
-static QString fileNameFromDisposition(const QString& disposition)
-{
-  static const QRegularExpression extended(R"re(filename\*\s*=\s*([^']*)'[^']*'([^;\s]+))re",
-                                           QRegularExpression::CaseInsensitiveOption);
-  static const QRegularExpression quoted(R"re(filename\s*=\s*"([^"]*)")re",
-                                         QRegularExpression::CaseInsensitiveOption);
-  static const QRegularExpression bare(R"re(filename\s*=\s*([^;"\s][^;]*))re",
-                                       QRegularExpression::CaseInsensitiveOption);
-
-  auto match = extended.match(disposition);
-  if (match.hasMatch()) {
-    const QByteArray raw = QByteArray::fromPercentEncoding(match.captured(2).toLatin1());
-    const QString name   = match.captured(1).compare("UTF-8", Qt::CaseInsensitive) == 0
-                               ? QString::fromUtf8(raw)
-                               : QString::fromLatin1(raw);
-    if (!name.isEmpty()) {
-      return name;
-    }
-  }
-
-  match = quoted.match(disposition);
-  if (match.hasMatch() && !match.captured(1).isEmpty()) {
-    return match.captured(1);
-  }
-
-  match = bare.match(disposition);
-  if (match.hasMatch()) {
-    return match.captured(1).trimmed();
-  }
-
-  return QString();
 }
 
 unsigned int DownloadManager::DownloadInfo::s_NextDownloadID = 1U;
@@ -763,30 +722,8 @@ void DownloadManager::addReadOnlySources(std::set<std::wstring>& seen,
 bool DownloadManager::addDownload(const QStringList& URLs, QString gameName, int modID,
                                   int fileID, const ModRepositoryFileInfo* fileInfo)
 {
-  QString fileName = QFileInfo(URLs.first()).fileName();
-  if (fileName.isEmpty()) {
-    fileName = "unknown";
-  } else {
-    fileName = QUrl::fromPercentEncoding(fileName.toUtf8());
-  }
-
-  // Temporary URLs for S3-compatible storage are signed for a single method, removing
-  // the ability to make HEAD requests to such URLs. We can use the
-  // response-content-disposition GET parameter, setting the Content-Disposition header,
-  // to predetermine intended file name without a subrequest.
-  // MO2 Revamped: the parameter is read from the query itself, the same way as
-  // the header (see fileNameFromDisposition())
-  const QUrlQuery urlQuery(QUrl(URLs.first()));
-  if (urlQuery.hasQueryItem("response-content-disposition")) {
-    const QString dispoName = fileNameFromDisposition(
-        urlQuery.queryItemValue("response-content-disposition", QUrl::FullyDecoded));
-    if (!dispoName.isEmpty()) {
-      fileName = MOBase::sanitizeFileName(dispoName);
-      if (fileName.isEmpty()) {
-        fileName = "unknown";
-      }
-    }
-  }
+  // the name from the link, or from its response-content-disposition
+  const QString fileName = DownloadUrl::fileNameFromUrl(URLs.first());
 
   // MO2 Revamped: UTF-8, as the link is; the local code page broke non-ASCII names
   QUrl preferredUrl = QUrl::fromEncoded(URLs.first().toUtf8());

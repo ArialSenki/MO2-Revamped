@@ -204,28 +204,28 @@ QString VersionInfo::parseReleaseType(QString versionString)
   // extracted now, otherwise the outer parser will think it's the subminor version and
   // then 1.0.0rc1 would be interpreted as newer than 1.0.0
 
-  static std::map<QString, ReleaseType> typeStrings = {{"prealpha", RELEASE_PREALPHA},
-                                                       {"alpha", RELEASE_ALPHA},
-                                                       {"beta", RELEASE_BETA},
-                                                       {"rc", RELEASE_CANDIDATE}};
+  // MO2 Revamped: searched in this order, pre-alpha before the "alpha" inside
+  // it (a std::map searched "alpha" first: "1.0prealpha" was an alpha with
+  // "pre" left over, and canonicalString()'s " pre-alpha" didn't parse back)
+  static const std::pair<QString, ReleaseType> typeStrings[] = {
+      {"pre-alpha", RELEASE_PREALPHA},
+      {"prealpha", RELEASE_PREALPHA},
+      {"alpha", RELEASE_ALPHA},
+      {"beta", RELEASE_BETA},
+      {"rc", RELEASE_CANDIDATE}};
 
   m_ReleaseType = RELEASE_FINAL;
 
-  auto typeIter = typeStrings.begin();
-  int offset    = -1;
-
-  for (; (typeIter != typeStrings.end()) && (offset == -1); ++typeIter) {
-    offset = (int)versionString.indexOf(typeIter->first, Qt::CaseInsensitive);
-    if (offset != -1) {
-      m_ReleaseType = typeIter->second;
-      break;
-    }
-  }
-
+  int offset = -1;
   int length = 0;
 
-  if (typeIter != typeStrings.end()) {
-    length = (int)typeIter->first.length();
+  for (const auto& [name, type] : typeStrings) {
+    offset = (int)versionString.indexOf(name, Qt::CaseInsensitive);
+    if (offset != -1) {
+      m_ReleaseType = type;
+      length        = (int)name.length();
+      break;
+    }
   }
 
   if (m_Scheme == SCHEME_REGULAR) {
@@ -258,7 +258,9 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
                   : scheme != SCHEME_DISCOVER ? scheme
                                               : SCHEME_REGULAR;
   m_ReleaseType = RELEASE_FINAL;
-  m_Major = m_Minor = m_SubMinor = m_SubSubMinor = 0;
+  // MO2 Revamped: the decimal positions too; a reused VersionInfo kept the
+  // previous version's ("1.05" then "f1.5" gave "f1.05")
+  m_Major = m_Minor = m_SubMinor = m_SubSubMinor = m_DecimalPositions = 0;
   m_Rest.clear();
   if (versionString.length() == 0) {
     return;
@@ -386,10 +388,20 @@ QDLLEXPORT bool operator<(const VersionInfo& LHS, const VersionInfo& RHS)
     return LHS.m_ReleaseType < RHS.m_ReleaseType;
 
   // if the rest contains only integers, compare them numerically
+  // MO2 Revamped: after the separators that lead it: "1.1.0-beta.9" leaves
+  // "-.9", "1.2.3.4.10" leaves ".10" and "1.0-2" leaves "-2", and as text (or
+  // as -2) they sorted beta.9 after beta.10
+  const auto number = [](const QString& rest) {
+    qsizetype i = 0;
+    while (i < rest.size() && QStringView(u"-._ ").contains(rest[i])) {
+      ++i;
+    }
+    return QStringView(rest).sliced(i);
+  };
   bool LHS_ok, RHS_ok;
   int LHS_int, RHS_int;
-  LHS_int = LHS.m_Rest.toInt(&LHS_ok);
-  RHS_int = RHS.m_Rest.toInt(&RHS_ok);
+  LHS_int = number(LHS.m_Rest).toInt(&LHS_ok);
+  RHS_int = number(RHS.m_Rest).toInt(&RHS_ok);
   if (LHS_ok && RHS_ok) {
     return LHS_int < RHS_int;
   }

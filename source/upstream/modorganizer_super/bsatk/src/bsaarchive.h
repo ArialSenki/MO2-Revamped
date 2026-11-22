@@ -170,6 +170,7 @@ private:
   {
     File::Ptr file;
     DataBuffer data;
+    bool failed = false;  // the reader couldn't read it: nothing to write
   };
 
 private:
@@ -235,7 +236,28 @@ private:
 
   void cleanFolder(Folder::Ptr folder);
 
+  // MO2 Revamped: offsets and sizes come from the archive; they are checked
+  // against its size before they size a buffer, so a damaged one can't ask
+  // for gigabytes
+  bool inArchive(uint64_t offset, uint64_t size) const
+  {
+    return offset <= m_ArchiveSize && size <= m_ArchiveSize - offset;
+  }
+  // size bytes from the current read position
+  bool remains(uint64_t size) const
+  {
+    const std::streamoff pos = m_File.tellg();
+    return pos >= 0 && inArchive(static_cast<uint64_t>(pos), size);
+  }
+  // no zlib or LZ4 data unpacks to more than about 1032 times its size
+  static bool plausibleUnpacked(uint64_t packed, uint64_t unpacked)
+  {
+    return unpacked <= packed * 1032 + 1024;
+  }
+
 private:
+  uint64_t m_ArchiveSize = 0;
+
   mutable std::fstream m_File;
 
   Folder::Ptr m_RootFolder;

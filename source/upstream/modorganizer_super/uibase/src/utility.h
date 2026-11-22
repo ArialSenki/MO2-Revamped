@@ -345,7 +345,8 @@ QString SetJoin(const std::set<T>& value, const QString& separator,
     stream << *iter;
     ++iter;
     unsigned int pos = 1;
-    for (; iter != value.end() && pos < maximum; ++iter) {
+    // MO2 Revamped: pos counted; it stayed 1 and the maximum was ignored
+    for (; iter != value.end() && pos < maximum; ++iter, ++pos) {
       stream << separator << *iter;
     }
     if (maximum < value.size()) {
@@ -365,6 +366,8 @@ QList<T> ConvertList(const QVariantList& variants)
     }
     result.append(var.value<T>());
   }
+  // MO2 Revamped: it had no return: undefined behaviour, a crash in practice
+  return result;
 }
 /**
  * @brief convert QString to std::wstring (utf-16 encoding)
@@ -644,12 +647,14 @@ bool forEachLineInFile(const QString& filePath, F&& f)
 
     if (p != lineStart) {
       // skip whitespace at beginning of line, don't go past end of line
-      while (std::isspace(*lineStart) && lineStart < p) {
+      // MO2 Revamped: the bound checked first; a file ending in a line of
+      // spaces read the byte past its buffer, here and in the '#' test
+      while (lineStart < p && std::isspace(static_cast<unsigned char>(*lineStart))) {
         ++lineStart;
       }
 
       // skip comments
-      if (*lineStart != '#') {
+      if (lineStart < p && *lineStart != '#') {
         // skip line if it only had whitespace
         if (lineStart < p) {
           // skip white at end of line

@@ -613,11 +613,17 @@ namespace shell
   std::wstring toUNC(const QFileInfo& path)
   {
     auto wpath = QDir::toNativeSeparators(path.absoluteFilePath()).toStdWString();
-    if (!wpath.starts_with(L"\\\\?\\")) {
-      wpath = L"\\\\?\\" + wpath;
+    if (wpath.starts_with(L"\\\\?\\") || wpath.starts_with(L"\\\\.\\")) {
+      return wpath;
     }
 
-    return wpath;
+    // MO2 Revamped: a network path (\\server\share\...) takes the UNC form;
+    // "\\?\" before it gave "\\?\\\server\share", which no call can open
+    if (wpath.starts_with(L"\\\\")) {
+      return L"\\\\?\\UNC\\" + wpath.substr(2);
+    }
+
+    return L"\\\\?\\" + wpath;
   }
 
   Result Delete(const QFileInfo& path)
@@ -658,8 +664,10 @@ namespace shell
 
   Result CreateDirectories(const QDir& dir)
   {
-    const DWORD e =
-        static_cast<DWORD>(::SHCreateDirectory(0, dir.path().toStdWString().c_str()));
+    // MO2 Revamped: a full path with backslashes, as SHCreateDirectory needs;
+    // with QDir's "C:/a/b/c" it made no folder past the first missing one
+    const auto path = QDir::toNativeSeparators(dir.absolutePath()).toStdWString();
+    const DWORD e   = static_cast<DWORD>(::SHCreateDirectory(0, path.c_str()));
 
     if (e != ERROR_SUCCESS) {
       return Result::makeFailure(e, QString::fromStdWString(formatSystemMessage(e)));
@@ -939,7 +947,10 @@ QString decodeTextData(const QByteArray& fileData, QString* encoding)
       codec   = utf16.value();
       decoder = QStringDecoder(codec);
     } else {
-      decoder = QStringDecoder(QStringConverter::Encoding::System);
+      // MO2 Revamped: reported too; it stayed "UTF-8", and the text editor
+      // saved an ANSI ini decoded with the code page back as UTF-8
+      codec   = QStringConverter::Encoding::System;
+      decoder = QStringDecoder(codec);
     }
     text = decoder.decode(fileData);
   }
@@ -992,10 +1003,9 @@ QIcon iconForExecutable(const QString& filePath)
 
 QString getFileVersion(QString const& filepath)
 {
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(QDir(filepath).absolutePath()).toStdWString();
+  // MO2 Revamped: through toUNC(), which also takes a path on a network share
+  // (this put "\\?\" before "\\server\share\...": no version from a share)
+  const std::wstring app_name = shell::toUNC(QFileInfo(filepath));
   DWORD handle;
   DWORD info_len = ::GetFileVersionInfoSizeW(app_name.c_str(), &handle);
   if (info_len == 0) {
@@ -1030,10 +1040,9 @@ QString getFileVersion(QString const& filepath)
 
 QString getProductVersion(QString const& filepath)
 {
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(QDir(filepath).absolutePath()).toStdWString();
+  // MO2 Revamped: through toUNC(), which also takes a path on a network share
+  // (this put "\\?\" before "\\server\share\...": no version from a share)
+  const std::wstring app_name = shell::toUNC(QFileInfo(filepath));
   DWORD handle;
   DWORD info_len = ::GetFileVersionInfoSizeW(app_name.c_str(), &handle);
   if (info_len == 0) {
