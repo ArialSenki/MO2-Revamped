@@ -613,11 +613,17 @@ namespace shell
   std::wstring toUNC(const QFileInfo& path)
   {
     auto wpath = QDir::toNativeSeparators(path.absoluteFilePath()).toStdWString();
-    if (!wpath.starts_with(L"\\\\?\\")) {
-      wpath = L"\\\\?\\" + wpath;
+    if (wpath.starts_with(L"\\\\?\\") || wpath.starts_with(L"\\\\.\\")) {
+      return wpath;
     }
 
-    return wpath;
+    // MO2 Revamped: a network path (\\server\share\...) takes the UNC form;
+    // "\\?\" before it gave "\\?\\\server\share", which no call can open
+    if (wpath.starts_with(L"\\\\")) {
+      return L"\\\\?\\UNC\\" + wpath.substr(2);
+    }
+
+    return L"\\\\?\\" + wpath;
   }
 
   Result Delete(const QFileInfo& path)
@@ -992,10 +998,9 @@ QIcon iconForExecutable(const QString& filePath)
 
 QString getFileVersion(QString const& filepath)
 {
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(QDir(filepath).absolutePath()).toStdWString();
+  // MO2 Revamped: through toUNC(), which also takes a path on a network share
+  // (this put "\\?\" before "\\server\share\...": no version from a share)
+  const std::wstring app_name = shell::toUNC(QFileInfo(filepath));
   DWORD handle;
   DWORD info_len = ::GetFileVersionInfoSizeW(app_name.c_str(), &handle);
   if (info_len == 0) {
@@ -1030,10 +1035,9 @@ QString getFileVersion(QString const& filepath)
 
 QString getProductVersion(QString const& filepath)
 {
-  // This *really* needs to be factored out
-  std::wstring app_name =
-      L"\\\\?\\" +
-      QDir::toNativeSeparators(QDir(filepath).absolutePath()).toStdWString();
+  // MO2 Revamped: through toUNC(), which also takes a path on a network share
+  // (this put "\\?\" before "\\server\share\...": no version from a share)
+  const std::wstring app_name = shell::toUNC(QFileInfo(filepath));
   DWORD handle;
   DWORD info_len = ::GetFileVersionInfoSizeW(app_name.c_str(), &handle);
   if (info_len == 0) {
