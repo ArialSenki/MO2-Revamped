@@ -37,6 +37,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
+#include <QCoreApplication>
+#include <QFrame>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -150,7 +152,10 @@ FomodInstallerDialog::FomodInstallerDialog(
 {
   buildUi();
   setWindowFlags(windowFlags() | Qt::WindowMaximizeButtonHint);
-  setWindowTitle(modName);
+  // the kind of installer, as the other installers' windows; the mod's name
+  // is in the Mod name field
+  setWindowTitle(QCoreApplication::translate("RevampedFomod", "FOMOD installer"));
+  setAccessibleDescription(modName);
 
   updateNameEdit();
   if (ui->nameCombo->completer() != nullptr) {
@@ -168,7 +173,15 @@ void FomodInstallerDialog::buildUi()
   resize(1000, 680);
   setSizeGripEnabled(true);
 
-  auto* root = new QVBoxLayout(this);
+  // a content dialog's parts (RevampedFluent::buildContent): the content, then
+  // the band of buttons at the bottom
+  auto* outer = new QVBoxLayout(this);
+  outer->setContentsMargins(0, 0, 0, 0);
+  outer->setSpacing(0);
+  auto* content = new QWidget(this);
+  content->setObjectName(QStringLiteral("fluentDialogContent"));
+  outer->addWidget(content, 1);
+  auto* root = new QVBoxLayout(content);
   root->setContentsMargins(24, 20, 24, 16);
   root->setSpacing(12);
 
@@ -287,8 +300,18 @@ void FomodInstallerDialog::buildUi()
   ui->selectionNote->setWordWrap(true);
   ui->selectionNote->setVisible(false);
   footer->addWidget(ui->selectionNote, 1);
-  // the note can be hidden: the buttons keep their size either way
+  // the note can be hidden: the row keeps its place either way
   footer->addStretch(1);
+  root->addLayout(footer);
+
+  // Back, Next and Cancel in the band, of the same width, as the content
+  // dialogs' buttons
+  auto* band = new QFrame(this);
+  band->setObjectName(QStringLiteral("fluentDialogFooter"));
+  auto* buttons = new QHBoxLayout(band);
+  buttons->setContentsMargins(24, 24, 24, 24);
+  buttons->setSpacing(8);
+  outer->addWidget(band);
   ui->prevBtn = RevampedFluent::enterPressesItself(new QPushButton(QCoreApplication::translate("RevampedFomod", "Back"), this));
   ui->prevBtn->setAutoDefault(false);
   ui->prevBtn->setEnabled(false);
@@ -299,10 +322,10 @@ void FomodInstallerDialog::buildUi()
   ui->cancelBtn = RevampedFluent::enterPressesItself(new QPushButton(QCoreApplication::translate("RevampedFomod", "Cancel"), this));
   ui->cancelBtn->setAutoDefault(false);
   for (auto* button : {ui->prevBtn, ui->nextBtn, ui->cancelBtn}) {
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     button->setMinimumWidth(110);
-    footer->addWidget(button);
+    buttons->addWidget(button, 1);
   }
-  root->addLayout(footer);
 
   connect(ui->manualBtn, &QPushButton::clicked, this,
           &FomodInstallerDialog::on_manualBtn_clicked);

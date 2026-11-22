@@ -689,14 +689,21 @@ class WizardInstallerDialog(QDialog):
         self._pages: dict[ParserRuleContext, SelectPage] = {}
 
         self.setObjectName("BainWizardDialog")
-        self.setWindowTitle(tr("BAIN Wizard Installer"))
+        self.setWindowTitle(tr("BAIN wizard installer"))
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowFlag(Qt.WindowType.WindowMaximizeButtonHint, True)
         self.setMinimumSize(760, 520)
         self.resize(960, 640)
         self.setSizeGripEnabled(True)
 
-        root = QVBoxLayout(self)
+        # a content dialog's parts: the content, then the band of buttons
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        content = QWidget(self)
+        content.setObjectName("fluentDialogContent")
+        outer.addWidget(content, 1)
+        root = QVBoxLayout(content)
         root.setContentsMargins(24, 20, 24, 16)
         root.setSpacing(12)
 
@@ -763,6 +770,15 @@ class WizardInstallerDialog(QDialog):
         footer.addWidget(self._manualBtn)
         footer.addWidget(self._scriptBtn)
         footer.addStretch(1)
+        root.addLayout(footer)
+        # Back, Next and Cancel in the band, of the same width, as the content
+        # dialogs' buttons
+        band = QFrame(self)
+        band.setObjectName("fluentDialogFooter")
+        buttons = QHBoxLayout(band)
+        buttons.setContentsMargins(24, 24, 24, 24)
+        buttons.setSpacing(8)
+        outer.addWidget(band)
         self._backBtn = fluent.enter_presses_itself(QPushButton(tr("Back"), self))
         self._backBtn.setAutoDefault(False)
         self._nextBtn = fluent.enter_presses_itself(QPushButton(tr("Next"), self))
@@ -772,9 +788,9 @@ class WizardInstallerDialog(QDialog):
         cancel = fluent.enter_presses_itself(QPushButton(tr("Cancel"), self))
         cancel.setAutoDefault(False)
         for button in (self._backBtn, self._nextBtn, cancel):
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             button.setMinimumWidth(110)
-            footer.addWidget(button)
-        root.addLayout(footer)
+            buttons.addWidget(button, 1)
 
         self._cancelBtn = cancel
         self._image_cache: dict[Path, QPixmap] = {}

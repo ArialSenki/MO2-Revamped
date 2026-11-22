@@ -25,7 +25,7 @@ public:
   explicit InstallerFomodPredialog(const MOBase::GuessedValue<QString>& preset,
                                    QWidget* parent = nullptr)
       : RevampedFluent::ContentDialog(
-            parent, QStringLiteral("FomodCSharpPredialog"), tr("FOMOD C# Installer"),
+            parent, QStringLiteral("FomodCSharpPredialog"), tr("FOMOD C# installer"),
             tr("This mod's installer is a C# script. MO2 runs it when you choose "
                "Install; it may ask you questions in its own windows."))
   {
