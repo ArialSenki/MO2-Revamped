@@ -275,12 +275,13 @@ void FluentDashboard::setupBanner(QWidget* central)
   auto* layout = qobject_cast<QBoxLayout*>(central->layout());
   layout->insertWidget(0, m_banner);
   m_banner->installEventFilter(this);
+  m_lastPlayed->installEventFilter(this);
 }
 
 bool FluentDashboard::eventFilter(QObject* watched, QEvent* event)
 {
   if (event->type() == QEvent::Resize || event->type() == QEvent::LayoutRequest) {
-    if (watched == m_banner) {
+    if (watched == m_banner || watched == m_lastPlayed) {
       fitBanner();
     } else if (watched == m_stats) {
       fitStats();
@@ -291,22 +292,28 @@ bool FluentDashboard::eventFilter(QObject* watched, QEvent* event)
 
 // a narrow window (about 1024 px, or 150 %) first drops the "Profile" and
 // "Program" words before the pickers, which explain themselves, so "Last
-// saved" keeps its words
+// saved" keeps its words. It goes by what the layout did: "Last saved" drawn
+// narrower than its text hides the words, and they come back once the banner
+// has room for everything with them
 void FluentDashboard::fitBanner()
 {
   auto* row = m_banner->layout();
-  if (row == nullptr || m_profileLabel == nullptr || m_programLabel == nullptr) {
+  if (row == nullptr || m_profileLabel == nullptr || m_programLabel == nullptr ||
+      m_lastPlayed->fullText().isEmpty()) {
     return;
   }
-  int need = row->sizeHint().width();
-  if (m_profileLabel->isHidden()) {
-    need += m_profileLabel->sizeHint().width() + m_programLabel->sizeHint().width() +
-            2 * row->spacing();
+  if (!m_profileLabel->isHidden()) {
+    if (m_lastPlayed->width() < m_lastPlayed->sizeHint().width()) {
+      m_profileLabel->hide();
+      m_programLabel->hide();
+    }
+    return;
   }
-  const bool fits = m_banner->width() >= need;
-  if (m_profileLabel->isHidden() == fits) {
-    m_profileLabel->setVisible(fits);
-    m_programLabel->setVisible(fits);
+  const int need = row->sizeHint().width() + m_profileLabel->sizeHint().width() +
+                   m_programLabel->sizeHint().width() + 2 * row->spacing();
+  if (m_banner->width() >= need) {
+    m_profileLabel->show();
+    m_programLabel->show();
   }
 }
 
