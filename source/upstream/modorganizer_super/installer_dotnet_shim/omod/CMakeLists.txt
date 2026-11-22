@@ -4,6 +4,11 @@ cmake_minimum_required(VERSION 3.16)
 # plugin and its .NET libraries install to installer_omod\dotnet\
 add_library(installer_omod_shim SHARED)
 mo2_configure_plugin(installer_omod_shim WARNINGS OFF TRANSLATIONS OFF)
+# MO2 Revamped: the real plugin is C++/CLI. A .NET error that leaves it (a
+# library missing from the dotnet folder, the WinForms set-up) reaches this
+# native code as a structured exception, which catch (...) only catches
+# with /EHa: under the default /EHsc it ended MO2 at the first install
+target_compile_options(installer_omod_shim PRIVATE /EHa)
 target_sources(installer_omod_shim PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/dotnetplugin.h)
 set_target_properties(installer_omod_shim PROPERTIES
 	OUTPUT_NAME installer_omod PDB_NAME installer_omod_shim CXX_STANDARD 20)
