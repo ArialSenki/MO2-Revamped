@@ -166,9 +166,29 @@ def draw_glyph(painter: QPainter, rect: QRectF, glyph: int, color: QColor, pixel
     painter.restore()
 
 
+def muted_color() -> QColor:
+    """The theme's muted tone, the one MO2 draws a row's glyph in."""
+    application = QApplication.instance()
+    dark = application is not None and application.palette().window().color().lightness() < 128
+    return QColor("#C5C5C5" if dark else "#5D5D5D")
+
+
+def _label_ink(label: QLabel) -> QColor:
+    """The color a glyph's picture is drawn in: the one the theme gives the
+    label (read once it is polished: before that the palette is the window's
+    text color), or the muted tone when the theme has no rule for it."""
+    label.ensurePolished()
+    ink = label.palette().color(QPalette.ColorRole.WindowText)
+    application = QApplication.instance()
+    if application is not None and ink == application.palette().color(QPalette.ColorRole.WindowText):
+        return muted_color()
+    return ink
+
+
 def set_glyph(label: QLabel, glyph: int, color: QColor | None = None, pixels: int = 16) -> None:
     """A label that shows one glyph: its text in the icon font, or MO2's
-    picture of it without one. In the color, or else the label's text color."""
+    picture of it without one. In the color, or else the one the theme gives
+    the label (the muted tone when it gives none)."""
     if has_glyph_font():
         label.setText(chr(glyph))
         label.setFont(glyph_font(pixels))
@@ -177,8 +197,7 @@ def set_glyph(label: QLabel, glyph: int, color: QColor | None = None, pixels: in
     else:
         label.setText("")
         label.setPixmap(glyph_pixmap(glyph, pixels,
-                                     color if color is not None
-                                     else label.palette().color(QPalette.ColorRole.WindowText)))
+                                     color if color is not None else _label_ink(label)))
 
 
 def glyph_label(glyph: int, parent: QWidget | None = None) -> QLabel:
@@ -186,9 +205,9 @@ def glyph_label(glyph: int, parent: QWidget | None = None) -> QLabel:
     label = QLabel(chr(glyph), parent)
     label.setObjectName("instanceRowGlyph")
     if not has_glyph_font():
-        # MO2's picture of it, in the text color (no icon font to draw it)
+        # MO2's picture of it, in the row glyphs' muted tone (no icon font to draw it)
         label.setText("")
-        label.setPixmap(glyph_pixmap(glyph, 16, label.palette().color(QPalette.ColorRole.WindowText)))
+        label.setPixmap(glyph_pixmap(glyph, 16, _label_ink(label)))
     label.setFont(glyph_font(16))
     label.setFixedWidth(24)
     label.setAlignment(Qt.AlignmentFlag.AlignCenter)
