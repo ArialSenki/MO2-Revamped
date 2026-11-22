@@ -60,7 +60,9 @@ def has_glyph_font() -> bool:
     # MO2R_GLYPH_SVG=1 forces the pictures on Windows, as it does in MO2
     if os.environ.get("MO2R_GLYPH_SVG") == "1":
         return False
-    return any(QFontDatabase.hasFamily(family) for family in GLYPH_FAMILIES)
+    # PyQt6 has no QFontDatabase.hasFamily: compare with the installed families
+    installed = {family.casefold() for family in QFontDatabase.families()}
+    return any(family.casefold() in installed for family in GLYPH_FAMILIES)
 
 
 # glyph -> how much larger than its 20 px its picture is drawn (see _glyph_scale)
