@@ -22291,6 +22291,10 @@ Télécharger LSLib depuis GitHub (github.com/Norbyte/lslib) ? Sans lui, ces mod
       <source>%1 × %2 pixels</source>
       <translation>%1 × %2 pixels</translation>
     </message>
+    <message>
+      <source>Only the first %1 MB of this file are shown.</source>
+      <translation>Seuls les %1 premiers Mo de ce fichier sont affichés.</translation>
+    </message>
   </context>
   <context>
     <name>PreviewBsa</name>

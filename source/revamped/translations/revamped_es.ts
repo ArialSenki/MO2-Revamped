@@ -22388,6 +22388,10 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
       <source>%1 × %2 pixels</source>
       <translation>%1 × %2 píxeles</translation>
     </message>
+    <message>
+      <source>Only the first %1 MB of this file are shown.</source>
+      <translation>Solo se muestran los primeros %1 MB de este archivo.</translation>
+    </message>
   </context>
   <context>
     <name>PreviewBsa</name>

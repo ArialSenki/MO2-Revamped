@@ -2098,40 +2098,111 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
 
 void OrganizerCore::activateModsAfterRefresh(const QStringList& names)
 {
+  // MO2 Revamped: one callback for every mod enabled meanwhile, in the profile
+  // they were enabled in. Each enable queued its own, and each rebuilt the
+  // whole plugin list when the refresh ended (~0.3-0.7 s each with thousands
+  // of plugins); and a profile switch in between turned the mods' plugins on
+  // in the new profile, over what the user had there
+  const QString profile =
+      m_CurrentProfile != nullptr ? m_CurrentProfile->name() : QString();
+  if (profile != m_ActivateProfile) {
+    m_ActivateAfterRefresh.clear();
+    m_ActivateProfile = profile;
+  }
+  for (const QString& name : names) {
+    m_ActivateAfterRefresh.insert(name);
+  }
+  if (m_ActivateQueued) {
+    return;
+  }
+  m_ActivateQueued = true;
   onNextRefresh(
-      [this, names] {
+      [this] {
+        m_ActivateQueued = false;
         // the refresh that just ended started before the mods were enabled;
         // the one queued after it has them
-        // and after a failed one, the next that works (refreshESPList() skips
-        // a failed one too)
-        if (m_RefreshPending || m_LastRefreshFailed) {
-          activateModsAfterRefresh(names);
+        if (m_RefreshPending) {
+          activateModsAfterRefresh({});
           return;
         }
-        if (m_CurrentProfile == nullptr) {
+        if (m_LastRefreshFailed) {
+          // the first refresh that works after a failed one: the plugin list
+          // is rebuilt only once its tasks are done (refreshESPList() skips
+          // while the flag is up), so the plugins go on right after that
+          QMetaObject::invokeMethod(
+              this,
+              [this] {
+                activatePendingMods();
+              },
+              Qt::QueuedConnection);
           return;
         }
-        // by name: mods installed meanwhile moved the indices
-        QList<unsigned int> indices;
-        for (const QString& name : names) {
-          const unsigned int index = ModInfo::getIndex(name);
-          if (index != UINT_MAX && m_CurrentProfile->modEnabled(index)) {
-            indices.append(index);
-          }
-        }
-        if (indices.isEmpty()) {
-          return;
-        }
-        refreshESPList(true);
-        m_PluginList.blockSignals(true);
-        updateModsActiveState(indices, true);
-        m_PluginList.blockSignals(false);
-        refreshBSAList();
-        if (m_UserInterface != nullptr) {
-          m_UserInterface->archivesWriter().writeImmediately(false);
-        }
+        activatePendingMods();
       },
       RefreshCallbackGroup::CORE, RefreshCallbackMode::FORCE_WAIT_FOR_REFRESH);
+}
+
+void OrganizerCore::activatePendingMods()
+{
+  // another refresh started meanwhile: its end does them
+  if (m_DirectoryUpdate || m_RefreshPending) {
+    activateModsAfterRefresh({});
+    return;
+  }
+  if (m_CurrentProfile == nullptr || m_CurrentProfile->name() != m_ActivateProfile) {
+    m_ActivateAfterRefresh.clear();
+    return;
+  }
+  // by name: mods installed meanwhile moved the indices. A mod the
+  // structure doesn't have yet (the refresh failed) waits for one that
+  // has it: decided by the structure, not by the refresh's flags, so
+  // the first refresh that works turns its plugins on, and not some
+  // later one over what the user chose meanwhile
+  QList<unsigned int> indices;
+  QStringList waiting;
+  for (const QString& name : std::as_const(m_ActivateAfterRefresh)) {
+    const unsigned int index = ModInfo::getIndex(name);
+    if (index == UINT_MAX || !m_CurrentProfile->modEnabled(index)) {
+      continue;
+    }
+    const ModInfo::Ptr mod = ModInfo::getByIndex(index);
+    if (!ownsOriginName(mod)) {
+      continue;
+    }
+    if (!m_DirectoryStructure->originExists(ToWString(mod->internalName()))) {
+      waiting.append(name);
+      continue;
+    }
+    indices.append(index);
+  }
+  m_ActivateAfterRefresh.clear();
+  if (!waiting.isEmpty()) {
+    activateModsAfterRefresh(waiting);
+  }
+  if (indices.isEmpty()) {
+    return;
+  }
+  refreshESPList(true);
+  m_PluginList.blockSignals(true);
+  updateModsActiveState(indices, true);
+  m_PluginList.blockSignals(false);
+  refreshBSAList();
+  if (m_UserInterface != nullptr) {
+    m_UserInterface->archivesWriter().writeImmediately(false);
+  }
+  // the archives of those mods, now enabled with their plugins: the
+  // refresh read the archive list before they were (as when a mod is
+  // enabled outside a refresh, see updateModsInDirectoryStructure)
+  const std::vector<QString> archives = enabledArchives();
+  const std::set<QString> archiveSet(archives.begin(), archives.end());
+  const auto archiveContext = m_DirectoryRefresher->archiveContext(archiveSet);
+  for (unsigned int index : indices) {
+    const ModInfo::Ptr mod = ModInfo::getByIndex(index);
+    m_DirectoryRefresher->addModBSAToStructure(
+        m_DirectoryStructure, mod->internalName(),
+        m_CurrentProfile->getModPriority(index), mod->absolutePath(),
+        mod->archives(), archiveContext);
+  }
 }
 
 void OrganizerCore::updateModInDirectoryStructure(unsigned int index,

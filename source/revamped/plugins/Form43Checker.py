@@ -25,6 +25,10 @@ class Form43Checker(mobase.IPluginDiagnose):
 
     def init(self, organizer: mobase.IOrganizer):
         self.__organizer = organizer
+        # MO2 skips a plugin's refresh callback while the plugin is off: the
+        # answer kept from before would never be forgotten (and none asked
+        # for again behind the flag), so it is when the plugin is on again
+        organizer.onPluginEnabled(self.name(), self.__forget)
         return True
 
     def name(self):

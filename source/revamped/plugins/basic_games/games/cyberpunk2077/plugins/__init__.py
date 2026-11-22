@@ -73,6 +73,9 @@ class CyberpunkFrameworkCheck(mobase.IPluginDiagnose):
         mod_list.onModStateChanged(self._states_changed)
         mod_list.onModInstalled(lambda mod, *_: self._mod_files_changed(mod))
         mod_list.onModRemoved(lambda name, *_: self._mod_files_changed(name))
+        # a refresh (F5, a program's end, files hidden in a mod) forgets every
+        # mod: a change below a mod's top folder keeps the folder's date
+        self._summaries.watch(organizer, self.name(), self._changed)
         organizer.onProfileChanged(lambda *_: self._changed())
         # the game compiles the scripts as it starts: read its log once it closes
         organizer.onFinishedRun(lambda *_: self._changed())

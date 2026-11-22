@@ -22127,6 +22127,10 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <source>%1 × %2 pixels</source>
       <translation>%1 × %2 Pixel</translation>
     </message>
+    <message>
+      <source>Only the first %1 MB of this file are shown.</source>
+      <translation>Nur die ersten %1 MB dieser Datei werden angezeigt.</translation>
+    </message>
   </context>
   <context>
     <name>PreviewBsa</name>
