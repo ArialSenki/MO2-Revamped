@@ -31,6 +31,40 @@ class PerModCache(Generic[T]):
         for key in [key for key in self._entries if key[0] == name]:
             del self._entries[key]
 
+    def clear(self) -> None:
+        self._entries.clear()
+
+    def watch(
+        self,
+        organizer: mobase.IOrganizer,
+        plugin_name: str,
+        changed: Callable[[], None] | None = None,
+    ) -> None:
+        """Forgets every mod at each refresh of MO2's files: F5, the end of a
+        program, files hidden or deleted in a mod, Overwrite moved into one.
+        A change below a mod's top folder doesn't change that folder's date
+        (and the listing's copy of the date is updated lazily), so the date
+        alone kept such a result until MO2 restarted. Toggling a mod is no
+        refresh, so it stays cheap. MO2 skips a plugin's refresh callback
+        while the plugin is off: turned on again, it forgets too. changed()
+        is called after, for the check to make its report again."""
+        self._organizer = organizer
+        self._changed = changed
+        organizer.onPluginEnabled(plugin_name, self._refreshed_off)
+        self._watch_next_refresh()
+
+    def _watch_next_refresh(self) -> None:
+        self._organizer.onNextRefresh(self._refreshed, False)
+
+    def _refreshed(self) -> None:
+        self._refreshed_off()
+        self._watch_next_refresh()
+
+    def _refreshed_off(self) -> None:
+        self.clear()
+        if self._changed is not None:
+            self._changed()
+
     def active(
         self,
         organizer: mobase.IOrganizer,
@@ -42,7 +76,12 @@ class PerModCache(Generic[T]):
         gives None (or raises) is left out and read again next time."""
         mod_list = organizer.modList()
         mods = []
-        for name in mod_list.allModsByProfilePriority():
+        names = list(mod_list.allModsByProfilePriority())
+        # a mod renamed or gone: its entry would stay forever
+        existing = set(names)
+        for key in [key for key in self._entries if key[0] not in existing]:
+            del self._entries[key]
+        for name in names:
             if not mod_list.state(name) & mobase.ModState.ACTIVE:
                 continue
             mod = mod_list.getMod(name)

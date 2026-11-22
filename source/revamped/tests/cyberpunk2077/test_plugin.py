@@ -409,6 +409,21 @@ class FrameworkTest(unittest.TestCase):
             check._mod_files_changed("Mod 7")
             check.activeProblems()
             self.assertEqual(sorted(reads), ["Mod 3", "Mod 7"])
+
+            # a file below a mod's top folder changes no date: MO2's refresh
+            # (F5, a program's end, a file hidden in the mod) forgets every mod
+            reads.clear()
+            (organizer.mods / "Mod 5" / "archive/pc/mod/m5.archive").unlink()
+            check.activeProblems()
+            self.assertEqual(reads, [])
+            organizer.refresh()
+            check.activeProblems()
+            self.assertEqual(len(reads), 21)
+            # and the next refresh is watched too
+            reads.clear()
+            organizer.refresh()
+            check.activeProblems()
+            self.assertEqual(len(reads), 21)
         finally:
             fake_organizer.FakeMod.fileTree = saved
             mod_cache._folder_stamps = saved_stamps

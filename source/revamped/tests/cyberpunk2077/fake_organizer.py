@@ -199,6 +199,17 @@ class FakeOrganizer:
         self.about_to_run.append(callback)
         return True
 
+    def onNextRefresh(self, callback, immediate_if_possible: bool = True) -> bool:
+        self.__dict__.setdefault("refresh_callbacks", []).append(callback)
+        return True
+
+    def refresh(self) -> None:
+        """What MO2 does at the end of a refresh: the callbacks run once (one
+        they register waits for the next refresh)."""
+        callbacks, self.refresh_callbacks = self.__dict__.get("refresh_callbacks", []), []
+        for callback in callbacks:
+            callback()
+
     def onProfileChanged(self, callback) -> bool:
         return True
 
