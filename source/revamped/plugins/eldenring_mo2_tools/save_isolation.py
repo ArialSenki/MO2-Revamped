@@ -4202,7 +4202,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             if not metadata_path.is_file() or cls._is_reparse_point(metadata_path):
                 continue
             try:
-                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
                 name = cls._validated_save_profile_name(metadata.get("name"))
                 if metadata.get("id") != profile_id:
                     continue
@@ -4647,7 +4647,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if base is None:
             return {}
         try:
-            data = json.loads((base / _LAUNCH_METHODS_FILENAME).read_text(encoding="utf-8"))
+            data = json.loads((base / _LAUNCH_METHODS_FILENAME).read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, ValueError):
             return {}
         methods = data.get("methods") if isinstance(data, dict) else None
@@ -4685,7 +4685,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
             raise OSError(_tr("The MO2 instance folder is unknown."))
         path = base / _LAUNCH_METHODS_FILENAME
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, ValueError):
             data = {}
         if not isinstance(data, dict):
@@ -4705,7 +4705,7 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         if base is None:
             return True
         try:
-            data = json.loads((base / _LAUNCH_METHODS_FILENAME).read_text(encoding="utf-8"))
+            data = json.loads((base / _LAUNCH_METHODS_FILENAME).read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, ValueError):
             return True
         return not isinstance(data, dict) or data.get(self._ReforgedOnlineSavesKey) != "shared"

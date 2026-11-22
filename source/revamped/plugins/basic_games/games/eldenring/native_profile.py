@@ -200,6 +200,8 @@ class NativeProfileMixin:
             disabled_libraries: set[tuple[str, str]] = set()
             seen_routes: set[tuple[str, str]] = set()
             seen_virtual_paths: dict[str, dict] = {}
+            # for each game path, the copy its kept initializer belongs to
+            initializer_sources: dict[str, Path] = {}
             scope_priorities: set[int] = set()
             native_route_index_cache: dict[
                 str, tuple[dict[str, str], list[str]]
@@ -543,10 +545,22 @@ class NativeProfileMixin:
                         f"Elden Ring MO2: '{route}' of '{mapped_mod}' is the same game "
                         f"file as an earlier native profile entry; it loads once, from '{winner}'."
                     )
-                    # an initializer names an export of its own copy of the DLL
+                    # an initializer names an export of its own copy of the DLL:
+                    # the first entry's goes when its copy is not the one that loads
+                    loads = os.path.normcase(str(earlier["real_library"]))
+                    if (
+                        earlier["initializer"]
+                        and os.path.normcase(str(initializer_sources[virtual_key])) != loads
+                    ):
+                        qInfo(
+                            f"Elden Ring MO2: dropped initializer '{earlier['initializer']}' of "
+                            f"'{earlier['route']}': the copy that loads is from '{winner}'."
+                        )
+                        earlier["initializer"] = None
                     if initializer_function and not earlier["initializer"]:
-                        if os.path.normcase(str(_source_path)) == os.path.normcase(str(earlier["real_library"])):
+                        if os.path.normcase(str(_source_path)) == loads:
                             earlier["initializer"] = initializer_function
+                            initializer_sources[virtual_key] = _source_path
                         else:
                             qInfo(
                                 f"Elden Ring MO2: dropped initializer '{initializer_function}' of "
@@ -562,6 +576,7 @@ class NativeProfileMixin:
                     "initializer": initializer_function,
                 }
                 seen_virtual_paths[virtual_key] = entry
+                initializer_sources[virtual_key] = _source_path
                 entries.append(entry)
                 declared_libraries.add(os.path.normcase(str(library.resolve())))
                 scope_priorities.add(active_mod_priority[winner])

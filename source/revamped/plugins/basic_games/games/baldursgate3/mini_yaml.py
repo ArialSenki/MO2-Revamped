@@ -401,11 +401,14 @@ class _Block:
     def block_scalar(self, header: str, indent: int) -> str:
         folded = header[0] == ">"
         chomp = "-" if "-" in header else "+" if "+" in header else ""
+        # an indentation indicator ("|2", ">-2"): the text starts that many
+        # columns in from its parent, so its own leading spaces are kept
+        indicator = re.search(r"[1-9]", header)
         body: list[str] = []
-        block_indent = None
+        block_indent = indent + int(indicator[0]) if indicator else None
         while self.pos < len(self.lines):
             ind, content, raw = self.lines[self.pos]
-            if content and ind <= indent:
+            if content and (ind <= indent or (indicator and ind < block_indent)):
                 break
             if block_indent is None and content:
                 block_indent = ind

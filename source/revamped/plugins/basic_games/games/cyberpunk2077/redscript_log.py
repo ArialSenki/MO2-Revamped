@@ -15,7 +15,13 @@ LOG = "r6/logs/redscript_rCURRENT.log"
 _HEADER = re.compile(r"^\[(ERROR|WARN|INFO|DEBUG)[^\]]*\]\s?(.*)$")
 # redscript names the scripts in r6/scripts relative to it ("Mod\main.reds")
 _RELATIVE_SCRIPT = re.compile(r"(?:^|\s)([^\s:\\/][^\r\n:]{0,260}?\.reds):(\d+)", re.IGNORECASE)
-_SCRIPT = re.compile(r"([A-Za-z]:[\\/][^\r\n:]{0,260}?\.reds|[\\/]{2}[^\r\n:]{0,260}?\.reds)(?::(\d+))?", re.IGNORECASE)
+# a full path: Windows, network, or Unix (Linux/Steam Deck), the last only at
+# the start of a word so "Mod/main.reds" stays relative
+_SCRIPT = re.compile(
+    r"([A-Za-z]:[\\/][^\r\n:]{0,260}?\.reds|[\\/]{2}[^\r\n:]{0,260}?\.reds"
+    r"|(?<!\S)/[^\s/:][^\r\n:]{0,260}?\.reds)(?::(\d+))?",
+    re.IGNORECASE,
+)
 # MO2 Revamped: the paths above are bounded (260 characters is the most a
 # Windows path has), so a long line of repeated starts can't make the lazy
 # scans quadratic. A real log is a few KB: only its last 1 MB is read, each

@@ -38,7 +38,7 @@ class SaveSwapMixin:
         """The executables switched by hand in Save Isolation, keyed by their
         normalised binary path."""
         try:
-            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8"))
+            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, ValueError):
             return {}
         methods = data.get("methods") if isinstance(data, dict) else None
@@ -54,7 +54,7 @@ class SaveSwapMixin:
     def reforged_online_saves_separate(cls, instance_base: Path) -> bool:
         """Whether Reforged's online play keeps its own save (the default)."""
         try:
-            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8"))
+            data = json.loads(cls.launch_methods_path(instance_base).read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, ValueError):
             return True
         if not isinstance(data, dict):
