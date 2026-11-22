@@ -388,10 +388,20 @@ QDLLEXPORT bool operator<(const VersionInfo& LHS, const VersionInfo& RHS)
     return LHS.m_ReleaseType < RHS.m_ReleaseType;
 
   // if the rest contains only integers, compare them numerically
+  // MO2 Revamped: after the separators that lead it: "1.1.0-beta.9" leaves
+  // "-.9", "1.2.3.4.10" leaves ".10" and "1.0-2" leaves "-2", and as text (or
+  // as -2) they sorted beta.9 after beta.10
+  const auto number = [](const QString& rest) {
+    qsizetype i = 0;
+    while (i < rest.size() && QStringView(u"-._ ").contains(rest[i])) {
+      ++i;
+    }
+    return QStringView(rest).sliced(i);
+  };
   bool LHS_ok, RHS_ok;
   int LHS_int, RHS_int;
-  LHS_int = LHS.m_Rest.toInt(&LHS_ok);
-  RHS_int = RHS.m_Rest.toInt(&RHS_ok);
+  LHS_int = number(LHS.m_Rest).toInt(&LHS_ok);
+  RHS_int = number(RHS.m_Rest).toInt(&RHS_ok);
   if (LHS_ok && RHS_ok) {
     return LHS_int < RHS_int;
   }
