@@ -398,6 +398,10 @@ class ForcedLoadsMixin:
             if not settings.is_file():
                 continue
             value = self._ini_value(settings, "SAVE", "save_file_extension")
+            # read as the save tool reads it (_settings_extension): without a
+            # "; note", quotes or a leading dot
+            if value:
+                value = value.split(";", 1)[0].strip().strip("\"'").lstrip(".") or None
             # MO2 Revamped: "sl2" (or Reforged's err) would aim Convergence's
             # co-op saves at another game save
             if self._usable_coop_extension(value):
@@ -465,7 +469,11 @@ class ForcedLoadsMixin:
             partial = settings_target.with_name(settings_target.name + ".mo2r-tmp")
             partial.write_bytes(new_data)
             os.replace(partial, settings_target)
-        return target_dir / seamless.name
+        copy = target_dir / seamless.name
+        if not copy.is_file():
+            # its own DLL a link (left out of the copy above) or not copied
+            raise OSError(f"{copy} wasn't copied")
+        return copy
 
     @staticmethod
     def _files_without_links(folder: Path):

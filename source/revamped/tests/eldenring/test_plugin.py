@@ -379,6 +379,26 @@ class ConvergenceWithSeamless(unittest.TestCase):
         self.assertTrue(type(game)._usable_coop_extension("cnvco2"))
         self.assertTrue(type(game)._usable_coop_extension("co3"))
 
+    def test_extension_read_as_the_save_tool_reads_it(self):
+        # "; note", quotes and a leading dot: the same value in both
+        self.add_convergence(extension='".cnvx" ; Convergence co-op')
+        self.assertEqual(game_for(self.organizer)._convergence_coop_extension(), "cnvx")
+
+    def test_no_launch_stop_without_native_dlls(self):
+        # with the mods' DLLs not loaded, a copy that can't be made stops nothing
+        self.add_convergence()
+        game = game_for(self.organizer)
+        blocker = Path(self.organizer.base) / game.ConvergenceSeamlessFolder
+        blocker.parent.mkdir(parents=True, exist_ok=True)
+        blocker.write_text("not a folder", encoding="utf-8")
+        saved = self.organizer.pluginSetting
+        self.organizer.pluginSetting = lambda plugin, key: (
+            False if key == game.NativeDllSetting else saved(plugin, key))
+        try:
+            self.assertTrue(game._convergence_seamless_ready(str(Path("eldenring.exe"))))
+        finally:
+            self.organizer.pluginSetting = saved
+
     def test_a_failed_copy_loads_no_seamless(self):
         # with the copy impossible, the mod's own DLL would save Convergence's
         # characters into ER0000.co2: no Seamless DLL, and the launch says why

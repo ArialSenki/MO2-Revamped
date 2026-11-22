@@ -376,6 +376,9 @@ class LaunchChecksMixin:
         into the co-op save it uses without Convergence."""
         if self._runs_outside_vfs(app_path):
             return True
+        if not bool(self._organizer.pluginSetting(self.name(), self.NativeDllSetting)):
+            # MO2 loads no mod DLL then, Seamless's neither
+            return True
         self._seamless_load_dll()
         error = getattr(self, "_convergence_seamless_error", None)
         if not error:
