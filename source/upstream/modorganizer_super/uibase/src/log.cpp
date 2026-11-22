@@ -360,8 +360,17 @@ void createDefault(LoggerConfiguration conf)
 
 Logger& getDefault()
 {
-  Q_ASSERT(g_default);
-  return *g_default;
+  if (g_default) {
+    return *g_default;
+  }
+
+  // MO2 Revamped: no default logger yet (uibase used before createDefault(), or
+  // from a Python process outside MO2 such as the test harness): dereferencing
+  // the empty pointer killed the process on the first log line, so log to a
+  // fallback that only writes warnings and errors to a console, if there is one
+  static Logger fallback(
+      LoggerConfiguration{.name = "uibase", .maxLevel = Levels::Warning, .pattern = "%v"});
+  return fallback;
 }
 
 }  // namespace MOBase::log
