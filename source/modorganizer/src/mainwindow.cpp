@@ -3003,10 +3003,16 @@ QFuture<void> MainWindow::checkForProblemsAsync()
       continue;
     }
     if (auto* diagnose = qobject_cast<IPluginDiagnose*>(pluginObj)) {
+      QElapsedTimer took;
+      took.start();
       try {
         proxied += diagnose->activeProblems().size();
       } catch (const std::exception& e) {
         log::warn("problem check of {} failed: {}", plugin->name(), e.what());
+      }
+      // they hold the interface thread: name the slow ones
+      if (took.elapsed() >= 20) {
+        log::debug("problem check of {}: {} ms", plugin->name(), took.elapsed());
       }
     }
   }
