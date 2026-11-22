@@ -8,6 +8,8 @@
 #include <iplugingame.h>
 #include <utility.h>
 
+#include <algorithm>
+
 #include <QAction>
 #include <QCoreApplication>
 #include <QDialog>
@@ -628,6 +630,7 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
   auto* rows = new QVBoxLayout(card);
   rows->setContentsMargins(0, 0, 0, 0);
   rows->setSpacing(0);
+  QList<QPushButton*> buttons;
   for (const Row& entry : topic.rows) {
     auto* row = new QFrame(card);
     row->setObjectName(QStringLiteral("fluentSettingRow"));
@@ -666,8 +669,18 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
         onAction(action);
       });
       rowLayout->addWidget(button, 0, Qt::AlignVCenter);
+      buttons << button;
     }
     rows->addWidget(row);
+  }
+  // a page's buttons line up in one column of the same width
+  int buttonWidth = 0;
+  for (QPushButton* button : buttons) {
+    button->ensurePolished();
+    buttonWidth = std::max(buttonWidth, button->sizeHint().width());
+  }
+  for (QPushButton* button : buttons) {
+    button->setMinimumWidth(buttonWidth);
   }
   layout->addWidget(card);
   layout->addStretch(1);
