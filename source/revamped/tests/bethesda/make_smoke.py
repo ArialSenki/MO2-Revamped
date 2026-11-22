@@ -1,7 +1,7 @@
 """Fake game trees for the Bethesda smoke tests (MO2 Revamped): each of the 14
 Bethesda games opened in MO2 with the old and the new game plugin.
 
-    python -I make_smoke.py <root> <game>
+    python -I make_smoke.py <root> <game> [<saves folder>]
     python -I make_smoke.py diff <old.json> <new.json> <old root> <new root> [<old bed> <new bed>]
 
 The first form writes <root>/game (the game's exe and launcher are copies of
@@ -10,7 +10,8 @@ as minimal plugin headers of the game's format) and <root>/instance (two mods,
 profile Default with local saves and the game's INI files, ModOrganizer.ini).
 The tree is valid for both the old plugins (source/upstream/modorganizer_super/
 game_*) and the new ones (source/revamped/games/bethesda/games/*). Nothing
-outside <root> is touched.
+outside <root> is touched. With a saves folder (the deep pass), its files are
+copied into the profile's saves and automatic archive invalidation is on.
 
 The second form compares two mo2r_smoke_dump.py outputs with each root (and
 the user's own folders) replaced by a placeholder, and prints the differences.
@@ -156,7 +157,7 @@ def at(hours):
     return T0 + hours * HOUR
 
 
-def make(root, key):
+def make(root, key, saves=None):
     g = GAMES[key]
     fmt = g["fmt"]
     game, inst = os.path.join(root, "game"), os.path.join(root, "instance")
@@ -213,8 +214,13 @@ def make(root, key):
         f.write(MO2_HEADER + "\n" + "".join(p + "\n" for p in order))
     for name in ("plugins.txt", "loadorder.txt"):
         os.utime(os.path.join(prof, name), (at(200), at(200)))
+    if saves:
+        for name in sorted(os.listdir(saves)):
+            if os.path.isfile(os.path.join(saves, name)):
+                shutil.copy2(os.path.join(saves, name), os.path.join(prof, "saves", name))
     with open(os.path.join(prof, "settings.ini"), "w") as f:
-        f.write("[General]\nLocalSaves=true\nLocalSettings=true\nAutomaticArchiveInvalidation=false\n")
+        f.write("[General]\nLocalSaves=true\nLocalSettings=true\nAutomaticArchiveInvalidation="
+                + ("true" if saves else "false") + "\n")
     for ini in g["inis"]:
         with open(os.path.join(prof, ini), "w", newline="\r\n") as f:
             if g["order"] == "mw":
@@ -290,12 +296,12 @@ def diff(old_json, new_json, old_root, new_root, old_bed=None, new_bed=None):
 def main():
     if len(sys.argv) in (6, 8) and sys.argv[1] == "diff":
         sys.exit(diff(*sys.argv[2:]))
-    if len(sys.argv) != 3 or sys.argv[2] not in GAMES:
+    if len(sys.argv) not in (3, 4) or sys.argv[2] not in GAMES:
         raise SystemExit(__doc__ + "\ngames: " + ", ".join(GAMES))
     root = sys.argv[1]
     if os.path.exists(root):
         shutil.rmtree(root)
-    make(root, sys.argv[2])
+    make(root, sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None)
 
 
 if __name__ == "__main__":

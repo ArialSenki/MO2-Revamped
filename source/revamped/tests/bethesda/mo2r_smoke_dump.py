@@ -188,7 +188,27 @@ class SmokeDump(mobase.IPlugin):
         out["ModDataContent"] = r
 
         f, r = feature("SaveGameInfo")
+        # the Saves tab: the saves in the profile (the deep pass puts real ones
+        # there) as the game lists them, with their missing plugins
+        try:
+            listed = list(self._org.managedGame().listSaves(QDir(prof.absolutePath() + "/saves")))
+        except Exception as e:
+            listed = None
+            r["saves"] = {"error": f"{type(e).__name__}: {e}"}
+        if listed is not None:
+            saves = []
+            for s in sorted(listed, key=lambda s: s.getFilepath().lower()):
+                row = {"name": method(s, "getName"), "file": method(s, "getFilepath"),
+                       "group": method(s, "getSaveGroupIdentifier"),
+                       "files": call(lambda: sorted(s.allFiles()))}
+                if f is not None:
+                    row["missing"] = call(lambda: {k: sorted(v) for k, v in f.getMissingAssets(s).items()})
+                saves.append(row)
+            r["saves"] = saves
         out["SaveGameInfo"] = r
+        # what archive invalidation left in the game's data folder (the deep pass
+        # turns it on)
+        out["dataFolder"] = call(lambda: sorted(os.listdir(self._org.managedGame().dataDirectory().absolutePath())))
 
         f, r = feature("ScriptExtender")
         if f is not None:

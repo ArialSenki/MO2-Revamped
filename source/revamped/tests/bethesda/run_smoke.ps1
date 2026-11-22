@@ -4,7 +4,7 @@ in MO2 once with the old game_*.dll and once with the new one, on a fresh fake
 tree each time (make_smoke.py), and what mobase shows compared
 (mo2r_smoke_dump.py, then make_smoke.py diff).
 
-  run_smoke.ps1 [-Games skyrimse,morrowind] [-OldBed ...] [-NewBed ...] [-Work ...]
+  run_smoke.ps1 [-Games skyrimse,morrowind] [-OldBed ...] [-NewBed ...] [-Work ...] [-SavesRoot ...]
 
 The beds differ only in their game plugins. Their ModOrganizer.ini and
 plugins\mo2r_smoke_dump.py are replaced per case. The MO2 lock is taken for
@@ -14,9 +14,14 @@ is closed with closepid.ps1. Each run's mo_interface.log is kept next to its
 JSON, and its warnings and errors printed. Folders the old or new plugin made
 under Documents\My Games (Starfield makes its Data folder there) are removed
 again if they are empty.
+
+-SavesRoot is the deep pass: each game's profile gets the files of
+<SavesRoot>\<game> (real saves, for the Saves tab and its missing plugins) and
+automatic archive invalidation on; use its own -Work.
 #>
 param([string[]]$Games, [string]$OldBed = 'D:\mo2build\bed-smoke-old', [string]$NewBed = 'D:\mo2build\bed-smoke-new',
-      [string]$Work = 'D:\mo2build\smoke-work', [int]$LockWaitSeconds = 1800, [int]$StartTimeout = 180)
+      [string]$Work = 'D:\mo2build\smoke-work', [int]$LockWaitSeconds = 1800, [int]$StartTimeout = 180,
+      [string]$SavesRoot)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $tools = 'D:\mo2build\scripts'
@@ -37,7 +42,9 @@ function Get-Dirs($path) {
 function Invoke-Case($game, $bed, $tag) {
   $root = Join-Path $Work "$game-$tag"
   $out = Join-Path $Work "$game-$tag-out"
-  & py -3.12 -I "$here\make_smoke.py" $root $game | Out-Null
+  $extra = @()
+  if ($SavesRoot) { $sv = Join-Path $SavesRoot $game; New-Item -ItemType Directory -Force $sv | Out-Null; $extra = @($sv) }
+  & py -3.12 -I "$here\make_smoke.py" $root $game @extra | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "make_smoke.py failed for $game" }
   Remove-Item $out -Recurse -Force -ErrorAction SilentlyContinue
   New-Item -ItemType Directory -Force $out | Out-Null
