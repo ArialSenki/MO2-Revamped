@@ -1011,6 +1011,7 @@ int MOApplication::run(MOMultiProcess& multiProcess)
     setStartupDiagnosticPhase("application.run.event_loop");
     writeStartupDiagnosticEvent("application.run.event_loop.begin");
     res = exec();
+    log::debug("exit: event loop ended");
     setStartupDiagnosticPhase("application.run.shutdown");
     writeStartupDiagnosticEvent("application.run.event_loop.returned");
     mainWindow.close();
@@ -1018,6 +1019,7 @@ int MOApplication::run(MOMultiProcess& multiProcess)
     // main window is about to be destroyed
     m_nexus->getAccessManager()->setTopLevelWidget(nullptr);
   }
+  log::debug("exit: main window closed");
 
   // reset geometry if the flag was set from the settings dialog
   m_settings->geometry().resetIfNeeded();

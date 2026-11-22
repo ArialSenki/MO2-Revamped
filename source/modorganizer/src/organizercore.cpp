@@ -207,23 +207,36 @@ OrganizerCore::~OrganizerCore()
     m_RootLastRun = nullptr;
   }
 
+  log::debug("exit: core: game folder restored");
   m_RefresherThread.exit();
   m_RefresherThread.wait();
 
   if (m_StructureDeleter.joinable()) {
     m_StructureDeleter.join();
   }
+  log::debug("exit: core: refresher stopped");
 
   saveCurrentProfile();
 
   // profile has to be cleaned up before the modinfo-buffer is cleared
   m_CurrentProfile.reset();
+  log::debug("exit: core: profile saved");
 
   ModInfo::clear();
   m_ModList.setProfile(nullptr);
   //  NexusInterface::instance()->cleanup();
+  log::debug("exit: core: mods cleared");
 
-  delete m_DirectoryStructure;
+  // MO2 Revamped: when MO2 is closing, the process ends right after this; the
+  // system frees the structure's memory at once, where freeing its entries one
+  // by one held the exit ~0.5 s with a Nolvus list (~550,000 files). A core
+  // replaced inside the process (a restart during setup) still frees it
+  if (ModOrganizerCanCloseNow()) {
+    m_DirectoryStructure = nullptr;
+  } else {
+    delete m_DirectoryStructure;
+  }
+  log::debug("exit: core: files structure released");
 }
 
 void OrganizerCore::storeSettings()
