@@ -33,6 +33,7 @@ class IPluginGame;
 #include <QElapsedTimer>
 #include <QHash>
 #include <QListWidget>
+#include <QReadWriteLock>
 #include <QString>
 #include <QTemporaryFile>
 #include <QTime>
@@ -382,9 +383,24 @@ private:
 private:
   void syncLoadOrder();
   void updateIndices();
+  // rebuilds the indexes by name and by priority from m_ESPs; the caller holds
+  // m_RowsLock for writing
+  void rebuildNameIndexes();
   // the plugin's index in m_ESPs, or -1: by its exact name first, then without
   // case
   int indexOfName(const QString& name) const;
+
+  // MO2 Revamped: the problems check runs the plugins' checks on a worker
+  // thread, and they ask this list by name (state(), masters()...) while the
+  // interface thread may be rebuilding it after mods were switched: a lookup
+  // in the half-built name index crashed MO2. The rows and their indexes
+  // (m_ESPs, m_ESPsByName, m_ESPsByExactName, m_ESPsByPriority) only change
+  // shape under this lock, taken for writing; the by-name getters take it for
+  // reading when another thread calls them. The interface thread, the only
+  // one that writes, reads without it. Nothing is called back or signalled
+  // while it is held for writing
+  mutable QReadWriteLock m_RowsLock;
+  class OffThreadRead;
 
   // MO2 Revamped: plugins a profile names that no mod has (a list's optional
   // mods left off); logged as one line once the profile is read

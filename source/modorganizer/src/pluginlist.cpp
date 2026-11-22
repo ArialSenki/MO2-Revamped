@@ -53,12 +53,14 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSortFilterProxyModel>
 #include <QElapsedTimer>
 #include <QTimer>
+#include <QThread>
 #include <QString>
 #include <QtDebug>
 
 #include <algorithm>
 #include <ctime>
 #include <execution>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
 
@@ -285,6 +287,7 @@ void PluginList::refresh(const QString& profileName,
     beginResetModel();
     m_ResettingModel = true;
     setProperty("__aboutToChange", true);
+    const QWriteLocker rows(&m_RowsLock);
     m_ESPs.clear();
     m_ESPsByName.clear();
     m_ESPsByExactName.clear();
@@ -439,6 +442,9 @@ void PluginList::refresh(const QString& profileName,
   }
 
   tHeaders = stage.restart();
+  // made here and added to the list further down, under the rows' lock
+  std::vector<ESPInfo> added;
+  added.reserve(newPlugins.size());
   for (const NewPlugin& plugin : newPlugins) {
     const QString& filename     = *plugin.filename;
     const FileEntryPtr& current = *plugin.entry;
@@ -479,11 +485,11 @@ void PluginList::refresh(const QString& profileName,
         originName           = modInfo->name();
       }
 
-      m_ESPs.emplace_back(filename, forceLoaded, forceEnabled, forceDisabled,
-                          originName, plugin.fullPath, hasIni, loadedArchives,
-                          lightPluginsAreSupported, mediumPluginsAreSupported,
-                          *plugin.header);
-      m_ESPs.rbegin()->priority = -1;
+      added.emplace_back(filename, forceLoaded, forceEnabled, forceDisabled,
+                         originName, plugin.fullPath, hasIni, loadedArchives,
+                         lightPluginsAreSupported, mediumPluginsAreSupported,
+                         *plugin.header);
+      added.back().priority = -1;
     } catch (const std::exception& e) {
       errors.append(tr("failed to update esp info for file %1 (source id: %2), error: %3")
                         .arg(filename)
@@ -516,18 +522,32 @@ void PluginList::refresh(const QString& profileName,
     }
   }
 
-  for (const auto& espName : m_ESPsByName) {
-    if (!available.contains(espName.first.toLower())) {
-      m_ESPs[espName.second].name = "";
-    }
-  }
+  // the rows change shape in one step for the other threads: the new plugins
+  // come in, the ones no longer there leave, and the indexes by name follow.
+  // Between two of these a by-name lookup would find rows that are gone
+  size_t rowsBefore = 0;
+  {
+    const QWriteLocker rows(&m_RowsLock);
+    m_ESPs.insert(m_ESPs.end(), std::make_move_iterator(added.begin()),
+                  std::make_move_iterator(added.end()));
+    added.clear();
 
-  const size_t rowsBefore = m_ESPs.size();
-  m_ESPs.erase(std::remove_if(m_ESPs.begin(), m_ESPs.end(),
-                              [](const ESPInfo& info) -> bool {
-                                return info.name.isEmpty();
-                              }),
-               m_ESPs.end());
+    for (const auto& espName : m_ESPsByName) {
+      if (!available.contains(espName.first.toLower())) {
+        m_ESPs[espName.second].name = "";
+      }
+    }
+
+    rowsBefore = m_ESPs.size();
+    m_ESPs.erase(std::remove_if(m_ESPs.begin(), m_ESPs.end(),
+                                [](const ESPInfo& info) -> bool {
+                                  return info.name.isEmpty();
+                                }),
+                 m_ESPs.end());
+
+    fixPriorities();
+    rebuildNameIndexes();
+  }
 
   if (!persistent.isEmpty() && m_ESPs.size() != rowsBefore) {
     std::unordered_map<QString, int> rowOf;
@@ -547,11 +567,9 @@ void PluginList::refresh(const QString& profileName,
     changePersistentIndexList(persistent, moved);
   }
 
-  fixPriorities();
-
   // functions in GamePlugins will use the IPluginList interface of this, so
-  // indices need to work. priority will be off however
-  updateIndices();
+  // indices need to work (rebuilt above). priority will be off however
+  generatePluginIndexes();
   tRows = stage.restart();
 
   if (gamePlugins) {
@@ -1250,8 +1268,33 @@ int PluginList::timeElapsedSinceLastChecked() const
   return m_LastCheck.elapsed();
 }
 
+// holds m_RowsLock for reading on any thread but the list's own
+class PluginList::OffThreadRead
+{
+public:
+  explicit OffThreadRead(const PluginList& list)
+      : m_Lock(QThread::currentThread() != list.thread() ? &list.m_RowsLock : nullptr)
+  {
+    if (m_Lock != nullptr) {
+      m_Lock->lockForRead();
+    }
+  }
+  ~OffThreadRead()
+  {
+    if (m_Lock != nullptr) {
+      m_Lock->unlock();
+    }
+  }
+  OffThreadRead(const OffThreadRead&)            = delete;
+  OffThreadRead& operator=(const OffThreadRead&) = delete;
+
+private:
+  QReadWriteLock* m_Lock;
+};
+
 QStringList PluginList::pluginNames() const
 {
+  const OffThreadRead reading(*this);
   QStringList result;
 
   for (const ESPInfo& info : m_ESPs) {
@@ -1263,6 +1306,7 @@ QStringList PluginList::pluginNames() const
 
 IPluginList::PluginStates PluginList::state(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return IPluginList::STATE_MISSING;
@@ -1343,6 +1387,7 @@ void PluginList::setLoadOrder(const QStringList& pluginList)
 
 int PluginList::priority(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   return i < 0 ? -1 : m_ESPs[i].priority;
 }
@@ -1373,6 +1418,7 @@ bool PluginList::setPriority(const QString& name, int newPriority)
 
 int PluginList::loadOrder(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return -1;
@@ -1383,6 +1429,7 @@ int PluginList::loadOrder(const QString& name) const
 
 QStringList PluginList::masters(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return QStringList();
@@ -1397,6 +1444,7 @@ QStringList PluginList::masters(const QString& name) const
 
 QString PluginList::origin(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return QString();
@@ -1407,6 +1455,7 @@ QString PluginList::origin(const QString& name) const
 
 bool PluginList::hasMasterExtension(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1417,6 +1466,7 @@ bool PluginList::hasMasterExtension(const QString& name) const
 
 bool PluginList::hasLightExtension(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1427,6 +1477,7 @@ bool PluginList::hasLightExtension(const QString& name) const
 
 bool PluginList::isMasterFlagged(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1437,6 +1488,7 @@ bool PluginList::isMasterFlagged(const QString& name) const
 
 bool PluginList::isMediumFlagged(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1447,6 +1499,7 @@ bool PluginList::isMediumFlagged(const QString& name) const
 
 bool PluginList::isLightFlagged(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1457,6 +1510,7 @@ bool PluginList::isLightFlagged(const QString& name) const
 
 bool PluginList::hasNoRecords(const QString& name) const
 {
+  const OffThreadRead reading(*this);
   const int i = indexOfName(name);
   if (i < 0) {
     return false;
@@ -1498,6 +1552,16 @@ PluginList::onPluginMoved(const std::function<void(const QString&, int, int)>& f
 
 void PluginList::updateIndices()
 {
+  {
+    const QWriteLocker rows(&m_RowsLock);
+    rebuildNameIndexes();
+  }
+
+  generatePluginIndexes();
+}
+
+void PluginList::rebuildNameIndexes()
+{
   m_ESPsByName.clear();
   m_ESPsByExactName.clear();
   m_ESPsByExactName.reserve(static_cast<qsizetype>(m_ESPs.size()));
@@ -1518,8 +1582,6 @@ void PluginList::updateIndices()
   for (const auto& [name, i] : m_ESPsByName) {
     m_ESPsByExactName.insert(m_ESPs[i].name, i);
   }
-
-  generatePluginIndexes();
 }
 
 int PluginList::indexOfName(const QString& name) const

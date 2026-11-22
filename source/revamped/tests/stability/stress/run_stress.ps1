@@ -9,7 +9,8 @@ listed. Result in <Out>\result.json.
   py -3.12 -I make_stress_tree.py <tree> 1500
   run_stress.ps1 -Bed <test bed> -Tree <tree> -Out <folder> [-Exe <ModOrganizer.exe to copy in>]
 
-MO2R_STRESS_PHASES=selection stops after the selection phase.
+MO2R_STRESS_PHASES=selection stops after the selection phase; =readers runs only
+the plugin list asked from other threads while several mods are switched.
 Needs D:\mo2build\scripts (desk.ps1, closepid.ps1, mo2lock.ps1).
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Out,
