@@ -72,6 +72,7 @@ private:
     LICENSE_REVAMPED,
     LICENSE_YAFSML,
     LICENSE_MINHOOK,
+    LICENSE_FLUENTICONS,
   };
 
 private:

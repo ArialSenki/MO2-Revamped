@@ -70,9 +70,12 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   m_LicenseFiles[LICENSE_DXTEX]   = "DXTex.txt";
   m_LicenseFiles[LICENSE_VDF]     = "ValveFileVDF.txt";
   // MO2 Revamped: the notices and licenses it ships in licenses/ itself
-  m_LicenseFiles[LICENSE_REVAMPED] = "MO2-Revamped-THIRD-PARTY-NOTICES.txt";
+  // the installer ships the notices as Markdown (Copy-RevampedLicenses in
+  // Build-Release.ps1); the older .txt is removed from the install
+  m_LicenseFiles[LICENSE_REVAMPED] = "MO2-Revamped-THIRD-PARTY-NOTICES.md";
   m_LicenseFiles[LICENSE_YAFSML]   = "YAFSML-MIT.txt";
   m_LicenseFiles[LICENSE_MINHOOK]  = "MinHook-BSD-2-Clause.txt";
+  m_LicenseFiles[LICENSE_FLUENTICONS] = "FluentUISystemIcons-MIT.txt";
 
   addLicense(tr("MO2 Revamped third-party notices"), LICENSE_REVAMPED);
   addLicense("Mod Organizer 2 / usvfs", LICENSE_GPL3);
@@ -82,10 +85,11 @@ AboutDialog::AboutDialog(const QString& version, QWidget* parent,
   addLicense("Boost Library", LICENSE_BOOST);
   addLicense("7-zip", LICENSE_7ZIP);
   addLicense("ZLib", LICENSE_ZLIB);
+  // MO2 Revamped: Tango still covers the INI editor's icon; the RRZE and
+  // game-icons.net pictures of 2.5.2 are no longer shipped, and the icons MO2
+  // draws without the Windows icon fonts come from Fluent UI System Icons
   addLicense("Tango Icon Theme", LICENSE_NONE);
-  addLicense("RRZE Icon Set", LICENSE_CCBY3);
-  addLicense("Icons by Lorc, Delapouite and sbed available on http://game-icons.net",
-             LICENSE_CCBY3);
+  addLicense("Fluent UI System Icons", LICENSE_FLUENTICONS);
   addLicense("Castle Core", LICENSE_CASTLE);
   addLicense("ANTLR", LICENSE_ANTLR);
   addLicense("LOOT", LICENSE_GPL3);
@@ -288,7 +292,12 @@ void AboutDialog::on_creditsList_currentItemChanged(QListWidgetItem* current,
   if (iter != m_LicenseFiles.end()) {
     QString filePath = qApp->applicationDirPath() + "/licenses/" + iter->second;
     QString text     = MOBase::readFileText(filePath);
-    ui->licenseText->setText(text);
+    // the notices are Markdown; the license texts are plain text
+    if (filePath.endsWith(QStringLiteral(".md"), Qt::CaseInsensitive)) {
+      ui->licenseText->setMarkdown(text);
+    } else {
+      ui->licenseText->setText(text);
+    }
   } else {
     ui->licenseText->setText(tr("No license"));
   }
