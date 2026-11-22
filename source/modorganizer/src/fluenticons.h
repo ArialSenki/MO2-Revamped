@@ -9,6 +9,7 @@
 
 #include <QColor>
 #include <QIcon>
+#include <QImage>
 #include <QRectF>
 
 class QAbstractButton;
@@ -45,6 +46,10 @@ QFont font(int pixelSize);
 // in the resources (":/MO/glyphs/<code point>"). MO2R_GLYPH_SVG=1 forces that
 // on Windows, to check it
 bool hasGlyphFont();
+
+// a glyph's SVG in the ink, a pixels-wide square (transparent when there is no
+// SVG for it): what the Qt Quick views show without the font
+QImage glyphImage(char16_t codepoint, int pixels, const QColor& ink);
 
 // draws one glyph in the rectangle, pixelSize tall: in the font when it is
 // installed, else its SVG in the ink. What draws glyphs as text goes through

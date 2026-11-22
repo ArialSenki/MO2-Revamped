@@ -543,6 +543,11 @@ QIcon glyph(char16_t codepoint, Tone tone)
   return QIcon(new GlyphEngine(codepoint, tone));
 }
 
+QImage glyphImage(char16_t codepoint, int pixels, const QColor& ink)
+{
+  return svgGlyph(codepoint, qMax(1, pixels), ink);
+}
+
 bool hasGlyphFont()
 {
   static const bool found = [] {
