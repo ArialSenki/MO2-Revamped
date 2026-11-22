@@ -423,15 +423,13 @@ class DDSPreview(mobase.IPluginPreview):
     def supportsArchives(self) -> bool:
         return True
 
+    # the import inside the guard too: when QtOpenGL can't load (Wine without
+    # OpenGL, a blocked DLL) the ImportError reached C++ as a generic error box
     def genFilePreview(self, fileName: str, maxSize: QSize) -> QWidget:
-        from DDS.DDSFile import DDSFile
-
-        return self._guarded(lambda: DDSFile.fromFile(fileName))
+        return self._guarded(lambda: _dds_file().fromFile(fileName))
 
     def genDataPreview(self, fileData: bytes, fileName: str, maxSize: QSize) -> QWidget:
-        from DDS.DDSFile import DDSFile
-
-        return self._guarded(lambda: DDSFile(fileData, fileName))
+        return self._guarded(lambda: _dds_file()(fileData, fileName))
 
     def _guarded(self, make) -> QWidget:
         # a damaged file must not take MO2 down
@@ -448,6 +446,12 @@ class DDSPreview(mobase.IPluginPreview):
         dds_file.load()
         check_data(dds_file)
         return DDSPreviewWidget(self, dds_file, bool(self._setting("log gl errors")))
+
+
+def _dds_file():
+    from DDS.DDSFile import DDSFile
+
+    return DDSFile
 
 
 def createPlugin() -> mobase.IPlugin:
