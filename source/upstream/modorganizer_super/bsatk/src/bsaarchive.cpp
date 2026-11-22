@@ -1021,9 +1021,16 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
     size_t lzInSize  = inSize;
 
     std::unique_ptr<unsigned char[]> outBuffer(new unsigned char[outSize]);
-    LZ4F_decompress(dcContext, outBuffer.get(), &lzOutSize, inBuffer.get(), &lzInSize,
-                    &options);
+    const size_t lzResult = LZ4F_decompress(dcContext, outBuffer.get(), &lzOutSize,
+                                            inBuffer.get(), &lzInSize, &options);
+    LZ4F_freeDecompressionContext(dcContext);
 
+    // MO2 Revamped: the frame must decode whole (0) to exactly the declared
+    // size. A truncated or damaged frame passed, and the buffer was written
+    // out uninitialised; the context leaked on every file
+    if (lzResult != 0 || lzOutSize != outSize) {
+      return ERROR_INVALIDDATA;
+    }
     outFile.write(reinterpret_cast<char*>(outBuffer.get()), outSize);
   } else {
     BSAULong inSize = file->m_FileSize;
@@ -1294,7 +1301,8 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
         } else {
           // Skyrim SE uses LZ4 Frame compression
           if (!fileInfo.file->m_TextureChunks.size()) {
-            char* outBuffer = new char[fileInfo.file->m_UncompressedFileSize];
+            std::unique_ptr<char[]> outBuffer(
+                new char[fileInfo.file->m_UncompressedFileSize]);
 
             LZ4F_decompressionContext_t dcContext = nullptr;
             LZ4F_decompressOptions_t options      = {};
@@ -1302,11 +1310,16 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
             size_t outSize = fileInfo.file->m_UncompressedFileSize;
             size_t inSize  = dataBuffer.second;
 
-            LZ4F_decompress(dcContext, outBuffer, &outSize, dataBuffer.first.get(),
-                            &inSize, &options);
-            outputFile.write(outBuffer, fileInfo.file->m_UncompressedFileSize);
+            const size_t lzResult = LZ4F_decompress(dcContext, outBuffer.get(), &outSize,
+                                                    dataBuffer.first.get(), &inSize, &options);
             LZ4F_freeDecompressionContext(dcContext);
-            delete[] outBuffer;
+            // MO2 Revamped: a frame that doesn't decode whole to the declared
+            // size is a failure, not a file of uninitialised memory
+            if (lzResult != 0 || outSize != fileInfo.file->m_UncompressedFileSize) {
+              ++failures;
+            } else {
+              outputFile.write(outBuffer.get(), fileInfo.file->m_UncompressedFileSize);
+            }
           }
         }
       } else {
