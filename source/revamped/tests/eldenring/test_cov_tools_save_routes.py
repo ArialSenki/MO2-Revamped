@@ -536,8 +536,9 @@ class SaveFormats(ToolCase):
         ini = write(folder / "a.ini", b"\xef\xbb\xbf[SAVE]\nSave_File_Extension = 'co3' ; c\n")
         self.assertEqual(Tool._settings_extension(ini, "save_file_extension"), "co3")
         ini = write(folder / "b.ini", "save_file_extension=\xe9t\xe9\n".encode("cp1252"))
-        # not UTF-8: read with replacement characters, never an exception
-        self.assertTrue(Tool._settings_extension(ini, "save_file_extension"))
+        # not UTF-8: read with replacement characters, never an exception, and
+        # not a plain word, so no extension (3c1b38ef)
+        self.assertEqual(Tool._settings_extension(ini, "save_file_extension"), "")
         self.assertEqual(Tool._settings_extension(folder / "missing.ini", "x"), "")
         self.assertEqual(Tool._settings_extension(write(folder / "c.ini", "other = 1\n"), "x"), "")
 
