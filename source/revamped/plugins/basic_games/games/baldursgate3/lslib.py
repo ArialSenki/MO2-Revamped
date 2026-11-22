@@ -137,6 +137,11 @@ class LSLibRetriever:
             try:
                 if self._install_tools(local[-1], True) and self._has_all_tools():
                     return True
+            except zipfile.BadZipFile:
+                # not a zip (cut short or damaged): it goes, so a fresh copy
+                # is downloaded instead of this one being tried on every start
+                qWarning(f"LSLib archive {local[-1].name} is damaged; removed")
+                _remove_damaged(local[-1])
             except Exception:  # noqa: BLE001
                 qWarning(
                     f"LSLib archive {local[-1].name} unusable: {traceback.format_exc()}"
@@ -194,7 +199,9 @@ class LSLibRetriever:
         try:
             if not self._install_tools(zip_path, not downloaded):
                 return False
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            if isinstance(e, zipfile.BadZipFile):
+                _remove_damaged(zip_path)
             qDebug(f"Extraction failed: {traceback.format_exc()}")
             self._error(
                 self._utils.tr("Failed to extract LSLib tools:\n{0}").format(
@@ -459,6 +466,13 @@ def _trusted_url(url: str) -> bool:
 
     parts = urlsplit(url)
     return parts.scheme == "https" and (parts.hostname or "").casefold() in _TRUSTED_HOSTS
+
+
+def _remove_damaged(archive: Path) -> None:
+    try:
+        archive.unlink(missing_ok=True)
+    except OSError as e:
+        qWarning(f"Couldn't remove the damaged {archive.name}: {e}")
 
 
 def _version_key(name: str) -> tuple[int, ...]:

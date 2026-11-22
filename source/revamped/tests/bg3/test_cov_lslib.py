@@ -261,6 +261,8 @@ class DownloadFlowTest(RetrieverBase):
         FakeBox.accept = False
         self.assertFalse(self.retriever.download_lslib_if_missing(reason="Mod: a.pak"))
         self.assertIn("Mod: a.pak", FakeBox.shown[0])
+        # it isn't a zip: removed, so the next start downloads a fresh copy
+        self.assertFalse((self.utils.tools_dir / "ExportTool-v1.0.zip").exists())
         # asked once per session
         self.assertFalse(self.retriever.download_lslib_if_missing())
         self.assertEqual(len(FakeBox.shown), 1)
@@ -315,6 +317,7 @@ class DownloadFlowTest(RetrieverBase):
         self.retriever._download = write
         self.assertFalse(self.retriever.download_lslib_if_missing())
         self.assertIn("Failed to extract", FakeBox.shown[-1])
+        self.assertFalse((self.utils.tools_dir / "ExportTool-v2.0.zip").exists())
 
     def test_check_for_updates(self):
         self.tools_present()
