@@ -64,6 +64,18 @@ def _tr(text: str) -> str:
 _GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
 
 
+try:
+    # MO2's pictures of the glyphs (SVGs) where no icon font is installed:
+    # Wine and Proton, or MO2R_GLYPH_SVG=1
+    import revamped_fluent as _fluent
+except ImportError:
+    _fluent = None
+
+
+def _glyph_pictures() -> bool:
+    return _fluent is not None and not _fluent.has_glyph_font()
+
+
 def _glyph_font(pixels: int) -> QFont:
     font = QFont()
     font.setFamilies(_GLYPH_FAMILIES)
@@ -80,6 +92,8 @@ def _glyph_icon(glyph: int, muted: bool = False) -> QIcon:
         if palette is not None
         else QColor("#808080")
     )
+    if _glyph_pictures():
+        return QIcon(_fluent.glyph_pixmap(glyph, 16, color))
     pixmap = QPixmap(32, 32)
     pixmap.setDevicePixelRatio(2.0)
     pixmap.fill(Qt.GlobalColor.transparent)

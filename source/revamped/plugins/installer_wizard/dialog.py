@@ -18,6 +18,7 @@ from typing import Any, cast
 from antlr4 import ParserRuleContext
 from PyQt6.QtCore import QRectF, QSize, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import (
+    QColor,
     QFontDatabase,
     QImageReader,
     QKeySequence,
@@ -407,15 +408,16 @@ class RequiresPage(Page):
             if not needed:
                 return
             state: bool | None = True if ok else (None if have is None else False)
-            mark = QLabel(chr(GLYPH_OK if state else GLYPH_UNKNOWN if state is None else GLYPH_NO))
-            mark.setFont(fluent.glyph_font(16))
+            mark = QLabel()
             # Windows 11's status colors: a met requirement green, an unmet one
-            # red, one MO2 can't check in the text's color (Light / Dark ink)
+            # red, one MO2 can't check in the text's color (Light / Dark ink).
+            # Without the icon font the mark is MO2's picture of the glyph
+            ink = None
             if state is not None:
                 dark = mark.palette().window().color().lightness() < 128
-                ink = (("#6CCB5F" if dark else "#0F7B0F") if state
-                       else ("#FF99A4" if dark else "#C42B1C"))
-                mark.setStyleSheet(f"QLabel {{ color: {ink}; background: transparent; }}")
+                ink = QColor(("#6CCB5F" if dark else "#0F7B0F") if state
+                             else ("#FF99A4" if dark else "#C42B1C"))
+            fluent.set_glyph(mark, GLYPH_OK if state else GLYPH_UNKNOWN if state is None else GLYPH_NO, ink)
             if have is None:
                 description = arg(tr("Needs %1. MO2 can't check this one."), needed)
             elif have:

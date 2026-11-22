@@ -77,6 +77,18 @@ def _named_for_nightreign(text: str) -> str:
 _GLYPH_FAMILIES = ["Segoe Fluent Icons", "Segoe MDL2 Assets"]
 
 
+try:
+    # MO2's pictures of the glyphs (SVGs) where no icon font is installed:
+    # Wine and Proton, or MO2R_GLYPH_SVG=1
+    import revamped_fluent as _fluent
+except ImportError:
+    _fluent = None
+
+
+def _glyph_pictures() -> bool:
+    return _fluent is not None and not _fluent.has_glyph_font()
+
+
 def _theme_kind() -> str:
     application = QApplication.instance()
     if application is not None and application.palette().window().color().lightness() < 128:
@@ -101,6 +113,8 @@ def _glyph_label(glyph: int, parent) -> QLabel:
     label.setFont(_glyph_font(16))
     label.setFixedWidth(24)
     label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    if _glyph_pictures():
+        _fluent.set_glyph(label, glyph)
     return label
 
 
@@ -113,6 +127,8 @@ def _glyph_icon(glyph: int, muted: bool = False) -> QIcon:
         if palette is not None
         else QColor("#808080")
     )
+    if _glyph_pictures():
+        return QIcon(_fluent.glyph_pixmap(glyph, 16, color))
     pixmap = QPixmap(32, 32)
     pixmap.setDevicePixelRatio(2.0)
     pixmap.fill(Qt.GlobalColor.transparent)
@@ -153,13 +169,16 @@ class _NavigationDelegate(QStyledItemDelegate):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(_accent_color())
             painter.drawRoundedRect(QRectF(row.left(), row.center().y() - 8, 3, 16), 1.5, 1.5)
-        painter.setFont(_glyph_font(16))
+        glyph = str(index.data(Qt.ItemDataRole.UserRole) or "")
+        glyph_rect = QRectF(row.left() + 14, row.top(), 20, row.height())
+        if glyph and _glyph_pictures():
+            _fluent.draw_glyph(painter, glyph_rect, ord(glyph[0]), text)
+        else:
+            painter.setFont(_glyph_font(16))
+            painter.setPen(text)
+            painter.drawText(glyph_rect, Qt.AlignmentFlag.AlignCenter, glyph)
+        # the page name in the text color: the fill and the pill left the pen off
         painter.setPen(text)
-        painter.drawText(
-            QRectF(row.left() + 14, row.top(), 20, row.height()),
-            Qt.AlignmentFlag.AlignCenter,
-            str(index.data(Qt.ItemDataRole.UserRole) or ""),
-        )
         label = QFont(option.font)
         label.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)
         painter.setFont(label)
