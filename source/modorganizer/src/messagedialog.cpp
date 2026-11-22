@@ -296,11 +296,10 @@ void MessageDialog::paintEvent(QPaintEvent*)
   // the glyph sits on the first line, the text in the middle of the card
   const int textTop = inner.top() + std::max(0, (inner.height() - textH) / 2);
   const int firstLine = QFontMetrics(font()).height();
-  p.setFont(FluentIcons::font(GlyphSize));
-  p.setPen(FluentIcons::color(FluentIcons::Tone::Accent));
-  p.drawText(QRect(inner.left(), textTop + (firstLine - GlyphSize - 4) / 2, GlyphSize,
-                   GlyphSize + 4),
-             Qt::AlignCenter, QString(QChar(InfoGlyph)));
+  FluentIcons::drawGlyph(p,
+                         QRect(inner.left(), textTop + (firstLine - GlyphSize - 4) / 2,
+                               GlyphSize, GlyphSize + 4),
+                         InfoGlyph, FluentIcons::color(FluentIcons::Tone::Accent), GlyphSize);
 
   p.setFont(font());
   p.setPen(ink);

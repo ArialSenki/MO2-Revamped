@@ -144,8 +144,9 @@ QWidget* ProblemsDialog::createDetails()
   empty->setProperty("fluentCard", true);
   auto* emptyLayout = new QVBoxLayout(empty);
   emptyLayout->addStretch(1);
-  auto* check = new QLabel(QString(QChar(CheckGlyph)), empty);
+  auto* check = new QLabel(empty);
   check->setFont(FluentIcons::font(40));
+  FluentIcons::setGlyph(check, CheckGlyph, 40, FluentIcons::Tone::Success);
   check->setAlignment(Qt::AlignCenter);
   QPalette palette = check->palette();
   palette.setColor(QPalette::WindowText, FluentIcons::color(FluentIcons::Tone::Success));

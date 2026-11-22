@@ -780,7 +780,6 @@ namespace Mo2RevampedSetup
             long dataBytes = 0;
             foreach (CopyEntry copy in dataCopies)
                 dataBytes += copy.Data == null ? new FileInfo(copy.SourcePath).Length : copy.Data.LongLength;
-            CheckSpace(target, manifest.TotalBytes + dataBytes, request.Mode == SetupMode.Update ? manifest.TotalBytes : 0);
 
             string backupRoot = BackupRoot(target);
             string backup = Path.Combine(backupRoot, DateTime.Now.ToString("yyyyMMdd-HHmmss-fff"));
@@ -799,6 +798,9 @@ namespace Mo2RevampedSetup
                 foreach (InstallFileState earlier in earlierState.Files)
                     if (!String.IsNullOrEmpty(earlier.Path) && !earlierFiles.ContainsKey(earlier.Path)) earlierFiles.Add(earlier.Path, earlier);
             if (WineHost.IsRunning) AddWineRuntimeCopies(manifest, payload, target, earlierFiles);
+            // after the Wine runtime copies, whose bytes it counts too; nothing
+            // was written to the target before this
+            CheckSpace(target, manifest.TotalBytes + dataBytes, request.Mode == SetupMode.Update ? manifest.TotalBytes : 0);
             HashSet<string> payloadPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (PayloadFile file in manifest.Files)
             {

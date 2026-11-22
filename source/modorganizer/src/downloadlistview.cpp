@@ -143,10 +143,7 @@ void DownloadProgressDelegate::paintGroup(QPainter* painter,
 
   // chevron right when closed, down when open
   const QRect chevron(area.left(), area.top(), 16, area.height());
-  painter->setFont(FluentIcons::font(11));
-  painter->setPen(ink);
-  painter->drawText(chevron, Qt::AlignCenter,
-                    QString(QChar(expanded ? 0xE70D : 0xE76C)));
+  FluentIcons::drawGlyph(*painter, chevron, expanded ? 0xE70D : 0xE76C, ink, 11);
 
   const QRect icon(chevron.right() + 6, area.center().y() - 8, 16, 16);
   FluentIcons::glyph(glyph, FluentIcons::Tone::Muted).paint(painter, icon);

@@ -167,8 +167,9 @@ QLabel* label(QWidget* parent, const char* name, const QString& text = {},
 
 QLabel* glyph(QWidget* parent, char16_t code)
 {
-  auto* l = label(parent, "instanceRowGlyph", QString(QChar(code)), false);
+  auto* l = label(parent, "instanceRowGlyph", QString(), false);
   l->setFont(FluentIcons::font(16));
+  FluentIcons::setGlyph(l, code, 16, FluentIcons::Tone::Muted);
   l->setFixedWidth(24);
   l->setAlignment(Qt::AlignCenter);
   return l;

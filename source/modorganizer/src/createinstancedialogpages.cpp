@@ -130,9 +130,8 @@ QIcon choiceIcon(char16_t glyph, int size = 16)
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
-    painter.setFont(FluentIcons::font(size));
-    painter.setPen(FluentIcons::color(FluentIcons::Tone::Ink));
-    painter.drawText(QRectF(left, 0, size, size), Qt::AlignCenter, QString(QChar(glyph)));
+    FluentIcons::drawGlyph(painter, QRectF(left, 0, size, size), glyph,
+                           FluentIcons::color(FluentIcons::Tone::Ink), size);
     painter.end();
     icon.addPixmap(pixmap);
   }
