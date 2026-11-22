@@ -345,7 +345,8 @@ QString SetJoin(const std::set<T>& value, const QString& separator,
     stream << *iter;
     ++iter;
     unsigned int pos = 1;
-    for (; iter != value.end() && pos < maximum; ++iter) {
+    // MO2 Revamped: pos counted; it stayed 1 and the maximum was ignored
+    for (; iter != value.end() && pos < maximum; ++iter, ++pos) {
       stream << separator << *iter;
     }
     if (maximum < value.size()) {
