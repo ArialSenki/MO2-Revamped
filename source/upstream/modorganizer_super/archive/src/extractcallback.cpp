@@ -90,6 +90,19 @@ CArchiveExtractCallback::CArchiveExtractCallback(
 
 CArchiveExtractCallback::~CArchiveExtractCallback()
 {
+  // MO2 Revamped: a file still open here never got its SetOperationResult():
+  // the extraction was canceled or failed while writing it. It was sized to its
+  // full length when opened, so it stayed with a tail of zeros, looking
+  // complete; in a Merge into an existing mod that replaced the mod's good file.
+  // It goes, as a file the archive didn't finish
+  if (m_OutFileStreamCom) {
+    m_OutputFileStream->Close();
+    m_OutFileStreamCom.Release();
+    for (const auto& path : m_FullProcessedPaths) {
+      std::error_code ec;
+      std::filesystem::remove(path, ec);
+    }
+  }
 #ifdef INSTRUMENT_ARCHIVE
   m_LogCallback(Archive::LogLevel::Debug, m_Timers.GetStream.toString(L"GetStream"));
   m_LogCallback(Archive::LogLevel::Debug, m_Timers.SetOperationResult.SetMTime.toString(

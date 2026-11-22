@@ -1253,9 +1253,15 @@ ModInfo::Ptr OrganizerCore::installDownload(int index, int priority)
 
     if (modInfo != nullptr) {
       modInfo->addInstalledFile(modID, fileID);
-      m_DownloadManager.markInstalled(index);
-      if (settings().interface().hideDownloadsAfterInstallation()) {
-        m_DownloadManager.removeDownload(index, false);
+      // MO2 Revamped: the install ran events (progress, installer dialogs), and a
+      // download canceled or looked up meanwhile left the list: the index may be
+      // another download's now. This file's, found again
+      const int now = m_DownloadManager.indexByArchive(fileName);
+      if (now >= 0) {
+        m_DownloadManager.markInstalled(now);
+        if (settings().interface().hideDownloadsAfterInstallation()) {
+          m_DownloadManager.removeDownload(now, false);
+        }
       }
     }
 
@@ -1273,8 +1279,19 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
 {
   GuessedValue<QString> modName;
   if (!initModName.isEmpty()) {
-    modName.update(initModName, GUESS_USER);
+    // MO2 Revamped: through the folder-name filter, as every other guess is (it
+    // is attached later, and doesn't apply to a value already set): a plugin's
+    // "Other mod/sub" installed into another mod's folder, ".." into the
+    // instance's, and "Name." into a folder Windows named "Name"
+    QString name = initModName;
+    if (fixDirectoryName(name)) {
+      modName.update(name, GUESS_USER);
+    } else {
+      log::warn("install: the mod name '{}' can't be a folder name, not used", initModName);
+    }
   }
+  // not caught here: a collection's install catches it and shows the reason in
+  // the mod's row, without a dialog in the middle of the run
   const auto [modIndex, modInfo] =
       doInstall(archivePath, modName, currentMod, priority, reinstallation);
   if (m_CurrentProfile == nullptr) {

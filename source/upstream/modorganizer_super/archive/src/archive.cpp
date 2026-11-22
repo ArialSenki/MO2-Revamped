@@ -29,6 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <algorithm>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <stddef.h>
 #include <string>
@@ -133,7 +134,14 @@ private:
   ALibrary m_Library;
   std::wstring m_ArchiveName;  // TBH I don't think this is required
   CComPtr<IInArchive> m_ArchivePtr;
-  CArchiveExtractCallback* m_ExtractCallback;
+  // MO2 Revamped: cancel() comes from the interface's thread while extract()
+  // runs on a worker, and once more after every extraction (the progress
+  // window is canceled as it closes). The pointer was never set before the
+  // first extraction and freed by Extract() at the end of each, so such a
+  // cancel wrote through garbage or freed memory. Now it's held (a reference)
+  // while extracting, under a lock, and is null otherwise
+  std::mutex m_CancelMutex;
+  CComPtr<CArchiveExtractCallback> m_ExtractCallback;
 
   LogCallback m_LogCallback;
   PasswordCallback m_PasswordCallback;
@@ -573,13 +581,21 @@ bool ArchiveImpl::extract(std::wstring const& outputDirectory,
     }
   }
 
-  m_ExtractCallback = new CArchiveExtractCallback(
+  CComPtr<CArchiveExtractCallback> callback = new CArchiveExtractCallback(
       progressCallback, fileChangeCallback, errorCallback, m_PasswordCallback,
       m_LogCallback, m_ArchivePtr, outputDirectory, &m_FileList[0], m_FileList.size(),
       totalSize, &m_Password);
+  {
+    std::lock_guard lock(m_CancelMutex);
+    m_ExtractCallback = callback;
+  }
   HRESULT result = m_ArchivePtr->Extract(
-      indices.data(), static_cast<UInt32>(indices.size()), false, m_ExtractCallback);
-  // Note: m_ExtractCallBack is deleted by Extract
+      indices.data(), static_cast<UInt32>(indices.size()), false, callback);
+  {
+    std::lock_guard lock(m_CancelMutex);
+    m_ExtractCallback.Release();
+  }
+  // the callback is freed when the last reference (callback) goes
   switch (result) {
   case S_OK: {
     // nop
@@ -600,7 +616,10 @@ bool ArchiveImpl::extract(std::wstring const& outputDirectory,
 
 void ArchiveImpl::cancel()
 {
-  m_ExtractCallback->SetCanceled(true);
+  std::lock_guard lock(m_CancelMutex);
+  if (m_ExtractCallback != nullptr) {
+    m_ExtractCallback->SetCanceled(true);
+  }
 }
 
 std::unique_ptr<Archive> CreateArchive()
