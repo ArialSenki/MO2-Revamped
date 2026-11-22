@@ -116,6 +116,10 @@ struct DeployOptions
 // whether deploy() can write into gameDir at all (it copies nothing when not)
 bool gameDirWritable(const QString& gameDir);
 
+// rel inside dir, with one separator between them: a game at a drive root made
+// "D://rel", which the manifest, the log and the messages then showed
+QString under(const QString& dir, const QString& rel);
+
 Result deploy(const std::vector<File>& files, const QString& gameDir,
               const QString& stateDir, const QString& overwriteRoot,
               const DeployOptions& options = {});

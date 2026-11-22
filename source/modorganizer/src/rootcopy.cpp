@@ -57,6 +57,14 @@ static QString native(const QString& path)
   return QDir::toNativeSeparators(path);
 }
 
+QString under(const QString& dir, const QString& rel)
+{
+  // a game at a drive root is "D:/" (or "D:\\"): its own separator is the one
+  return dir.endsWith(QLatin1Char('/')) || dir.endsWith(QLatin1Char('\\'))
+             ? dir + rel
+             : dir + QLatin1Char('/') + rel;
+}
+
 // --------------------------------------------------------------------------
 // PE files
 
@@ -472,7 +480,7 @@ bool gameDirWritable(const QString& gameDir)
   if (!QFileInfo(gameDir).isDir()) {
     return false;
   }
-  QFile test(gameDir + QStringLiteral("/.mo2r-rootcopy-test"));
+  QFile test(under(gameDir, QStringLiteral(".mo2r-rootcopy-test")));
   if (!test.open(QIODevice::WriteOnly)) {
     return false;
   }
@@ -710,7 +718,7 @@ QMap<QString, QPair<QString, QString>> foreignCopies(const QStringList& stateDir
 bool isConflict(const QJsonObject& e, const QString& gameDir, const QString& stateDir)
 {
   const QString rel        = e.value("path").toString();
-  const QString target     = gameDir + "/" + rel;
+  const QString target     = under(gameDir, rel);
   const QString saved      = backupPath(stateDir, rel);
   const bool hadBackup     = e.value("backup").toBool();
   const QString backupHash = e.value("backupHash").toString();
@@ -761,7 +769,7 @@ int settleConflicts(const QString& stateDir)
     }
     const QString rel    = e.value("path").toString();
     const QString saved  = backupPath(stateDir, rel);
-    const QString target = gameDir + "/" + rel;
+    const QString target = under(gameDir, rel);
     if (QFileInfo::exists(saved)) {
       const QString dest = keep + "/" + rel;
       if (!copyWhole(saved, dest, fileHash(saved)) || !removeFile(saved)) {
@@ -868,7 +876,7 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
         !planned.insert(rel.toLower()).second) {
       continue;
     }
-    const QString target = gameDir + "/" + rel;
+    const QString target = under(gameDir, rel);
     bool cached    = false;
     QString hash   = sources.hash(f.source, &cached);
     if (hash.isEmpty()) {
@@ -929,7 +937,7 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
       parents.prepend(dir);
     }
     for (const QString& dir : parents) {
-      if (!QFileInfo(gameDir + "/" + dir).isDir() &&
+      if (!QFileInfo(under(gameDir, dir)).isDir() &&
           knownDirs.insert(dir.toLower()).second) {
         dirs.append(dir);
       }
@@ -970,7 +978,7 @@ Result deploy(const std::vector<File>& files, const QString& gameDir,
     const QJsonObject e      = manifest.entry(i);
     const QString rel        = e.value("path").toString();
     const QString source     = e.value("source").toString();
-    const QString target     = gameDir + "/" + rel;
+    const QString target     = under(gameDir, rel);
     const QString hash       = e.value("hash").toString();
     const bool backup        = e.value("backup").toBool();
     const QString backupHash = e.value("backupHash").toString();
@@ -1068,7 +1076,7 @@ Result restore(const QString& stateDir)
   for (auto i = entries.size() - 1; i >= 0; --i) {
     const QJsonObject e      = entries.at(i).toObject();
     const QString rel        = e.value("path").toString();
-    const QString target     = gameDir + "/" + rel;
+    const QString target     = under(gameDir, rel);
     const QString hash       = e.value("hash").toString();
     const bool hadBackup     = e.value("backup").toBool();
     const QString backupHash = e.value("backupHash").toString();
@@ -1217,7 +1225,7 @@ Result restore(const QString& stateDir)
     return a.size() > b.size();
   });
   for (const QString& dir : dirs) {
-    QDir().rmdir(gameDir + "/" + dir);
+    QDir().rmdir(under(gameDir, dir));
   }
 
   if (remaining.isEmpty()) {
