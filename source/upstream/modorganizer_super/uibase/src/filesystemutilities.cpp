@@ -6,6 +6,26 @@
 namespace MOBase
 {
 
+namespace
+{
+
+// MO2 Revamped: a Windows device name, in any case
+bool isDeviceName(const QString& name)
+{
+  static const QString invalidNames[] = {"CON",  "PRN",  "AUX",  "NUL",  "COM1", "COM2",
+                                         "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
+                                         "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
+                                         "LPT6", "LPT7", "LPT8", "LPT9"};
+  for (const QString& device : invalidNames) {
+    if (name.compare(device, Qt::CaseInsensitive) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 bool fixDirectoryName(QString& name)
 {
   // MO2 Revamped: the characters dropped first, then the trailing dots and
@@ -20,15 +40,8 @@ bool fixDirectoryName(QString& name)
     temp = temp.trimmed();
   }
 
-  static QString invalidNames[] = {"CON",  "PRN",  "AUX",  "NUL",  "COM1", "COM2",
-                                   "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
-                                   "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
-                                   "LPT6", "LPT7", "LPT8", "LPT9"};
-  for (unsigned int i = 0; i < sizeof(invalidNames) / sizeof(QString); ++i) {
-    if (temp.compare(invalidNames[i], Qt::CaseInsensitive) == 0) {
-      temp = "";
-      break;
-    }
+  if (isDeviceName(temp)) {
+    temp = "";
   }
 
   if (temp.length() >= 1) {
@@ -64,6 +77,17 @@ bool validFileName(const QString& name)
     return false;
   }
   if (name == "." || name == "..") {
+    return false;
+  }
+
+  // MO2 Revamped: device names aren't files, also with an extension or with
+  // spaces before it ("CON.txt", "AUX .ini" open the device): the names
+  // fixDirectoryName refuses. "CON" passed
+  QString stem = name.section(u'.', 0, 0);
+  while (stem.endsWith(u' ')) {
+    stem.chop(1);
+  }
+  if (isDeviceName(stem)) {
     return false;
   }
 
