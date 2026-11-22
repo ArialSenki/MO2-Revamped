@@ -103,9 +103,39 @@ private:
   QWidget* m_colorsFrom;
 };
 
+// MO2's own plugins' options whose keys don't read well as names
+QString knownOptionName(const QString& key)
+{
+  static const std::pair<const char*, const char*> names[] = {
+      {"check_errorlog", QT_TRANSLATE_NOOP("PluginOptionNames", "Errors from the last run")},
+      {"check_font", QT_TRANSLATE_NOOP("PluginOptionNames", "Missing fonts")},
+      {"check_conflict", QT_TRANSLATE_NOOP("PluginOptionNames", "Mods that clash with MO2")},
+      {"check_missingmasters", QT_TRANSLATE_NOOP("PluginOptionNames", "Missing masters")},
+      {"check_alternategames", QT_TRANSLATE_NOOP("PluginOptionNames", "Mods from another edition")},
+      {"check_fileattributes", QT_TRANSLATE_NOOP("PluginOptionNames", "Unwanted file attributes")},
+      {"ow_ignore_empty", QT_TRANSLATE_NOOP("PluginOptionNames", "Ignore empty folders in Overwrite")},
+      {"ow_ignore_log", QT_TRANSLATE_NOOP("PluginOptionNames", "Ignore .log files in Overwrite")},
+      {"sse_downloads", QT_TRANSLATE_NOOP("PluginOptionNames", "Skyrim SE downloads")},
+      {"prefer", QT_TRANSLATE_NOOP("PluginOptionNames", "Try this installer first")},
+      {"silent", QT_TRANSLATE_NOOP("PluginOptionNames", "Install without asking")},
+      {"sensitive", QT_TRANSLATE_NOOP("PluginOptionNames", "Watch other animations too")},
+      {"external", QT_TRANSLATE_NOOP("PluginOptionNames", "Use an external editor")},
+      {"associated", QT_TRANSLATE_NOOP("PluginOptionNames", "Use the program set for .ini files")},
+  };
+  for (const auto& [option, name] : names) {
+    if (key == QLatin1String(option)) {
+      return QCoreApplication::translate("PluginOptionNames", name);
+    }
+  }
+  return {};
+}
+
 // check_font reads "Check font"; the plugin's own key stays with the row
 QString readableOptionName(QString key)
 {
+  if (const QString known = knownOptionName(key); !known.isEmpty()) {
+    return known;
+  }
   key.replace(QLatin1Char('_'), QLatin1Char(' '));
   // camelCase, without splitting an abbreviation
   static const QRegularExpression wordStart(QStringLiteral("(?<=[a-z0-9])(?=[A-Z])"));

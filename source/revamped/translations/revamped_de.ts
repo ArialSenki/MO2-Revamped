@@ -22167,4 +22167,63 @@ LSLib von GitHub herunterladen (github.com/Norbyte/lslib)? Ohne es bleiben diese
       <translation>%1-Archiv · 1 Datei · %2</translation>
     </message>
   </context>
+  <context>
+    <name>PluginOptionNames</name>
+    <message>
+      <source>Errors from the last run</source>
+      <translation>Fehler beim letzten Start</translation>
+    </message>
+    <message>
+      <source>Missing fonts</source>
+      <translation>Fehlende Schriftarten</translation>
+    </message>
+    <message>
+      <source>Mods that clash with MO2</source>
+      <translation>Mods, die mit MO2 kollidieren</translation>
+    </message>
+    <message>
+      <source>Missing masters</source>
+      <translation>Fehlende Master</translation>
+    </message>
+    <message>
+      <source>Mods from another edition</source>
+      <translation>Mods aus einer anderen Edition</translation>
+    </message>
+    <message>
+      <source>Unwanted file attributes</source>
+      <translation>Unerwünschte Dateiattribute</translation>
+    </message>
+    <message>
+      <source>Ignore empty folders in Overwrite</source>
+      <translation>Leere Ordner in Overwrite ignorieren</translation>
+    </message>
+    <message>
+      <source>Ignore .log files in Overwrite</source>
+      <translation>.log-Dateien in Overwrite ignorieren</translation>
+    </message>
+    <message>
+      <source>Skyrim SE downloads</source>
+      <translation>Downloads von Skyrim SE</translation>
+    </message>
+    <message>
+      <source>Try this installer first</source>
+      <translation>Diesen Installer zuerst versuchen</translation>
+    </message>
+    <message>
+      <source>Install without asking</source>
+      <translation>Ohne Nachfrage installieren</translation>
+    </message>
+    <message>
+      <source>Watch other animations too</source>
+      <translation>Auch andere Animationen beobachten</translation>
+    </message>
+    <message>
+      <source>Use an external editor</source>
+      <translation>Externen Editor verwenden</translation>
+    </message>
+    <message>
+      <source>Use the program set for .ini files</source>
+      <translation>Das für .ini-Dateien festgelegte Programm verwenden</translation>
+    </message>
+  </context>
 </TS>
