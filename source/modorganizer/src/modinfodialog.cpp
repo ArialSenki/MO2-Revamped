@@ -200,6 +200,17 @@ ModInfoDialog::ModInfoDialog(OrganizerCore& core, PluginContainer& plugin,
   FluentDialogs::keepRhiContentInside(this);
   ui->setupUi(this);
   perf.lap("setupUi");
+  // MO2 Revamped: set here by resource path, which the glyph table knows; the
+  // .ui files no longer point at 2.5.2's pictures
+  ui->activateESP->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/next")));
+  ui->deactivateESP->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/previous")));
+  ui->refresh->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/refresh")));
+  ui->visitNexus->setIcon(
+      FluentIcons::icon(QStringLiteral(":/MO/gui/resources/internet-web-browser.png")));
+  ui->track->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/tracked")));
+  ui->tabWidget->setTabIcon(
+      ui->tabWidget->indexOf(ui->tabNexus),
+      FluentIcons::icon(QStringLiteral(":/MO/gui/resources/internet-web-browser.png")));
   LCDNumber::useFrames(this);
 
   // All nine information tabs should remain readable without Qt's tiny

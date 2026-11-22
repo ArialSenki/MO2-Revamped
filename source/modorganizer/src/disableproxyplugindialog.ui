@@ -166,10 +166,6 @@
         <property name="text">
          <string>Disable plugin</string>
         </property>
-        <property name="icon">
-         <iconset resource="resources.qrc">
-          <normaloff>:/MO/gui/remove</normaloff>:/MO/gui/remove</iconset>
-        </property>
        </widget>
       </item>
       <item>

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <optional>
 #include <QAction>
+#include <QBuffer>
 #include <QApplication>
 #include <QCache>
 #include <QFile>
@@ -650,6 +651,24 @@ QIcon icon(const QString& resource)
     return *original;
   }
   return *originals.insert(resource, QIcon(resource));
+}
+
+QString imageUrl(const QString& resource, int size)
+{
+  // twice the size, so a scaled display still gets a sharp picture. The glyph
+  // engine caches its pixmaps per color, so the pixmap's key changes with the
+  // theme and the encoded picture is kept per key
+  static QHash<qint64, QString> cache;
+  const QPixmap pixmap = icon(resource).pixmap(QSize(size, size) * 2);
+  if (auto it = cache.constFind(pixmap.cacheKey()); it != cache.constEnd()) {
+    return *it;
+  }
+  QByteArray png;
+  QBuffer buffer(&png);
+  buffer.open(QIODevice::WriteOnly);
+  pixmap.save(&buffer, "PNG");
+  return *cache.insert(pixmap.cacheKey(), QStringLiteral("data:image/png;base64,") +
+                                              QString::fromLatin1(png.toBase64()));
 }
 
 QIcon file(const QString& fileName, bool directory)

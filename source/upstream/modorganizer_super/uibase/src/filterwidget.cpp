@@ -529,9 +529,10 @@ void FilterWidget::createClear()
 {
   m_clear = new QToolButton(m_edit);
 
-  QPixmap pixmap(":/MO/gui/edit_clear");
-  m_clear->setIcon(QIcon(pixmap));
-  m_clear->setIconSize(pixmap.size());
+  // MO2 Revamped: MO2's own clear icon, which it draws as a Fluent glyph
+  // (2.5.2's edit_clear picture is gone from the resources)
+  m_clear->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/clear.svg")));
+  m_clear->setIconSize(QSize(16, 16));
   m_clear->setCursor(Qt::ArrowCursor);
   m_clear->setStyleSheet("QToolButton { border: none; padding: 0px; }");
   m_clear->hide();

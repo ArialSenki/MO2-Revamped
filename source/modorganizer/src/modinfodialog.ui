@@ -429,10 +429,6 @@ Most mods do not have optional esps, so chances are good you are looking at an e
                <property name="text">
                 <string/>
                </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/next</normaloff>:/MO/gui/next</iconset>
-               </property>
                <property name="iconSize">
                 <size>
                  <width>22</width>
@@ -451,10 +447,6 @@ Most mods do not have optional esps, so chances are good you are looking at an e
                </property>
                <property name="text">
                 <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/previous</normaloff>:/MO/gui/previous</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -966,10 +958,6 @@ text-align: left;</string>
       </layout>
      </widget>
      <widget class="QWidget" name="tabNexus">
-      <attribute name="icon">
-       <iconset resource="resources.qrc">
-        <normaloff>:/MO/gui/resources/internet-web-browser.png</normaloff>:/MO/gui/resources/internet-web-browser.png</iconset>
-      </attribute>
       <attribute name="title">
        <string>Nexus info</string>
       </attribute>
@@ -1123,20 +1111,12 @@ p, li { white-space: pre-wrap; }
                <property name="text">
                 <string>Refresh</string>
                </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/refresh</normaloff>:/MO/gui/refresh</iconset>
-               </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="visitNexus">
                <property name="text">
                 <string>Open in browser</string>
-               </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/resources/internet-web-browser.png</normaloff>:/MO/gui/resources/internet-web-browser.png</iconset>
                </property>
               </widget>
              </item>
@@ -1145,20 +1125,12 @@ p, li { white-space: pre-wrap; }
                <property name="text">
                 <string>Endorse</string>
                </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/icon_favorite</normaloff>:/MO/gui/icon_favorite</iconset>
-               </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="track">
                <property name="text">
                 <string>Track</string>
-               </property>
-               <property name="icon">
-                <iconset resource="resources.qrc">
-                 <normaloff>:/MO/gui/tracked</normaloff>:/MO/gui/tracked</iconset>
                </property>
                <property name="checkable">
                 <bool>true</bool>

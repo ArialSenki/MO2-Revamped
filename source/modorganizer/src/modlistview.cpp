@@ -1979,9 +1979,10 @@ QString ModListView::contentsTooltip(const QModelIndex& index) const
   }
   QString result("<table cellspacing=7>");
   m_core->modDataContents().forEachContentIn(contents, [&result](auto const& content) {
+    // MO2 Revamped: the content's glyph, not the resource's old picture
     result.append(QString("<tr><td><img src=\"%1\" width=32/></td>"
                           "<td valign=\"middle\">%2</td></tr>")
-                      .arg(content.icon())
+                      .arg(FluentIcons::imageUrl(content.icon()))
                       .arg(content.name()));
   });
   result.append("</table>");

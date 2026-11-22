@@ -11,6 +11,8 @@ DisableProxyPluginDialog::DisableProxyPluginDialog(
     : QDialog(parent), ui(new Ui::DisableProxyPluginDialog)
 {
   ui->setupUi(this);
+  // MO2 Revamped: by resource path, which the glyph table knows
+  ui->yesBtn->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/remove")));
 
   ui->label_2->setPixmap(FluentIcons::glyph(0xE7BA, FluentIcons::Tone::Caution)
                              .pixmap(QSize(28, 28), devicePixelRatioF()));

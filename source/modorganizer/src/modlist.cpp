@@ -1748,8 +1748,9 @@ QString ModList::getColumnToolTip(int column) const
     QString result =
         tr("Depicts the content of the mod:") + "<br>" + "<table cellspacing=7>";
     m_Organizer->modDataContents().forEachContent([&result](auto const& content) {
+      // MO2 Revamped: the content's glyph, not the resource's old picture
       result += QString("<tr><td><img src=\"%1\" width=32/></td><td>%2</td></tr>")
-                    .arg(content.icon())
+                    .arg(FluentIcons::imageUrl(content.icon()))
                     .arg(content.name());
     });
     return result + "</table>";

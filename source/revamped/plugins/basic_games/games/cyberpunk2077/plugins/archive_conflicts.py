@@ -88,7 +88,8 @@ class ArchiveConflictsTool(mobase.IPluginTool):
         return self.description()
 
     def icon(self) -> QIcon:
-        return QIcon(":/MO/gui/content/bsa")
+        # MO2's archive icon, which it draws as a Fluent glyph
+        return QIcon(":/MO/gui/mainwindow/files/archive.svg")
 
     def setParentWidget(self, widget: QWidget) -> None:
         self._parent = widget
