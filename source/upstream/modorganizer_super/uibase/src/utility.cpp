@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "utility.h"
 #include "log.h"
 #include "report.h"
+#include <QLocale>
 #include <QApplication>
 #include <QBuffer>
 #include <QCollator>
@@ -1163,7 +1164,12 @@ QString localizedSize(unsigned long long bytes, const QString& B, const QString&
     const double truncated =
         static_cast<double>(static_cast<unsigned long long>(n * 100)) / 100.0;
 
-    return QString().setNum(truncated, 'f', 2);
+    // the decimal separator of the interface's language (QLocale's default,
+    // set with the language), as the counts beside sizes use; no grouping,
+    // so "1023.99 KB" stays one number
+    QLocale locale;
+    locale.setNumberOptions(locale.numberOptions() | QLocale::OmitGroupSeparator);
+    return locale.toString(truncated, 'f', 2);
   };
 
   if (bytes < OneKB) {
@@ -1265,6 +1271,10 @@ QDLLEXPORT QString localizedTimeRemaining(unsigned int remaining)
 
 QDLLEXPORT void localizedByteSizeTests()
 {
+  // the C locale's separator, whatever the interface's language
+  const QLocale previous;
+  QLocale::setDefault(QLocale::c());
+
   auto f = [](unsigned long long n) {
     return localizedByteSize(n).toStdString();
   };
@@ -1294,6 +1304,13 @@ QDLLEXPORT void localizedByteSizeTests()
 
   CHECK_EQ(f(1099511627776), "1.00 TB");
   CHECK_EQ(f(2759774185818), "2.51 TB");
+
+  // a language with a decimal comma, and no grouping in a size
+  QLocale::setDefault(QLocale(QLocale::Spanish, QLocale::Spain));
+  CHECK_EQ(f(2048), "2,00 KB");
+  CHECK_EQ(f(1048575), "1023,99 KB");
+
+  QLocale::setDefault(previous);
 
 #undef CHECK_EQ
 }

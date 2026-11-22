@@ -15775,7 +15775,7 @@ Revisa las opciones del juego antes de jugar.</translation>
   <context>
     <name>InstallerFomodPredialog</name>
     <message>
-      <source>FOMOD C# Installer</source>
+      <source>FOMOD C# installer</source>
       <translation>Instalador FOMOD C#</translation>
     </message>
     <message>
@@ -16001,6 +16001,10 @@ Revisa las opciones del juego antes de jugar.</translation>
     <message>
       <source>Missing files or folders</source>
       <translation>Faltan archivos o carpetas</translation>
+    </message>
+    <message>
+      <source>FOMOD installer</source>
+      <translation>Instalador FOMOD</translation>
     </message>
   </context>
   <context>
@@ -16675,7 +16679,7 @@ Revisa las opciones del juego antes de jugar.</translation>
       <translation>MO2 no puede ejecutar el wizard.txt de este paquete. Puedes abrir el script o instalar el mod a mano.</translation>
     </message>
     <message>
-      <source>BAIN Wizard Installer</source>
+      <source>BAIN wizard installer</source>
       <translation>Instalador de asistente BAIN</translation>
     </message>
     <message>

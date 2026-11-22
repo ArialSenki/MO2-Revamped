@@ -25,6 +25,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QLocale>
 #include <QRegularExpression>
 #include <QTranslator>
 #include <log.h>
@@ -454,6 +455,9 @@ void InstallLanguageTranslators(const QString& language)
 
   g_language = language;
   qApp->setProperty("mo2Language", language);
+  // numbers, sizes and dates in the interface's language too, so a count's
+  // grouping and a size's decimal separator agree ("1.530.879" with "54,48 GB")
+  QLocale::setDefault(language.isEmpty() ? QLocale::system() : QLocale(language));
 
   // Qt searches the most recently installed translator first, so the Revamped
   // file can supply strings that MO2's own files do not translate.
