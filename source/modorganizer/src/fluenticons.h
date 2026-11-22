@@ -67,6 +67,10 @@ QIcon glyph(char16_t codepoint, Tone tone = Tone::Ink);
 // when it has none
 QIcon icon(const QString& resource);
 
+// the icon of a resource (its glyph when it has one) as a data: URL for rich
+// text such as tooltips, where an <img src> would load the resource's file
+QString imageUrl(const QString& resource, int size = 32);
+
 // the icon for a file or folder in the data, conflict and file trees, picked
 // from its extension (Elden Ring archives, DLLs, configs, saves...)
 QIcon file(const QString& fileName, bool directory);
