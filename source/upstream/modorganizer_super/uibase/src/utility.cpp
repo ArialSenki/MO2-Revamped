@@ -664,8 +664,10 @@ namespace shell
 
   Result CreateDirectories(const QDir& dir)
   {
-    const DWORD e =
-        static_cast<DWORD>(::SHCreateDirectory(0, dir.path().toStdWString().c_str()));
+    // MO2 Revamped: a full path with backslashes, as SHCreateDirectory needs;
+    // with QDir's "C:/a/b/c" it made no folder past the first missing one
+    const auto path = QDir::toNativeSeparators(dir.absolutePath()).toStdWString();
+    const DWORD e   = static_cast<DWORD>(::SHCreateDirectory(0, path.c_str()));
 
     if (e != ERROR_SUCCESS) {
       return Result::makeFailure(e, QString::fromStdWString(formatSystemMessage(e)));
