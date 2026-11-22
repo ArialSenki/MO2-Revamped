@@ -467,7 +467,7 @@ static QString backupPath(const QString& stateDir, const QString& rel)
   return stateDir + QStringLiteral("/files/") + rel;
 }
 
-static bool gameDirWritable(const QString& gameDir)
+bool gameDirWritable(const QString& gameDir)
 {
   if (!QFileInfo(gameDir).isDir()) {
     return false;
