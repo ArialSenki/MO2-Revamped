@@ -6,6 +6,6 @@ HearthFires.esm
 Dragonborn.esm
 Ext Light.esl
 Master.esm
-Flagged Light.esp
 Active.esp
 Inactive.esp
+Flagged Light.esp

@@ -1,59 +1,93 @@
 <#
 Golden tests for the Bethesda game plugins (MO2 Revamped): for each case, a fake
 tree (make_tree.py), a portable test bed opens it, and the profile's plugins.txt
-and loadorder.txt are compared byte for byte with golden\<case>\.
+and loadorder.txt are compared byte for byte with golden\<game>\<case>\.
 
-  run_golden.ps1 -Bed <portable MO2 folder> -Work <scratch folder> [-Record] [-Cases big,case]
+  run_golden.ps1 -Bed <portable MO2 folder> -Work <scratch folder> [-Game falloutnv] [-Record] [-Cases big,case]
 
--Record writes golden\<case>\ from the bed instead of comparing. The bed's
-ModOrganizer.ini and plugins\mo2r_golden_dump.py are replaced; use a bed made
-for tests. Needs D:\mo2build\scripts (desk.ps1, closepid.ps1, mo2lock.ps1).
+-Game is skyrimse (the default) or falloutnv; -Cases defaults to all of that
+game's cases. -Record writes golden\<game>\<case>\ from the bed instead of
+comparing. The bed's ModOrganizer.ini and plugins\mo2r_golden_dump.py are
+replaced; use a bed made for tests. Needs D:\mo2build\scripts (desk.ps1,
+closepid.ps1, mo2lock.ps1).
+
+Repeatable since the core fixes of 2026-11-21 (two New Vegas runs and three
+Skyrim SE runs, all identical): the order used to change on each start, with
+old and new plugins alike, because MO2's core walked m_ESPs, which comes from a
+hash map seeded per start. PluginList::fixPluginRelationships now visits by
+priority, fixPriorities breaks ties by name, and setLoadOrder places plugins
+with no place from loadorder.txt by their old priority, then by name. The
+goldens are that order, so the bed needs a ModOrganizer.exe with those fixes.
+MO2 also dates every plugin, Data included, to 2000-01-(1 + priority) on each
+save of the list (PluginList::saveLoadOrder).
 #>
 param([Parameter(Mandatory)][string]$Bed, [Parameter(Mandatory)][string]$Work,
-      [string[]]$Cases = @('big', 'case', 'unicode', 'mixed'), [switch]$Record)
+      [ValidateSet('skyrimse', 'falloutnv')][string]$Game = 'skyrimse',
+      [string[]]$Cases, [switch]$Record, [int]$LockWaitSeconds = 1800)
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
 $tools = 'D:\mo2build\scripts'
-if (Get-Process ModOrganizer -ErrorAction SilentlyContinue) { throw 'a ModOrganizer.exe is running' }
-& "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds 1800 | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'no MO2 lock' }
+$allCases = @{
+  skyrimse  = @('big', 'case', 'unicode', 'mixed')
+  falloutnv = @('mtime', 'disagree', 'disagree-old', 'mixed', 'unicode', 'case', 'big')
+}
+if (-not $Cases) { $Cases = $allCases[$Game] }
 $failed = 0
+$locked = $false
 try {
   Copy-Item "$here\mo2r_golden_dump.py" "$Bed\plugins\mo2r_golden_dump.py" -Force
   Set-Content "$Bed\portable.txt" ''
   foreach ($case in $Cases) {
-    $root = Join-Path $Work $case
-    & py -3.12 -I "$here\make_tree.py" $root $case
+    $root = Join-Path $Work "$Game-$case"
+    & py -3.12 -I "$here\make_tree.py" $root $case $Game
+    if ($LASTEXITCODE -ne 0) { throw "make_tree.py failed for $case" }
     $ini = Get-Content -Raw "$root\instance\ModOrganizer.ini"
     $base = "$root\instance".Replace('\', '/')
     Set-Content -Encoding ascii "$Bed\ModOrganizer.ini" ($ini + "version=2.5.2`n`n[Settings]`nbase_directory=$base`nstyle=dark.qss`nrevamped_theme_choice_prompt_completed=true`n")
-    $out = Join-Path $Work "$case-out"
+    $out = Join-Path $Work "$Game-$case-out"
     Remove-Item $out -Recurse -Force -ErrorAction SilentlyContinue
     $env:MO2R_GOLDEN_OUT = $out
+    # the lock for each case, not the whole run: mo2lock counts a lock older
+    # than 30 min with no MO2 running as stale, so one taken at the start could
+    # be lost between cases. No lock within -LockWaitSeconds: the run stops.
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" take -Owner bethesda-golden -WaitSeconds $LockWaitSeconds | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "no MO2 lock for $case; run stopped" }
+    $locked = $true
     $o = & "$tools\vis\desk.ps1" -CommandLine "`"$Bed\ModOrganizer.exe`"" -WorkDir $Bed
     $procId = [int](($o | Select-String 'started pid (\d+)').Matches[0].Groups[1].Value)
     $t = Get-Date
     while (-not (Test-Path "$out\done") -and ((Get-Date) - $t).TotalSeconds -lt 400) { Start-Sleep 2 }
     & "$tools\vis\desk.ps1" -CommandLine "powershell.exe -NoProfile -ExecutionPolicy Bypass -File $tools\vis\closepid.ps1 -Target $procId" -WorkDir "$tools\vis" | Out-Null
     for ($i = 0; $i -lt 60 -and (Get-Process -Id $procId -ErrorAction SilentlyContinue); $i++) { Start-Sleep 1 }
+    if (Get-Process -Id $procId -ErrorAction SilentlyContinue) { Stop-Process -Id $procId -Force; Start-Sleep 2 }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null
+    $locked = $false
     if (-not (Test-Path "$out\done")) { "$case`: no output"; $failed++; continue }
     # what MO2 left in the profile once closed (it saves the lists on exit too)
     foreach ($f in 'plugins.txt', 'loadorder.txt') { Copy-Item "$root\instance\profiles\Default\$f" "$out\$f" -Force }
-    $golden = Join-Path $here "golden\$case"
+    $golden = Join-Path $here "golden\$Game\$case"
     if ($Record) {
       New-Item -ItemType Directory -Force $golden | Out-Null
       Copy-Item "$out\plugins.txt", "$out\loadorder.txt" $golden -Force
-      "$case`: recorded ($(Get-Content "$out\done") plugins in the list)"
+      "$Game $case`: recorded ($(Get-Content "$out\done") plugins in the list)"
       continue
     }
     foreach ($f in 'plugins.txt', 'loadorder.txt') {
       $same = (Get-FileHash "$out\$f").Hash -eq (Get-FileHash "$golden\$f").Hash
-      "$case $f`: $(if ($same) { 'same' } else { 'DIFFERENT' })"
-      if (-not $same) { $failed++ }
+      if ($same) { "$Game $case $f`: same"; continue }
+      # the same lines (bytes) in another order: what an unstable golden can
+      # still check (see the note at the top)
+      $a = [IO.File]::ReadAllBytes("$out\$f"); $b = [IO.File]::ReadAllBytes("$golden\$f")
+      $enc = [Text.Encoding]::GetEncoding(28591)
+      $la = $enc.GetString($a) -split "`r`n" | Sort-Object -CaseSensitive
+      $lb = $enc.GetString($b) -split "`r`n" | Sort-Object -CaseSensitive
+      $sameLines = ($la -join "`n") -ceq ($lb -join "`n")
+      "$Game $case $f`: $(if ($sameLines) { 'same lines, other order' } else { 'DIFFERENT' })"
+      $failed++
     }
   }
 } finally {
   Remove-Item "$Bed\plugins\mo2r_golden_dump.py" -Force -ErrorAction SilentlyContinue
-  & "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null
+  if ($locked) { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$tools\mo2lock.ps1" release -Owner bethesda-golden | Out-Null }
 }
 if ($failed) { "FAILED: $failed"; exit 1 } else { 'all passed' }
