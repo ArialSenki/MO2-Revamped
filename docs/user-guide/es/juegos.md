@@ -184,7 +184,10 @@ juego con SMAPI para que cargue los mods.
 
 Skyrim (Special Edition, el original y VR), Fallout 4 (y VR), Fallout 3, New
 Vegas, Tale of Two Wastelands, Oblivion, Morrowind, Starfield, Enderal y Nehrim
-usan los plugins de Bethesda de MO2, con los cambios de MO2 Revamped.
+usan los plugins de Bethesda propios de MO2 Revamped, escritos desde cero
+sobre una base común. Mantienen los nombres de archivo, los nombres y los
+ajustes de los plugins de MO2, así que las instancias hechas con MO2 2.5.2 o
+con una beta anterior abren tal cual.
 
 **Qué hace MO2 Revamped**
 
@@ -210,12 +213,14 @@ usan los plugins de Bethesda de MO2, con los cambios de MO2 Revamped.
   perfil, hace que el juego cargue los archivos sueltos por encima de los de sus
   archivos BSA.
 - **DLC y Creation Club** aparecen en la lista de mods como "Creation Club:
-  nombre"; ordena sus plugins en la pestaña Plugins.
+  nombre", también en Skyrim VR y Fallout 4 VR; ordena sus plugins en la
+  pestaña Plugins.
 - **Ventana sin bordes**, en la flecha de **Ejecutar**, para Skyrim, Skyrim SE,
   Enderal, Enderal SE, Fallout 3, New Vegas, TTW, Fallout 4, Oblivion y
   Nehrim.
-- Partidas en hora local, co-saves de Fallout 3, y detección de GOG y de
-  cualquier biblioteca de Steam.
+- Partidas en hora local, leídas con límites de tamaño para que una partida
+  dañada no cierre MO2; co-saves de Fallout 3; detección de GOG y de cualquier
+  biblioteca de Steam.
 
 **Problemas habituales**
 

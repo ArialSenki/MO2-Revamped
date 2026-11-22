@@ -179,7 +179,9 @@ game with SMAPI to load mods.
 
 Skyrim (Special Edition, original and VR), Fallout 4 (and VR), Fallout 3, New
 Vegas, Tale of Two Wastelands, Oblivion, Morrowind, Starfield, Enderal and
-Nehrim use MO2's Bethesda plugins, with MO2 Revamped's changes.
+Nehrim use MO2 Revamped's own Bethesda plugins, written from scratch on one
+shared base. They keep the file names, names and settings of MO2's plugins,
+so instances made with MO2 2.5.2 or an earlier beta open as they are.
 
 **What MO2 Revamped does**
 
@@ -202,12 +204,13 @@ Nehrim use MO2's Bethesda plugins, with MO2 Revamped's changes.
 - **Loose files and archives:** **Automatic archive invalidation**, in each
   profile, makes the game load loose files over the ones in its archives.
 - **DLC and Creation Club** content shows in the mod list as
-  "Creation Club: name"; order their plugins in the Plugins tab.
+  "Creation Club: name", also in Skyrim VR and Fallout 4 VR; order their
+  plugins in the Plugins tab.
 - **Borderless window**, in the arrow menu of **Run**, for Skyrim, Skyrim SE,
   Enderal, Enderal SE, Fallout 3, New Vegas, TTW, Fallout 4, Oblivion and
   Nehrim.
-- Saves in local time, Fallout 3 co-saves, GOG and any-Steam-library
-  detection.
+- Saves in local time, read with size checks so a damaged save can't crash
+  MO2; Fallout 3 co-saves; GOG and any-Steam-library detection.
 
 **Common problems**
 
