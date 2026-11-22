@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import mobase
 from basic_games.games import game_eldenring_mo2 as er
@@ -469,6 +470,45 @@ class ConvergenceWithSeamless(unittest.TestCase):
         listing.write_text("../keep.txt\n", encoding="utf-8")
         self.seamless_load(game_for(self.organizer))
         self.assertTrue(outside.is_file())
+
+    def test_a_folder_that_cant_be_read_keeps_its_copy(self):
+        # part of the mod not listed (OneDrive offline, permissions): what
+        # wasn't seen isn't gone, so nothing leaves the copy
+        self.add_convergence()
+        game = game_for(self.organizer)
+        dll = self.seamless_load(game)
+        self.assertTrue((dll.parent / "locale" / "en.json").is_file())
+        locale = str(self.seamless_root / "SeamlessCoop" / "locale")
+        real_walk = os.walk
+
+        def walk(top, *args, onerror=None, **kwargs):
+            for root, dirs, files in real_walk(top, *args, onerror=onerror, **kwargs):
+                if "locale" in dirs:
+                    # as when listing the folder fails
+                    dirs.remove("locale")
+                    if onerror is not None:
+                        onerror(PermissionError(13, "denied", locale))
+                yield root, dirs, files
+
+        with mock.patch.object(os, "walk", walk):
+            dll = self.seamless_load(game_for(self.organizer))
+        self.assertTrue((dll.parent / "locale" / "en.json").is_file())
+        self.assertTrue(dll.is_file())
+        # read again in full, a dropped file still goes
+        (self.seamless_root / "SeamlessCoop" / "locale" / "en.json").unlink()
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertFalse((dll.parent / "locale" / "en.json").exists())
+
+    def test_a_damaged_list_doesnt_stop_the_launch(self):
+        # NULs in the list (a power cut while it was written) aren't a path:
+        # the error left the forced loads and no launch started
+        self.add_convergence()
+        dll = self.seamless_load(game_for(self.organizer))
+        listing = dll.parent.parent / f".{dll.parent.name}.copied.txt"
+        listing.write_bytes(b"\x00" * 64 + b"\nlocale/en.json\n")
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertTrue(dll.is_file())
+        self.assertNotIn("\x00", listing.read_text(encoding="utf-8"))
 
     def test_save_section_added_when_missing(self):
         cls = type(game_for(self.organizer))

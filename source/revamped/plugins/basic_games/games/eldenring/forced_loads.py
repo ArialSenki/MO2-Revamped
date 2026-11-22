@@ -435,7 +435,8 @@ class ForcedLoadsMixin:
         target_dir = Path(self._organizer.basePath()) / self.ConvergenceSeamlessFolder / source_dir.name
         settings_name = f"{seamless.stem}_settings.ini".casefold()
         copied: set[str] = set()
-        for source in self._files_without_links(source_dir):
+        unread: list[OSError] = []
+        for source in self._files_without_links(source_dir, unread):
             relative = source.relative_to(source_dir)
             target = target_dir / relative
             if source.is_dir():
@@ -454,8 +455,19 @@ class ForcedLoadsMixin:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
         # files an earlier copy took from the mod that it no longer has go;
-        # any other file only in the copy stays (Seamless may write its own)
-        self._prune_seamless_copy(target_dir, copied)
+        # any other file only in the copy stays (Seamless may write its own).
+        # Not when part of the mod couldn't be listed (OneDrive offline, an
+        # antivirus, permissions): what wasn't seen isn't gone, and removing it
+        # left the copy without its locale files, or without its DLL
+        if unread:
+            self._log_when_changed("convergence-seamless-unread", [(
+                qWarning,
+                f"Elden Ring MO2: part of '{source_dir}' couldn't be read ({unread[0]}); "
+                "Seamless Co-op's copy for The Convergence keeps what it had.",
+            )])
+        else:
+            self._log_when_changed("convergence-seamless-unread", [])
+            self._prune_seamless_copy(target_dir, copied)
         settings_source = seamless.with_name(f"{seamless.stem}_settings.ini")
         # bytes that aren't UTF-8 (a password saved in the system's code
         # page) go back as they were
@@ -487,12 +499,18 @@ class ForcedLoadsMixin:
         return copy
 
     @staticmethod
-    def _files_without_links(folder: Path):
+    def _files_without_links(folder: Path, unread: list[OSError] | None = None):
         """Everything below folder, never through a junction or symbolic link
         (one in a mod's SeamlessCoop folder would copy files from elsewhere on
         the disk into the instance, or loop). Only links: OneDrive's files and
         deduplicated ones are reparse points too, and a Seamless in a mods
-        folder under OneDrive was refused, stopping every Convergence launch."""
+        folder under OneDrive was refused, stopping every Convergence launch.
+        What couldn't be listed or looked at is left out, and its error added
+        to unread when given."""
+
+        def failed(error: OSError) -> None:
+            if unread is not None:
+                unread.append(error)
 
         def is_link(path: str) -> bool:
             info = os.lstat(path)
@@ -500,14 +518,17 @@ class ForcedLoadsMixin:
                 return False
             return getattr(info, "st_reparse_tag", 0) in _LINK_REPARSE_TAGS
 
-        for root, dirs, files in os.walk(folder, followlinks=False):
+        for root, dirs, files in os.walk(folder, followlinks=False, onerror=failed):
             kept = []
             for name in dirs:
                 path = os.path.join(root, name)
                 try:
                     if is_link(path):
                         continue
-                except (OSError, AttributeError):
+                except OSError as error:
+                    failed(error)
+                    continue
+                except AttributeError:
                     continue
                 kept.append(name)
                 yield Path(path)
@@ -517,7 +538,10 @@ class ForcedLoadsMixin:
                 try:
                     if is_link(path):
                         continue
-                except (OSError, AttributeError):
+                except OSError as error:
+                    failed(error)
+                    continue
+                except AttributeError:
                     continue
                 yield Path(path)
 
@@ -543,7 +567,13 @@ class ForcedLoadsMixin:
         for name in sorted(earlier):
             if not name or name.casefold() in current:
                 continue
-            stale = (target_dir / name).resolve()
+            try:
+                stale = (target_dir / name).resolve()
+            except (OSError, ValueError, RuntimeError):
+                # not a path (the list damaged: NULs after a power cut). It
+                # raised out of the forced loads, and no launch started until
+                # the user deleted the list
+                continue
             # only inside the copy, whatever the list says
             if stale == root or root not in stale.parents:
                 continue
@@ -566,7 +596,10 @@ class ForcedLoadsMixin:
         except (OSError, UnicodeError):
             pass
         listing.parent.mkdir(parents=True, exist_ok=True)
-        listing.write_text(new_listing, encoding="utf-8")
+        # whole or not at all
+        partial = listing.with_name(listing.name + ".mo2r-tmp")
+        partial.write_text(new_listing, encoding="utf-8")
+        os.replace(partial, listing)
 
     @staticmethod
     def _with_save_extension(text: str, extension: str) -> str:
