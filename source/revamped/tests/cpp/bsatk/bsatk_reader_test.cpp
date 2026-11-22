@@ -830,6 +830,17 @@ std::vector<Case> cases()
                  check(ddsTail(target() / "all" / "textures" / "t.dds", 128) == all,
                        "chunks byte-exact (extractAll)");
                }});
+  c.push_back({"BSA 104 zlib without its Adler-32 trailer (Fallout 3's own) extracts", [] {
+                 // Fallout - Misc.bsa's menus\s.txt: the deflate data is whole,
+                 // the 4-byte checksum after it isn't there
+                 const Bytes content = pattern(3000, 13);
+                 std::vector<BsaFolder> f = {{"data", {{"a.txt", content, true}}}};
+                 auto l = bsa(104, kStd | kCompressed, f);
+                 const uint32_t size = static_cast<uint32_t>(l.w.b.size() - l.data[0]);
+                 l.w.b.resize(l.w.b.size() - 4);
+                 l.w.put32(l.fileRecord[0] + 8, size - 4);
+                 wellFormed(save(l.w.b), expect(f));
+               }});
   c.push_back({"BA2 DX10 BC7 texture gets the DX10 header, byte-exact", [] {
                  const Bytes a = pattern(4096, 12);
                  const auto p  = save(ba2Texture("t.dds", {{a, true}}, kBC7).w.b, "ba2");

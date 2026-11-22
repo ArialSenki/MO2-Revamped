@@ -949,7 +949,14 @@ boost::shared_array<unsigned char> Archive::decompress(unsigned char* inBuffer,
     stream.avail_out = outSize;
     stream.next_out  = reinterpret_cast<Bytef*>(outBuffer.get());
     zlibRet          = inflate(&stream, Z_FINISH);
-    if (zlibRet != Z_STREAM_END || stream.total_out != outSize) {
+    // Bethesda's own archives have streams without the Adler-32 trailer
+    // (Fallout 3's Fallout - Misc.bsa, menus\s.txt): inflate stops short of
+    // Z_STREAM_END for want of 4 more bytes, with every byte unpacked. Such a
+    // stream is complete when it filled the buffer and used all its input
+    const bool complete =
+        zlibRet == Z_STREAM_END ||
+        ((zlibRet == Z_BUF_ERROR || zlibRet == Z_OK) && stream.avail_in == 0);
+    if (!complete || stream.total_out != outSize) {
       throw std::runtime_error("invalid data");
     }
     inflateEnd(&stream);
