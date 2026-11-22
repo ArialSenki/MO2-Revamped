@@ -220,12 +220,17 @@ void ThemeSettingsTab::addThemeButtons()
   }
 
   // the theme as a settings row, its title on the left and the picker on the
-  // right, as the Display card's rows; the .ui has the picker alone in a row
-  while (QLayoutItem* item = layout->takeAt(0)) {
-    delete item;
+  // right, as the Display card's rows; it takes the place of the .ui's row
+  // with the picker alone, under the card's heading
+  int rowIndex = layout->count();
+  for (int i = 0; i < layout->count(); ++i) {
+    QLayout* sub = layout->itemAt(i)->layout();
+    if (sub != nullptr && sub->indexOf(ui->styleBox) >= 0) {
+      delete layout->takeAt(i);  // the row and its spacer; the picker stays
+      rowIndex = i;
+      break;
+    }
   }
-  layout->setDirection(QBoxLayout::TopToBottom);
-  layout->setContentsMargins(9, 9, 9, 9);
   auto* themeRow = new QFrame(ui->themeStyleGroup);
   themeRow->setObjectName(QStringLiteral("fluentSettingRow"));
   auto* themeRowLayout = new QHBoxLayout(themeRow);
@@ -238,7 +243,7 @@ void ThemeSettingsTab::addThemeButtons()
   themeRowLayout->addWidget(themeLabel);
   themeRowLayout->addStretch(1);
   themeRowLayout->addWidget(ui->styleBox);
-  layout->addWidget(themeRow);
+  layout->insertWidget(rowIndex, themeRow);
 
   // themes of your own: made and edited here, or by hand in the folder; under
   // the row, lined up with its title
