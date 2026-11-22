@@ -1,25 +1,9 @@
 <RCC>
     <qresource prefix="/MO/gui">
-        <file alias="save">resources/save.svg</file>
-        <file alias="word-wrap">resources/word-wrap.svg</file>
-        <file alias="remove">resources/process-stop.png</file>
-        <file alias="executable">resources/application-x-executable.png</file>
-        <file alias="next">resources/go-next_16.png</file>
-        <file alias="previous">resources/go-previous_16.png</file>
-        <file alias="refresh">resources/view-refresh_16.png</file>
-        <file alias="check">resources/check.png</file>
-        <file alias="warning">resources/dialog-warning.png</file>
-        <file alias="checked-checkbox">resources/icons8-checked-checkbox.png</file>
-        <file alias="unchecked-checkbox">resources/icons8-unchecked-checkbox.png</file>
-        <file alias="indeterminate-checkbox">resources/icons8-indeterminate-checkbox.png</file>
-        <file>resources/internet-web-browser.png</file>
-        <file alias="edit_clear">resources/edit-clear.png</file>
-        <file alias="icon_favorite">resources/icon-favorite.png</file>
         <file alias="splash">splash.png</file>
         <file alias="app_icon">resources/mo_icon.png</file>
         <file alias="app_icon_sizes">mo_icon.ico</file>
         <file alias="folder">resources/folder.svg</file>
-        <file alias="tracked">resources/tracked.png</file>
     </qresource>
     <qresource prefix="/MO/gui/contextmenu">
         <file alias="all-mods.svg">resources/contextmenu/all-mods.svg</file>
@@ -114,22 +98,6 @@
         <file alias="image.svg">resources/mainwindow/files/image.svg</file>
         <file alias="save.svg">resources/mainwindow/files/save.svg</file>
         <file alias="text.svg">resources/mainwindow/files/text.svg</file>
-    </qresource>
-    <qresource prefix="/MO/gui/content">
-        <file alias="plugin">resources/contents/jigsaw-piece.png</file>
-        <file alias="skyproc">resources/contents/hand-of-god.png</file>
-        <file alias="texture">resources/contents/empty-chessboard.png</file>
-        <file alias="music">resources/contents/double-quaver.png</file>
-        <file alias="sound">resources/contents/lyre.png</file>
-        <file alias="interface">resources/contents/usable.png</file>
-        <file alias="skse">resources/contents/checkbox-tree.png</file>
-        <file alias="script">resources/contents/tinker.png</file>
-        <file alias="mesh">resources/contents/breastplate.png</file>
-        <file alias="bsa">resources/contents/locked-chest.png</file>
-        <file alias="menu">resources/contents/config.png</file>
-        <file alias="inifile">resources/contents/feather-and-scroll.png</file>
-        <file alias="modgroup">resources/contents/xedit.png</file>
-        <file alias="facegen">resources/contents/facegen.png</file>
     </qresource>
     <qresource prefix="/qt/etc">
         <file>qt.conf</file>
