@@ -114,7 +114,9 @@ class CyberpunkSaveGame(BasicGameSaveGame):
     def __init__(self, filepath: Path):
         super().__init__(filepath)
         try:
-            with open(filepath / self._name_file, encoding="utf-8") as file:
+            # MO2 Revamped: utf-8-sig, a name saved with a BOM showed an
+            # invisible character in front of it
+            with open(filepath / self._name_file, encoding="utf-8-sig") as file:
                 self._name = file.readline().strip()
         except (OSError, ValueError):
             self._name = ""
