@@ -552,7 +552,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
 
   menu.addSeparator();
   menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                 rows.count() == 1 ? tr("Delete...")
+                 rows.count() == 1 ? tr("Delete…")
                                    : tr("Delete %1 saves…").arg(rows.count()),
                  [&] {
                    deleteSavegame();

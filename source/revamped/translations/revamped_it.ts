@@ -12737,7 +12737,7 @@ p, li { white-space: pre-wrap; }
       <translation>Percorso della cartella</translation>
     </message>
     <message>
-      <source>Delete...</source>
+      <source>Delete…</source>
       <translation>Elimina…</translation>
     </message>
     <message>

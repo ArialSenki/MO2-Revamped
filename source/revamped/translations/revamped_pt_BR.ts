@@ -12201,7 +12201,7 @@ p, li { white-space: pre-wrap; }
       <translation>Caminho da pasta</translation>
     </message>
     <message>
-      <source>Delete...</source>
+      <source>Delete…</source>
       <translation>Excluir…</translation>
     </message>
     <message>
