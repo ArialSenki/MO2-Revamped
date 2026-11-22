@@ -14559,6 +14559,10 @@ Vérifiez les options du jeu avant de jouer.</translation>
   <context>
     <name>DownloadManager</name>
     <message>
+      <source>This download can't be resumed: its address isn't a web address.</source>
+      <translation>Ce téléchargement ne peut pas reprendre : son adresse n'est pas une adresse web.</translation>
+    </message>
+    <message>
       <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
 %1</source>
       <translation>Ces téléchargements n'ont pas été supprimés. Ils sont peut-être utilisés, ou la suppression a été annulée :

@@ -75,6 +75,61 @@ void cutAtCharacter(QByteArray& bytes)
   }
 }
 
+// MO2 Revamped: a mod's picture is read only as the format its extension
+// names. Qt otherwise looked at the content: an SVG named .png reached the SVG
+// reader, whose <image href="\\server\..."> made Windows send the password
+// hash to that server. SVG (and PDF) aren't previewed at all, and no picture
+// may take more than 128 MB to decode
+constexpr int MaxDecodeMegabytes = 128;
+bool isRefusedFormat(const QString& format)
+{
+  return format == u"svg" || format == u"svgz" || format == u"pdf";
+}
+
+// true when the data is a picture of the format its extension names
+bool readsAsItsExtension(const QString& fileName, const QByteArray& fileData)
+{
+  const QByteArray format = QFileInfo(fileName).suffix().toLower().toLatin1();
+  if (format.isEmpty() || isRefusedFormat(QString::fromLatin1(format))) {
+    return false;
+  }
+  QBuffer buffer;
+  QFile file(fileName);
+  QIODevice* device = &file;
+  if (!fileData.isNull()) {
+    buffer.setData(fileData);
+    device = &buffer;
+  }
+  if (!device->open(QIODevice::ReadOnly)) {
+    return false;
+  }
+  QImageReader reader(device, format);
+  reader.setAutoDetectImageFormat(false);
+  reader.setDecideFormatFromContent(false);
+  reader.setAllocationLimit(MaxDecodeMegabytes);
+  return reader.canRead() && reader.format() == format;
+}
+
+QPixmap readPicture(const QString& fileName, const QByteArray& fileData)
+{
+  const QByteArray format = QFileInfo(fileName).suffix().toLower().toLatin1();
+  QBuffer buffer;
+  QFile file(fileName);
+  QIODevice* device = &file;
+  if (!fileData.isNull()) {
+    buffer.setData(fileData);
+    device = &buffer;
+  }
+  if (!device->open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  QImageReader reader(device, format);
+  reader.setAutoDetectImageFormat(false);
+  reader.setDecideFormatFromContent(false);
+  reader.setAllocationLimit(MaxDecodeMegabytes);
+  return QPixmap::fromImage(reader.read());
+}
+
 // MO2 Revamped: the picture scaled to fit the preview with its proportions,
 // never above its own size, so a large picture never makes the window grow and
 // a small one stays sharp. An animated GIF plays
@@ -85,28 +140,31 @@ public:
       : QWidget(parent)
   {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    if (!fileData.isNull()) {
-      m_buffer.setData(fileData);
-      m_buffer.open(QIODevice::ReadOnly);
-      m_movie.setDevice(&m_buffer);
-    } else {
-      m_movie.setFileName(fileName);
+    if (!readsAsItsExtension(fileName, fileData)) {
+      return;
     }
-    // only a format that animates: an .ico, .icns or .tiff also has several
-    // frames (its sizes, its pages), which flashed past to the last one
-    const QByteArray format = m_movie.format().toLower();
-    if (m_movie.isValid() && m_movie.frameCount() > 1 &&
-        (format == "gif" || format == "webp" || format == "apng")) {
+    // only these formats animate; checked above to be what the data is
+    static const QStringList animated = {"gif", "webp", "mng", "apng"};
+    const QString format = QFileInfo(fileName).suffix().toLower();
+    if (animated.contains(format)) {
+      if (!fileData.isNull()) {
+        m_buffer.setData(fileData);
+        m_buffer.open(QIODevice::ReadOnly);
+        m_movie.setDevice(&m_buffer);
+      } else {
+        m_movie.setFileName(fileName);
+      }
+      m_movie.setFormat(format.toLatin1());
+    }
+    if (animated.contains(format) && m_movie.isValid() && m_movie.frameCount() > 1) {
       QObject::connect(&m_movie, &QMovie::frameChanged, this, [this] {
         m_picture = m_movie.currentPixmap();
         update();
       });
       m_movie.start();
       m_picture = m_movie.currentPixmap();
-    } else if (!fileData.isNull()) {
-      m_picture.loadFromData(fileData);
     } else {
-      m_picture.load(fileName);
+      m_picture = readPicture(fileName, fileData);
     }
   }
 
@@ -164,7 +222,7 @@ bool PreviewBase::init(IOrganizer* moInfo)
     auto strFileType = QString(fileType).toLower();
 
     // skip dds as that one is handled by the dds preview plugin.
-    if (strFileType == "dds" || blacklist.contains(strFileType))
+    if (strFileType == "dds" || isRefusedFormat(strFileType) || blacklist.contains(strFileType))
       continue;
 
     m_PreviewGenerators[strFileType] = imageReader;
