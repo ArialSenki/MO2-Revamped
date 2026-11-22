@@ -1084,11 +1084,37 @@ class Mo2RevampedInfo(mobase.IPluginTool):
             lines.append(f"  {name}: {version or 'no version'}")
         return [f"Plugins ({len(lines)}):", *lines]
 
+    def _instance_data_dirs(self) -> list[Path]:
+        """The folders MO2 may have written this instance's logs and crash
+        dumps into, the likeliest first. They go into the instance's own folder
+        (the one with ModOrganizer.ini), which MO2 keeps in the application's
+        "dataPath". basePath() is the base directory setting: the same folder
+        unless the instance keeps its mods elsewhere (a linked Nolvus or
+        Wabbajack list), where the report found neither the dump nor a log."""
+        folders = []
+        try:
+            app = QApplication.instance()
+            data = app.property("dataPath") if app is not None else None
+            if data:
+                folders.append(Path(str(data)))
+        except Exception:
+            pass
+        try:
+            folders.append(Path(self._organizer.basePath()))
+        except Exception:
+            pass
+        unique = []
+        for folder in folders:
+            if folder not in unique:
+                unique.append(folder)
+        return unique
+
     def _crash_dump_facts(self) -> list[str]:
         """Where the last crash dump is; the dump itself is never included."""
         try:
-            folder = Path(self._organizer.basePath()) / "crashDumps"
-            candidates = list(folder.glob("*.dmp"))
+            candidates = []
+            for base in self._instance_data_dirs():
+                candidates.extend((base / "crashDumps").glob("*.dmp"))
         except Exception:
             return ["Last crash dump: unavailable"]
         # each dump's facts read once: one removed or locked meanwhile (MO2
@@ -1180,12 +1206,13 @@ class Mo2RevampedInfo(mobase.IPluginTool):
     def _diagnostic_log_dir(self) -> Path:
         # MO2 writes its logs into the instance folder: beside the program for
         # a portable instance, under %LOCALAPPDATA%\ModOrganizer for a global one
-        try:
-            log_dir = Path(self._organizer.basePath()) / "logs"
-            if log_dir.is_dir():
-                return log_dir
-        except Exception:
-            pass
+        for base in self._instance_data_dirs():
+            try:
+                log_dir = base / "logs"
+                if log_dir.is_dir():
+                    return log_dir
+            except Exception:
+                pass
         return Path(QApplication.applicationDirPath()) / "logs"
 
     def _diagnostic_log_files(self) -> list[tuple[str, Path]]:
