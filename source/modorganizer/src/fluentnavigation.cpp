@@ -250,6 +250,8 @@ public:
     QFont label = option.font;
     label.setWeight(selected ? QFont::DemiBold : QFont::Normal);
     painter->setFont(label);
+    // the fill above left the pen off (NoPen) on a selected or hovered row
+    painter->setPen(text);
     const QRectF textRect = row.adjusted(46, 0, -8, 0);
     painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
                       QFontMetrics(label).elidedText(index.data().toString(),
