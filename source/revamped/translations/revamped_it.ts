@@ -1220,6 +1220,10 @@ Vuoi davvero continuare?</translation>
         <numerusform>Installa le %n selezionate</numerusform>
       </translation>
     </message>
+    <message>
+      <source>…and %1 more</source>
+      <translation>…e altri %1</translation>
+    </message>
   </context>
   <context>
     <name>DownloadManager</name>
@@ -18987,7 +18991,7 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
       <translation>Opzioni del profilo</translation>
     </message>
     <message>
-      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves...&lt;/b&gt; copies saves between profiles.</source>
+      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves…&lt;/b&gt; copies saves between profiles.</source>
       <translation>&lt;b&gt;Salvataggi specifici del profilo&lt;/b&gt; e &lt;b&gt;File INI del gioco specifici del profilo&lt;/b&gt; separano salvataggi e impostazioni del gioco per ogni profilo. &lt;b&gt;Trasferisci salvataggi…&lt;/b&gt; copia i salvataggi tra profili.</translation>
     </message>
     <message>

@@ -298,8 +298,15 @@ bool FluentDashboard::eventFilter(QObject* watched, QEvent* event)
 void FluentDashboard::fitBanner()
 {
   auto* row = m_banner->layout();
-  if (row == nullptr || m_profileLabel == nullptr || m_programLabel == nullptr ||
-      m_lastPlayed->fullText().isEmpty()) {
+  if (row == nullptr || m_profileLabel == nullptr || m_programLabel == nullptr) {
+    return;
+  }
+  // no "Last saved" drawn (none, or a profile without saves: hidden with its
+  // old text and width), so nothing is cut: the words stay. Judged by its old
+  // width, the words were hidden, shown back, hidden again in a loop
+  if (m_lastPlayed->isHidden() || m_lastPlayed->fullText().isEmpty()) {
+    m_profileLabel->show();
+    m_programLabel->show();
     return;
   }
   if (!m_profileLabel->isHidden()) {

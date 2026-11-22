@@ -103,9 +103,17 @@ private:
   QWidget* m_colorsFrom;
 };
 
-// MO2's own plugins' options whose keys don't read well as names
-QString knownOptionName(const QString& key)
+// MO2's own plugins' options whose keys don't read well as names. The short
+// generic keys (prefer, silent...) only for MO2's own C++ plugins: another
+// plugin's "silent" or "external" isn't "Install without asking"
+QString knownOptionName(const QString& key, bool ownPlugin)
 {
+  static const QSet<QString> generic = {
+      QStringLiteral("prefer"), QStringLiteral("silent"), QStringLiteral("sensitive"),
+      QStringLiteral("external"), QStringLiteral("associated")};
+  if (!ownPlugin && generic.contains(key)) {
+    return {};
+  }
   static const std::pair<const char*, const char*> names[] = {
       {"check_errorlog", QT_TRANSLATE_NOOP("PluginOptionNames", "Errors from the last run")},
       {"check_font", QT_TRANSLATE_NOOP("PluginOptionNames", "Missing fonts")},
@@ -131,9 +139,9 @@ QString knownOptionName(const QString& key)
 }
 
 // check_font reads "Check font"; the plugin's own key stays with the row
-QString readableOptionName(QString key)
+QString readableOptionName(QString key, bool ownPlugin)
 {
-  if (const QString known = knownOptionName(key); !known.isEmpty()) {
+  if (const QString known = knownOptionName(key, ownPlugin); !known.isEmpty()) {
     return known;
   }
   key.replace(QLatin1Char('_'), QLatin1Char(' '));
@@ -795,6 +803,8 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
     ui->pluginSettingsList->setItemDelegateForColumn(
         0, new NoEditDelegate(ui->pluginSettingsList));
   }
+  // a plugin loaded through a proxy (Python) is never one of MO2's C++ plugins
+  const bool ownPlugin = m_pluginContainer->requirements(plugin).proxy() == nullptr;
   for (auto iter = settings.begin(); iter != settings.end(); ++iter) {
     // masters only exist in games with plugin files; the value stays stored
     if (iter.key() == QLatin1String("check_missingmasters") &&
@@ -803,7 +813,7 @@ void PluginsSettingsTab::on_pluginsList_currentItemChanged(QTreeWidgetItem* curr
     }
 
     QTreeWidgetItem* newItem =
-        new QTreeWidgetItem(QStringList(readableOptionName(iter.key())));
+        new QTreeWidgetItem(QStringList(readableOptionName(iter.key(), ownPlugin)));
     newItem->setData(0, Qt::UserRole, iter.key());
     QVariant value = *iter;
     QString description;

@@ -161,7 +161,7 @@ std::vector<Topic> topics()
         {0xE8F7, Text::tr("Profile options"),
          Text::tr("<b>Profile-specific saves</b> and <b>Profile-specific game INI "
                   "files</b> keep saves and game settings apart for each profile. "
-                  "<b>Transfer saves...</b> copies saves between profiles.")},
+                  "<b>Transfer saves…</b> copies saves between profiles.")},
         {0xE713, Text::tr("Defaults"),
          Text::tr("Settings &gt; General &gt; <b>Profile defaults</b> chooses the "
                   "options a new profile starts with.")},

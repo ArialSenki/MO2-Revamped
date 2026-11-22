@@ -1193,6 +1193,10 @@ Möchtest du wirklich fortfahren?</translation>
         <numerusform>%n ausgewählte installieren</numerusform>
       </translation>
     </message>
+    <message>
+      <source>…and %1 more</source>
+      <translation>…und %1 weitere</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -18765,7 +18769,7 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
       <translation>Profiloptionen</translation>
     </message>
     <message>
-      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves...&lt;/b&gt; copies saves between profiles.</source>
+      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves…&lt;/b&gt; copies saves between profiles.</source>
       <translation>&lt;b&gt;Profileigene Spielstände&lt;/b&gt; und &lt;b&gt;Profileigene INI-Dateien des Spiels&lt;/b&gt; trennen Spielstände und Spieleinstellungen je Profil. &lt;b&gt;Spielstände übertragen…&lt;/b&gt; kopiert Spielstände zwischen Profilen.</translation>
     </message>
     <message>
