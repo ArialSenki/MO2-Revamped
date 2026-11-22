@@ -529,7 +529,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
     SaveGameInfo::MissingAssets missing = info->getMissingAssets(*save);
     if (missing.size() != 0) {
       menu.setToolTipsVisible(true);
-      QAction* action = menu.addAction(tr("Restore required plugins..."));
+      QAction* action = menu.addAction(tr("Restore required plugins…"));
       action->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/enable.svg"));
       action->setToolTip(
           tr("Choose installed mods to activate the plugins required by this save."));
@@ -553,7 +553,7 @@ void SavesTab::onContextMenu(const QPoint& pos)
   menu.addSeparator();
   menu.addAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
                  rows.count() == 1 ? tr("Delete...")
-                                   : tr("Delete %1 saves...").arg(rows.count()),
+                                   : tr("Delete %1 saves…").arg(rows.count()),
                  [&] {
                    deleteSavegame();
                  });

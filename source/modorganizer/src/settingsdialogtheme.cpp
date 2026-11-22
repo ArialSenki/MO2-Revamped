@@ -223,8 +223,8 @@ void ThemeSettingsTab::addThemeButtons()
   auto* row = new QHBoxLayout;
   row->setContentsMargins(0, 4, 0, 0);
   row->setSpacing(8);
-  auto* newButton    = new QPushButton(QObject::tr("New theme..."), ui->themeStyleGroup);
-  auto* editButton   = new QPushButton(QObject::tr("Edit theme..."), ui->themeStyleGroup);
+  auto* newButton    = new QPushButton(QObject::tr("New theme…"), ui->themeStyleGroup);
+  auto* editButton   = new QPushButton(QObject::tr("Edit theme…"), ui->themeStyleGroup);
   auto* folderButton = new QPushButton(QObject::tr("Open themes folder"), ui->themeStyleGroup);
   for (auto* button : {newButton, editButton, folderButton}) {
     button->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);

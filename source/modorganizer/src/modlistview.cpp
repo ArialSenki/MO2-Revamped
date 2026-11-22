@@ -900,7 +900,7 @@ void ModListView::onExternalFolderDropped(const QUrl& url, int priority)
   do {
     bool ok;
     name.update(
-        QInputDialog::getText(this, tr("Copy folder..."),
+        QInputDialog::getText(this, tr("Copy folder…"),
                               tr("This will copy the content of %1 to a new mod.\n"
                                  "Please enter the name:")
                                   .arg(fileInfo.fileName()),
@@ -932,7 +932,7 @@ void ModListView::onExternalFolderDropped(const QUrl& url, int priority)
   const QString modPath = newMod->absolutePath();
   QString error;
   const auto copied = ModListViewActions::copyFolder(
-      this, source, modPath, tr("Copying \"%1\"...").arg(fileInfo.fileName()), &error);
+      this, source, modPath, tr("Copying \"%1\"…").arg(fileInfo.fileName()), &error);
   if (copied != ModListViewActions::CopyResult::Copied) {
     QDir modDir(modPath);
     const auto entries = modDir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot |

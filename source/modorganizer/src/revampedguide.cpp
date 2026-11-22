@@ -286,9 +286,9 @@ std::vector<Topic> topics()
          Text::tr("The toolbar's icon size and button style (icons, text or both), "
                   "and whether the status bar and the log panel show.")},
         {0xE70F, Text::tr("Theme editor"),
-         Text::tr("<b>New theme...</b> asks for a name, a base (Light or Dark) and six "
+         Text::tr("<b>New theme…</b> asks for a name, a base (Light or Dark) and six "
                   "colors, and the window shows them as you pick. <b>Save</b> keeps "
-                  "them; <b>Cancel</b> goes back. <b>Edit theme...</b> changes one of "
+                  "them; <b>Cancel</b> goes back. <b>Edit theme…</b> changes one of "
                   "yours.")},
         {0xE838, Text::tr("Theme files"),
          Text::tr("Themes are .qss files in the <b>stylesheets</b> folder (<b>Open "

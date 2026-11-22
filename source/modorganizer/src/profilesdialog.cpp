@@ -480,7 +480,7 @@ QWidget* ProfilesDialog::createDetails()
   m_copy->setAutoDefault(false);
   m_copy->setToolTip(tr("Create a profile with the same mods and options (Ctrl+D)"));
   m_transfer =
-      new QPushButton(FluentIcons::glyph(TransferGlyph), tr("Transfer saves..."), actions);
+      new QPushButton(FluentIcons::glyph(TransferGlyph), tr("Transfer saves…"), actions);
   m_transfer->setObjectName(QStringLiteral("transferButton"));
   m_transfer->setAutoDefault(false);
   m_transfer->setToolTip(tr("Copy or move saves between this profile and the game"));
@@ -735,7 +735,7 @@ void ProfilesDialog::showListMenu(const QPoint& pos)
   QListWidgetItem* item = m_list->itemAt(pos);
   if (item == nullptr) {
     QMenu menu(this);
-    menu.addAction(FluentIcons::glyph(AddGlyph), tr("New profile..."), this,
+    menu.addAction(FluentIcons::glyph(AddGlyph), tr("New profile…"), this,
                    &ProfilesDialog::addProfile);
     menu.addAction(menuGlyph(MenuGlyphs::Folder), tr("Open profiles folder"), this, [] {
       shell::Explore(Settings::instance().paths().profiles());
@@ -764,12 +764,12 @@ void ProfilesDialog::showListMenu(const QPoint& pos)
   setDefaultMenuAction(&menu, add(PlayGlyph, tr("Use this profile"), m_select,
                                   &ProfilesDialog::selectProfile));
   menu.addSeparator();
-  add(RenameGlyph, tr("Rename..."), m_rename, &ProfilesDialog::renameProfile,
+  add(RenameGlyph, tr("Rename…"), m_rename, &ProfilesDialog::renameProfile,
       QKeySequence(Qt::Key_F2));
-  add(CopyGlyph, tr("Duplicate..."), m_copy, &ProfilesDialog::copyProfile,
+  add(CopyGlyph, tr("Duplicate…"), m_copy, &ProfilesDialog::copyProfile,
       QKeySequence(Qt::CTRL | Qt::Key_D));
   if (!m_eldenRing) {
-    add(TransferGlyph, tr("Transfer saves..."), m_transfer, &ProfilesDialog::transferSaves);
+    add(TransferGlyph, tr("Transfer saves…"), m_transfer, &ProfilesDialog::transferSaves);
   }
   menu.addSeparator();
 
@@ -781,7 +781,7 @@ void ProfilesDialog::showListMenu(const QPoint& pos)
                  &ProfilesDialog::exploreProfile);
   addCopyMenu(&menu, {{tr("Name"), item->text()}, {tr("Folder path"), nativePath(folder)}});
   menu.addSeparator();
-  add(DeleteGlyph, tr("Delete profile..."), m_remove, &ProfilesDialog::removeProfile,
+  add(DeleteGlyph, tr("Delete profile…"), m_remove, &ProfilesDialog::removeProfile,
       QKeySequence(Qt::Key_Delete));
 
   menu.exec(m_list->viewport()->mapToGlobal(pos));

@@ -1241,7 +1241,7 @@ QWidget* CategoriesDialog::createFluentList()
     button->show();
   }
   ui->nexusRefresh->setText(tr("Load from Nexus"));
-  ui->nexusImportButton->setText(tr("Import..."));
+  ui->nexusImportButton->setText(tr("Import…"));
   layout->addLayout(nexus);
   ui->nexusStatus->setParent(card);
   ui->nexusStatus->setObjectName(QStringLiteral("fluentSettingDescription"));

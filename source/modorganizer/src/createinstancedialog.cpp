@@ -658,7 +658,7 @@ void CreateInstanceDialog::finish()
     dirs.push_back(createDir(ci.dataPath));
     if (ci.type == Isolated) {
       const QString copying =
-          tr("Copying MO2 application files into %1...").arg(ci.dataPath);
+          tr("Copying MO2 application files into %1…").arg(ci.dataPath);
       logCreation(copying);
 
       // on its own thread: it takes a while and the window has to keep painting

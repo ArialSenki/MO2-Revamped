@@ -203,7 +203,7 @@
     </message>
     <message>
       <source>Import from Nexus...</source>
-      <translation>Importar do Nexus...</translation>
+      <translation>Importar do Nexus…</translation>
     </message>
     <message>
       <source>Add the categories currently listed here to your MO2 category list.</source>
@@ -358,8 +358,8 @@ As alterações são salvas quando você escolhe OK.</translation>
       <translation>ID</translation>
     </message>
     <message>
-      <source>Import...</source>
-      <translation>Importar...</translation>
+      <source>Import…</source>
+      <translation>Importar…</translation>
     </message>
     <message>
       <source>Inside</source>
@@ -600,8 +600,8 @@ As alterações são salvas quando você escolhe OK.</translation>
       <translation>A pasta isolada do MO2 já existe: %1</translation>
     </message>
     <message>
-      <source>Copying MO2 application files into %1...</source>
-      <translation>Copiando os arquivos do aplicativo MO2 para %1...</translation>
+      <source>Copying MO2 application files into %1…</source>
+      <translation>Copiando os arquivos do aplicativo MO2 para %1…</translation>
     </message>
     <message>
       <source>The isolated copy could not be completed.</source>
@@ -1003,16 +1003,16 @@ As alterações são salvas quando você escolhe OK.</translation>
       <translation>Mover %1 downloads para categoria</translation>
     </message>
     <message>
-      <source>New category...</source>
-      <translation>Nova categoria...</translation>
+      <source>New category…</source>
+      <translation>Nova categoria…</translation>
     </message>
     <message>
       <source>Back to where it came from</source>
       <translation>Voltar para a origem</translation>
     </message>
     <message>
-      <source>Rename category...</source>
-      <translation>Renomear categoria...</translation>
+      <source>Rename category…</source>
+      <translation>Renomear categoria…</translation>
     </message>
     <message>
       <source>Remove category</source>
@@ -1135,16 +1135,16 @@ Tem certeza de que deseja continuar?</translation>
       <translation>Ocultar downloads</translation>
     </message>
     <message>
-      <source>Installed...</source>
-      <translation>Instalados...</translation>
+      <source>Installed…</source>
+      <translation>Instalados…</translation>
     </message>
     <message>
-      <source>Uninstalled...</source>
-      <translation>Não instalados...</translation>
+      <source>Uninstalled…</source>
+      <translation>Não instalados…</translation>
     </message>
     <message>
-      <source>All...</source>
-      <translation>Todos...</translation>
+      <source>All…</source>
+      <translation>Todos…</translation>
     </message>
     <message>
       <source>Delete downloads</source>
@@ -1352,8 +1352,8 @@ Tem certeza de que deseja continuar?</translation>
       <translation>Adicionar programa</translation>
     </message>
     <message>
-      <source>Restore the game's programs...</source>
-      <translation>Restaurar os programas do jogo...</translation>
+      <source>Restore the game's programs…</source>
+      <translation>Restaurar os programas do jogo…</translation>
     </message>
     <message>
       <source>Browse</source>
@@ -1396,8 +1396,8 @@ Tem certeza de que deseja continuar?</translation>
       <translation>Os arquivos que o programa cria vão para este mod em vez do Overwrite</translation>
     </message>
     <message>
-      <source>Configure...</source>
-      <translation>Configurar...</translation>
+      <source>Configure…</source>
+      <translation>Configurar…</translation>
     </message>
     <message>
       <source>Force load libraries</source>
@@ -1708,7 +1708,7 @@ Reinstale o mod para mudar isso.</translation>
     </message>
     <message>
       <source>Manual...</source>
-      <translation>Manual...</translation>
+      <translation>Manual…</translation>
     </message>
     <message>
       <source>Open MO2's manual installer to choose the files and folders yourself.</source>
@@ -1724,11 +1724,11 @@ Reinstale o mod para mudar isso.</translation>
     </message>
     <message>
       <source>Several folders contain {0}. Only one copy of a DLL can load; if they are alternatives, choose Manual... and keep the one you want.</source>
-      <translation>Várias pastas contêm {0}. Só uma cópia de uma DLL pode ser carregada; se forem alternativas, escolha Manual... e mantenha a que quiser.</translation>
+      <translation>Várias pastas contêm {0}. Só uma cópia de uma DLL pode ser carregada; se forem alternativas, escolha Manual… e mantenha a que quiser.</translation>
     </message>
     <message>
       <source>This archive looks like it offers options ({0}). Both layouts install all of them; choose Manual... to keep only the one you want.</source>
-      <translation>Este arquivo parece oferecer opções ({0}). As duas estruturas instalam todas; escolha Manual... para manter só a que quiser.</translation>
+      <translation>Este arquivo parece oferecer opções ({0}). As duas estruturas instalam todas; escolha Manual… para manter só a que quiser.</translation>
     </message>
     <message>
       <source>Layout</source>
@@ -1884,7 +1884,7 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>This archive may be for another game. Manual... lets you choose its files.</source>
-      <translation>Este arquivo pode ser de outro jogo. Com Manual... você escolhe os arquivos.</translation>
+      <translation>Este arquivo pode ser de outro jogo. Com Manual… você escolhe os arquivos.</translation>
     </message>
     <message>
       <source>Your active mods also bring regulation.bin ({0}). Only one can provide it: the one with the highest priority wins.</source>
@@ -2004,11 +2004,11 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>Manual... lets you add them.</source>
-      <translation>Com Manual... você pode adicioná-los.</translation>
+      <translation>Com Manual… você pode adicioná-los.</translation>
     </message>
     <message>
       <source>These names can't be used for a file or folder: {0}. A name can't be empty, "." or "..", contain &lt; &gt; : " / \ | ? *, end with a dot or a space, or be a name Windows keeps for itself (CON, NUL, COM1...). Rename them.</source>
-      <translation>Estes nomes não podem ser usados para um arquivo ou pasta: {0}. Um nome não pode estar vazio, ser "." ou "..", conter &lt; &gt; : " / \ | ? *, terminar em ponto ou espaço, nem ser um nome que o Windows reserva para si (CON, NUL, COM1...). Renomeie-os.</translation>
+      <translation>Estes nomes não podem ser usados para um arquivo ou pasta: {0}. Um nome não pode estar vazio, ser "." ou "..", conter &lt; &gt; : " / \ | ? *, terminar em ponto ou espaço, nem ser um nome que o Windows reserva para si (CON, NUL, COM1…). Renomeie-os.</translation>
     </message>
     <message>
       <source>This Seamless Co-op is made for the other game: it has {0}, and this game needs {1}. MO2 does not load {0} here; install the build made for this game.</source>
@@ -2016,7 +2016,7 @@ Reinstale o mod para alterar isso.</translation>
     </message>
     <message>
       <source>These names can't be used for a file or folder: {0}. A name can't be empty, "." or "..", contain &lt; &gt; : " / \ | ? *, end with a dot or a space, or be a name Windows reserves (CON, NUL, COM1...). Rename them.</source>
-      <translation>Estes nomes não podem ser usados para um arquivo ou pasta: {0}. Um nome não pode estar vazio, ser "." ou "..", conter &lt; &gt; : " / \ | ? *, terminar em ponto ou espaço, nem ser um nome que o Windows reserva para si (CON, NUL, COM1...). Renomeie-os.</translation>
+      <translation>Estes nomes não podem ser usados para um arquivo ou pasta: {0}. Um nome não pode estar vazio, ser "." ou "..", conter &lt; &gt; : " / \ | ? *, terminar em ponto ou espaço, nem ser um nome que o Windows reserva para si (CON, NUL, COM1…). Renomeie-os.</translation>
     </message>
 </context>
   <context>
@@ -2335,7 +2335,7 @@ O jogo não foi iniciado.</translation>
     </message>
     <message>
       <source>Revamped native '{0}' was not found in the mapped MO2 mod '{1}'. Keep original structure may retain natives/...; MO2 layout must place it under DLLs/.</source>
-      <translation>O nativo do Revamped '{0}' não foi encontrado no mod do MO2 mapeado '{1}'. Manter a estrutura original pode preservar natives/...; a estrutura do MO2 deve colocá-lo em DLLs/.</translation>
+      <translation>O nativo do Revamped '{0}' não foi encontrado no mod do MO2 mapeado '{1}'. Manter a estrutura original pode preservar natives/…; a estrutura do MO2 deve colocá-lo em DLLs/.</translation>
     </message>
     <message>
       <source>MO2 has no active file origin for Revamped native '{0}'.</source>
@@ -6304,7 +6304,7 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
     </message>
     <message>
       <source>Preparing LOOT...</source>
-      <translation>Preparando o LOOT...</translation>
+      <translation>Preparando o LOOT…</translation>
     </message>
     <message>
       <source>Technical details</source>
@@ -6413,8 +6413,8 @@ Elas continuarão procurando na pasta antiga e não encontrarão nada até que o
       <translation>Algumas alterações só serão aplicadas após reiniciar.</translation>
     </message>
     <message>
-      <source>Edit programs...</source>
-      <translation>Editar programas...</translation>
+      <source>Edit programs…</source>
+      <translation>Editar programas…</translation>
     </message>
     <message>
       <source>No programs</source>
@@ -6527,7 +6527,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>List and profile backup actions...</source>
-      <translation>Ações de lista e backup do perfil...</translation>
+      <translation>Ações de lista e backup do perfil…</translation>
     </message>
     <message>
       <source>Install or create mods and separators, enable or disable all or matching mods, check for updates, assign categories, refresh or export the mod list, and create, restore, or delete mod-list and plugin-order backups for this profile.</source>
@@ -6535,7 +6535,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>Choose a game or MO2 folder to open...</source>
-      <translation>Escolha uma pasta do jogo ou do MO2 para abrir...</translation>
+      <translation>Escolha uma pasta do jogo ou do MO2 para abrir…</translation>
     </message>
     <message>
       <source>Shows how many active mods are visible in the mod list. Filtering the list changes this count; hover over the counter for totals and visible counts by type.</source>
@@ -6563,7 +6563,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
     </message>
     <message>
       <source>Search mods...</source>
-      <translation>Pesquisar mods...</translation>
+      <translation>Pesquisar mods…</translation>
     </message>
     <message>
       <source>Filter plugins by name. Separate alternatives with a semicolon, |, or OR surrounded by spaces.</source>
@@ -6599,7 +6599,7 @@ Sempre ocultar: nunca mostra os separadores</translation>
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;For one selected save with missing required plugins, use Restore required plugins... to activate installed mods that provide them. You can also delete the save or open its folder. For Elden Ring, choose the save route and named save profile in Tools &amp;gt; Elden Ring Save Isolation.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </source>
-      <translation>&lt;p&gt;Esta lista mostra os saves da pasta associada ao perfil ativo do MO2. Passe o cursor sobre um save para ver mais detalhes quando o plugin do jogo os fornece.&lt;/p&gt;&lt;p&gt;Se um save selecionado tiver plugins necessários ausentes, use Restaurar plugins necessários... para ativar os mods instalados que os fornecem. Você também pode excluir o save ou abrir a pasta dele. No Elden Ring, escolha a rota de saves e o perfil de saves nomeado em Ferramentas &amp;gt; Isolamento de saves.&lt;/p&gt;</translation>
+      <translation>&lt;p&gt;Esta lista mostra os saves da pasta associada ao perfil ativo do MO2. Passe o cursor sobre um save para ver mais detalhes quando o plugin do jogo os fornece.&lt;/p&gt;&lt;p&gt;Se um save selecionado tiver plugins necessários ausentes, use Restaurar plugins necessários… para ativar os mods instalados que os fornecem. Você também pode excluir o save ou abrir a pasta dele. No Elden Ring, escolha a rota de saves e o perfil de saves nomeado em Ferramentas &amp;gt; Isolamento de saves.&lt;/p&gt;</translation>
     </message>
     <message>
       <source>Downloaded archives for this instance appear here. Double-click an archive to install it. To choose its priority, drag it from this list onto the mod list while sorting by Priority.</source>
@@ -7388,7 +7388,7 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
                                   &lt;/style&gt;&lt;/head&gt;&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;"&gt;
                                   &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Esta lista mostra os saves da pasta atribuída ao perfil ativo do MO2. Passe o mouse sobre um save para ver mais detalhes quando o plugin do jogo os fornece.&lt;/span&gt;&lt;/p&gt;
                                   &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;"&gt;&lt;/p&gt;
-                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Para um save selecionado com plugins necessários faltando, use Restaurar plugins necessários... para ativar os mods instalados que os fornecem. Você também pode excluir o save ou abrir a pasta dele.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                  &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"&gt;&lt;span style=" font-size:8pt;"&gt;Para um save selecionado com plugins necessários faltando, use Restaurar plugins necessários… para ativar os mods instalados que os fornecem. Você também pode excluir o save ou abrir a pasta dele.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
                                 </translation>
     </message>
     <message>
@@ -7541,7 +7541,7 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
     </message>
     <message>
       <source>A game support wiki is available for this game. Open it now? You can also open it later from the &quot;...&quot; menu.</source>
-      <translation>Há uma wiki de ajuda para este jogo. Abrir agora? Você também pode abri-la depois pelo menu &quot;...&quot;.</translation>
+      <translation>Há uma wiki de ajuda para este jogo. Abrir agora? Você também pode abri-la depois pelo menu &quot;…&quot;.</translation>
     </message>
     <message>
       <source>Network proxy</source>
@@ -8944,8 +8944,8 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Move todos os arquivos e pastas do Overwrite para a Lixeira.</translation>
     </message>
     <message>
-      <source>Review and manage files...</source>
-      <translation>Revisar e gerenciar arquivos...</translation>
+      <source>Review and manage files…</source>
+      <translation>Revisar e gerenciar arquivos…</translation>
     </message>
     <message>
       <source>Browse files in Overwrite, create folders, rename items, or move files into regular mods.</source>
@@ -8960,16 +8960,16 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Substitui os arquivos que os mods normais já têm pelas versões do Overwrite.</translation>
     </message>
     <message>
-      <source>Create mod from Overwrite...</source>
-      <translation>Criar mod a partir do Overwrite...</translation>
+      <source>Create mod from Overwrite…</source>
+      <translation>Criar mod a partir do Overwrite…</translation>
     </message>
     <message>
       <source>Move all files from Overwrite into a new regular mod.</source>
       <translation>Move todos os arquivos do Overwrite para um novo mod normal.</translation>
     </message>
     <message>
-      <source>Move files to an existing mod...</source>
-      <translation>Mover arquivos para um mod existente...</translation>
+      <source>Move files to an existing mod…</source>
+      <translation>Mover arquivos para um mod existente…</translation>
     </message>
     <message>
       <source>Choose a regular mod and move all files from Overwrite into it.</source>
@@ -9008,8 +9008,8 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Desativar</translation>
     </message>
     <message>
-      <source>Select color...</source>
-      <translation>Escolher cor...</translation>
+      <source>Select color…</source>
+      <translation>Escolher cor…</translation>
     </message>
     <message>
       <source>Reset color</source>
@@ -9040,8 +9040,8 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Nome do arquivo baixado</translation>
     </message>
     <message>
-      <source>Sync to mods...</source>
-      <translation>Sincronizar com mods...</translation>
+      <source>Sync to mods…</source>
+      <translation>Sincronizar com mods…</translation>
     </message>
     <message>
       <source>Open folder</source>
@@ -9060,20 +9060,20 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Copiar nome</translation>
     </message>
     <message>
-      <source>Remove separators...</source>
-      <translation>Remover separadores...</translation>
+      <source>Remove separators…</source>
+      <translation>Remover separadores…</translation>
     </message>
     <message>
-      <source>Remove separator...</source>
-      <translation>Remover separador...</translation>
+      <source>Remove separator…</source>
+      <translation>Remover separador…</translation>
     </message>
     <message>
       <source>Restore backup</source>
       <translation>Restaurar backup</translation>
     </message>
     <message>
-      <source>Remove backup...</source>
-      <translation>Remover backup...</translation>
+      <source>Remove backup…</source>
+      <translation>Remover backup…</translation>
     </message>
     <message>
       <source>Reinstall</source>
@@ -9088,12 +9088,12 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Verificar atualizações</translation>
     </message>
     <message>
-      <source>Remove mods...</source>
-      <translation>Remover mods...</translation>
+      <source>Remove mods…</source>
+      <translation>Remover mods…</translation>
     </message>
     <message>
-      <source>Remove...</source>
-      <translation>Remover...</translation>
+      <source>Remove…</source>
+      <translation>Remover…</translation>
     </message>
     <message>
       <source>Nexus</source>
@@ -9155,16 +9155,16 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Salva um backup da lista de mods atual deste perfil.</translation>
     </message>
     <message>
-      <source>Restore mod list backup...</source>
-      <translation>Restaurar backup da lista de mods...</translation>
+      <source>Restore mod list backup…</source>
+      <translation>Restaurar backup da lista de mods…</translation>
     </message>
     <message>
       <source>Choose a saved backup for this profile's mod list.</source>
       <translation>Escolha um backup salvo da lista de mods deste perfil.</translation>
     </message>
     <message>
-      <source>Delete mod list backup...</source>
-      <translation>Excluir backup da lista de mods...</translation>
+      <source>Delete mod list backup…</source>
+      <translation>Excluir backup da lista de mods…</translation>
     </message>
     <message>
       <source>Choose and permanently delete a saved mod list backup.</source>
@@ -9183,36 +9183,36 @@ A maioria dos mods não tem esps opcionais, então é provável que a lista este
       <translation>Salva a ordem de carregamento de plugins atual deste perfil.</translation>
     </message>
     <message>
-      <source>Restore plugin order backup...</source>
-      <translation>Restaurar backup da ordem de plugins...</translation>
+      <source>Restore plugin order backup…</source>
+      <translation>Restaurar backup da ordem de plugins…</translation>
     </message>
     <message>
       <source>Choose a saved plugin load order for this profile.</source>
       <translation>Escolha uma ordem de carregamento de plugins salva para este perfil.</translation>
     </message>
     <message>
-      <source>Delete plugin order backup...</source>
-      <translation>Excluir backup da ordem de plugins...</translation>
+      <source>Delete plugin order backup…</source>
+      <translation>Excluir backup da ordem de plugins…</translation>
     </message>
     <message>
       <source>Choose and permanently delete a saved plugin load order.</source>
       <translation>Escolha e exclua permanentemente uma ordem de carregamento de plugins salva.</translation>
     </message>
     <message>
-      <source>Install mod above...</source>
-      <translation>Instalar mod acima...</translation>
+      <source>Install mod above…</source>
+      <translation>Instalar mod acima…</translation>
     </message>
     <message>
-      <source>Install mod inside...</source>
-      <translation>Instalar mod dentro...</translation>
+      <source>Install mod inside…</source>
+      <translation>Instalar mod dentro…</translation>
     </message>
     <message>
-      <source>Install mod below...</source>
-      <translation>Instalar mod abaixo...</translation>
+      <source>Install mod below…</source>
+      <translation>Instalar mod abaixo…</translation>
     </message>
     <message>
-      <source>Export to CSV...</source>
-      <translation>Exportar para CSV...</translation>
+      <source>Export to CSV…</source>
+      <translation>Exportar para CSV…</translation>
     </message>
   </context>
   <context>
@@ -9450,8 +9450,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Abrir páginas da web</translation>
     </message>
     <message>
-      <source>Create mod...</source>
-      <translation>Criar mod...</translation>
+      <source>Create mod…</source>
+      <translation>Criar mod…</translation>
     </message>
     <message>
       <source>Active mods from the current profile</source>
@@ -9534,8 +9534,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Não foi possível mover %1 para %2.</translation>
     </message>
     <message>
-      <source>Backing up "%1"...</source>
-      <translation>Fazendo backup de "%1"...</translation>
+      <source>Backing up "%1"…</source>
+      <translation>Fazendo backup de "%1"…</translation>
     </message>
     <message>
       <source>Failed to create backup.</source>
@@ -10158,8 +10158,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Abre a pasta Overwrite no Explorador de Arquivos do Windows.</translation>
     </message>
     <message>
-      <source>&amp;Delete...</source>
-      <translation>&amp;Excluir...</translation>
+      <source>&amp;Delete…</source>
+      <translation>&amp;Excluir…</translation>
     </message>
     <message>
       <source>&amp;Open file</source>
@@ -10217,16 +10217,16 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       </translation>
     </message>
     <message>
-      <source>Create mod...</source>
-      <translation>Criar mod...</translation>
+      <source>Create mod…</source>
+      <translation>Criar mod…</translation>
     </message>
     <message>
       <source>Move all files from Overwrite into a new regular mod</source>
       <translation>Move todos os arquivos do Overwrite para um novo mod</translation>
     </message>
     <message>
-      <source>Move to a mod...</source>
-      <translation>Mover para um mod...</translation>
+      <source>Move to a mod…</source>
+      <translation>Mover para um mod…</translation>
     </message>
     <message>
       <source>Choose a regular mod and move all files from Overwrite into it</source>
@@ -10261,8 +10261,8 @@ Mova para um mod o que quiser manter antes de continuar.</translation>
       <translation>Esvaziar o Overwrite?</translation>
     </message>
     <message>
-      <source>Empty to Recycle Bin...</source>
-      <translation>Esvaziar para a Lixeira...</translation>
+      <source>Empty to Recycle Bin…</source>
+      <translation>Esvaziar para a Lixeira…</translation>
     </message>
     <message>
       <source>Everything in Overwrite goes to the Recycle Bin: %1. Logs and settings that DLL mods and tools wrote there are gone from the game until you restore them.
@@ -10335,7 +10335,7 @@ Para manter alguns arquivos, mova-os para um mod antes.</translation>
     </message>
     <message>
       <source>A plugin whose masters are missing, or a script extender plugin (F4SE, NVSE, xOBSE...) that didn't load the last time the game ran.</source>
-      <translation>Um plugin com masters faltando, ou um plugin do script extender (F4SE, NVSE, xOBSE...) que não carregou na última vez que o jogo rodou.</translation>
+      <translation>Um plugin com masters faltando, ou um plugin do script extender (F4SE, NVSE, xOBSE…) que não carregou na última vez que o jogo rodou.</translation>
     </message>
     <message>
       <source>Steam saves still hidden after an earlier launch, or a profile that has no saves of its own yet.</source>
@@ -10689,8 +10689,8 @@ Continuar?</translation>
       <translation>Cria um perfil com os mesmos mods e opções (Ctrl+D)</translation>
     </message>
     <message>
-      <source>Transfer saves...</source>
-      <translation>Transferir saves...</translation>
+      <source>Transfer saves…</source>
+      <translation>Transferir saves…</translation>
     </message>
     <message>
       <source>Copy or move saves between this profile and the game</source>
@@ -10769,20 +10769,20 @@ Continuar?</translation>
       <translation>Ative os saves específicos do perfil para transferi-los</translation>
     </message>
     <message>
-      <source>New profile...</source>
-      <translation>Novo perfil...</translation>
+      <source>New profile…</source>
+      <translation>Novo perfil…</translation>
     </message>
     <message>
       <source>Open profiles folder</source>
       <translation>Abrir pasta de perfis</translation>
     </message>
     <message>
-      <source>Rename...</source>
-      <translation>Renomear...</translation>
+      <source>Rename…</source>
+      <translation>Renomear…</translation>
     </message>
     <message>
-      <source>Duplicate...</source>
-      <translation>Duplicar...</translation>
+      <source>Duplicate…</source>
+      <translation>Duplicar…</translation>
     </message>
     <message>
       <source>Open folder</source>
@@ -10797,8 +10797,8 @@ Continuar?</translation>
       <translation>Caminho da pasta</translation>
     </message>
     <message>
-      <source>Delete profile...</source>
-      <translation>Excluir perfil...</translation>
+      <source>Delete profile…</source>
+      <translation>Excluir perfil…</translation>
     </message>
     <message>
       <source>A profile is one setup of the same instance: which mods are enabled, their order and, if you want, its own saves and game INI files. Profiles share the instance's mods and downloads, so a second profile costs no disk space.
@@ -10935,12 +10935,12 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
       <translation>Tema da interface</translation>
     </message>
     <message>
-      <source>New theme...</source>
-      <translation>Novo tema...</translation>
+      <source>New theme…</source>
+      <translation>Novo tema…</translation>
     </message>
     <message>
-      <source>Edit theme...</source>
-      <translation>Editar tema...</translation>
+      <source>Edit theme…</source>
+      <translation>Editar tema…</translation>
     </message>
     <message>
       <source>Open themes folder</source>
@@ -11013,8 +11013,8 @@ Use um por jogatina ou por lista de mods que quiser testar. O perfil em uso é e
         <translation>&quot;%1&quot; não existe mais. Salvar as alterações como um novo arquivo?</translation>
     </message>
     <message>
-      <source>Manage profiles...</source>
-      <translation>Gerenciar perfis...</translation>
+      <source>Manage profiles…</source>
+      <translation>Gerenciar perfis…</translation>
     </message>
     <message>
       <source>Removed from Nexus</source>
@@ -12131,7 +12131,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Save to file...</source>
-      <translation>Salvar em arquivo...</translation>
+      <translation>Salvar em arquivo…</translation>
     </message>
     <message>
       <source>Save text output</source>
@@ -12165,8 +12165,8 @@ p, li { white-space: pre-wrap; }
       <translation>Alguns destes saves ainda estão lá. Podem estar em uso, ou a exclusão foi cancelada.</translation>
     </message>
     <message>
-      <source>Restore required plugins...</source>
-      <translation>Restaurar plugins necessários...</translation>
+      <source>Restore required plugins…</source>
+      <translation>Restaurar plugins necessários…</translation>
     </message>
     <message>
       <source>Choose installed mods to activate the plugins required by this save.</source>
@@ -12194,11 +12194,11 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
       <source>Delete...</source>
-      <translation>Excluir...</translation>
+      <translation>Excluir…</translation>
     </message>
     <message>
-      <source>Delete %1 saves...</source>
-      <translation>Excluir %1 saves...</translation>
+      <source>Delete %1 saves…</source>
+      <translation>Excluir %1 saves…</translation>
     </message>
     <message>
       <source>Open folder</source>
@@ -12684,7 +12684,7 @@ Escolha quanto detalhe o MO2 grava em ModOrganizer.log. Info é o recomendado no
     </message>
     <message>
       <source>Search plugins...</source>
-      <translation>Pesquisar plugins...</translation>
+      <translation>Pesquisar plugins…</translation>
     </message>
     <message>
       <source>Plugin details and options</source>
@@ -13434,8 +13434,8 @@ Iniciar mesmo assim?</translation>
       <translation>Já existe um programa chamado "%1". Escolha outro nome.</translation>
     </message>
     <message>
-      <source>&amp;Save tree as text...</source>
-      <translation>&amp;Salvar árvore como texto...</translation>
+      <source>&amp;Save tree as text…</source>
+      <translation>&amp;Salvar árvore como texto…</translation>
     </message>
     <message>
       <source>Expand all below</source>
@@ -13462,8 +13462,8 @@ Iniciar mesmo assim?</translation>
       <translation>Abre a pasta que contém o arquivo, com o arquivo selecionado</translation>
     </message>
     <message>
-      <source>Mod information...</source>
-      <translation>Informações do mod...</translation>
+      <source>Mod information…</source>
+      <translation>Informações do mod…</translation>
     </message>
     <message>
       <source>Real path</source>
@@ -13549,8 +13549,8 @@ Iniciar mesmo assim?</translation>
       <translation>Mostrar na &amp;pasta</translation>
     </message>
     <message>
-      <source>&amp;Delete...</source>
-      <translation>&amp;Excluir...</translation>
+      <source>&amp;Delete…</source>
+      <translation>&amp;Excluir…</translation>
     </message>
     <message>
       <source>&amp;Un-hide</source>
@@ -13638,8 +13638,8 @@ Iniciar mesmo assim?</translation>
       <translation>Enviar para</translation>
     </message>
     <message>
-      <source>Origin information...</source>
-      <translation>Informações da origem...</translation>
+      <source>Origin information…</source>
+      <translation>Informações da origem…</translation>
     </message>
   </context>
   <context>
@@ -13657,8 +13657,8 @@ Iniciar mesmo assim?</translation>
       <translation>Criar backup da ordem de plugins</translation>
     </message>
     <message>
-      <source>Restore plugin order backup...</source>
-      <translation>Restaurar backup da ordem de plugins...</translation>
+      <source>Restore plugin order backup…</source>
+      <translation>Restaurar backup da ordem de plugins…</translation>
     </message>
     <message>
       <source>Sort the plugins with LOOT? The current order will be replaced.</source>
@@ -13676,16 +13676,16 @@ Iniciar mesmo assim?</translation>
       <translation>Exceção: %1</translation>
     </message>
     <message>
-      <source>Copy folder...</source>
-      <translation>Copiar pasta...</translation>
+      <source>Copy folder…</source>
+      <translation>Copiar pasta…</translation>
     </message>
     <message>
       <source>"%1" holds the mods folder or this instance, so it can't be copied into a mod.</source>
       <translation>"%1" contém a pasta de mods ou esta instância, então não pode ser copiada para um mod.</translation>
     </message>
     <message>
-      <source>Copying "%1"...</source>
-      <translation>Copiando "%1"...</translation>
+      <source>Copying "%1"…</source>
+      <translation>Copiando "%1"…</translation>
     </message>
     <message>
       <source>The folder could not be copied into a mod: %1</source>
@@ -13720,7 +13720,7 @@ Iniciar mesmo assim?</translation>
     </message>
     <message>
       <source>Browse...</source>
-      <translation>Procurar...</translation>
+      <translation>Procurar…</translation>
     </message>
     <message>
       <source>Arguments (optional)</source>
@@ -13863,15 +13863,15 @@ Iniciar mesmo assim?</translation>
     </message>
     <message>
       <source>Test a link...</source>
-      <translation>Testar um link...</translation>
+      <translation>Testar um link…</translation>
     </message>
     <message>
       <source>Add program...</source>
-      <translation>Adicionar programa...</translation>
+      <translation>Adicionar programa…</translation>
     </message>
     <message>
       <source>Edit...</source>
-      <translation>Editar...</translation>
+      <translation>Editar…</translation>
     </message>
     <message>
       <source>Use for all games</source>
@@ -14079,7 +14079,7 @@ Use esta opção se você moveu o Mod Organizer ou desinstalou a instalação do
     </message>
     <message>
       <source>Choose a program...</source>
-      <translation>Escolher um programa...</translation>
+      <translation>Escolher um programa…</translation>
     </message>
     <message>
       <source>Error</source>
@@ -16727,7 +16727,7 @@ Extrair os arquivos deles no mod? Arquivos soltos seguem a ordem da lista de mod
     </message>
     <message>
       <source>Checking the files of the game and the active mods...</source>
-      <translation>Verificando os arquivos do jogo e dos mods ativos...</translation>
+      <translation>Verificando os arquivos do jogo e dos mods ativos…</translation>
     </message>
     <message>
       <source>Fix the file attributes?</source>
@@ -16755,7 +16755,7 @@ Extrair os arquivos deles no mod? Arquivos soltos seguem a ordem da lista de mod
     </message>
     <message>
       <source>Fixing the file attributes...</source>
-      <translation>Corrigindo os atributos de arquivo...</translation>
+      <translation>Corrigindo os atributos de arquivo…</translation>
     </message>
     <message>
       <source>Some attributes couldn't be fixed</source>
@@ -18730,7 +18730,7 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     </message>
     <message>
       <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves...&lt;/b&gt; copies saves between profiles.</source>
-      <translation>&lt;b&gt;Saves específicos do perfil&lt;/b&gt; e &lt;b&gt;Arquivos INI do jogo específicos do perfil&lt;/b&gt; separam saves e configurações do jogo de cada perfil. &lt;b&gt;Transferir saves...&lt;/b&gt; copia saves entre perfis.</translation>
+      <translation>&lt;b&gt;Saves específicos do perfil&lt;/b&gt; e &lt;b&gt;Arquivos INI do jogo específicos do perfil&lt;/b&gt; separam saves e configurações do jogo de cada perfil. &lt;b&gt;Transferir saves…&lt;/b&gt; copia saves entre perfis.</translation>
     </message>
     <message>
       <source>Defaults</source>
@@ -18897,8 +18897,8 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <translation>Editor de temas</translation>
     </message>
     <message>
-      <source>&lt;b&gt;New theme...&lt;/b&gt; asks for a name, a base (Light or Dark) and six colors, and the window shows them as you pick. &lt;b&gt;Save&lt;/b&gt; keeps them; &lt;b&gt;Cancel&lt;/b&gt; goes back. &lt;b&gt;Edit theme...&lt;/b&gt; changes one of yours.</source>
-      <translation>&lt;b&gt;Novo tema...&lt;/b&gt; pede um nome, uma base (Claro ou Escuro) e seis cores, e a janela as mostra enquanto você escolhe. &lt;b&gt;Salvar&lt;/b&gt; as mantém; &lt;b&gt;Cancelar&lt;/b&gt; volta atrás. &lt;b&gt;Editar tema...&lt;/b&gt; muda um dos seus.</translation>
+      <source>&lt;b&gt;New theme…&lt;/b&gt; asks for a name, a base (Light or Dark) and six colors, and the window shows them as you pick. &lt;b&gt;Save&lt;/b&gt; keeps them; &lt;b&gt;Cancel&lt;/b&gt; goes back. &lt;b&gt;Edit theme…&lt;/b&gt; changes one of yours.</source>
+      <translation>&lt;b&gt;Novo tema…&lt;/b&gt; pede um nome, uma base (Claro ou Escuro) e seis cores, e a janela as mostra enquanto você escolhe. &lt;b&gt;Salvar&lt;/b&gt; as mantém; &lt;b&gt;Cancelar&lt;/b&gt; volta atrás. &lt;b&gt;Editar tema…&lt;/b&gt; muda um dos seus.</translation>
     </message>
     <message>
       <source>Theme files</source>
@@ -21193,7 +21193,7 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     </message>
     <message>
       <source>Warns when active Cyberpunk 2077 mods need a framework (RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware...) or the REDmod DLC that isn&apos;t installed.</source>
-      <translation>Avisa quando mods ativos do Cyberpunk 2077 precisam de um framework (RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware...) ou do DLC REDmod que não está instalado.</translation>
+      <translation>Avisa quando mods ativos do Cyberpunk 2077 precisam de um framework (RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware…) ou do DLC REDmod que não está instalado.</translation>
     </message>
     <message>
       <source>REDmod mods need the REDmod DLC</source>
@@ -21289,7 +21289,7 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
     </message>
     <message>
       <source>Skips the &quot;Breaching...&quot; start screen on game launch (can also skip loading of GOG rewards)</source>
-      <translation>Pula a tela inicial “Breaching...” ao iniciar o jogo (também pode pular o carregamento das recompensas da GOG)</translation>
+      <translation>Pula a tela inicial “Breaching…” ao iniciar o jogo (também pode pular o carregamento das recompensas da GOG)</translation>
     </message>
     <message>
       <source>Write the mod list&apos;s order of .archive files to &lt;code&gt;archive/pc/mod/modlist.txt&lt;/code&gt; (in Overwrite) on each launch; turning it off removes the file this plugin wrote</source>

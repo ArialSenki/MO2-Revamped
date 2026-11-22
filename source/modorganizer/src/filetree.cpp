@@ -762,7 +762,7 @@ void FileTree::addFileMenus(QMenu& menu, const FileEntry& file, int originID)
       .enabled(!file.isFromArchive())
       .addTo(menu);
 
-  MenuItem(tr("Mod information..."))
+  MenuItem(tr("Mod information…"))
       .icon(":/MO/gui/contextmenu/information.svg")
       .callback([&] {
         openModInfo();
@@ -927,7 +927,7 @@ void FileTree::addCommonMenus(QMenu& menu)
       .hint(tr("Refreshes the list"))
       .addTo(menu);
 
-  MenuItem(tr("&Save tree as text..."))
+  MenuItem(tr("&Save tree as text…"))
       .icon(":/MO/gui/contextmenu/export.svg")
       .callback([&] {
         dumpToFile();

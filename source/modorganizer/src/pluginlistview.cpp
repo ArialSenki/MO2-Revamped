@@ -414,7 +414,7 @@ void PluginListView::onCustomContextMenuRequested(const QPoint& pos)
       backups->addAction(tr("Create plugin order backup"), this, [this] {
         m_createBackup();
       });
-      backups->addAction(tr("Restore plugin order backup..."), this, [this] {
+      backups->addAction(tr("Restore plugin order backup…"), this, [this] {
         m_restoreBackup();
       });
     }

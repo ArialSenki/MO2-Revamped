@@ -4139,7 +4139,7 @@ bool MainWindow::refreshProfiles(bool selectProfile, QString newProfile)
 
   profileBox->blockSignals(true);
   profileBox->clear();
-  profileBox->addItem(QObject::tr("Manage profiles..."));
+  profileBox->addItem(QObject::tr("Manage profiles…"));
 
   QDir profilesDir(Settings::instance().paths().profiles());
   profilesDir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
@@ -4257,7 +4257,7 @@ void MainWindow::refreshExecutablesList()
   ui->executablesListBox->setEnabled(false);
   ui->executablesListBox->clear();
 
-  add(tr("Edit programs..."), {});
+  add(tr("Edit programs…"), {});
 
   for (const auto& exe : *m_OrganizerCore.executablesList()) {
     if (!exe.hide()) {
@@ -6430,7 +6430,7 @@ void MainWindow::languageChange(const QString& newLanguage)
   }
   log::debug("loaded language {}", newLanguage);
 
-  ui->profileBox->setItemText(0, QObject::tr("Manage profiles..."));
+  ui->profileBox->setItemText(0, QObject::tr("Manage profiles…"));
 
   createHelpMenu();
 

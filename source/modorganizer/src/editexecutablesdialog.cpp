@@ -1391,7 +1391,7 @@ QWidget* EditExecutablesDialog::createFluentListCard()
       actions[2]->setText(tr("Duplicate"));
     }
     menu->addSeparator();
-    menu->addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs..."), this,
+    menu->addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs…"), this,
                     &EditExecutablesDialog::on_reset_clicked);
     add->setMenu(menu);
   }
@@ -1477,7 +1477,7 @@ QWidget* EditExecutablesDialog::createFluentDetails()
   addSwitchRow(rows, 0xE74E, tr("Save new files to a mod"),
                tr("New files go here instead of Overwrite"),
                ui->createFilesInMod, ui->mods);
-  ui->configureLibraries->setText(tr("Configure..."));
+  ui->configureLibraries->setText(tr("Configure…"));
   addSwitchRow(rows, 0xE950, tr("Force load libraries"),
                tr("Loads extra DLLs into the program when it starts"),
                ui->forceLoadLibraries, ui->configureLibraries);
@@ -1612,7 +1612,7 @@ void EditExecutablesDialog::showFluentListMenu(const QPoint& pos)
     menu.addAction(FluentIcons::glyph(0xE7C3), tr("Add empty"), this,
                    [this] { addEmpty(); });
     menu.addSeparator();
-    menu.addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs..."), this,
+    menu.addAction(FluentIcons::glyph(0xE777), tr("Restore the game's programs…"), this,
                    &EditExecutablesDialog::on_reset_clicked);
     menu.exec(ui->list->viewport()->mapToGlobal(pos));
     return;
