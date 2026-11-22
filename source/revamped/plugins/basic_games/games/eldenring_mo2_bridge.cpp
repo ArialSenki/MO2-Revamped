@@ -504,8 +504,8 @@ void minimize_existing_game_windows() {
   }
 }
 
-// Wine and Proton export wine_get_version from their ntdll; the registry key
-// is the other sign (some Proton builds hide the export)
+// Wine and Proton export wine_get_version from their ntdll. A prefix can hide
+// that export, so the registry key counts too, with a second sign
 bool running_under_wine() {
   const HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
   if (ntdll != nullptr &&
@@ -513,12 +513,25 @@ bool running_under_wine() {
     return true;
   }
   HKEY key = nullptr;
-  if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Wine", 0, KEY_READ, &key) ==
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Wine", 0, KEY_READ, &key) !=
       ERROR_SUCCESS) {
-    RegCloseKey(key);
-    return true;
+    return false;
   }
-  return false;
+  RegCloseKey(key);
+  // the key alone isn't Wine: a tool or a copied profile leaves it on a real
+  // Windows, where the timed release would show the game too early. With it,
+  // one of the exports only Wine's own ntdll and kernel32 have is asked for
+  if (ntdll != nullptr) {
+    for (const char* name : {"__wine_unix_call_dispatcher", "__wine_dbg_header",
+                             "wine_server_call", "__wine_syscall_dispatcher"}) {
+      if (GetProcAddress(ntdll, name) != nullptr) {
+        return true;
+      }
+    }
+  }
+  const HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+  return kernel32 != nullptr &&
+         GetProcAddress(kernel32, "wine_get_unix_file_name") != nullptr;
 }
 
 BOOL CALLBACK restore_minimized_game_window(HWND window, LPARAM parameter) {
