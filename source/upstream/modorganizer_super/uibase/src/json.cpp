@@ -26,15 +26,20 @@ namespace QtJson
 {
 static QString sanitizeString(QString str);
 static QByteArray join(const QList<QByteArray>& list, const QByteArray& sep);
-static QVariant parseValue(const QString& json, int& index, bool& success);
-static QVariant parseObject(const QString& json, int& index, bool& success);
-static QVariant parseArray(const QString& json, int& index, bool& success);
+static QVariant parseValue(const QString& json, int& index, bool& success, int depth);
+static QVariant parseObject(const QString& json, int& index, bool& success, int depth);
+static QVariant parseArray(const QString& json, int& index, bool& success, int depth);
 static QVariant parseString(const QString& json, int& index, bool& success);
 static QVariant parseNumber(const QString& json, int& index);
 static int lastIndexOfNumber(const QString& json, int index);
 static void eatWhitespace(const QString& json, int& index);
 static int lookAhead(const QString& json, int index);
 static int nextToken(const QString& json, int& index);
+
+// MO2 Revamped: how many arrays and objects can be open at once; each one is a
+// recursion, and 10,000 "[" overflowed the stack. Past it parsing fails, as
+// for any other damaged input
+static const int MaxDepth = 512;
 
 template <typename T>
 QByteArray serializeMap(const T& map, bool& success)
@@ -79,7 +84,7 @@ QVariant parse(const QString& json, bool& success)
     int index = 0;
 
     // Parse the first value
-    QVariant value = parseValue(data, index, success);
+    QVariant value = parseValue(data, index, success, 0);
 
     // Return the parsed value
     return value;
@@ -212,7 +217,7 @@ static QByteArray join(const QList<QByteArray>& list, const QByteArray& sep)
 /**
  * parseValue
  */
-static QVariant parseValue(const QString& json, int& index, bool& success)
+static QVariant parseValue(const QString& json, int& index, bool& success, int depth)
 {
   // Determine what kind of data we should parse by
   // checking out the upcoming token
@@ -222,9 +227,9 @@ static QVariant parseValue(const QString& json, int& index, bool& success)
   case JsonTokenNumber:
     return parseNumber(json, index);
   case JsonTokenCurlyOpen:
-    return parseObject(json, index, success);
+    return parseObject(json, index, success, depth);
   case JsonTokenSquaredOpen:
-    return parseArray(json, index, success);
+    return parseArray(json, index, success, depth);
   case JsonTokenTrue:
     nextToken(json, index);
     return QVariant(true);
@@ -246,10 +251,15 @@ static QVariant parseValue(const QString& json, int& index, bool& success)
 /**
  * parseObject
  */
-static QVariant parseObject(const QString& json, int& index, bool& success)
+static QVariant parseObject(const QString& json, int& index, bool& success, int depth)
 {
   QVariantMap map;
   int token;
+
+  if (depth >= MaxDepth) {
+    success = false;
+    return QVariantMap();
+  }
 
   // Get rid of the whitespace and increment index
   nextToken(json, index);
@@ -287,7 +297,7 @@ static QVariant parseObject(const QString& json, int& index, bool& success)
       }
 
       // Parse the key/value pair's value
-      QVariant value = parseValue(json, index, success);
+      QVariant value = parseValue(json, index, success, depth + 1);
 
       if (!success) {
         return QVariantMap();
@@ -305,9 +315,14 @@ static QVariant parseObject(const QString& json, int& index, bool& success)
 /**
  * parseArray
  */
-static QVariant parseArray(const QString& json, int& index, bool& success)
+static QVariant parseArray(const QString& json, int& index, bool& success, int depth)
 {
   QVariantList list;
+
+  if (depth >= MaxDepth) {
+    success = false;
+    return QVariantList();
+  }
 
   nextToken(json, index);
 
@@ -324,7 +339,7 @@ static QVariant parseArray(const QString& json, int& index, bool& success)
       nextToken(json, index);
       break;
     } else {
-      QVariant value = parseValue(json, index, success);
+      QVariant value = parseValue(json, index, success, depth + 1);
       if (!success) {
         return QVariantList();
       }
