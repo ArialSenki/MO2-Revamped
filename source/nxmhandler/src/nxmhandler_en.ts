@@ -4,102 +4,102 @@
 <context>
     <name>HandlerEditDialog</name>
     <message>
-        <location filename="handlereditdialog.cpp" line="114"/>
+        <location filename="handlereditdialog.cpp" line="110"/>
         <source>Add a program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="114"/>
+        <location filename="handlereditdialog.cpp" line="110"/>
         <source>Edit program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="132"/>
+        <location filename="handlereditdialog.cpp" line="128"/>
         <source>Pick the program that should open Nexus links, usually a ModOrganizer.exe, and the games it handles.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="141"/>
+        <location filename="handlereditdialog.cpp" line="137"/>
         <source>Program</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="145"/>
+        <location filename="handlereditdialog.cpp" line="141"/>
         <source>Path to ModOrganizer.exe</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="148"/>
+        <location filename="handlereditdialog.cpp" line="144"/>
         <source>Browse...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="159"/>
+        <location filename="handlereditdialog.cpp" line="155"/>
         <source>Arguments (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="161"/>
+        <location filename="handlereditdialog.cpp" line="157"/>
         <source>Passed to the program before the link</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="166"/>
+        <location filename="handlereditdialog.cpp" line="162"/>
         <source>Games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="167"/>
+        <location filename="handlereditdialog.cpp" line="163"/>
         <source>Links for these games go to this program.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="181"/>
+        <location filename="handlereditdialog.cpp" line="177"/>
         <source>Other games (any game not handled above)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="187"/>
+        <location filename="handlereditdialog.cpp" line="183"/>
         <source>Other game IDs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="189"/>
+        <location filename="handlereditdialog.cpp" line="185"/>
         <source>For example: eldenring, starfield</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="191"/>
+        <location filename="handlereditdialog.cpp" line="187"/>
         <source>Nexus game IDs that are not in the list, separated by commas. Mod Organizer adds its own game here when it registers.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="202"/>
+        <location filename="handlereditdialog.cpp" line="198"/>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="202"/>
+        <location filename="handlereditdialog.cpp" line="198"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="205"/>
+        <location filename="handlereditdialog.cpp" line="201"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="281"/>
+        <location filename="handlereditdialog.cpp" line="277"/>
         <source>Select Executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="282"/>
+        <location filename="handlereditdialog.cpp" line="278"/>
         <source>Executable (*.exe)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="handlereditdialog.cpp" line="293"/>
+        <location filename="handlereditdialog.cpp" line="289"/>
         <source>This file does not exist. Links sent to it cannot be opened.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -429,79 +429,85 @@ Use this if you moved Mod Organizer or if you uninstalled the Mod Organizer inst
 <context>
     <name>NxmHandler</name>
     <message>
-        <location filename="main.cpp" line="131"/>
+        <location filename="main.cpp" line="146"/>
         <source>Change Handler?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="132"/>
+        <location filename="main.cpp" line="147"/>
         <source>A nxm handler from a different Mod Organizer installation has been registered. Do you want to replace it? This is usually not necessary unless the other installation is defective.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="149"/>
+        <location filename="main.cpp" line="164"/>
         <source>Register?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="150"/>
+        <location filename="main.cpp" line="165"/>
         <source>Mod Organizer is not set up to handle nxm links. Associate it with nxm links?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="154"/>
+        <location filename="main.cpp" line="169"/>
         <source>No, don&apos;t ask again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="202"/>
+        <location filename="main.cpp" line="239"/>
         <source>Apply Chrome fix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="203"/>
+        <location filename="main.cpp" line="240"/>
         <source>Chrome may not support nexus links even though the association is set up correctly. Do you want to apply a fix for that (You have to close chrome before pressing yes or this will have no effect!)?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="273"/>
+        <location filename="main.cpp" line="310"/>
         <source>No handler found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="274"/>
+        <location filename="main.cpp" line="311"/>
         <source>Windows sent a Nexus link for &quot;%1&quot;, but no program in the list handles that game, so the link cannot be opened yet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="278"/>
+        <location filename="main.cpp" line="315"/>
         <source>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click &quot;Register MO2 for Nexus download links&quot;.</source>
         <oldsource>Choose the Mod Organizer that should open links for this game and the link is passed on to it right away. If Mod Organizer should handle it, you can also go to Settings &gt; Nexus there and click &quot;Associate with ... links&quot;.</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="283"/>
+        <location filename="main.cpp" line="320"/>
         <source>Choose a program...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="358"/>
+        <location filename="main.cpp" line="395"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="358"/>
-        <location filename="main.cpp" line="383"/>
+        <location filename="main.cpp" line="395"/>
+        <location filename="main.cpp" line="418"/>
         <source>Invalid number of parameters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="383"/>
+        <location filename="main.cpp" line="63"/>
+        <location filename="main.cpp" line="418"/>
         <source>Invalid Arguments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.cpp" line="402"/>
+        <location filename="main.cpp" line="64"/>
+        <source>This nxm link holds a quote or a control character, which no Nexus link has, so it wasn&apos;t opened. The program that passed it may have changed it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.cpp" line="437"/>
         <source>Uncaught exception:
 %1</source>
         <translation type="unfinished"></translation>

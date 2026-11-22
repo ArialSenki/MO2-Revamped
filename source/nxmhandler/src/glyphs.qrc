@@ -1,0 +1,17 @@
+<!DOCTYPE RCC>
+<!-- MO2 Revamped: the glyphs the window draws, as MO2 bundles them, for when
+     no icon font is installed (Wine, Proton) -->
+<RCC version="1.0">
+  <qresource prefix="/nxmglyphs">
+    <file alias="E70F">../../modorganizer/src/resources/glyphs/E70F.svg</file>
+    <file alias="E710">../../modorganizer/src/resources/glyphs/E710.svg</file>
+    <file alias="E71B">../../modorganizer/src/resources/glyphs/E71B.svg</file>
+    <file alias="E73E">../../modorganizer/src/resources/glyphs/E73E.svg</file>
+    <file alias="E74A">../../modorganizer/src/resources/glyphs/E74A.svg</file>
+    <file alias="E74B">../../modorganizer/src/resources/glyphs/E74B.svg</file>
+    <file alias="E74D">../../modorganizer/src/resources/glyphs/E74D.svg</file>
+    <file alias="E768">../../modorganizer/src/resources/glyphs/E768.svg</file>
+    <file alias="E7BA">../../modorganizer/src/resources/glyphs/E7BA.svg</file>
+    <file alias="E8FD">../../modorganizer/src/resources/glyphs/E8FD.svg</file>
+  </qresource>
+</RCC>

@@ -10,9 +10,11 @@
 
 #include <QColor>
 #include <QIcon>
+#include <QRectF>
 #include <QString>
 
 class QApplication;
+class QPainter;
 class QWidget;
 
 namespace Fluent
@@ -42,11 +44,21 @@ const Theme& theme();
 void install(QApplication& app, int forceDark = -1);
 
 // a monochrome icon drawn from the Segoe Fluent Icons font (Segoe MDL2 Assets
-// on Windows 10), e.g. 0xE710 for "Add"
+// on Windows 10), e.g. 0xE710 for "Add"; without either font (Wine, Proton),
+// from the glyph's SVG as MO2 bundles it
 QIcon glyphIcon(ushort codepoint, const QColor& color, int size = 16);
+
+// one glyph centered in the rectangle, pixelSize tall: as text in the icon
+// font, or its SVG without one. The painter's pen and font are kept
+void drawGlyph(QPainter* painter, const QRectF& rect, ushort codepoint, const QColor& color,
+               int pixelSize);
 
 // the icon font family available on this system
 QString iconFontFamily();
+
+// whether either icon font is installed (not on Wine or Proton);
+// MO2R_GLYPH_SVG=1 says no, to check the SVGs on Windows
+bool hasIconFont();
 
 // marks a frame as a Fluent card (rounded, card background)
 void makeCard(QWidget* widget);

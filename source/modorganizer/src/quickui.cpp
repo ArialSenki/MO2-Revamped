@@ -1,5 +1,6 @@
 #include "quickui.h"
 
+#include "fluenticons.h"
 #include "fluentmotion.h"
 #include "settings.h"
 #include "usertheme.h"
@@ -61,6 +62,38 @@ public:
   }
 };
 
+// glyphs without the icon fonts: "image://fluentglyph/<code point, hex>/<color
+// without its #>", the glyph's SVG in that color at the size asked for
+class GlyphProvider : public QQuickImageProvider
+{
+public:
+  GlyphProvider() : QQuickImageProvider(QQuickImageProvider::Image) {}
+
+  QImage requestImage(const QString& id, QSize* size, const QSize& requested) override
+  {
+    bool ok             = false;
+    const int codepoint = id.section(QLatin1Char('/'), 0, 0).toInt(&ok, 16);
+    QColor ink = QColor::fromString(QLatin1Char('#') + id.section(QLatin1Char('/'), 1, 1));
+    if (!ink.isValid()) {
+      ink = Qt::black;
+    }
+    const int pixels = requested.isValid() && !requested.isEmpty()
+                           ? qMax(requested.width(), requested.height())
+                           : 16;
+    QImage image;
+    if (ok && codepoint > 0 && codepoint <= 0xFFFF) {
+      image = FluentIcons::glyphImage(char16_t(codepoint), pixels, ink);
+    } else {
+      image = QImage(1, 1, QImage::Format_ARGB32_Premultiplied);
+      image.fill(Qt::transparent);
+    }
+    if (size != nullptr) {
+      *size = image.size();
+    }
+    return image;
+  }
+};
+
 // one engine for the views that are open: the QML types and the compiled files
 // load once for them. It goes when the last view does, so the memory of the
 // dialogs comes back while MO2 runs (the startup Instances window, then the
@@ -95,6 +128,7 @@ QQmlEngine* sharedEngine()
     }
     engine = new QQmlEngine;
     engine->addImageProvider(QStringLiteral("mo2"), new IconProvider);
+    engine->addImageProvider(QStringLiteral("fluentglyph"), new GlyphProvider);
     // gone before the application is: the engine first, then what it read
     static const bool once = [] {
       QObject::connect(qApp, &QCoreApplication::aboutToQuit, [] {
@@ -321,6 +355,11 @@ Fluent::Fluent(QObject* parent) : QObject(parent)
                      ? QStringLiteral("Segoe Fluent Icons")
                      : QStringLiteral("Segoe MDL2 Assets");
   refresh();
+}
+
+bool Fluent::glyphFont() const
+{
+  return FluentIcons::hasGlyphFont();
 }
 
 Fluent* Fluent::instance()

@@ -14,6 +14,17 @@ import mobase
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import QRectF, QTimer, Qt, qCritical, qInfo, qWarning
 
+try:
+    # MO2's pictures of the glyphs (SVGs) where no icon font is installed:
+    # Wine and Proton, or MO2R_GLYPH_SVG=1
+    import revamped_fluent as _fluent
+except ImportError:
+    _fluent = None
+
+
+def _glyph_pictures() -> bool:
+    return _fluent is not None and not _fluent.has_glyph_font()
+
 
 # PyQt passes Qt's log functions ASCII only: a message with any other
 # character (a path with an accent, a Windows error in Spanish) raised
@@ -952,6 +963,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
 
     @staticmethod
     def _glyph_icon(glyph: int) -> QtGui.QIcon:
+        if _glyph_pictures():
+            return QtGui.QIcon(_fluent.glyph_pixmap(
+                glyph, 16,
+                QtWidgets.QApplication.palette().color(QtGui.QPalette.ColorRole.WindowText)))
         font = QtGui.QFont()
         font.setFamilies(["Segoe Fluent Icons", "Segoe MDL2 Assets"])
         font.setPixelSize(16)
@@ -1720,6 +1735,8 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             icon.setFont(glyph_font)
             icon.setFixedWidth(24)
             icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if _glyph_pictures():
+                _fluent.set_glyph(icon, glyph)
             # beside a title alone it sits in the middle, as the row's button does
             row_layout.addWidget(
                 icon, 0, Qt.AlignmentFlag.AlignTop if description else Qt.AlignmentFlag.AlignVCenter

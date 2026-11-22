@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from PyQt6.QtCore import QEvent, QObject, QRectF, QSize, Qt
+from PyQt6.QtCore import QEvent, QObject, QPointF, QRectF, QSize, Qt
 from PyQt6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -53,8 +53,13 @@ def glyph_font(pixels: int) -> QFont:
 def has_glyph_font() -> bool:
     """Whether an icon font is installed (not on Wine or Proton): without one
     the glyphs come from MO2's own pictures of them (:/MO/glyphs)."""
+    import os
+
     from PyQt6.QtGui import QFontDatabase
 
+    # MO2R_GLYPH_SVG=1 forces the pictures on Windows, as it does in MO2
+    if os.environ.get("MO2R_GLYPH_SVG") == "1":
+        return False
     return any(QFontDatabase.hasFamily(family) for family in GLYPH_FAMILIES)
 
 
@@ -74,16 +79,51 @@ def glyph_pixmap(glyph: int, pixels: int, color: QColor, ratio: float = 2.0) -> 
         from PyQt6.QtCore import QSize
         from PyQt6.QtGui import QImageReader
 
+        # Fluent UI System Icons keep 2 px free around a 20 px icon, where a
+        # font glyph fills its em: read 20/16 larger and centered, the shapes
+        # reach the same extent as the font's, as MO2 draws them
+        drawn = round(pixmap.width() * 1.25)
         reader = QImageReader(f":/MO/glyphs/{glyph:04X}", b"svg")
-        reader.setScaledSize(QSize(pixmap.width(), pixmap.height()))
+        reader.setScaledSize(QSize(drawn, drawn))
         shapes = reader.read()
         if not shapes.isNull():
             shapes.setDevicePixelRatio(ratio)
-            painter.drawImage(0, 0, shapes)
+            offset = (pixmap.width() - drawn) / 2 / ratio
+            painter.drawImage(QPointF(offset, offset), shapes)
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
             painter.fillRect(QRectF(0, 0, pixels, pixels), color)
     painter.end()
     return pixmap
+
+
+def draw_glyph(painter: QPainter, rect: QRectF, glyph: int, color: QColor, pixels: int = 16) -> None:
+    """Draws the glyph centered in the rectangle: as text in the icon font, or
+    MO2's picture of it without one. The painter's pen and font are kept."""
+    painter.save()
+    if has_glyph_font():
+        painter.setFont(glyph_font(pixels))
+        painter.setPen(color)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    else:
+        ratio = painter.device().devicePixelRatioF() if painter.device() is not None else 1.0
+        picture = glyph_pixmap(glyph, pixels, color, max(1.0, ratio))
+        painter.drawPixmap(QPointF(rect.center().x() - pixels / 2, rect.center().y() - pixels / 2), picture)
+    painter.restore()
+
+
+def set_glyph(label: QLabel, glyph: int, color: QColor | None = None, pixels: int = 16) -> None:
+    """A label that shows one glyph: its text in the icon font, or MO2's
+    picture of it without one. In the color, or else the label's text color."""
+    if has_glyph_font():
+        label.setText(chr(glyph))
+        label.setFont(glyph_font(pixels))
+        if color is not None:
+            label.setStyleSheet(f"QLabel {{ color: {color.name()}; background: transparent; }}")
+    else:
+        label.setText("")
+        label.setPixmap(glyph_pixmap(glyph, pixels,
+                                     color if color is not None
+                                     else label.palette().color(QPalette.ColorRole.WindowText)))
 
 
 def glyph_label(glyph: int, parent: QWidget | None = None) -> QLabel:
@@ -339,9 +379,7 @@ class NavigationDelegate(QStyledItemDelegate):
         left = row.left() + 14
         glyph = index.data(Qt.ItemDataRole.UserRole)
         if glyph:
-            painter.setFont(glyph_font(16))
-            painter.setPen(text)
-            painter.drawText(QRectF(left, row.top(), 20, row.height()), Qt.AlignmentFlag.AlignCenter, str(glyph))
+            draw_glyph(painter, QRectF(left, row.top(), 20, row.height()), ord(str(glyph)[0]), text)
             left += 32
         label = QFont(option.font)
         label.setWeight(QFont.Weight.DemiBold if selected else QFont.Weight.Normal)

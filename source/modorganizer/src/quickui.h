@@ -118,6 +118,8 @@ class Fluent : public QObject
   Q_PROPERTY(QString fontFamily READ fontFamily NOTIFY changed)
   Q_PROPERTY(qreal fontSize READ fontSize NOTIFY changed)
   Q_PROPERTY(QString iconFamily READ iconFamily CONSTANT)
+  // false without the icon fonts (Wine): FluentGlyph shows the glyph's SVG
+  Q_PROPERTY(bool glyphFont READ glyphFont CONSTANT)
 
   // motion: whether things move, and the Windows 11 durations (0 when off)
   Q_PROPERTY(bool animated READ animated NOTIFY changed)
@@ -175,6 +177,7 @@ public:
   QString fontFamily() const { return m_fontFamily; }
   qreal fontSize() const { return m_fontSize; }
   QString iconFamily() const { return m_iconFamily; }
+  bool glyphFont() const;
   bool animated() const { return m_animated; }
   int fast() const { return m_animated ? 167 : 0; }
   int normal() const { return m_animated ? 250 : 0; }

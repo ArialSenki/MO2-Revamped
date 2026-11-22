@@ -68,12 +68,10 @@ Item {
                          : Fluent.tintNeutral
                     Behavior on color { enabled: tile.settled; ColorAnimation { duration: Fluent.normal } }
 
-                    Text {
+                    FluentGlyph {
                         anchors.centerIn: parent
                         text: tile.modelData.glyph
-                        font.family: Fluent.iconFamily
-                        font.pointSize: 13
-                        textFormat: Text.PlainText
+                        pointSize: 13
                         color: tile.tone === "accent" ? Fluent.accent
                              : tile.tone === "caution" ? Fluent.onTintCaution
                              : tile.tone === "critical" ? Fluent.critical

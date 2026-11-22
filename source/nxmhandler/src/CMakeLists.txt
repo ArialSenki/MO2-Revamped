@@ -9,6 +9,11 @@ mo2_configure_executable(nxmhandler
 # and reads programs' version resources (version)
 target_link_libraries(nxmhandler PRIVATE dwmapi version)
 
+# MO2 Revamped: the glyphs' SVGs (src/glyphs.qrc) where no icon font is
+# installed (Wine, Proton); Qt6Svg.dll is in MO2's dlls folder
+find_package(Qt6 COMPONENTS Svg REQUIRED)
+target_link_libraries(nxmhandler PRIVATE Qt6::Svg)
+
 # MO2 Revamped: keep local source paths out of Release binaries, as for
 # ModOrganizer.exe (source/modorganizer/src/CMakeLists.txt); Build-Release.ps1
 # rejects a payload that contains them. MSVC 19.30+ needs deterministic

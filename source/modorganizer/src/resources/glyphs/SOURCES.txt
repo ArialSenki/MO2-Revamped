@@ -15,8 +15,8 @@ E713	Settings	ic_fluent_settings_20_regular.svg
 E714	Video	ic_fluent_video_20_regular.svg
 E716	People	ic_fluent_people_20_regular.svg
 E71B	Link	ic_fluent_link_20_regular.svg
-E71C	Filter	ic_fluent_filter_20_regular.svg
-E71D	Apps	ic_fluent_apps_20_regular.svg
+E71C	(drawn for MO2 Revamped: a funnel, which Fluent UI System Icons has none of)	E71C.svg
+E71D	Apps List	ic_fluent_apps_list_20_regular.svg
 E721	Search	ic_fluent_search_20_regular.svg
 E723	Attach	ic_fluent_attach_20_regular.svg
 E72A	Arrow Right	ic_fluent_arrow_right_20_regular.svg
@@ -25,13 +25,13 @@ E72C	Arrow Clockwise	ic_fluent_arrow_clockwise_20_regular.svg
 E72E	Lock Closed	ic_fluent_lock_closed_20_regular.svg
 E734	Star	ic_fluent_star_20_regular.svg
 E735	Star	ic_fluent_star_20_filled.svg
-E737	Globe	ic_fluent_globe_20_regular.svg
+E737	Window	ic_fluent_window_20_regular.svg
 E739	Checkbox Unchecked	ic_fluent_checkbox_unchecked_20_regular.svg
-E73D	Checkbox Checked	ic_fluent_checkbox_checked_20_regular.svg
+E73D	Checkbox Checked	ic_fluent_checkbox_checked_20_filled.svg
 E73E	Checkmark	ic_fluent_checkmark_20_regular.svg
 E74A	Arrow Up	ic_fluent_arrow_up_20_regular.svg
 E74B	Arrow Down	ic_fluent_arrow_down_20_regular.svg
-E74C	Puzzle Piece	ic_fluent_puzzle_piece_20_regular.svg
+E74C	Apps	ic_fluent_apps_20_regular.svg
 E74D	Delete	ic_fluent_delete_20_regular.svg
 E74E	Save	ic_fluent_save_20_regular.svg
 E753	Cloud	ic_fluent_cloud_20_regular.svg
@@ -43,7 +43,7 @@ E768	Play	ic_fluent_play_20_regular.svg
 E769	Pause	ic_fluent_pause_20_regular.svg
 E76B	Chevron Left	ic_fluent_chevron_left_20_regular.svg
 E76C	Chevron Right	ic_fluent_chevron_right_20_regular.svg
-E76F	Re Order Dots Vertical	ic_fluent_re_order_dots_vertical_20_regular.svg
+E76F	Re Order	ic_fluent_re_order_20_regular.svg
 E770	Desktop	ic_fluent_desktop_20_regular.svg
 E774	Globe	ic_fluent_globe_20_regular.svg
 E777	Arrow Reset	ic_fluent_arrow_reset_20_regular.svg
@@ -53,7 +53,7 @@ E785	Lock Open	ic_fluent_lock_open_20_regular.svg
 E790	Color	ic_fluent_color_20_regular.svg
 E7A7	Arrow Undo	ic_fluent_arrow_undo_20_regular.svg
 E7B3	Eye	ic_fluent_eye_20_regular.svg
-E7B8	Box	ic_fluent_box_20_regular.svg
+E7B8	Archive	ic_fluent_archive_20_regular.svg
 E7BA	Warning	ic_fluent_warning_20_regular.svg
 E7C1	Flag	ic_fluent_flag_20_regular.svg
 E7C3	Document	ic_fluent_document_20_regular.svg
@@ -71,7 +71,7 @@ E893	Next	ic_fluent_next_20_regular.svg
 E894	Dismiss	ic_fluent_dismiss_20_regular.svg
 E895	Arrow Sync	ic_fluent_arrow_sync_20_regular.svg
 E896	Arrow Download	ic_fluent_arrow_download_20_regular.svg
-E897	Question Circle	ic_fluent_question_circle_20_regular.svg
+E897	Question	ic_fluent_question_20_regular.svg
 E8A5	Document	ic_fluent_document_20_regular.svg
 E8A7	Open	ic_fluent_open_20_regular.svg
 E8A9	Grid	ic_fluent_grid_20_regular.svg
@@ -84,7 +84,7 @@ E8C8	Copy	ic_fluent_copy_20_regular.svg
 E8CB	Arrow Sort	ic_fluent_arrow_sort_20_regular.svg
 E8D3	Text Color	ic_fluent_text_color_20_regular.svg
 E8D6	Music Note 2	ic_fluent_music_note_2_20_regular.svg
-E8DA	Folder Open	ic_fluent_folder_open_20_regular.svg
+E8DA	Folder Arrow Right	ic_fluent_folder_arrow_right_20_regular.svg
 E8DE	Folder Arrow Right	ic_fluent_folder_arrow_right_20_regular.svg
 E8E0	Thumb Dislike	ic_fluent_thumb_dislike_20_regular.svg
 E8E1	Thumb Like	ic_fluent_thumb_like_20_regular.svg
@@ -97,30 +97,30 @@ E8F7	Folder Sync	ic_fluent_folder_sync_20_regular.svg
 E8FD	Text Bullet List LTR	ic_fluent_text_bullet_list_ltr_20_regular.svg
 E90A	Comment	ic_fluent_comment_20_regular.svg
 E90F	Wrench	ic_fluent_wrench_20_regular.svg
-E915	Circle Small	ic_fluent_circle_small_20_regular.svg
+E915	Circle Small	ic_fluent_circle_small_20_filled.svg
 E916	Timer	ic_fluent_timer_20_regular.svg
 E91B	Image	ic_fluent_image_20_regular.svg
 E930	Checkmark Circle	ic_fluent_checkmark_circle_20_regular.svg
-E943	Code	ic_fluent_code_20_regular.svg
+E943	Braces	ic_fluent_braces_20_regular.svg
 E945	Flash	ic_fluent_flash_20_regular.svg
 E946	Info	ic_fluent_info_20_regular.svg
-E950	Library	ic_fluent_library_20_regular.svg
-E9CE	Question	ic_fluent_question_20_regular.svg
+E950	Developer Board	ic_fluent_developer_board_20_regular.svg
+E9CE	Question Circle	ic_fluent_question_circle_20_regular.svg
 E9D2	Data Area	ic_fluent_data_area_20_regular.svg
 E9D5	Task List LTR	ic_fluent_task_list_ltr_20_regular.svg
-E9D9	Pulse	ic_fluent_pulse_20_regular.svg
+E9D9	Pulse Square	ic_fluent_pulse_square_20_regular.svg
 E9F9	Document Bullet List	ic_fluent_document_bullet_list_20_regular.svg
-EA35	Save Copy	ic_fluent_save_copy_20_regular.svg
+EA35	Save Multiple	ic_fluent_save_multiple_20_regular.svg
 EA37	List	ic_fluent_list_20_regular.svg
-EA39	Error Circle	ic_fluent_error_circle_20_regular.svg
-EA3C	Merge	ic_fluent_merge_20_regular.svg
+EA39	Dismiss Circle	ic_fluent_dismiss_circle_20_regular.svg
+EA3C	Merge	ic_fluent_merge_20_regular.svg (turned a quarter left, to point up as the font glyph)
 EA86	Puzzle Piece	ic_fluent_puzzle_piece_20_regular.svg
 EA8F	Alert	ic_fluent_alert_20_regular.svg
 EB51	Heart	ic_fluent_heart_20_regular.svg
 EB9F	Image	ic_fluent_image_20_regular.svg
 EBE8	Bug	ic_fluent_bug_20_regular.svg
 EC4F	Music Note 1	ic_fluent_music_note_1_20_regular.svg
-EC7A	Developer Board	ic_fluent_developer_board_20_regular.svg
+EC7A	Wrench Screwdriver	ic_fluent_wrench_screwdriver_20_regular.svg
 ECAA	App Generic	ic_fluent_app_generic_20_regular.svg
 ED1A	Eye Off	ic_fluent_eye_off_20_regular.svg
 EDA2	Hard Drive	ic_fluent_hard_drive_20_regular.svg
@@ -128,10 +128,10 @@ EDD9	Caret Left	ic_fluent_caret_left_20_filled.svg
 EDDA	Caret Right	ic_fluent_caret_right_20_filled.svg
 EDDB	Caret Up	ic_fluent_caret_up_20_filled.svg
 EDDC	Caret Down	ic_fluent_caret_down_20_filled.svg
-EDE1	Share	ic_fluent_share_20_regular.svg
-F000	Text Description	ic_fluent_text_description_20_regular.svg
-F012	Archive	ic_fluent_archive_20_regular.svg
-F156	Stack	ic_fluent_stack_20_regular.svg
-F158	Shapes	ic_fluent_shapes_20_regular.svg
-F164	Arrow Maximize	ic_fluent_arrow_maximize_20_regular.svg
-F166	Arrow Minimize	ic_fluent_arrow_minimize_20_regular.svg
+EDE1	Arrow Export LTR	ic_fluent_arrow_export_ltr_20_regular.svg
+F000	Document Text	ic_fluent_document_text_20_regular.svg
+F012	Folder Zip	ic_fluent_folder_zip_20_regular.svg
+F156	Layer	ic_fluent_layer_20_regular.svg
+F158	Cube	ic_fluent_cube_20_regular.svg
+F164	Add Square	ic_fluent_add_square_20_regular.svg
+F166	Subtract Square	ic_fluent_subtract_square_20_regular.svg
