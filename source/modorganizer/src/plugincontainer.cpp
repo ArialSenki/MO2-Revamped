@@ -315,7 +315,9 @@ PluginContainer::PluginContainer(OrganizerCore* organizer)
 PluginContainer::~PluginContainer()
 {
   m_Organizer = nullptr;
+  log::debug("exit: unloading plugins");
   unloadPlugins();
+  log::debug("exit: plugins unloaded");
 }
 
 void PluginContainer::startPlugins(IUserInterface* userInterface)

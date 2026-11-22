@@ -466,6 +466,8 @@ private:
   QString m_InstallationFile;
   QString m_Comments;
   QString m_Notes;
+  // the names in meta.ini's "INI Tweaks" list, read with the rest of it
+  QStringList m_IniTweakNames;
   QString m_NexusDescription;
   QString m_Repository;
   QString m_CustomURL;
