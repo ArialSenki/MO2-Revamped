@@ -123,6 +123,18 @@ static std::string pathForMessage(const std::filesystem::path& path)
   return result;
 }
 
+// MO2 Revamped: a read that must return all it asks for. A short one (a
+// damaged or truncated archive) doesn't throw by itself, and the rest of the
+// buffer was used uninitialised
+template <typename T>
+static void readExactly(std::fstream& file, T* buffer, size_t size)
+{
+  file.read(reinterpret_cast<char*>(buffer), static_cast<std::streamsize>(size));
+  if (static_cast<size_t>(file.gcount()) != size) {
+    throw data_invalid_exception("can't read from bsa");
+  }
+}
+
 Archive::Archive()
     : m_RootFolder(new Folder), m_ArchiveFlags(FLAG_HASDIRNAMES | FLAG_HASFILENAMES),
       m_Type(TYPE_SKYRIM)
@@ -1029,6 +1041,16 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
     fileInfo.file = *begin;
     size_t size   = static_cast<size_t>(fileInfo.file->m_FileSize);
 
+    // MO2 Revamped: this runs on a thread of its own. An exception here (a
+    // name or a size read past the end of a damaged archive, a texture chunk
+    // that doesn't unpack) left the thread and ended MO2 through
+    // std::terminate; a file skipped with `continue` was never queued, so the
+    // extraction thread waited for it forever; a short read wrote the rest of
+    // the buffer out uninitialised; and a chunk that didn't unpack was copied
+    // from a null pointer. Such a file is now queued as failed, and counted
+    // as a failure by the extraction thread.
+    try {
+    m_File.clear();
     m_File.seekg(fileInfo.file->m_DataOffset);
     if (m_Type != TYPE_FALLOUT4 && m_Type != TYPE_STARFIELD &&
         m_Type != TYPE_STARFIELD_LZ4_TEXTURE && m_Type != TYPE_FALLOUT4NG_7 &&
@@ -1036,8 +1058,7 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
       if (namePrefixed()) {
         std::string fullName = readBString(m_File);
         if (size <= fullName.length()) {
-#pragma message("report error!")
-          continue;
+          throw data_invalid_exception("file shorter than its embedded name");
         }
         size -= fullName.length() + 1;
       }
@@ -1049,7 +1070,7 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
         fileInfo.data =
             std::make_pair(boost::shared_array<unsigned char>(new unsigned char[size]),
                            static_cast<BSAULong>(size));
-        m_File.read(reinterpret_cast<char*>(fileInfo.data.first.get()), size);
+        readExactly(m_File, fileInfo.data.first.get(), size);
       }
     } else {
       if (!fileInfo.file->m_TextureChunks.size()) {
@@ -1058,55 +1079,57 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
         fileInfo.data =
             std::make_pair(boost::shared_array<unsigned char>(new unsigned char[size]),
                            static_cast<BSAULong>(size));
-        m_File.read(reinterpret_cast<char*>(fileInfo.data.first.get()), size);
+        readExactly(m_File, fileInfo.data.first.get(), size);
       } else {
         fileInfo.file->m_UncompressedFileSize = 0L;
         BSAULong totalSize                    = 0U;
         for (BSAUInt i = 0; i < fileInfo.file->m_TextureChunks.size(); ++i) {
           totalSize += fileInfo.file->m_TextureChunks[i].unpackedSize;
         }
-        char* chunkData     = new char[totalSize];
+        std::unique_ptr<char[]> chunkData(new char[totalSize]);
         BSAULong currentPos = 0U;
         for (BSAUInt i = 0; i < fileInfo.file->m_TextureChunks.size(); ++i) {
           BSAULong length = fileInfo.file->m_TextureChunks[i].unpackedSize;
+          if (length > totalSize - currentPos) {
+            throw data_invalid_exception("texture chunks larger than the texture");
+          }
           if (fileInfo.file->m_TextureChunks[i].packedSize > 0) {
-            char* chunk = new char[fileInfo.file->m_TextureChunks[i].packedSize];
-            m_File.read(chunk, fileInfo.file->m_TextureChunks[i].packedSize);
+            std::unique_ptr<char[]> chunk(
+                new char[fileInfo.file->m_TextureChunks[i].packedSize]);
+            readExactly(m_File, chunk.get(), fileInfo.file->m_TextureChunks[i].packedSize);
             if (m_Type == TYPE_FALLOUT4 || m_Type == TYPE_STARFIELD || m_Type == TYPE_FALLOUT4NG_7 || m_Type == TYPE_FALLOUT4NG_8) {
               EErrorCode result = ERROR_NONE;
-              try {
-                boost::shared_array<unsigned char> unpackedChunk = decompress(
-                    reinterpret_cast<unsigned char*>(chunk),
-                    fileInfo.file->m_TextureChunks[i].packedSize, result, length);
-                memcpy(chunkData + currentPos,
-                       reinterpret_cast<char*>(unpackedChunk.get()), length);
-                unpackedChunk.reset();
-              } catch (const std::exception&) {
-#pragma message("report error!")
-                continue;
+              BSAULong unpacked = length;
+              boost::shared_array<unsigned char> unpackedChunk = decompress(
+                  reinterpret_cast<unsigned char*>(chunk.get()),
+                  fileInfo.file->m_TextureChunks[i].packedSize, result, unpacked);
+              if (result != ERROR_NONE || unpackedChunk.get() == nullptr ||
+                  unpacked != length) {
+                throw data_invalid_exception("texture chunk doesn't unpack");
               }
+              memcpy(chunkData.get() + currentPos,
+                     reinterpret_cast<char*>(unpackedChunk.get()), length);
             } else {
-              char* unpackedChunk = new char[length];
-              LZ4_decompress_safe(chunk, unpackedChunk,
+              std::unique_ptr<char[]> unpackedChunk(new char[length]);
+              LZ4_decompress_safe(chunk.get(), unpackedChunk.get(),
                                   fileInfo.file->m_TextureChunks[i].packedSize, length);
-              memcpy(chunkData + currentPos, unpackedChunk, length);
-              delete[] unpackedChunk;
+              memcpy(chunkData.get() + currentPos, unpackedChunk.get(), length);
             }
-            delete[] chunk;
             fileInfo.file->m_UncompressedFileSize += length;
           } else {
-            char* chunk = new char[length];
-            m_File.read(chunk, length);
-            memcpy(chunkData + currentPos, chunk, length);
-            delete[] chunk;
+            readExactly(m_File, chunkData.get() + currentPos, length);
           }
           currentPos += length;
         }
         fileInfo.file->m_FileSize = 0;
         fileInfo.data             = std::make_pair(boost::shared_array<unsigned char>(
-                                           reinterpret_cast<unsigned char*>(chunkData)),
+                                           reinterpret_cast<unsigned char*>(chunkData.release())),
                                                    static_cast<BSAULong>(totalSize));
       }
+    }
+    } catch (const std::exception&) {
+      fileInfo.data   = DataBuffer();
+      fileInfo.failed = true;
     }
 
     {
@@ -1144,6 +1167,11 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
       queue.pop();
     }
     queueFree.post();
+
+    if (fileInfo.failed) {
+      ++failures;
+      continue;
+    }
 
     DataBuffer dataBuffer = fileInfo.data;
 

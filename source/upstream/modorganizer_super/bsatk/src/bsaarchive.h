@@ -170,6 +170,7 @@ private:
   {
     File::Ptr file;
     DataBuffer data;
+    bool failed = false;  // the reader couldn't read it: nothing to write
   };
 
 private:
