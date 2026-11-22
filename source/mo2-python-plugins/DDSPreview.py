@@ -10,7 +10,7 @@ import struct
 import sys
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QCoreApplication, QRectF, QSize, Qt, qDebug
+from PyQt6.QtCore import QCoreApplication, QRectF, QSize, Qt, qWarning
 from PyQt6.QtGui import QColor, QIcon, QMatrix4x4, QPainter, QPainterPath, QPixmap, QVector4D
 from PyQt6.QtWidgets import (QApplication, QButtonGroup, QColorDialog, QHBoxLayout, QLabel, QToolButton,
                              QVBoxLayout, QWidget)
@@ -440,7 +440,8 @@ class DDSPreview(mobase.IPluginPreview):
         except CantShow as problem:
             return failure_widget(str(problem))
         except Exception as error:
-            qDebug(f"DDS preview: {type(error).__name__}: {error}")
+            # a warning, so the log shows why at its usual level
+            qWarning(f"DDS preview: {type(error).__name__}: {error}")
             return failure_widget(tr("It may be damaged, or in a format the preview doesn't read."))
 
     def _preview(self, dds_file: DDSFile) -> QWidget:
