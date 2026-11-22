@@ -13,6 +13,11 @@ Wine o Proton, en el mismo prefijo que el juego o en uno propio.
 - MO2 no se cierra al arrancar cuando Wine no informa de ninguna pantalla.
 - La transparencia de las ventanas (Mica) y las esquinas redondeadas están
   desactivadas.
+- Los iconos se dibujan con imágenes, porque las fuentes de iconos de Windows
+  no están en el prefijo. Las ventanas opcionales de Qt Quick siguen
+  necesitando la fuente.
+- Sin .NET en el prefijo, los archivos FOMOD de C# y OMOD pasan a los demás
+  instaladores, con un aviso en el registro.
 - El navegador integrado funciona sin su sandbox, que Wine no admite.
 - Los diagnósticos de inicio y de memoria están activados de forma
   predeterminada, así que un inicio fallido deja un registro (ver abajo).

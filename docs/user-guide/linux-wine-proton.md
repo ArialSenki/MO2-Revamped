@@ -11,6 +11,10 @@ Wine or Proton, in the same prefix as the game or in its own.
   prefix with winetricks or protontricks are accepted too.
 - MO2 doesn't crash at start when Wine reports no screen.
 - Window transparency (Mica) and rounded corners are off.
+- Icons are drawn from pictures, because the Windows icon fonts aren't in a
+  prefix. The optional Qt Quick windows still need the font.
+- Without .NET in the prefix, C# FOMOD and OMOD archives go to the other
+  installers, with a warning in the log.
 - The built-in browser runs without its sandbox, which Wine doesn't support.
 - Startup and memory diagnostics are on by default, so a failed start leaves a
   log (see below).
