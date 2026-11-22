@@ -647,12 +647,14 @@ bool forEachLineInFile(const QString& filePath, F&& f)
 
     if (p != lineStart) {
       // skip whitespace at beginning of line, don't go past end of line
-      while (std::isspace(*lineStart) && lineStart < p) {
+      // MO2 Revamped: the bound checked first; a file ending in a line of
+      // spaces read the byte past its buffer, here and in the '#' test
+      while (lineStart < p && std::isspace(static_cast<unsigned char>(*lineStart))) {
         ++lineStart;
       }
 
       // skip comments
-      if (*lineStart != '#') {
+      if (lineStart < p && *lineStart != '#') {
         // skip line if it only had whitespace
         if (lineStart < p) {
           // skip white at end of line
