@@ -1296,6 +1296,11 @@ EErrorCode Archive::extractAll(
 
   std::vector<File::Ptr> fileList;
   m_RootFolder->collectFiles(fileList);
+  // MO2 Revamped: an archive without files read the first of none below (and
+  // divided the progress by zero): MO2 crashed extracting an empty BSA or BA2
+  if (fileList.empty()) {
+    return ERROR_NONE;
+  }
   std::sort(fileList.begin(), fileList.end(), ByOffset);
   m_File.seekg((*(fileList.begin()))->m_DataOffset);
 
