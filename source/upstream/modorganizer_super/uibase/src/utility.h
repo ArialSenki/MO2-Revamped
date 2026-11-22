@@ -366,6 +366,8 @@ QList<T> ConvertList(const QVariantList& variants)
     }
     result.append(var.value<T>());
   }
+  // MO2 Revamped: it had no return: undefined behaviour, a crash in practice
+  return result;
 }
 /**
  * @brief convert QString to std::wstring (utf-16 encoding)
