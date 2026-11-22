@@ -92,6 +92,9 @@ private:
     qint64 m_DownloadTimeLast;
     unsigned int m_DownloadID;
     QString m_FileName;
+    // MO2 Revamped: m_FileName is the "unknown" stand-in (neither the link nor
+    // the server named the file yet): the answer's Content-Disposition replaces it
+    bool m_NameIsFallback = false;
     QFile m_Output;
     QNetworkReply* m_Reply;
     QElapsedTimer m_StartTime;

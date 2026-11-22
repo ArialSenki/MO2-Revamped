@@ -25,6 +25,13 @@ QString fileNameFromDisposition(const QString& disposition);
 // its query gives (S3-style signed links); "unknown" when there is none
 QString fileNameFromUrl(const QString& url);
 
+// the name a download's file starts with (DownloadManager::addDownload), from
+// the link's or the server's name: without the query a link left in it
+// ("?id=5" of https://h/download/?id=5), and "unknown" when no file name is
+// left; fallback, when given, tells whether it is that "unknown", which the
+// server's Content-Disposition may still replace
+QString downloadBaseName(QString name, bool* fallback = nullptr);
+
 }  // namespace DownloadUrl
 
 #endif  // DOWNLOADURL_H

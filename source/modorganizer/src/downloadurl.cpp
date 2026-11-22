@@ -132,7 +132,8 @@ QString fileNameFromUrl(const QString& url)
   // MO2 Revamped: the last part of the path, not of the whole link: a "/" in
   // the query or the fragment (?token=ab/cd, #part/2) named the file after it,
   // and a fragment stayed in the name. A path without a name keeps the old
-  // result, so the Content-Disposition of the answer can still name the file
+  // result ("?id=5"): downloadBaseName() makes it "unknown", which the
+  // Content-Disposition of the answer can still replace
   if (const QUrl parsed(url); parsed.isValid() && (parsed.hasQuery() || parsed.hasFragment())) {
     const QString pathName = QFileInfo(parsed.path(QUrl::FullyEncoded)).fileName();
     if (!pathName.isEmpty()) {
@@ -163,6 +164,26 @@ QString fileNameFromUrl(const QString& url)
     }
   }
   return fileName;
+}
+
+QString downloadBaseName(QString name, bool* fallback)
+{
+  // the name could be a URL at this point so strip out the URL query
+  const qsizetype queryIndex = name.indexOf(u'?');
+  if (queryIndex >= 0) {
+    name.truncate(queryIndex);
+  }
+  // MO2 Revamped: nothing left (https://h/download/?id=5) was an empty name,
+  // and the file ".unfinished", shared by every such download
+  const bool none =
+      MOBase::sanitizeFileName(name).isEmpty() || name == QStringLiteral("unknown");
+  if (none) {
+    name = QStringLiteral("unknown");
+  }
+  if (fallback != nullptr) {
+    *fallback = none;
+  }
+  return name;
 }
 
 }  // namespace DownloadUrl
