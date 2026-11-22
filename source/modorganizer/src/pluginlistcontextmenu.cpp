@@ -48,7 +48,7 @@ PluginListContextMenu::PluginListContextMenu(const QModelIndex& index,
     if (modInfoIndex != UINT_MAX) {
       origin = ModInfo::getByIndex(modInfoIndex);
       if (!origin->isForeign() && m_selected.size() == 1) {
-        QAction* infoAction = addAction(tr("Origin information..."), [=]() {
+        QAction* infoAction = addAction(tr("Origin information…"), [=]() {
           openOriginInformation(m_plugin);
         });
         infoAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/information.svg"));

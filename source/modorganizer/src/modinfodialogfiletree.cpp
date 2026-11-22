@@ -163,7 +163,7 @@ FileTreeTab::FileTreeTab(ModInfoDialogTabContext cx)
   m_actions.preview   = new QAction(tr("&Preview"), ui->filetree);
   m_actions.explore   = new QAction(tr("Show in &folder"), ui->filetree);
   m_actions.rename    = new QAction(tr("&Rename"), ui->filetree);
-  m_actions.del       = new QAction(tr("&Delete..."), ui->filetree);
+  m_actions.del       = new QAction(tr("&Delete…"), ui->filetree);
   m_actions.hide      = new QAction(tr("&Hide"), ui->filetree);
   m_actions.unhide    = new QAction(tr("&Un-hide"), ui->filetree);
 

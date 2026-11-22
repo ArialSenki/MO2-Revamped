@@ -219,12 +219,39 @@ void ThemeSettingsTab::addThemeButtons()
     return;
   }
 
-  // themes of your own: made and edited here, or by hand in the folder
+  // the theme as a settings row, its title on the left and the picker on the
+  // right, as the Display card's rows; it takes the place of the .ui's row
+  // with the picker alone, under the card's heading
+  int rowIndex = layout->count();
+  for (int i = 0; i < layout->count(); ++i) {
+    QLayout* sub = layout->itemAt(i)->layout();
+    if (sub != nullptr && sub->indexOf(ui->styleBox) >= 0) {
+      delete layout->takeAt(i);  // the row and its spacer; the picker stays
+      rowIndex = i;
+      break;
+    }
+  }
+  auto* themeRow = new QFrame(ui->themeStyleGroup);
+  themeRow->setObjectName(QStringLiteral("fluentSettingRow"));
+  auto* themeRowLayout = new QHBoxLayout(themeRow);
+  themeRowLayout->setContentsMargins(4, 6, 4, 6);
+  themeRowLayout->setSpacing(12);
+  auto* themeLabel = new QLabel(QObject::tr("Theme"), themeRow);
+  themeLabel->setObjectName(QStringLiteral("fluentSettingTitle"));
+  themeLabel->setBuddy(ui->styleBox);
+  themeLabel->setToolTip(ui->styleBox->toolTip());
+  themeRowLayout->addWidget(themeLabel);
+  themeRowLayout->addStretch(1);
+  themeRowLayout->addWidget(ui->styleBox);
+  layout->insertWidget(rowIndex, themeRow);
+
+  // themes of your own: made and edited here, or by hand in the folder; under
+  // the row, lined up with its title
   auto* row = new QHBoxLayout;
-  row->setContentsMargins(0, 4, 0, 0);
+  row->setContentsMargins(4, 4, 4, 0);
   row->setSpacing(8);
-  auto* newButton    = new QPushButton(QObject::tr("New theme..."), ui->themeStyleGroup);
-  auto* editButton   = new QPushButton(QObject::tr("Edit theme..."), ui->themeStyleGroup);
+  auto* newButton    = new QPushButton(QObject::tr("New theme…"), ui->themeStyleGroup);
+  auto* editButton   = new QPushButton(QObject::tr("Edit theme…"), ui->themeStyleGroup);
   auto* folderButton = new QPushButton(QObject::tr("Open themes folder"), ui->themeStyleGroup);
   for (auto* button : {newButton, editButton, folderButton}) {
     button->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);

@@ -118,13 +118,13 @@ void ModListGlobalContextMenu::addInsertActions(QMenu* menu, ModListView* view,
 {
   // the mod are not created/installed at the same position depending
   // on the clicked mod and the sort order
-  QString installText = tr("Install mod above...");
+  QString installText = tr("Install mod above…");
   QString createText  = tr("Create empty mod above");
   if (info->isSeparator()) {
-    installText = tr("Install mod inside...");
+    installText = tr("Install mod inside…");
     createText  = tr("Create empty mod inside");
   } else if (view->sortOrder() == Qt::DescendingOrder) {
-    installText = tr("Install mod below...");
+    installText = tr("Install mod below…");
     createText  = tr("Create empty mod below");
   }
 
@@ -211,7 +211,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     core.refresh();
   });
   refreshAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/refresh.svg"));
-  QAction* exportAction = addAction(tr("Export to CSV..."), [=]() {
+  QAction* exportAction = addAction(tr("Export to CSV…"), [=]() {
     view->actions().exportModListCSV();
   });
   exportAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/export.svg"));
@@ -229,7 +229,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     }
     if (m_ProfileBackupRestoration) {
       QAction* restoreBackupAction =
-          addAction(tr("Restore mod list backup..."));
+          addAction(tr("Restore mod list backup…"));
       restoreBackupAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"));
       restoreBackupAction->setToolTip(
           tr("Choose a saved backup for this profile's mod list."));
@@ -237,7 +237,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
               [this] { m_ProfileBackupRestoration(); });
     }
     if (m_ProfileBackupRemoval) {
-      QAction* deleteBackupAction = addAction(tr("Delete mod list backup..."));
+      QAction* deleteBackupAction = addAction(tr("Delete mod list backup…"));
       deleteBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
       deleteBackupAction->setToolTip(
           tr("Choose and permanently delete a saved mod list backup."));
@@ -259,7 +259,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     }
     if (m_LoadOrderBackupRestoration) {
       QAction* restoreBackupAction =
-          addAction(tr("Restore plugin order backup..."));
+          addAction(tr("Restore plugin order backup…"));
       restoreBackupAction->setIcon(FluentIcons::icon(":/MO/gui/mainwindow/restore.svg"));
       restoreBackupAction->setToolTip(
           tr("Choose a saved plugin load order for this profile."));
@@ -268,7 +268,7 @@ void ModListGlobalContextMenu::populate(OrganizerCore& core, ModListView* view,
     }
     if (m_LoadOrderBackupRemoval) {
       QAction* deleteBackupAction =
-          addAction(tr("Delete plugin order backup..."));
+          addAction(tr("Delete plugin order backup…"));
       deleteBackupAction->setIcon(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"));
       deleteBackupAction->setToolTip(
           tr("Choose and permanently delete a saved plugin load order."));
@@ -695,7 +695,7 @@ void ModListContextMenu::addVisitActions(ModInfo::Ptr mod)
 
 void ModListContextMenu::addColorActions(ModInfo::Ptr mod)
 {
-  addAction(menuGlyph(MenuGlyphs::Color), tr("Select color..."), [=]() {
+  addAction(menuGlyph(MenuGlyphs::Color), tr("Select color…"), [=]() {
     m_actions.setColor(m_selected, m_index);
   });
   if (mod->color().isValid()) {
@@ -752,7 +752,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
   setToolTipsVisible(true);
 
   QAction* manageAction = addAction(menuGlyph(MenuGlyphs::Document),
-                                    tr("Review and manage files..."), [=]() {
+                                    tr("Review and manage files…"), [=]() {
                                       m_actions.displayModInformation(
                                           mod, ModInfo::getIndex(mod->name()));
                                     });
@@ -767,7 +767,7 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
                       QDir::NoDotAndDotDot)
            .isEmpty()) {
     addMenuSection(this, tr("Organize files"));
-    QAction* syncAction = addAction(menuGlyph(MenuGlyphs::Sync), tr("Sync to mods..."),
+    QAction* syncAction = addAction(menuGlyph(MenuGlyphs::Sync), tr("Sync to mods…"),
                                     [=]() {
                                       m_core.syncOverwrite();
                                     });
@@ -776,14 +776,14 @@ void ModListContextMenu::addOverwriteActions(ModInfo::Ptr mod)
 
     QAction* createModAction =
         addAction(FluentIcons::icon(":/MO/gui/contextmenu/create-mod.svg"),
-                  tr("Create mod from Overwrite..."), [=]() {
+                  tr("Create mod from Overwrite…"), [=]() {
                     m_actions.createModFromOverwrite();
                   });
     createModAction->setToolTip(
         tr("Move all files from Overwrite into a new regular mod."));
 
     QAction* moveAction = addAction(menuGlyph(MenuGlyphs::Merge),
-                                    tr("Move files to an existing mod..."), [=]() {
+                                    tr("Move files to an existing mod…"), [=]() {
                                       m_actions.moveOverwriteContentToExistingMod();
                                     });
     moveAction->setToolTip(
@@ -897,8 +897,8 @@ void ModListContextMenu::addSeparatorActions(ModInfo::Ptr mod)
     }
   }
   m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                         separators.size() > 1 ? tr("Remove separators...")
-                                               : tr("Remove separator..."),
+                         separators.size() > 1 ? tr("Remove separators…")
+                                               : tr("Remove separator…"),
                          this);
   connect(m_remove, &QAction::triggered, this, [=]() {
     m_actions.removeMods(separators);
@@ -949,7 +949,7 @@ void ModListContextMenu::addBackupActions(ModInfo::Ptr mod)
     }
   }
   m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                         tr("Remove backup..."), this);
+                         tr("Remove backup…"), this);
   connect(m_remove, &QAction::triggered, this, [=]() {
     m_actions.removeMods(backups);
   });
@@ -1037,7 +1037,7 @@ void ModListContextMenu::addRegularActions(ModInfo::Ptr mod)
 
   // the Delete key does the same in the list (display only, as Space above)
   m_remove = new QAction(FluentIcons::icon(":/MO/gui/contextmenu/remove.svg"),
-                         (m_selected.size() > 1 ? tr("Remove mods...") : tr("Remove...")) +
+                         (m_selected.size() > 1 ? tr("Remove mods…") : tr("Remove…")) +
                              QStringLiteral("	") +
                              QKeySequence(QKeySequence::Delete).toString(QKeySequence::NativeText),
                          this);

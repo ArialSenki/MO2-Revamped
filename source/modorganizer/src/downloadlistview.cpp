@@ -528,13 +528,13 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
   if (!hidden) {
     auto* hide = menu.addMenu(svg(":/MO/gui/contextmenu/visibility-hide.svg"),
                               tr("Hide downloads"));
-    addAction(*hide, tr("Installed..."), {}, [=] {
+    addAction(*hide, tr("Installed…"), {}, [=] {
       issueRemoveFromViewCompleted();
     });
-    addAction(*hide, tr("Uninstalled..."), {}, [=] {
+    addAction(*hide, tr("Uninstalled…"), {}, [=] {
       issueRemoveFromViewUninstalled();
     });
-    addAction(*hide, tr("All..."), {}, [=] {
+    addAction(*hide, tr("All…"), {}, [=] {
       issueRemoveFromViewAll();
     });
   } else {
@@ -546,13 +546,13 @@ void DownloadListView::onCustomContextMenu(const QPoint& point)
 
   auto* cleanup =
       menu.addMenu(svg(":/MO/gui/contextmenu/remove.svg"), tr("Delete downloads"));
-  addAction(*cleanup, tr("Installed..."), {}, [=] {
+  addAction(*cleanup, tr("Installed…"), {}, [=] {
     issueDeleteCompleted();
   });
-  addAction(*cleanup, tr("Uninstalled..."), {}, [=] {
+  addAction(*cleanup, tr("Uninstalled…"), {}, [=] {
     issueDeleteUninstalled();
   });
-  addAction(*cleanup, tr("All..."), {}, [=] {
+  addAction(*cleanup, tr("All…"), {}, [=] {
     issueDeleteAll();
   });
 
@@ -780,7 +780,7 @@ QStringList DownloadListView::confirmBulkDelete(int mode, const QString& title)
 
   QStringList shown = names.mid(0, 10);
   if (names.size() > shown.size()) {
-    shown << tr("...and %1 more").arg(names.size() - shown.size());
+    shown << tr("…and %1 more").arg(names.size() - shown.size());
   }
   // hidden downloads are only in the list (and so only deleted) while they
   // are shown
@@ -1150,7 +1150,7 @@ void DownloadListView::addGroupActions(QMenu& menu, const QModelIndex& index)
     if (!groups.categories().isEmpty()) {
       move->addSeparator();
     }
-    move->addAction(tr("New category..."), [this, selected] {
+    move->addAction(tr("New category…"), [this, selected] {
       newCategory(selected);
     });
     if (anyInCategory) {
@@ -1165,7 +1165,7 @@ void DownloadListView::addGroupActions(QMenu& menu, const QModelIndex& index)
   const QVariant kind = index.data(DownloadList::GroupKindRole);
   if (kind.isValid() && kind.toInt() == DownloadList::GROUP_CATEGORY) {
     const QString name = index.data(DownloadList::GroupNameRole).toString();
-    menu.addAction(menuGlyph(0xE8AC), tr("Rename category..."), [this, name] {
+    menu.addAction(menuGlyph(0xE8AC), tr("Rename category…"), [this, name] {
       bool ok = false;
       const QString to =
           QInputDialog::getText(this, tr("Rename category"), tr("New name:"),
@@ -1182,7 +1182,7 @@ void DownloadListView::addGroupActions(QMenu& menu, const QModelIndex& index)
       m_Groups->groups().removeCategory(name);
     });
   } else if (selected.isEmpty()) {
-    menu.addAction(menuGlyph(0xE8F4), tr("New category..."), [this] {
+    menu.addAction(menuGlyph(0xE8F4), tr("New category…"), [this] {
       newCategory({});
     });
   }

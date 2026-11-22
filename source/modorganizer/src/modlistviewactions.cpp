@@ -1610,7 +1610,7 @@ void ModListViewActions::createBackup(const QModelIndex& index) const
   QString error;
   const auto result =
       copyFolder(m_parent, modInfo->absolutePath(), backupDirectory,
-                 tr("Backing up \"%1\"...").arg(modInfo->name()), &error);
+                 tr("Backing up \"%1\"…").arg(modInfo->name()), &error);
   if (result == CopyResult::Failed) {
     QMessageBox::information(m_parent, tr("Failed"),
                              tr("Failed to create backup.") + QStringLiteral("\n\n") +

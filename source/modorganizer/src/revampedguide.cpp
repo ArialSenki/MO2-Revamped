@@ -8,7 +8,10 @@
 #include <iplugingame.h>
 #include <utility.h>
 
+#include <algorithm>
+
 #include <QAction>
+#include <QEvent>
 #include <QCoreApplication>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -286,9 +289,9 @@ std::vector<Topic> topics()
          Text::tr("The toolbar's icon size and button style (icons, text or both), "
                   "and whether the status bar and the log panel show.")},
         {0xE70F, Text::tr("Theme editor"),
-         Text::tr("<b>New theme...</b> asks for a name, a base (Light or Dark) and six "
+         Text::tr("<b>New theme…</b> asks for a name, a base (Light or Dark) and six "
                   "colors, and the window shows them as you pick. <b>Save</b> keeps "
-                  "them; <b>Cancel</b> goes back. <b>Edit theme...</b> changes one of "
+                  "them; <b>Cancel</b> goes back. <b>Edit theme…</b> changes one of "
                   "yours.")},
         {0xE838, Text::tr("Theme files"),
          Text::tr("Themes are .qss files in the <b>stylesheets</b> folder (<b>Open "
@@ -596,6 +599,37 @@ std::vector<Topic> topics()
   };
 }
 
+// gives buttons the width of the widest, measured each time their page shows
+// (the style sheet and the scale set their sizes only then)
+class SameWidth : public QObject
+{
+public:
+  SameWidth(QWidget* page, QList<QPushButton*> buttons)
+      : QObject(page), m_buttons(std::move(buttons))
+  {
+    page->installEventFilter(this);
+  }
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::Show || event->type() == QEvent::StyleChange) {
+      int width = 0;
+      for (QPushButton* button : m_buttons) {
+        button->setMinimumWidth(0);
+        button->setMaximumWidth(QWIDGETSIZE_MAX);
+        width = std::max(width, button->sizeHint().width());
+      }
+      for (QPushButton* button : m_buttons) {
+        button->setFixedWidth(width);
+      }
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QList<QPushButton*> m_buttons;
+};
+
 // one page: its heading and a card with a Settings row per entry; a row's
 // button records its action and closes the guide (links open at once)
 QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
@@ -628,6 +662,7 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
   auto* rows = new QVBoxLayout(card);
   rows->setContentsMargins(0, 0, 0, 0);
   rows->setSpacing(0);
+  QList<QPushButton*> buttons;
   for (const Row& entry : topic.rows) {
     auto* row = new QFrame(card);
     row->setObjectName(QStringLiteral("fluentSettingRow"));
@@ -666,8 +701,14 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
         onAction(action);
       });
       rowLayout->addWidget(button, 0, Qt::AlignVCenter);
+      buttons << button;
     }
     rows->addWidget(row);
+  }
+  // a page's buttons line up in one column of the same width, measured when
+  // the page shows, once the theme has sized them
+  if (buttons.size() > 1) {
+    new SameWidth(content, buttons);
   }
   layout->addWidget(card);
   layout->addStretch(1);

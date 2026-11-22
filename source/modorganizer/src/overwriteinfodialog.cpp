@@ -167,7 +167,7 @@ OverwriteInfoDialog::OverwriteInfoDialog(ModInfo::Ptr modInfo, QWidget* parent)
   ui->explorerButton->setIcon(FluentIcons::glyph(0xE838));  // OpenFolderHorizontal
 
 
-  m_DeleteAction    = new QAction(tr("&Delete..."), ui->filesView);
+  m_DeleteAction    = new QAction(tr("&Delete…"), ui->filesView);
   m_RenameAction    = new QAction(tr("&Rename"), ui->filesView);
   m_OpenAction      = new QAction(tr("&Open file"), ui->filesView);
   m_NewFolderAction = new QAction(tr("&New folder"), ui->filesView);
@@ -229,10 +229,10 @@ void OverwriteInfoDialog::buildFluentLayout()
   names->addWidget(m_summary);
   head->addLayout(names, 1);
   // what to do with the files: keep them in a mod, or look at them
-  m_createMod = new QPushButton(FluentIcons::glyph(0xE8F4), tr("Create mod..."), card);
+  m_createMod = new QPushButton(FluentIcons::glyph(0xE8F4), tr("Create mod…"), card);
   m_createMod->setToolTip(tr("Move all files from Overwrite into a new regular mod"));
   m_createMod->setAutoDefault(false);
-  m_moveToMod = new QPushButton(FluentIcons::glyph(0xEA3C), tr("Move to a mod..."), card);
+  m_moveToMod = new QPushButton(FluentIcons::glyph(0xEA3C), tr("Move to a mod…"), card);
   m_moveToMod->setToolTip(tr("Choose a regular mod and move all files from Overwrite into it"));
   m_moveToMod->setAutoDefault(false);
   head->addWidget(m_createMod, 0, Qt::AlignVCenter);
@@ -266,7 +266,7 @@ void OverwriteInfoDialog::buildFluentLayout()
   toolsLayout->addWidget(collapse);
   toolsLayout->addStretch(1);
   m_empty = new QPushButton(FluentIcons::glyph(0xE74D, FluentIcons::Tone::Critical),
-                            tr("Empty to Recycle Bin..."), tools);
+                            tr("Empty to Recycle Bin…"), tools);
   m_empty->setAutoDefault(false);
   m_empty->setToolTip(tr("Move everything in Overwrite to the Recycle Bin"));
   toolsLayout->addWidget(m_empty);

@@ -51,6 +51,10 @@ public:
   void setCaption(const QString& caption);
   QPushButton* addAction(const QString& text);
 
+  // a narrow tile drops its badge, so the caption and value keep their words
+  void setCompact(bool compact);
+  bool isCompact() const;
+
   // what the tile shows, for its Qt Quick version (SummaryQuickBridge)
   char16_t glyph() const { return m_glyph; }
   QString caption() const;
@@ -87,6 +91,10 @@ public:
   // retranslateUi() put back
   void retranslate();
 
+protected:
+  // the banner and the summary row make room in a narrow window
+  bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
   Ui::MainWindow* ui;
   OrganizerCore& m_core;
@@ -99,6 +107,9 @@ private:
   FluentStatTile* m_conflicts;
   FluentStatTile* m_overwrite;
   FluentStatTile* m_updates;
+  QWidget* m_stats = nullptr;
+  void fitBanner();
+  void fitStats();
   QPushButton* m_overwriteAction;
   QPushButton* m_conflictsAction;
   QPushButton* m_updatesAction;
