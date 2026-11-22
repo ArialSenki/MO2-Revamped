@@ -156,6 +156,7 @@ mo2_add_filter(NAME src/collections GROUPS
 	collectiondialog
 	collectionfiles
 	collectionmanifest
+	collectionnames
 	collectionsession
 	screenfitter
 	wabbajackbrowser
@@ -208,6 +209,7 @@ mo2_add_filter(NAME src/downloads GROUPS
 	downloadlist
 	downloadlistview
 	downloadmanager
+	downloadurl
 )
 
 mo2_add_filter(NAME src/env GROUPS
