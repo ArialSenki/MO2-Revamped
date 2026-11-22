@@ -19,6 +19,7 @@ along with Base Preview plugin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "previewbase.h"
 #include <QApplication>
+#include <QFile>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QBuffer>
@@ -243,8 +244,38 @@ QWidget* PreviewBase::genTxtPreview(const QString& fileName, const QSize&,
   // without wrapping, so their columns line up; a .txt wraps like prose
   auto* edit = new QPlainTextEdit();
   edit->setReadOnly(true);
-  edit->setPlainText(fileData.isNull() ? MOBase::readFileText(fileName)
-                                       : MOBase::decodeTextData(fileData));
+  // only the start of a big file: a log of a few GB was read whole, decoded and
+  // copied several times over (GBs of memory, the window frozen for minutes)
+  constexpr qint64 limit = 8 * 1024 * 1024;
+  QByteArray bytes;
+  bool cut = false;
+  if (!fileData.isNull()) {
+    cut   = fileData.size() > limit;
+    bytes = cut ? fileData.left(limit) : fileData;
+  } else if (QFileInfo(fileName).size() > limit) {
+    QFile file(fileName);
+    if (file.open(QIODevice::ReadOnly)) {
+      bytes = file.read(limit);
+      cut   = true;
+    }
+  }
+  if (cut) {
+    // at the last line break: a cut inside a UTF-8 character made the whole
+    // start read as the system code page (Cyrillic or CJK logs garbled)
+    const qsizetype end = bytes.lastIndexOf('\n');
+    if (end > 0) {
+      bytes.truncate(end + 1);
+    }
+  }
+  QString text;
+  if (cut) {
+    text = MOBase::decodeTextData(bytes) + QStringLiteral("\n\n") +
+           tr("Only the first %1 MB of this file are shown.").arg(limit / (1024 * 1024));
+  } else {
+    text = fileData.isNull() ? MOBase::readFileText(fileName)
+                             : MOBase::decodeTextData(fileData);
+  }
+  edit->setPlainText(text);
   if (QFileInfo(fileName).suffix().compare("txt", Qt::CaseInsensitive) != 0) {
     // a rule of its own: the theme's font for text fields would win over setFont()
     edit->setStyleSheet(QStringLiteral("QPlainTextEdit { font-family: \"%1\"; }")
