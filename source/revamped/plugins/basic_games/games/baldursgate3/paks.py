@@ -419,7 +419,9 @@ def forced_in_load_order(modpath: Path, pak: Path) -> bool:
     config = configparser.ConfigParser(interpolation=None, strict=False)
     try:
         config.read_string(
-            (modpath / "meta.ini").read_bytes().decode("utf-8", "replace")
+            # MO2 Revamped: utf-8-sig, a meta.ini saved with a BOM by an
+            # editor failed as "no section header" and the flag was lost
+            (modpath / "meta.ini").read_bytes().decode("utf-8-sig", "replace")
         )
     except (OSError, configparser.Error):
         return False
