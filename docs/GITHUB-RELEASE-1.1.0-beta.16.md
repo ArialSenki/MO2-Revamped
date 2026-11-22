@@ -105,7 +105,10 @@ Measured on Nolvus Awakening (about 3,700 mods and 3,500 plugins):
 
 The problem checks are cheaper too. The Cyberpunk, Stardew and Valheim checks
 read a mod again only when it changed. On NCR Core's 426 mods, the Cyberpunk
-check after a toggle takes 21–39 ms instead of 105–138 ms.
+check after a toggle takes 21–39 ms instead of 105–138 ms. The Form 43 check no
+longer reads every plugin again after each refresh (about 0.5 s with thousands,
+after each mod of a collection's install), and Baldur's Gate 3's check no
+longer keeps rereading a pak it can't read.
 
 Plugins with no fixed place now get the same order at every start (before, the
 same list could come out in different orders).
@@ -184,6 +187,9 @@ same list could come out in different orders).
 - **OLED Black:** the main button has a dim accent fill and outline, so it
   stands out; the notification cards match the other cards; and the
   first-start theme question offers OLED Black too.
+- **Icons:** the last 30 pictures left from MO2 2.5.2 are gone. Every icon is
+  now a Fluent icon, also in content tooltips, the mod information and
+  preview windows and the Cyberpunk plugin.
 - **F1** in Settings opens its help. "Ask before switching
   instances" is the new, shorter name of that option.
 - The drop hint frames the whole list from just outside it and goes away the
@@ -215,6 +221,9 @@ same list could come out in different orders).
   blurred by display scaling, and GIFs play. Text files are never read as web
   pages. The BSA preview says what the archive holds, has its filter above the
   files, and says so when the file isn't an archive.
+- A big text file shows only its first 8 MB, so a log of several GB no longer
+  freezes the preview. A DDS picture that can't be shown without OpenGL says
+  so instead of a general error.
 - A question asked while another is open no longer freezes MO2.
 
 ## Qt Quick (optional, off by default)
@@ -230,6 +239,15 @@ after a restart and draws in software, so it works on every graphics card.
   puts a copy beside ModOrganizer.exe there, keeping your own DLLs.
 - No black or transparent window (Mica is off under Wine), blank web pages
   fixed, nxm links accepted, and the startup log is on by default.
+- **Icons show under Wine and Proton.** The Windows icon fonts aren't in a
+  prefix, so icons were empty boxes; MO2 now draws them from Microsoft's
+  Fluent UI System Icons pictures. The optional Qt Quick windows still need
+  the font.
+- Without .NET in the prefix, C# FOMOD and OMOD archives go to the other
+  installers again, with a warning in the log, instead of failing.
+- The setup also recognizes Wine builds that hide it, counts the Visual C++
+  copies in its free space check, and cleans up properly after an uninstall
+  or a restore under Wine.
 
 ## Security
 
@@ -278,6 +296,17 @@ only mods you trust.
 - Fallout 3, New Vegas and Oblivion: a plugin rewritten with the same size and
   date is read again.
 - Opening an instance no longer changes the global language.
+- A damaged archive (a BA2 texture without chunks, a Morrowind BSA with a bad
+  name table) no longer crashes MO2 in the preview or at every refresh.
+- Enabling a mod while MO2 refreshes switches its plugins on once they are
+  listed, instead of one "Plugin not found" message per plugin and a
+  plugins.txt without them.
+- The plugin list's selection stays on its plugin when a disabled mod's
+  plugins leave the list, so Space or the menu no longer changes another one.
+- A game started from its Root folder keeps its script extender or Native Mod
+  Loader when the game folder can't be written to.
+- If .NET fails to start for a C# FOMOD or OMOD install, that installer is
+  unavailable instead of MO2 closing.
 
 ## From beta 15
 
