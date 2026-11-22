@@ -2026,6 +2026,16 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
   QElapsedTimer stage;
   stage.start();
   int enabled = 0;
+  // a plugin the list doesn't have yet: the list is rebuilt after the directory
+  // refresh that is running, and reported each one as "Plugin not found"
+  QStringList later;
+  const auto known = [&](const QString& plugin) {
+    if (m_PluginList.state(plugin) != IPluginList::STATE_MISSING) {
+      return true;
+    }
+    later.append(plugin);
+    return false;
+  };
   for (auto index : modIndices) {
     ModInfo::Ptr modInfo = ModInfo::getByIndex(index);
     // MO2 Revamped: the folder is listed once for the three kinds, not three
@@ -2052,7 +2062,8 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         continue;
       }
 
-      if (active != m_PluginList.isEnabled(esm) && file->getAlternatives().empty()) {
+      if (active != m_PluginList.isEnabled(esm) && file->getAlternatives().empty() &&
+          known(esm)) {
         m_PluginList.blockSignals(true);
         m_PluginList.enableESP(esm, active);
         m_PluginList.blockSignals(false);
@@ -2066,7 +2077,8 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         continue;
       }
 
-      if (active != m_PluginList.isEnabled(esl) && file->getAlternatives().empty()) {
+      if (active != m_PluginList.isEnabled(esl) && file->getAlternatives().empty() &&
+          known(esl)) {
         m_PluginList.blockSignals(true);
         m_PluginList.enableESP(esl, active);
         m_PluginList.blockSignals(false);
@@ -2080,7 +2092,8 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
         continue;
       }
 
-      if (active != m_PluginList.isEnabled(esp) && file->getAlternatives().empty()) {
+      if (active != m_PluginList.isEnabled(esp) && file->getAlternatives().empty() &&
+          known(esp)) {
         m_PluginList.blockSignals(true);
         m_PluginList.enableESP(esp, active);
         m_PluginList.blockSignals(false);
@@ -2092,6 +2105,22 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
     MessageDialog::showMessage(
         tr("Multiple esps/esls activated, please check that they don't conflict."),
         qApp->activeWindow());
+  }
+  if (!later.isEmpty()) {
+    // queued after the plugin list's own rebuild: it knows them by then
+    onNextRefresh(
+        [this, later, active] {
+          for (const QString& plugin : later) {
+            if (m_PluginList.state(plugin) == IPluginList::STATE_MISSING) {
+              log::warn("plugin {} is still not in the plugin list", plugin);
+            } else if (active != m_PluginList.isEnabled(plugin)) {
+              m_PluginList.enableESP(plugin, active);
+            }
+          }
+          m_PluginList.refreshLoadOrder();
+          m_PluginListsWriter.writeImmediately(false);
+        },
+        RefreshCallbackGroup::CORE, RefreshCallbackMode::RUN_NOW_IF_POSSIBLE);
   }
   const qint64 tStates = stage.restart();
   m_PluginList.refreshLoadOrder();
