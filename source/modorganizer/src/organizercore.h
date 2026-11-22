@@ -359,6 +359,12 @@ public:
   // switches on the plugins of mods enabled during a refresh, once a refresh
   // that has them is done
   void activateModsAfterRefresh(const QStringList& names);
+  void activatePendingMods();
+  // those mods, the profile they were enabled in, and whether a refresh's end
+  // is already asked to do them (one callback for all of them)
+  QSet<QString> m_ActivateAfterRefresh;
+  QString m_ActivateProfile;
+  bool m_ActivateQueued = false;
 
   void doAfterLogin(const std::function<void()>& function)
   {
