@@ -983,7 +983,9 @@ QIcon iconForExecutable(const QString& filePath)
     ::DestroyIcon(winIcon);
     return result;
   } else {
-    return QIcon(":/MO/gui/executable");
+    // MO2 Revamped: MO2's own executable icon, which it draws as a Fluent glyph
+    // (2.5.2's picture is gone from the resources)
+    return QIcon(QStringLiteral(":/MO/gui/mainwindow/files/executable.svg"));
   }
 }
 

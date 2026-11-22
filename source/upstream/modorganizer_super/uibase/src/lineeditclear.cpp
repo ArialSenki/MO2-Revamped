@@ -17,9 +17,10 @@ namespace MOBase
 LineEditClear::LineEditClear(QWidget* parent) : QLineEdit(parent)
 {
   clearButton = new QToolButton(this);
-  QPixmap pixmap(":/MO/gui/edit_clear");
-  clearButton->setIcon(QIcon(pixmap));
-  clearButton->setIconSize(pixmap.size());
+  // MO2 Revamped: MO2's own clear icon, which it draws as a Fluent glyph
+  // (2.5.2's edit_clear picture is gone from the resources)
+  clearButton->setIcon(QIcon(QStringLiteral(":/MO/gui/mainwindow/clear.svg")));
+  clearButton->setIconSize(QSize(16, 16));
   clearButton->setCursor(Qt::ArrowCursor);
   clearButton->setStyleSheet("QToolButton { border: none; padding: 0px; }");
   clearButton->hide();
