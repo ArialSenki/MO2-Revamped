@@ -120,6 +120,9 @@ def _dependency(data) -> Dependency | None:
     if not isinstance(unique_id, str) or not unique_id.strip():
         return None
     required = _get(data, "IsRequired", True)
+    # SMAPI reads it with Newtonsoft, which takes "true"/"false" in any case
+    if isinstance(required, str) and required.strip().casefold() == "false":
+        required = False
     minimum = _get(data, "MinimumVersion", "")
     return Dependency(unique_id.strip().casefold(), minimum if isinstance(minimum, str) else "", required is not False)
 

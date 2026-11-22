@@ -79,6 +79,14 @@ class ManifestFilesTest(unittest.TestCase):
                          [("lower.case", "", True), ("spaced.id", "", True)])
         self.assertEqual(parsed.content_pack_for.unique_id, "pathoschild.contentpatcher")
 
+    def test_is_required_as_a_string(self) -> None:
+        # Newtonsoft turns "true"/"false" into a bool in any case, as SMAPI reads it
+        parsed = manifests.parse(manifest_text("Me.A", Dependencies=[
+            {"UniqueID": "a.b", "IsRequired": "false"}, {"UniqueID": "c.d", "IsRequired": "False"},
+            {"UniqueID": "e.f", "IsRequired": "TRUE"}, {"UniqueID": "g.h", "IsRequired": "true"},
+        ]))
+        self.assertEqual([d.required for d in parsed.dependencies], [False, False, True, True])
+
     def test_cache(self) -> None:
         path = self.tmp / "manifest.json"
         path.write_text(manifest_text("Me.A"))
