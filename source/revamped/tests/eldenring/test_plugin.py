@@ -119,6 +119,11 @@ class Checker(unittest.TestCase):
         valid, fixable, invalid = self.checker.VALID, self.checker.FIXABLE, self.checker.INVALID
         cases = [
             (["SeamlessCoop/ersc.dll", "ersc_launcher.exe"], valid),
+            # Seamless Co-op 2.0.3 as MO2 installs it (MO2 flagged it as
+            # having no game data while this wasn't VALID)
+            (["SeamlessCoop/ersc.dll", "SeamlessCoop/ersc_settings.ini",
+              "SeamlessCoop/locale/english.json", "SeamlessCoop/crashpad/crashpad_handler.exe",
+              "ersc_launcher.exe", "meta.ini"], valid),
             (["parts/a.dcx", "notes.txt"], valid),
             (["Wrapper/parts/a.dcx"], fixable),
             (["parts/sub/x.dll", "parts/a.dcx"], valid),  # assets are never walked
@@ -434,6 +439,36 @@ class ConvergenceWithSeamless(unittest.TestCase):
         dll = self.seamless_load(game_for(self.organizer))
         self.assertTrue((dll.parent / "locale" / "en.json").is_file())
         self.assertFalse((dll.parent / "elsewhere" / "secret.txt").exists())
+
+    def test_files_the_mod_dropped_leave_the_copy(self):
+        # a Seamless update that drops a file: the copy loses it too, but
+        # a file Seamless wrote in the copy itself stays
+        self.add_convergence()
+        own = self.seamless_root / "SeamlessCoop"
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertTrue((dll.parent / "locale" / "en.json").is_file())
+        (dll.parent / "ersc_log.txt").write_text("log", encoding="utf-8")
+        (own / "locale" / "en.json").unlink()
+        (own / "locale").rmdir()
+        (own / "locale2").mkdir()
+        (own / "locale2" / "es.json").write_text("{}", encoding="utf-8")
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertFalse((dll.parent / "locale" / "en.json").exists())
+        self.assertFalse((dll.parent / "locale").exists())
+        self.assertTrue((dll.parent / "locale2" / "es.json").is_file())
+        self.assertTrue((dll.parent / "ersc_log.txt").is_file())
+        self.assertTrue(dll.is_file())
+        self.assertTrue((dll.parent / "ersc_settings.ini").is_file())
+
+    def test_a_listed_file_outside_the_copy_stays(self):
+        self.add_convergence()
+        dll = self.seamless_load(game_for(self.organizer))
+        outside = dll.parent.parent / "keep.txt"
+        outside.write_text("x", encoding="utf-8")
+        listing = dll.parent.parent / f".{dll.parent.name}.copied.txt"
+        listing.write_text("../keep.txt\n", encoding="utf-8")
+        self.seamless_load(game_for(self.organizer))
+        self.assertTrue(outside.is_file())
 
     def test_save_section_added_when_missing(self):
         cls = type(game_for(self.organizer))

@@ -434,6 +434,7 @@ class ForcedLoadsMixin:
         source_dir = seamless.parent
         target_dir = Path(self._organizer.basePath()) / self.ConvergenceSeamlessFolder / source_dir.name
         settings_name = f"{seamless.stem}_settings.ini".casefold()
+        copied: set[str] = set()
         for source in self._files_without_links(source_dir):
             relative = source.relative_to(source_dir)
             target = target_dir / relative
@@ -442,6 +443,7 @@ class ForcedLoadsMixin:
                 continue
             if str(relative).casefold() == settings_name:
                 continue
+            copied.add(relative.as_posix())
             info = source.stat()
             try:
                 current = target.stat()
@@ -451,7 +453,9 @@ class ForcedLoadsMixin:
                 pass
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
-        # files only in the copy stay: Seamless may write its own there
+        # files an earlier copy took from the mod that it no longer has go;
+        # any other file only in the copy stays (Seamless may write its own)
+        self._prune_seamless_copy(target_dir, copied)
         settings_source = seamless.with_name(f"{seamless.stem}_settings.ini")
         # bytes that aren't UTF-8 (a password saved in the system's code
         # page) go back as they were
@@ -516,6 +520,53 @@ class ForcedLoadsMixin:
                 except (OSError, AttributeError):
                     continue
                 yield Path(path)
+
+    @staticmethod
+    def _seamless_copy_list(target_dir: Path) -> Path:
+        """The list of the files the copy took from the mod, next to it."""
+        return target_dir.parent / f".{target_dir.name}.copied.txt"
+
+    @classmethod
+    def _prune_seamless_copy(cls, target_dir: Path, copied: set[str]) -> None:
+        """Removes from the copy the files the last copy took from the mod
+        that the mod no longer has (an update that dropped or renamed one).
+        A file that can't be removed now (the game still has it open) stays
+        in the list, for the next run."""
+        listing = cls._seamless_copy_list(target_dir)
+        try:
+            earlier = set(listing.read_text(encoding="utf-8").splitlines())
+        except (OSError, UnicodeError):
+            earlier = set()
+        keep = set(copied)
+        current = {name.casefold() for name in copied}
+        root = target_dir.resolve()
+        for name in sorted(earlier):
+            if not name or name.casefold() in current:
+                continue
+            stale = (target_dir / name).resolve()
+            # only inside the copy, whatever the list says
+            if stale == root or root not in stale.parents:
+                continue
+            try:
+                stale.unlink(missing_ok=True)
+            except OSError:
+                keep.add(name)
+                continue
+            parent = stale.parent
+            while parent != root and root in parent.parents:
+                try:
+                    parent.rmdir()
+                except OSError:
+                    break
+                parent = parent.parent
+        new_listing = "\n".join(sorted(keep)) + "\n"
+        try:
+            if listing.read_text(encoding="utf-8") == new_listing:
+                return
+        except (OSError, UnicodeError):
+            pass
+        listing.parent.mkdir(parents=True, exist_ok=True)
+        listing.write_text(new_listing, encoding="utf-8")
 
     @staticmethod
     def _with_save_extension(text: str, extension: str) -> str:

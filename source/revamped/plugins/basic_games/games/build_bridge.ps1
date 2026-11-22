@@ -51,6 +51,7 @@ try {
         (Join-Path $vendor 'buffer.c') `
         (Join-Path $vendor 'hde64.c') `
         -luser32 `
+        -ladvapi32 `
         -lgdi32 `
         -lkernel32
 
