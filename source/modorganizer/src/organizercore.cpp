@@ -1273,7 +1273,16 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
 {
   GuessedValue<QString> modName;
   if (!initModName.isEmpty()) {
-    modName.update(initModName, GUESS_USER);
+    // MO2 Revamped: through the folder-name filter, as every other guess is (it
+    // is attached later, and doesn't apply to a value already set): a plugin's
+    // "Other mod/sub" installed into another mod's folder, ".." into the
+    // instance's, and "Name." into a folder Windows named "Name"
+    QString name = initModName;
+    if (fixDirectoryName(name)) {
+      modName.update(name, GUESS_USER);
+    } else {
+      log::warn("install: the mod name '{}' can't be a folder name, not used", initModName);
+    }
   }
   const auto [modIndex, modInfo] =
       doInstall(archivePath, modName, currentMod, priority, reinstallation);
