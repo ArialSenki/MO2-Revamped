@@ -93,17 +93,29 @@ IPluginInstallerCustom* OmodShim::real()
 {
   if (m_Real == nullptr && !m_Failed) {
     // one try: a second init() would register its callbacks again
-    m_Failed     = true;
-    auto* plugin = RevampedDotNet::loadReal<IPluginInstallerCustom>(
-        m_Loader, "installer_omod/dotnet/installer_omod.dll");
-    if (plugin != nullptr) {
-      m_Hooks->setReal(plugin);
-      if (plugin->init(m_Hooks.get())) {
-        m_Real   = plugin;
-        m_Failed = false;
-      } else {
-        log::error("the OMOD installer failed to initialize");
+    m_Failed = true;
+    // MO2 Revamped: the plugin's constructor turns .NET errors into C++
+    // exceptions (an incomplete dotnet folder); outside a catch they ended MO2
+    // at the first OMOD install or game start. It stays unavailable instead
+    try {
+      auto* plugin = RevampedDotNet::loadReal<IPluginInstallerCustom>(
+          m_Loader, "installer_omod/dotnet/installer_omod.dll");
+      if (plugin != nullptr) {
+        m_Hooks->setReal(plugin);
+        if (plugin->init(m_Hooks.get())) {
+          m_Real   = plugin;
+          m_Failed = false;
+        } else {
+          log::error("the OMOD installer failed to initialize");
+        }
       }
+    } catch (const std::exception& e) {
+      log::error("the OMOD installer failed to load: {}", e.what());
+    } catch (...) {
+      log::error("the OMOD installer failed to load");
+    }
+    if (m_Real == nullptr) {
+      m_Hooks->setReal(nullptr);
     }
   }
   if (m_Real != nullptr) {

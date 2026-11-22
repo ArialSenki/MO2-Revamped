@@ -110,7 +110,13 @@ namespace CSharp {
     // Do this only once:
     if (g_Organizer == nullptr) {
       Application::EnableVisualStyles();
-      Application::SetCompatibleTextRenderingDefault(false);
+      // MO2 Revamped: .NET starts at the first C# FOMOD now, not with MO2; if
+      // a WinForms window exists by then (an OMOD script's), this throws, and
+      // the exception ended MO2. The default rendering is kept then
+      try {
+        Application::SetCompatibleTextRenderingDefault(false);
+      } catch (System::InvalidOperationException^) {
+      }
     }
 
     g_Organizer = moInfo;
