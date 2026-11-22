@@ -841,6 +841,42 @@ std::vector<Case> cases()
                  l.w.put32(l.fileRecord[0] + 8, size - 4);
                  wellFormed(save(l.w.b), expect(f));
                }});
+  c.push_back({"BSA 104 empty file stored compressed (size 0, no data) extracts empty", [] {
+                 // Fallout 3's placeholder.txt, New Vegas' do_not_delete.txt
+                 std::vector<BsaFolder> f = {{"data", {{"a.txt", Bytes(), true}}}};
+                 auto l = bsa(104, kStd | kCompressed, f);
+                 l.w.b.resize(l.data[0] + 4);
+                 l.w.put32(l.fileRecord[0] + 8, 4);
+                 wellFormed(save(l.w.b), expect(f));
+               }});
+  c.push_back({"BA2 DX10 chunks stored out of order extract from their own offsets", [] {
+                 // packers that share mips between textures don't keep a
+                 // texture's chunks together: the second chunk is stored first
+                 const Bytes a = pattern(2048, 14), b = pattern(512, 15);
+                 auto l = ba2Texture("textures\\t.dds", {{a, true}, {b, false}});
+                 const size_t d0 = l.data[0], d1 = l.data[1];
+                 const size_t end = d1 + b.size();
+                 Bytes moved(l.w.b.begin() + d1, l.w.b.begin() + end);
+                 moved.insert(moved.end(), l.w.b.begin() + d0, l.w.b.begin() + d1);
+                 std::copy(moved.begin(), moved.end(), l.w.b.begin() + d0);
+                 l.w.put64(l.record[0] + 24, d0 + b.size());
+                 l.w.put64(l.record[0] + 24 + 24, d0);
+                 const auto p = save(l.w.b, "ba2");
+                 Bytes all = a;
+                 all.insert(all.end(), b.begin(), b.end());
+                 Opened o = open(p);
+                 if (!check(!o.refused, "read()")) {
+                   return;
+                 }
+                 auto list = files(*o.archive);
+                 check(list.size() == 1 && !extractFails(*o.archive, list[0], target()),
+                       "extract()");
+                 check(ddsTail(target() / "t.dds", 128) == all, "chunks byte-exact (extract)");
+                 Opened o2 = open(p);
+                 check(!extractAllFails(*o2.archive, target() / "all"), "extractAll()");
+                 check(ddsTail(target() / "all" / "textures" / "t.dds", 128) == all,
+                       "chunks byte-exact (extractAll)");
+               }});
   c.push_back({"BA2 DX10 BC7 texture gets the DX10 header, byte-exact", [] {
                  const Bytes a = pattern(4096, 12);
                  const auto p  = save(ba2Texture("t.dds", {{a, true}}, kBC7).w.b, "ba2");
