@@ -423,7 +423,10 @@ const QHash<size_t, Glyph>& fingerprintTable()
     const auto& glyphs = glyphTable();
     for (auto it = glyphs.begin(); it != glyphs.end(); ++it) {
       const size_t f = fingerprint(QIcon(it.key()));
-      if (f != 0) {
+      // the old 2.5.2 paths are aliases of the glyph SVGs, so two of them can
+      // share a picture ("remove" and "indeterminate-checkbox"): the plain ink
+      // wins over a colored tone
+      if (f != 0 && (!t.contains(f) || it.value().tone == Tone::Ink)) {
         t.insert(f, it.value());
       }
     }
