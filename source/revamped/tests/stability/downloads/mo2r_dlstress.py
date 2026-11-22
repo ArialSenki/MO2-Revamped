@@ -44,6 +44,16 @@ class DlStress(mobase.IPlugin):
     # -- helpers ---------------------------------------------------------
     def _note(self, phase, key, value):
         self._r["phases"].setdefault(phase, {})[key] = value
+        self._partial()
+
+    def _partial(self):
+        # what is known so far, in case MO2 stops answering
+        try:
+            os.makedirs(OUT, exist_ok=True)
+            with open(os.path.join(OUT, "partial.json"), "w", encoding="utf-8") as f:
+                json.dump(self._r, f, indent=1, ensure_ascii=False, default=str)
+        except OSError:
+            pass
 
     def _err(self, text):
         self._r["errors"].append(text)
@@ -103,20 +113,33 @@ class DlStress(mobase.IPlugin):
             buttons = [b for b in w.findChildren(QAbstractButton) if b.isVisible() and b.text()]
             names = [b.text().replace("&", "") for b in buttons]
             key = (w.windowTitle(), text[:120], tuple(names))
-            if not self._r["dialogs"] or self._r["dialogs"][-1]["key"] != list(key):
-                self._r["dialogs"].append({"key": list(key), "at": time.strftime("%H:%M:%S")})
+            entry = {"key": list(key), "at": time.strftime("%H:%M:%S"),
+                     "class": type(w).__name__}
             chosen = None
-            for want in self._answer + ["OK", "Aceptar", "Yes", "Sí", "Close", "Cerrar"]:
+            # restyled dialogs draw their own buttons: by object name first
+            for want in self._answer:
+                found = w.findChild(QAbstractButton, want)
+                if found is not None and found.isVisible():
+                    chosen = found
+                    break
+            for want in [] if chosen else self._answer + ["Install", "Instalar", "OK", "Aceptar", "Yes", "Sí",
+                                        "Close", "Cerrar"]:
                 for b, n in zip(buttons, names):
                     if n.lower() == want.lower():
                         chosen = b
                         break
                 if chosen:
                     break
-            if chosen is not None:
-                chosen.click()
-            elif isinstance(w, QDialog):
-                w.reject()
+            entry["answer"] = (chosen.objectName() or chosen.text()) if chosen is not None else "rejected"
+            self._r["dialogs"].append(entry)
+            self._partial()
+            try:
+                if chosen is not None:
+                    chosen.click()
+                elif isinstance(w, QDialog):
+                    w.reject()
+            except RuntimeError:
+                pass
         QTimer.singleShot(250, self._watch)
 
     # -- the run ---------------------------------------------------------
@@ -149,6 +172,7 @@ class DlStress(mobase.IPlugin):
     def _run(self):
         # 1: four at once, two paused, one resumed, one canceled
         p = "several"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         for i in range(4):
             self._start_dl(f"{BASE}/file/dlmod{i}.zip?rate={RATE}")
         yield 1200
@@ -175,6 +199,7 @@ class DlStress(mobase.IPlugin):
 
         # 2: the same link twice at once
         p = "same name"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         url = f"{BASE}/file/dlmod4.zip?rate={RATE}"
         QTimer.singleShot(0, lambda: self._start_dl(url))
         self._start_dl(url)
@@ -189,6 +214,7 @@ class DlStress(mobase.IPlugin):
 
         # 3: the connection drops: no finished-looking truncated file
         p = "cut"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         self._start_dl(f"{BASE}/cut/dlmod5.zip?after=400000")
         yield 15000
         path = os.path.join(self._dldir(), "dlmod5.zip")
@@ -198,6 +224,7 @@ class DlStress(mobase.IPlugin):
 
         # 4: an empty list
         p = "empty"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         try:
             self._note(p, "returned", self._org.downloadManager().startDownloadURLs([]))
         except Exception as e:  # noqa: BLE001
@@ -206,6 +233,7 @@ class DlStress(mobase.IPlugin):
 
         # 5: a Unicode name from Content-Disposition, then installed
         p = "unicode"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         uname = "Ñandú Ünïcødé 日本語.zip"
         self._start_dl(f"{BASE}/file/{uname}?cd={uname}")
         yield 3000
@@ -222,6 +250,7 @@ class DlStress(mobase.IPlugin):
 
         # 6: paths past MAX_PATH inside the archive
         p = "deep"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         try:
             mod = self._org.installMod(os.path.join(SRV, "deepmod.zip"), "Deep Mod")
             self._note(p, "installed", mod is not None)
@@ -232,9 +261,10 @@ class DlStress(mobase.IPlugin):
 
         # 7: the same mod twice, replaced
         p = "duplicate"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         self._org.installMod(os.path.join(SRV, "dupmod.zip"), "Dup Mod")
         yield 500
-        self._answer = ["Replace", "Reemplazar"]
+        self._answer = ["replaceBtn", "Replace", "Reemplazar"]
         self._org.installMod(os.path.join(SRV, "dupmod-v2.zip"), "Dup Mod")
         self._answer = []
         yield 1000
@@ -249,6 +279,7 @@ class DlStress(mobase.IPlugin):
 
         # 8: names that aren't folder names
         p = "names"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         before = set(os.listdir(self._org.modsPath()))
         for name in ("Dup Mod/sub", "..", "Odd."):
             try:
@@ -266,10 +297,15 @@ class DlStress(mobase.IPlugin):
 
         # 9: remove a download while it is installed
         p = "remove while installing"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         idx = self._index("dlmod0.zip")
-        self._answer = ["Replace", "Reemplazar"]
-        QTimer.singleShot(150, lambda: self._signal("removeDownload", self._index("dlmod0.zip"), True))
+        self._answer = ["replaceBtn", "Replace", "Reemplazar"]
+        # from the list only: deleting the file it installs from brings up the
+        # Windows "file in use" prompt, which this plugin can't answer
+        QTimer.singleShot(150, lambda: self._signal("removeDownload", self._index("dlmod0.zip"), False))
+        self._note(p, "install called", time.strftime("%H:%M:%S"))
         self._signal("installDownload", idx)
+        self._note(p, "install returned", time.strftime("%H:%M:%S"))
         yield 3000
         self._answer = []
         self._note(p, "archive still there", os.path.isfile(os.path.join(self._dldir(), "dlmod0.zip")))
@@ -277,6 +313,7 @@ class DlStress(mobase.IPlugin):
 
         # 10: a read-only downloads folder
         p = "read-only folder"
+        self._note(p, "started", time.strftime("%H:%M:%S"))
         user = os.environ.get("USERNAME", "")
         dl = self._dldir()
         subprocess.run(["icacls", dl, "/deny", f"{user}:(OI)(CI)(W,D,DC)"], capture_output=True)
