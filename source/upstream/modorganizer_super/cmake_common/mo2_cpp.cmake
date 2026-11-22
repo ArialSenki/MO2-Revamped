@@ -177,6 +177,16 @@ function(mo2_configure_target TARGET)
 	endif()
 
     if(${MO2_CLI})
+        # MO2 Revamped: no /pathmap of the dependency folders (MO2_DEPS) under
+        # /clr: the .NET reference assemblies are found through the mapped
+        # path, so with the .NET Framework pack under a mapped folder (deps\
+        # netfx48) mscorlib.dll "can't be opened" (C2567) and nothing builds.
+        # The build, source and user maps stay
+        get_target_property(_mo2_options ${TARGET} COMPILE_OPTIONS)
+        if (_mo2_options)
+            list(FILTER _mo2_options EXCLUDE REGEX "/pathmap:[^>]*=MO2_DEPS")
+            set_target_properties(${TARGET} PROPERTIES COMPILE_OPTIONS "${_mo2_options}")
+        endif()
         if (CMAKE_GENERATOR MATCHES "Visual Studio")
             set_target_properties(${TARGET} PROPERTIES COMMON_LANGUAGE_RUNTIME "")
         else()
