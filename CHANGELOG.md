@@ -2,13 +2,14 @@
 
 ## 1.1.0-beta.16 (pre-release) — November 22, 2026
 
-Beta 15 plus our own game plugins for Cyberpunk 2077, Baldur's Gate 3, The
-Witcher 3, Stardew Valley and Valheim, a faster start that loads only the
+Beta 15 plus our own game plugins for the 14 Bethesda games, Cyberpunk 2077,
+Baldur's Gate 3, The Witcher 3, Stardew Valley and Valheim, a faster start that loads only the
 instance's game, much faster mod toggles and problem checks with large lists
 like Nolvus, help pages and first steps, Settings reorganised with animation
 levels, rewritten installer dialogs and previews, collection and Wabbajack
-fixes, separate saves for The Convergence with the Elden Ring bridge alpha.75
-and me3_compat 0.5.4, Wine and Proton fixes, and security and stability fixes.
+fixes, separate saves for The Convergence with the Elden Ring bridge alpha.76
+and me3_compat 0.5.4, Wine and Proton fixes, icons that no longer need the
+Windows icon fonts, and security and stability fixes.
 
 ### Our own game plugins
 
@@ -16,6 +17,15 @@ Written from scratch for MO2 Revamped. They keep the old plugins' names and
 settings, so existing instances open as before, and an update replaces the old
 plugin.
 
+- **The Bethesda games:** Skyrim Special Edition, Skyrim, Skyrim VR, Fallout 4,
+  Fallout 4 VR, Fallout 3, Fallout: New Vegas, Tale of Two Wastelands,
+  Oblivion, Nehrim, Morrowind, Enderal, Enderal Special Edition and Starfield,
+  on one shared base. They keep the old plugins' file names, names and
+  settings, so existing instances open as they are, with nothing to convert.
+  Saves are read with size checks, so a damaged save can't crash MO2, and
+  Skyrim SE lists its saves. **Skyrim VR and Fallout 4 VR** now list their DLC
+  and Creation Club plugins as unmanaged mods, like the other games (the old
+  plugins' list was always empty).
 - **Cyberpunk 2077:** a Content column and filter, an archive conflicts tool,
   Codeware and Root Builder checks, and the mods whose scripts redscript can't
   compile are named. The game's version is its patch number (2.5), as on
@@ -31,6 +41,11 @@ plugin.
   script.
 - **Stardew Valley** and **Valheim:** mod checks that fix common layouts, and
   BepInEx mods read from their DLL.
+- Fixes found by the plugins' new tests: Baldur's Gate 3 reads a meta.ini
+  saved with a BOM and downloads a damaged ExportTool again; Cyberpunk shows
+  save names saved with a BOM and marks an .archive with a bad header as
+  unreadable instead of emptying the conflicts list; Stardew reads UTF-16
+  manifests; a BepInEx mod inside a deeper wrapper folder is unwrapped.
 
 The plugins' texts are in English, Spanish, German, French, Italian and
 Brazilian Portuguese. The Skyrim SE and Fallout 4 plugins warn about a script
@@ -57,7 +72,12 @@ Measured on Nolvus Awakening (about 3,700 mods and 3,500 plugins):
   disabling one no longer rebuilds every row of the plugin list;
 - the plugin list is rebuilt once instead of twice, in about 0.15 s;
 - saving plugins.txt and loadorder.txt: about 25 ms instead of about 120 ms;
-- creating the mods at start: about a third faster.
+- creating the mods at start: about a third faster;
+- typing or clearing a one-letter filter: about 0.1 s instead of 2.7 s and
+  20.7 s;
+- switching profiles no longer reads every mod again (a freeze of about 1 s);
+- closing MO2: about 0.15 s instead of about 1.2 s, and saving the profile on
+  exit about 30 ms instead of about 540 ms.
 
 The problem checks are cheaper too. The Cyberpunk, Stardew and Valheim checks
 read a mod again only when it changed. On NCR Core's 426 mods, the Cyberpunk
@@ -96,6 +116,27 @@ same list could come out in different orders).
   would pass 259 characters is refused, with the longest folder that fits.
 - Many downloads from one server no longer end paused with "the server stopped
   sending data" while they only waited for a free connection.
+- A mod made by the collection is listed once, and a collection link with a
+  revision that doesn't exist is refused.
+
+## Downloads, extraction and archives
+
+- Two downloads started together no longer take the same name, and a
+  finished download whose name was taken meanwhile gets a free one.
+- A link with no file name takes the name the server gives, also after a
+  restart, instead of ending as "unknown" with no extension.
+- A download removed or resumed just as it finished is left alone; **Rename
+  new file** on a dropped archive renames it.
+- Cancelling during or right after an extraction no longer crashes MO2, and a
+  file an extraction didn't finish is removed.
+- After an install, the right download is marked installed even when another
+  one was cancelled meanwhile; a suggested mod name such as `CON` is made
+  safe.
+- BSA and BA2 archives: Fallout 3's and New Vegas' own archives extract
+  correctly, BA2 textures that share mipmaps extract right, and an empty file
+  stored compressed extracts as an empty file.
+- A new instance on a network share makes its folders on the share, and
+  paths on a network share work for MO2's file checks.
 
 ### Elden Ring and Nightreign
 
@@ -104,13 +145,18 @@ same list could come out in different orders).
   and saved over `ER0000.sl2`, the save of the game without mods, and with
   Seamless it shared `ER0000.co2` with Seamless played alone. With The
   Convergence active, Seamless loads once, from a copy of its folder in the
-  instance with your own settings; the mod itself isn't changed. The save list,
+  instance with your own settings; the mod itself isn't changed. Files a
+  Seamless update removed leave that copy, and if the copy can't be made the
+  launch stops with a message instead of saving into the shared
+  `ER0000.co2`. The save list,
   save recovery and the save tool know both names.
   **If you played The Convergence from MO2 before:** that character is in
   `ER0000.sl2` (or `ER0000.co2` with Seamless). Copy it as `ER0000.cnv` (or
   `ER0000.cnvco2`) in the same folder to go on with it.
-- **Bridge alpha.75:** MO2's save name stays when a mod DLL changes it (The
-  Convergence's ErdTools did). Also new since beta 15: native initializers run under
+- **Bridge alpha.76:** under Wine and Proton, **Start Elden Ring minimized**
+  ends by itself 15 s after the game's window appears, so the game no longer
+  stays minimized. Alpha.75: MO2's save name stays when a mod DLL changes it
+  (The Convergence's ErdTools did). Also new since beta 15: native initializers run under
   the virtual file system and match the DLL's real path, also for paths over
   259 characters; a DLL whose load failed after starting a thread is loaded
   once more; a thread whose DLL was unloaded no longer crashes the game; a
@@ -152,6 +198,15 @@ same list could come out in different orders).
   moment the drag leaves.
 - "Last saved" in the top bar no longer counts Steam's sync file or script
   extender logs as a save.
+- Sizes and numbers follow the interface's language (decimal comma, grouped
+  thousands), also in the Collections gallery, which has proper plurals.
+- Settings > Plugins shows readable names for the options of MO2's own
+  plugins. The theme is a settings row with its buttons below.
+- A narrow main window keeps the banner's and tiles' words, and the side
+  menus draw the selected page's name again.
+- The old 2.5.2 icon paths that other plugins use still work: they give the
+  matching Fluent icon, in a grey that reads on Light and Dark. About credits
+  Fluent UI System Icons.
 
 ### Help and first steps
 
@@ -180,6 +235,9 @@ same list could come out in different orders).
 - A big text file shows only its first 8 MB, so a log of several GB no longer
   freezes the preview. A DDS picture that can't be shown without OpenGL says
   so instead of a general error.
+- FOMOD and the BAIN wizard use the same button band and titles as MO2's
+  other dialogs, and the BAIN wizard marks a met requirement green and an
+  unmet one red.
 - A question asked while another is open no longer freezes MO2.
 
 ### Qt Quick (optional, off by default)
@@ -230,6 +288,14 @@ high. Fixed:
   folders it created or found empty; other users of the PC can read and run
   MO2 but not change it. When it runs as administrator, its logs stay in
   Program Files.
+- Previews read a picture only as the format its extension names, never
+  preview SVG or PDF, and skip pictures needing more than 128 MB. A disguised
+  picture can no longer make Windows send your sign-in hash to another
+  server, and a paused download resumes only from a web address.
+- Crafted BSA and BA2 archives are refused instead of corrupting memory.
+- Bug reports also hide Seamless Co-op's password.
+- The Elden Ring save tool keeps restores inside the save folder, and The
+  Convergence's Seamless copy refuses another save's extension.
 - Damaged Skyrim SE and Fallout 4 saves, and huge or malformed BG3, .NET,
   Stardew and Cyberpunk files, can no longer crash or freeze MO2.
 
@@ -263,6 +329,12 @@ only mods you trust.
   Loader when the game folder can't be written to.
 - If .NET fails to start for a C# FOMOD or OMOD install, that installer is
   unavailable instead of MO2 closing.
+- A mod's plugins that the plugin list doesn't have yet are switched on once
+  it is rebuilt, and mods enabled during a refresh rebuild the list once.
+- **Mod versions:** beta.10 sorts after beta.9, release candidates such as
+  `1.0~rc1` or `2.0-SE-RC1` are read right (before, one could look newer than
+  Nexus' own version and its update wasn't offered), and a date used as the
+  build number no longer sorts before older versions.
 
 ## 1.1.0-beta.15 (pre-release) — November 19, 2026
 
