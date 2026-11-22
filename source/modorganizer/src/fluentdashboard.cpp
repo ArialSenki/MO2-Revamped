@@ -4,6 +4,9 @@
 #include "quickui.h"
 #include "summaryquickbridge.h"
 #include <QElapsedTimer>
+#include <QEvent>
+
+#include <algorithm>
 
 #include "categories.h"
 #include "eldenringsavesettings.h"
@@ -141,6 +144,16 @@ QPushButton* FluentStatTile::addAction(const QString& text)
   return button;
 }
 
+void FluentStatTile::setCompact(bool compact)
+{
+  m_badge->setVisible(!compact);
+}
+
+bool FluentStatTile::isCompact() const
+{
+  return m_badge->isHidden();
+}
+
 QString FluentStatTile::caption() const
 {
   return m_caption->text();
@@ -261,11 +274,71 @@ void FluentDashboard::setupBanner(QWidget* central)
 
   auto* layout = qobject_cast<QBoxLayout*>(central->layout());
   layout->insertWidget(0, m_banner);
+  m_banner->installEventFilter(this);
+}
+
+bool FluentDashboard::eventFilter(QObject* watched, QEvent* event)
+{
+  if (event->type() == QEvent::Resize || event->type() == QEvent::LayoutRequest) {
+    if (watched == m_banner) {
+      fitBanner();
+    } else if (watched == m_stats) {
+      fitStats();
+    }
+  }
+  return QObject::eventFilter(watched, event);
+}
+
+// a narrow window (about 1024 px, or 150 %) first drops the "Profile" and
+// "Program" words before the pickers, which explain themselves, so "Last
+// saved" keeps its words
+void FluentDashboard::fitBanner()
+{
+  auto* row = m_banner->layout();
+  if (row == nullptr || m_profileLabel == nullptr || m_programLabel == nullptr) {
+    return;
+  }
+  int need = row->sizeHint().width();
+  if (m_profileLabel->isHidden()) {
+    need += m_profileLabel->sizeHint().width() + m_programLabel->sizeHint().width() +
+            2 * row->spacing();
+  }
+  const bool fits = m_banner->width() >= need;
+  if (m_profileLabel->isHidden() == fits) {
+    m_profileLabel->setVisible(fits);
+    m_programLabel->setVisible(fits);
+  }
+}
+
+// the same for the summary tiles: their badges go before their words do
+void FluentDashboard::fitStats()
+{
+  auto* row = m_stats->layout();
+  if (row == nullptr) {
+    return;
+  }
+  const FluentStatTile* tiles[] = {m_active, m_conflicts, m_overwrite, m_updates};
+  int need = row->contentsMargins().left() + row->contentsMargins().right() +
+             3 * row->spacing();
+  // the tiles share the row equally, so each needs the widest one's room
+  int widest = 0;
+  for (const FluentStatTile* tile : tiles) {
+    // with its badge and the badge's gap
+    widest = std::max(widest, tile->sizeHint().width() + (tile->isCompact() ? 34 + 14 : 0));
+  }
+  need += 4 * widest;
+  const bool compact = m_stats->width() < need;
+  for (FluentStatTile* tile : {m_active, m_conflicts, m_overwrite, m_updates}) {
+    if (tile->isCompact() != compact) {
+      tile->setCompact(compact);
+    }
+  }
 }
 
 void FluentDashboard::setupStats(QWidget* central)
 {
   auto* stats = new QWidget(central);
+  m_stats     = stats;
   stats->setObjectName(QStringLiteral("fluentStats"));
   stats->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
   auto* row = new QHBoxLayout(stats);
@@ -279,6 +352,7 @@ void FluentDashboard::setupStats(QWidget* central)
   for (auto* tile : {m_active, m_conflicts, m_overwrite, m_updates}) {
     row->addWidget(tile, 1);
   }
+  stats->installEventFilter(this);
   m_active->setWhatsThis(tr("How many mods of the profile are on, of all it has."));
   m_conflicts->setWhatsThis(
       tr("Mods that share files with others. The mod lower in the list wins; Show "

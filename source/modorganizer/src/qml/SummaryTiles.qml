@@ -42,6 +42,12 @@ Item {
                 // a tile's first value and tone appear as they are, once it has
                 // one; later changes move a little
                 property bool settled: false
+
+                // a narrow tile (about 1024 px, or 150 %) drops its badge, so
+                // the caption and value keep their words, as the widget tiles do
+                readonly property bool compact:
+                    width < 14 + 34 + 14 + Math.max(captionText.implicitWidth, value.implicitWidth)
+                            + 14 + (chip.visible ? chip.width + 14 : 0)
                 onToneChanged: if (tone !== "") Qt.callLater(() => tile.settled = true)
 
                 Accessible.role: Accessible.StaticText
@@ -50,6 +56,7 @@ Item {
 
                 Rectangle {
                     id: badge
+                    visible: !tile.compact
                     x: 14
                     anchors.verticalCenter: parent.verticalCenter
                     width: 34
@@ -77,13 +84,14 @@ Item {
                 }
 
                 Column {
-                    anchors.left: badge.right
+                    anchors.left: tile.compact ? parent.left : badge.right
                     anchors.leftMargin: 14
                     anchors.right: chip.visible ? chip.left : parent.right
                     anchors.rightMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
 
                     FluentText {
+                        id: captionText
                         width: parent.width
                         text: tile.modelData.caption
                         color: Fluent.caption
