@@ -1373,6 +1373,10 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
             if (buffer.get() != nullptr) {
               outputFile.write(reinterpret_cast<char*>(buffer.get()), length);
               buffer.reset();
+            } else if (result == ERROR_NONE && length == 0) {
+              // MO2 Revamped: an empty file stored compressed (just its size,
+              // 0) is extracted as such: Fallout 3's Fallout - Meshes.bsa and
+              // New Vegas' Fallout - Misc.bsa have placeholders like that
             } else {
               ++failures;
             }
