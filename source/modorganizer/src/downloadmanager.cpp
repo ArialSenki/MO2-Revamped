@@ -2216,7 +2216,8 @@ QString DownloadManager::getFileNameFromNetworkReply(QNetworkReply* reply)
     const QString name = fileNameFromDisposition(
         QString::fromUtf8(reply->rawHeader("Content-Disposition")));
     if (!name.isEmpty()) {
-      return MOBase::sanitizeFileName(name);
+      // MO2 Revamped: never a device's name (see withoutDeviceName())
+      return DownloadUrl::withoutDeviceName(MOBase::sanitizeFileName(name));
     }
   }
 
@@ -3072,6 +3073,10 @@ void DownloadManager::downloadFinished(int index)
 
   if (info != nullptr && info->m_Reply != nullptr) {
     QNetworkReply* reply          = info->m_Reply;
+    // MO2 Revamped: the states set below run events (plugins' callbacks, a
+    // message box): a download resumed in one of them that finds its file
+    // already complete finishes there and frees this same reply
+    const QPointer<QNetworkReply> replyAlive(reply);
     const unsigned int downloadID = info->m_DownloadID;
     const int status              = httpStatus(reply);
     // MO2 Revamped: the last bytes go through the same checks as the rest (see
@@ -3212,8 +3217,10 @@ void DownloadManager::downloadFinished(int index)
         return true;
       }
       log::debug("download {} was removed or resumed while it finished", downloadID);
-      reply->close();
-      reply->deleteLater();
+      if (replyAlive) {
+        reply->close();
+        reply->deleteLater();
+      }
       return false;
     };
     if (!stillOurs()) {
@@ -3329,8 +3336,10 @@ void DownloadManager::downloadFinished(int index)
 
       emit update(index);
     }
-    reply->close();
-    reply->deleteLater();
+    if (replyAlive) {
+      reply->close();
+      reply->deleteLater();
+    }
 
     if (!removed) {
       // writing the .meta and renaming the file run events (see

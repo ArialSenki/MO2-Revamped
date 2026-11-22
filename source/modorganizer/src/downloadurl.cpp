@@ -183,7 +183,17 @@ QString downloadBaseName(QString name, bool* fallback)
   if (fallback != nullptr) {
     *fallback = none;
   }
-  return name;
+  return withoutDeviceName(name);
+}
+
+QString withoutDeviceName(const QString& name)
+{
+  // the name up to its first dot, without the spaces Windows drops there
+  static const QRegularExpression device(
+      QStringLiteral("^ *(con|prn|aux|nul|conin\\$|conout\\$|com[0-9\u00b9\u00b2\u00b3]|"
+                     "lpt[0-9\u00b9\u00b2\u00b3]) *(\\..*)?$"),
+      QRegularExpression::CaseInsensitiveOption);
+  return device.match(name).hasMatch() ? QStringLiteral("_") + name : name;
 }
 
 }  // namespace DownloadUrl

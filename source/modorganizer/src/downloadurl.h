@@ -32,6 +32,11 @@ QString fileNameFromUrl(const QString& url);
 // server's Content-Disposition may still replace
 QString downloadBaseName(QString name, bool* fallback = nullptr);
 
+// name with "_" in front when Windows would open a device for it: CON, aux.zip,
+// COM1.7z, in any case (before Windows 11 a download saved as aux.zip was
+// written to the AUX device, not to a file). Other names as they are
+QString withoutDeviceName(const QString& name);
+
 }  // namespace DownloadUrl
 
 #endif  // DOWNLOADURL_H
