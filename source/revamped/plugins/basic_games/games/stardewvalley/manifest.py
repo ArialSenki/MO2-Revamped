@@ -158,7 +158,11 @@ def read(path: Path) -> Manifest | None:
     try:
         if path.stat().st_size > MAX_SIZE:
             return None
-        return parse(path.read_text(encoding="utf-8-sig", errors="replace"))
+        data = path.read_bytes()
+        # SMAPI reads it with .NET's File.ReadAllText, which follows a UTF-16
+        # BOM (Notepad's "Unicode"); anything else is UTF-8
+        encoding = "utf-16" if data[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig"
+        return parse(data.decode(encoding, errors="replace"))
     except OSError:
         return None
 

@@ -14,7 +14,7 @@ from typing import Callable
 
 import mobase
 
-from . import is_dir, lone_wrapper, name_of, prune_empty, remove_junk, unwrap
+from . import JUNK_FOLDERS, is_dir, lone_wrapper, name_of, prune_empty, remove_junk, unwrap
 
 # what every BepInEx game folder takes from a mod as it is
 BEPINEX_VALID = frozenset({
@@ -38,6 +38,21 @@ def has_dll(folder: mobase.IFileTree) -> bool:
 
     def visit(_path: str, entry) -> mobase.IFileTree.WalkReturn:
         if not is_dir(entry) and name_of(entry).endswith(".dll"):
+            found.append(entry)
+            return mobase.IFileTree.WalkReturn.STOP
+        return mobase.IFileTree.WalkReturn.CONTINUE
+
+    folder.walk(visit, "/")
+    return bool(found)
+
+
+def has_bepinex_folder(folder: mobase.IFileTree) -> bool:
+    """Whether a BepInEx folder is anywhere in the folder (then the folder is
+    a wrapper, however deep: "Mod v1/Mod/BepInEx/plugins/x.dll")."""
+    found = []
+
+    def visit(_path: str, entry) -> mobase.IFileTree.WalkReturn:
+        if is_dir(entry) and name_of(entry) == "bepinex":
             found.append(entry)
             return mobase.IFileTree.WalkReturn.STOP
         return mobase.IFileTree.WalkReturn.CONTINUE
@@ -107,7 +122,11 @@ class BepInExModDataChecker(mobase.ModDataChecker):
         """A plugin's own folder: DLLs (at any depth) and none of BepInEx's or
         the game folder's own structure (then it's a wrapper)."""
         structure = self.VALID_NAMES | BEPINEX_FOLDERS | self.PACK_WRAPPERS
-        return has_dll(folder) and not any(name_of(e) in structure for e in folder)
+        return (
+            has_dll(folder)
+            and not any(name_of(e) in structure for e in folder)
+            and not has_bepinex_folder(folder)
+        )
 
     def _loose_plugin(self, entry) -> bool:
         name = name_of(entry)
@@ -125,7 +144,9 @@ class BepInExModDataChecker(mobase.ModDataChecker):
         names = {name_of(e) for e in entries}
         # the archive's only folder (documents and Thunderstore's files apart):
         # with a DLL of its own it is the plugin's folder; two may be options
-        folders = [e for e in entries if is_dir(e)]
+        # (what macOS leaves, __MACOSX/._Mod.dll, isn't a folder of the mod's:
+        # fix() removes it first)
+        folders = [e for e in entries if is_dir(e) and name_of(e) not in JUNK_FOLDERS]
         lone = folders[0] if len(folders) == 1 else None
         loose_dlls = any(self._loose_plugin(e) for e in entries)
         # a loose DLL next to folders that hold DLLs of their own: options

@@ -1421,9 +1421,11 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     is_directory(entry)
                     and depth == 0
                     and self._package_folders_merge_without_conflicts(filetree, [entry])
-                    and entry.detach()
                 ):
+                    # merged before it is detached: a detached folder merges
+                    # nothing, and its files were lost
                     filetree.merge(entry)
+                    entry.detach()
             elif patterns.valid.match(name):
                 continue
             elif patterns.delete.match(name):

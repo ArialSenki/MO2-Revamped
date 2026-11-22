@@ -54,7 +54,13 @@ def missing_dotnet_major(exe: Path) -> typing.Optional[int]:
         options = json.loads(config.read_text(encoding="utf-8-sig"))["runtimeOptions"]
     except (OSError, ValueError, KeyError, TypeError):
         return None
+    # MO2 Revamped: "runtimeOptions": 5 or "frameworks": 5 raised
+    # AttributeError or TypeError below
+    if not isinstance(options, dict):
+        return None
     frameworks = options.get("frameworks") or [options.get("framework") or {}]
+    if not isinstance(frameworks, list):
+        return None
     roll = str(options.get("rollForward", "")).casefold()
     for fw in frameworks:
         name = fw.get("name", "") if isinstance(fw, dict) else ""

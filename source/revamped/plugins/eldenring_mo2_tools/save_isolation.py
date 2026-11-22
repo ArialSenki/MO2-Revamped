@@ -1680,7 +1680,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
     def _inside(root: Path, relative: str) -> Path | None:
         """root/relative, or None when relative is not a plain path inside root."""
         parts = Path(relative).parts
-        if not parts or Path(relative).is_absolute() or any(part in {"", ".", ".."} for part in parts) or ":" in parts[0]:
+        # a rooted path (\x or /home/x) is not absolute on Windows, but joins
+        # to the drive's root
+        if not parts or Path(relative).anchor or any(part in {"", ".", ".."} for part in parts) or ":" in parts[0]:
             return None
         return root.joinpath(*parts)
 
@@ -3380,7 +3382,9 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         source_path = Path(pending_item["save_source_path"])
         relative_path = Path(pending_item["save_relative_path"])
         if (
-            relative_path.is_absolute()
+            # rooted (\x\ER0000.sl2) is not absolute on Windows, but the
+            # destination would then be at the drive's root
+            relative_path.anchor
             or ".." in relative_path.parts
             or relative_path.suffix.casefold() not in suffixes
         ):

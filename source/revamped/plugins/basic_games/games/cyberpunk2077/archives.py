@@ -37,7 +37,12 @@ def read_hashes(path: Path) -> list[int]:
         magic, _version, index_pos, index_size, _debug_pos, _debug_size, _size = _HEADER.unpack(header)
         if magic != MAGIC:
             raise ArchiveError("not an RDAR archive")
-        file.seek(index_pos)
+        # MO2 Revamped: an index position past 2^63 (a corrupt header) raised
+        # a plain ValueError, which emptied the whole conflicts list
+        try:
+            file.seek(index_pos)
+        except (ValueError, OverflowError) as error:
+            raise ArchiveError("index past the end of the file") from error
         index = file.read(_INDEX.size)
         if len(index) < _INDEX.size:
             raise ArchiveError("index past the end of the file")

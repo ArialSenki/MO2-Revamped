@@ -246,6 +246,11 @@ def _strip_comment(line: str) -> str:
                 quote = ""
         elif quote == "'":
             if c == "'":
+                # MO2 Revamped: '' is a quote inside the string, not its end
+                # ('it''s # x' lost " # x'" and failed as not closed)
+                if line[i + 1 : i + 2] == "'":
+                    i += 2
+                    continue
                 quote = ""
         elif c in "\"'" and (i == 0 or line[i - 1] in " \t[{,:-"):
             quote = c
@@ -498,6 +503,9 @@ def _loads(text: str) -> Any:
         text = text[1:]
     lines: list[tuple[int, str, str]] = []
     started = False
+    # MO2 Revamped: "..." ends the document; a file with "---" at the top and
+    # "..." at the bottom (one document) was refused as two
+    ended = False
     # MO2 Revamped: lines end at "\n" only; str.splitlines() also broke them
     # at U+0085, U+2028 and U+2029 inside quoted text
     for raw in text.split("\n"):
@@ -507,6 +515,9 @@ def _loads(text: str) -> Any:
         stripped = raw.strip()
         if stripped.startswith("%") and not started:
             continue
+        if stripped == "..." and started:
+            ended = True
+            continue
         if stripped in ("---", "..."):
             if started:
                 raise ValueError("more than one document")
@@ -514,6 +525,8 @@ def _loads(text: str) -> Any:
         content = _strip_comment(raw).strip()
         indent = len(raw) - len(raw.lstrip(" "))
         if content:
+            if ended:
+                raise ValueError("more than one document")
             started = True
         lines.append((indent, content, raw))
     return _parse_document(_Block(lines))
@@ -535,7 +548,9 @@ def _drop_blank_lines_outside_blocks(block: _Block) -> None:
     in_block_at: int | None = None
     for ind, content, raw in block.lines:
         if in_block_at is not None:
-            if not content or ind > in_block_at:
+            # MO2 Revamped: a comment line back at the key's indentation ends
+            # the block (it was kept as the block's text, cut at its column)
+            if not raw.strip() or ind > in_block_at:
                 kept.append((ind, content, raw))
                 continue
             in_block_at = None
