@@ -498,17 +498,54 @@ void PluginList::refresh(const QString& profileName,
   for (const auto& [filename, current] : availablePlugins) {
     available.insert(filename.toLower());
   }
+  // MO2 Revamped: without a reset, the rows a disabled mod's plugins leave
+  // shift the ones after them. The persistent indexes (the view's selection
+  // and current row, the sort proxy's mapping) follow their plugin by name;
+  // they kept their row number and pointed at another plugin, which Space or
+  // the context menu then changed.
+  QModelIndexList persistent;
+  QStringList persistentNames;
+  if (!force) {
+    persistent = persistentIndexList();
+    persistentNames.reserve(persistent.size());
+    for (const QModelIndex& idx : persistent) {
+      const int row = idx.row();
+      persistentNames.append(row >= 0 && row < static_cast<int>(m_ESPs.size())
+                                 ? m_ESPs[row].name
+                                 : QString());
+    }
+  }
+
   for (const auto& espName : m_ESPsByName) {
     if (!available.contains(espName.first.toLower())) {
       m_ESPs[espName.second].name = "";
     }
   }
 
+  const size_t rowsBefore = m_ESPs.size();
   m_ESPs.erase(std::remove_if(m_ESPs.begin(), m_ESPs.end(),
                               [](const ESPInfo& info) -> bool {
                                 return info.name.isEmpty();
                               }),
                m_ESPs.end());
+
+  if (!persistent.isEmpty() && m_ESPs.size() != rowsBefore) {
+    std::unordered_map<QString, int> rowOf;
+    rowOf.reserve(m_ESPs.size());
+    for (int row = 0; row < static_cast<int>(m_ESPs.size()); ++row) {
+      rowOf.emplace(m_ESPs[row].name, row);
+    }
+    QModelIndexList moved;
+    moved.reserve(persistent.size());
+    for (qsizetype i = 0; i < persistent.size(); ++i) {
+      const auto it = persistentNames[i].isEmpty() ? rowOf.end()
+                                                   : rowOf.find(persistentNames[i]);
+      moved.append(it == rowOf.end()
+                       ? QModelIndex()
+                       : index(it->second, persistent[i].column(), persistent[i].parent()));
+    }
+    changePersistentIndexList(persistent, moved);
+  }
 
   fixPriorities();
 
