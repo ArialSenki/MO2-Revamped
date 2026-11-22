@@ -143,7 +143,7 @@ class EldenRingLocalSavegames(mobase.LocalSavegames):
                 or getattr(metadata_stat, "st_file_attributes", 0) & reparse_flag
             ):
                 return False
-            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             return False
         return (

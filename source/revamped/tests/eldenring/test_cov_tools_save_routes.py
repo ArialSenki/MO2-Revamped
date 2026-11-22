@@ -317,8 +317,11 @@ class NamedSaveProfiles(ToolCase):
         (root / ("3" * 32)).mkdir()
         write(root / ("3" * 32 + ".json"), json.dumps({"id": "3" * 32, "name": 5}))
         write(root / "loose.txt", "x")
+        # a record saved with a BOM still counts
+        (root / ("4" * 32)).mkdir()
+        write(root / ("4" * 32 + ".json"), b"\xef\xbb\xbf" + json.dumps({"id": "4" * 32, "name": "bom"}).encode())
         listed = Tool._read_named_save_profiles(self.profile, Tool.ProfileIsolated)
-        self.assertEqual(listed, [("a" * 32, "alpha"), (PROFILE_ID, "Zeta")])
+        self.assertEqual(listed, [("a" * 32, "alpha"), ("4" * 32, "bom"), (PROFILE_ID, "Zeta")])
         self.assertEqual(Tool._read_named_save_profiles(self.profile, Tool.GlobalShared), [])
 
     def test_create_with_a_starting_save_and_its_bak(self):
@@ -601,6 +604,16 @@ class LaunchFile(ToolCase):
         write(path, b"[1]")
         self.tool._write_launch_file({"methods": {}})
         self.assertEqual(json.loads(path.read_text(encoding="utf-8")), {"version": 1, "methods": {}})
+
+    def test_launch_file_with_a_bom(self):
+        path = self.organizer.base / "eldenring_mo2_launch_methods.json"
+        write(path, b"\xef\xbb\xbf" + json.dumps(
+            {"reforged_online_saves": "shared", "methods": {"a": "swap"}}).encode())
+        self.assertEqual(self.tool._launch_methods(), {"a": "swap"})
+        self.assertFalse(self.tool._reforged_online_separate())
+        # an update keeps what the file already held
+        self.tool._write_launch_file({"methods": {}})
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["reforged_online_saves"], "shared")
 
     def test_no_instance_folder(self):
         tool = Tool()

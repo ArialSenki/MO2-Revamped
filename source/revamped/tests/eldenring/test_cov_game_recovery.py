@@ -371,11 +371,13 @@ class LaunchMethodsFile(unittest.TestCase):
         self.assertEqual(self.cls.read_launch_methods(self.base), {"z:\\home\\user\\tool.exe": "swap"})
         self.assertFalse(self.cls.reforged_online_saves_separate(self.base))
 
-    def test_a_bom_is_not_read(self):
+    def test_a_bom_is_read(self):
         # Save Isolation writes it without one; a hand edit that adds one
-        # gives the defaults, as in Save Isolation itself
-        self.path.write_bytes(b"\xef\xbb\xbf" + json.dumps({"reforged_online_saves": "shared"}).encode())
-        self.assertTrue(self.cls.reforged_online_saves_separate(self.base))
+        # still counts, as in Save Isolation itself
+        self.path.write_bytes(b"\xef\xbb\xbf" + json.dumps(
+            {"reforged_online_saves": "shared", "methods": {"c:\\x.exe": "swap"}}).encode())
+        self.assertFalse(self.cls.reforged_online_saves_separate(self.base))
+        self.assertEqual(self.cls.read_launch_methods(self.base), {"c:\\x.exe": "swap"})
 
     def test_wine_paths_match(self):
         # Proton's drive letter and forward slashes name the same program

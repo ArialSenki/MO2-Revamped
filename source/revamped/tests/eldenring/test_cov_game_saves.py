@@ -113,12 +113,18 @@ class NamedSaveProfiles(unittest.TestCase):
             "not a dict": b"[1, 2]",
             "broken json": b"{",
             "not utf-8": b'{"id": "' + ID.encode() + b'", "name": "\xf1"}',
-            "bom": b"\xef\xbb\xbf" + json.dumps({"id": ID, "name": "x"}).encode(),
         }
         for label, raw in cases.items():
             with self.subTest(label):
                 self.make(root, None, raw)
                 self.assertFalse(self.cls.save_profile_is_available(self.folder, "profile"))
+
+    def test_metadata_with_a_bom(self):
+        # a hand-edited record saved with a BOM still names the profile
+        root = self.folder / "save_profiles"
+        write_ini(self.folder, f"[Saves]\nprofile_save_profile = {ID}\n")
+        self.make(root, None, b"\xef\xbb\xbf" + json.dumps({"id": ID, "name": "x"}).encode())
+        self.assertTrue(self.cls.save_profile_is_available(self.folder, "profile"))
 
     def test_folder_that_is_a_file(self):
         root = self.folder / "save_profiles"
