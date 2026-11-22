@@ -53,6 +53,35 @@ const char* const GapSizeProperty  = "fluentGapSize";
 // label leaves 2, so the icon carries the other 6 on its right
 constexpr int IconGap = 6;
 
+// how much larger than its own 20 px a glyph's SVG is drawn: 1.25 (see
+// svgGlyph), or as much as keeps its shapes inside the square when they reach
+// further out than Fluent's 2 px margin. Measured once per glyph, from where
+// it draws
+qreal svgGlyphScale(char16_t codepoint, const QString& path)
+{
+  static QHash<int, qreal> scales;
+  if (const auto it = scales.constFind(codepoint); it != scales.constEnd()) {
+    return *it;
+  }
+  constexpr int Probe = 160;  // 8 px for each of the SVG's 20 units
+  QImageReader reader(path, "svg");
+  reader.setScaledSize(QSize(Probe, Probe));
+  const QImage shapes = reader.read().convertToFormat(QImage::Format_ARGB32);
+  // the drawn pixel furthest from the center along x or y, in half pixels
+  int reach = 0;
+  for (int y = 0; y < shapes.height(); ++y) {
+    const QRgb* line = reinterpret_cast<const QRgb*>(shapes.constScanLine(y));
+    for (int x = 0; x < shapes.width(); ++x) {
+      if (qAlpha(line[x]) > 32) {
+        reach = qMax(reach, qMax(qAbs(2 * x + 1 - Probe), qAbs(2 * y + 1 - Probe)));
+      }
+    }
+  }
+  const qreal scale = reach > 0 ? qBound(1.0, qreal(Probe) / reach, 1.25) : 1.25;
+  scales.insert(codepoint, scale);
+  return scale;
+}
+
 // the glyph's SVG (Fluent UI System Icons, resources/glyphs) in the ink, on a
 // pixels-wide square; transparent when the glyph has no SVG. Its shapes are one
 // color, so painting the ink over them where they are keeps their edges
@@ -77,7 +106,9 @@ QImage svgGlyph(char16_t codepoint, int pixels, const QColor& ink)
   // Fluent UI System Icons keep 2 px free around a 20 px icon, where a font
   // glyph fills its em: read 20/16 larger and centered, the shapes reach the
   // same extent as the font's (3 px more at 16 px) and stay inside the square
-  const int drawn  = qRound(pixels * 1.25);
+  // Less than that for the icons that draw into those 2 px (the sync arrows
+  // reach 0.8 px from the edge): at 1.25 they lost a pixel top and bottom
+  const int drawn  = qRound(pixels * svgGlyphScale(codepoint, path));
   const int offset = (pixels - drawn) / 2;
   QImageReader reader(path, "svg");
   reader.setScaledSize(QSize(drawn, drawn));

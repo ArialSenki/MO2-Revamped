@@ -63,26 +63,68 @@ def has_glyph_font() -> bool:
     return any(QFontDatabase.hasFamily(family) for family in GLYPH_FAMILIES)
 
 
+# glyph -> how much larger than its 20 px its picture is drawn (see _glyph_scale)
+_GLYPH_SCALES: dict[int, float] = {}
+# the pictures already drawn, by glyph, size, color and scale: a delegate asks
+# for the same one at every paint, and each was decoded from its SVG again
+_GLYPH_PICTURES: dict[tuple[int, int, int, float], QPixmap] = {}
+_GLYPHS_MISSING: set[int] = set()
+
+
+def _glyph_scale(glyph: int) -> float:
+    """1.25 (see glyph_pixmap), or as much as keeps the picture's shapes inside
+    the square when they reach further out than Fluent's 2 px margin (the sync
+    arrows lost a pixel top and bottom). Measured once, from where it draws."""
+    scale = _GLYPH_SCALES.get(glyph)
+    if scale is not None:
+        return scale
+    from PyQt6.QtGui import QImage, QImageReader
+
+    probe = 160
+    reader = QImageReader(f":/MO/glyphs/{glyph:04X}", b"svg")
+    reader.setScaledSize(QSize(probe, probe))
+    shapes = reader.read().convertToFormat(QImage.Format.Format_ARGB32)
+    scale = 1.25
+    if not shapes.isNull():
+        data = shapes.constBits().asstring(shapes.sizeInBytes())
+        stride = shapes.bytesPerLine()
+        reach = 0
+        for y in range(shapes.height()):
+            # the row's alpha bytes (little-endian ARGB32: B, G, R, A)
+            alpha = data[y * stride + 3 : y * stride + 4 * probe : 4]
+            drawn = [x for x, value in enumerate(alpha) if value > 32]
+            if drawn:
+                reach = max(reach, abs(2 * y + 1 - probe), probe - 1 - 2 * drawn[0],
+                            2 * drawn[-1] + 1 - probe)
+        if reach > 0:
+            scale = min(1.25, max(1.0, probe / reach))
+    _GLYPH_SCALES[glyph] = scale
+    return scale
+
+
 def glyph_pixmap(glyph: int, pixels: int, color: QColor, ratio: float = 2.0) -> QPixmap:
     """The glyph drawn in the color: from the icon font, or else from MO2's
     picture of it (an SVG, drawn at the size asked for)."""
+    font = has_glyph_font()
+    key = (glyph, pixels, color.rgba(), ratio)
+    if not font and key in _GLYPH_PICTURES:
+        return _GLYPH_PICTURES[key]
     pixmap = QPixmap(round(pixels * ratio), round(pixels * ratio))
     pixmap.setDevicePixelRatio(ratio)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    if has_glyph_font():
+    if font:
         painter.setFont(glyph_font(pixels))
         painter.setPen(color)
         painter.drawText(QRectF(0, 0, pixels, pixels), Qt.AlignmentFlag.AlignCenter, chr(glyph))
     else:
-        from PyQt6.QtCore import QSize
         from PyQt6.QtGui import QImageReader
 
         # Fluent UI System Icons keep 2 px free around a 20 px icon, where a
         # font glyph fills its em: read 20/16 larger and centered, the shapes
         # reach the same extent as the font's, as MO2 draws them
-        drawn = round(pixmap.width() * 1.25)
+        drawn = round(pixmap.width() * _glyph_scale(glyph))
         reader = QImageReader(f":/MO/glyphs/{glyph:04X}", b"svg")
         reader.setScaledSize(QSize(drawn, drawn))
         shapes = reader.read()
@@ -92,7 +134,18 @@ def glyph_pixmap(glyph: int, pixels: int, color: QColor, ratio: float = 2.0) -> 
             painter.drawImage(QPointF(offset, offset), shapes)
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
             painter.fillRect(QRectF(0, 0, pixels, pixels), color)
+        elif glyph not in _GLYPHS_MISSING:
+            # said once, as MO2 does for its own: the row would just be blank
+            _GLYPHS_MISSING.add(glyph)
+            import sys
+
+            print(f"no picture for the icon glyph {glyph:04X} without the icon font",
+                  file=sys.stderr)
     painter.end()
+    if not font:
+        if len(_GLYPH_PICTURES) > 256:
+            _GLYPH_PICTURES.clear()
+        _GLYPH_PICTURES[key] = pixmap
     return pixmap
 
 
