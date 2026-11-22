@@ -217,6 +217,44 @@ class LazyStart(unittest.TestCase):
         self.assertTrue(lazy_games._init_probe_says_so(".games.missing_module:pending"))
         self.assertFalse(lazy_games._init_probe_says_so(None))
 
+    def test_store_errors_shown_with_no_lock_held(self):
+        # a store that can't be read, met by a game's first path read: its
+        # message box opens once the detection's lock is let go, so another
+        # thread reading a game's path doesn't wait for the user to close it
+        import threading
+
+        from PyQt6.QtWidgets import QMessageBox
+
+        from basic_games import steam_utils
+
+        BasicGame.setup = self.saved_setup
+        free = []
+
+        def box(*args):
+            def other():
+                got = basic_game._detect_lock.acquire(timeout=2)
+                if got:
+                    basic_game._detect_lock.release()
+                free.append(got)
+
+            thread = threading.Thread(target=other)
+            thread.start()
+            thread.join(5)
+
+        def broken():
+            raise OSError("unreadable")
+
+        saved = (steam_utils.find_games, QMessageBox.critical)
+        steam_utils.find_games = broken
+        QMessageBox.critical = staticmethod(box)
+        try:
+            game = FakeGame()
+            game.detectGame()
+            game.isInstalled()
+        finally:
+            steam_utils.find_games, QMessageBox.critical = saved
+        self.assertEqual(free, [True])
+
     def test_detect_waits_for_the_path(self):
         game = FakeGame()
         game.detectGame()

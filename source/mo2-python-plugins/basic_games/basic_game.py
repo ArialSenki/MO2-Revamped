@@ -402,6 +402,20 @@ _scan_depth = threading.local()
 _errors_lock = threading.Lock()
 
 
+class _holding_locks:
+    """While this thread holds the scan's or the detection's lock: the store
+    errors' message waits until it holds none (a message box opened under the
+    detection's lock made every other thread reading a game's path wait for
+    the user to close it, and a nested event loop could wait on one of them)."""
+
+    def __enter__(self):
+        _scan_depth.count = getattr(_scan_depth, "count", 0) + 1
+
+    def __exit__(self, *_):
+        _scan_depth.count -= 1
+        return False
+
+
 def _take_store_errors() -> list[tuple[str, Exception]]:
     with _errors_lock:
         errors = list(_store_errors)
@@ -553,7 +567,7 @@ class BasicGame(mobase.IPluginGame):
     def _gamePath(self) -> str:
         values = self.__dict__
         if values.get("_revamped_detect_pending"):
-            with _detect_lock:
+            with _detect_lock, _holding_locks():
                 # still pending once this thread has the lock, and not this
                 # thread's own detection reading the path again
                 if values.get("_revamped_detect_pending") and not values.get("_revamped_detecting"):
@@ -563,6 +577,8 @@ class BasicGame(mobase.IPluginGame):
                     finally:
                         values["_revamped_detecting"] = False
                         values["_revamped_detect_pending"] = False
+            # the store errors the detection's scan met, now that no lock is held
+            _report_store_errors()
         return values.get("_revamped_game_path", "")
 
     @_gamePath.setter

@@ -93,7 +93,7 @@ class DetectingGame(CovGame):
 
 # the game module a stub imports, and an init probe
 _FAKE_MODULE = "basic_games.games._cov_fake_game"
-_PROBE_MODULE = "basic_games._cov_probe"
+_PROBE_MODULE = "basic_games.games._cov_probe"
 
 
 def stub_entry(cls=DetectingGame, **extra):
@@ -270,24 +270,24 @@ class LazyGamesTest(StoreLists):
         self.assertTrue(hasattr(stub, "origin_watcher"))
         self.assertEqual(DetectingGame.made, [])
         # the probe says the real init() has work here
-        self.assertTrue(self.stub(init_probe="._cov_probe:yes").init(organizer))
+        self.assertTrue(self.stub(init_probe=".games._cov_probe:yes").init(organizer))
         self.assertEqual(len(DetectingGame.made), 1)
-        self.assertTrue(self.stub(init_probe="._cov_probe:no").init(organizer))
+        self.assertTrue(self.stub(init_probe=".games._cov_probe:no").init(organizer))
         self.assertTrue(self.stub(init_probe="no colon").init(organizer))
         self.assertTrue(self.stub(init_probe=5).init(organizer))
         self.assertEqual(len(DetectingGame.made), 1)
         # a failing probe: unsure, the real init() decides
         errors = io.StringIO()
         with redirect_stderr(errors):
-            self.assertTrue(self.stub(init_probe="._cov_probe:broken").init(organizer))
-            self.assertTrue(self.stub(init_probe="._cov_no_such_module:x").init(organizer))
+            self.assertTrue(self.stub(init_probe=".games._cov_probe:broken").init(organizer))
+            self.assertTrue(self.stub(init_probe=".games._cov_no_such_module:x").init(organizer))
         self.assertEqual(len(DetectingGame.made), 3)
         self.assertIn("no saves folder", errors.getvalue())
         # the real game fails to load: the stub stays
         sys.modules.pop(_FAKE_MODULE)
         errors = io.StringIO()
         with redirect_stderr(errors):
-            self.assertTrue(self.stub(init_probe="._cov_probe:yes").init(organizer))
+            self.assertTrue(self.stub(init_probe=".games._cov_probe:yes").init(organizer))
         self.assertIn("its init() failed", errors.getvalue())
 
 
@@ -429,6 +429,8 @@ class StoresTest(StoreLists):
              mock.patch.object(eadesktop_utils, "find_games", lambda errors: {"e": self.tmp}), \
              mock.patch.object(QMessageBox, "critical", lambda *args: shown.append(args[2])):
             BasicGame._scan_stores()
+            # what failed is said once the scan's lock is let go
+            basic_game._report_store_errors()
         self.assertEqual(BasicGame.steam_games, {"1": self.tmp})
         self.assertEqual(BasicGame.gog_games, {})
         self.assertEqual(BasicGame.epic_games, {})
