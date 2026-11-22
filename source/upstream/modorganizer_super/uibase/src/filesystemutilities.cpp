@@ -8,23 +8,28 @@ namespace MOBase
 
 bool fixDirectoryName(QString& name)
 {
-  QString temp = name.simplified();
-  while (temp.endsWith('.'))
-    temp.chop(1);
-
+  // MO2 Revamped: the characters dropped first, then the trailing dots and
+  // spaces, then the device names, in any case: dots trimmed before the drop
+  // left "J.R.R.?" as "J.R.R." (Explorer can't open it), "CON ?" became "CON",
+  // and "con" or "Aux" passed
+  QString temp = name;
   temp.replace(QRegularExpression(R"([<>:"/\\|?*])"), "");
+  temp = temp.simplified();
+  while (temp.endsWith('.')) {
+    temp.chop(1);
+    temp = temp.trimmed();
+  }
+
   static QString invalidNames[] = {"CON",  "PRN",  "AUX",  "NUL",  "COM1", "COM2",
                                    "COM3", "COM4", "COM5", "COM6", "COM7", "COM8",
                                    "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
                                    "LPT6", "LPT7", "LPT8", "LPT9"};
   for (unsigned int i = 0; i < sizeof(invalidNames) / sizeof(QString); ++i) {
-    if (temp == invalidNames[i]) {
+    if (temp.compare(invalidNames[i], Qt::CaseInsensitive) == 0) {
       temp = "";
       break;
     }
   }
-
-  temp = temp.simplified();
 
   if (temp.length() >= 1) {
     name = temp;
