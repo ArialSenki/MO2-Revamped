@@ -36,6 +36,16 @@ def plugin(path: Path, form: int) -> str:
 class Organizer:
     def __init__(self, files):
         self.files = files
+        self.refreshed = []
+
+    def onNextRefresh(self, callback, immediate):
+        self.refreshed.append(callback)
+        return True
+
+    def refresh(self):
+        callbacks, self.refreshed = self.refreshed, []
+        for callback in callbacks:
+            callback()
 
     def managedGame(self):
         game = mock.Mock()
@@ -78,10 +88,16 @@ class Cache(unittest.TestCase):
         self.assertGreater(self.stats(), 0)
         self.assertEqual(self.problems, [0])
 
-    def test_read_again_after_a_minute(self):
+    def test_read_again_after_a_refresh(self):
+        # a mod replaced in place: same paths, another form
         self.stats()
-        with mock.patch.object(Form43Checker.time, "monotonic", return_value=1e12):
-            self.assertEqual(self.stats(), 50)
+        plugin(self.dir / "p3.esp", 43)
+        self.assertEqual(self.stats(), 0)
+        self.organizer.refresh()
+        self.assertGreater(self.stats(), 0)
+        self.assertEqual(self.problems, [0])
+        # and the next refresh is watched again
+        self.assertEqual(len(self.organizer.refreshed), 1)
 
 
 if __name__ == "__main__":

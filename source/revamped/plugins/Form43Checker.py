@@ -1,6 +1,5 @@
 import os
 import stat
-import time
 from pathlib import Path
 
 import mobase
@@ -16,12 +15,13 @@ class Form43Checker(mobase.IPluginDiagnose):
         # modification time stay the same. Every problem check opened all the
         # plugins again (~0.5 s with a large Skyrim list, holding Python's lock)
         self.__forms: dict[str, tuple[tuple[int, int], int]] = {}
-        # the last answer, for the same plugin list within a minute: the check
-        # runs on the interface's thread after every refresh, and a stat per
-        # plugin is ~0.5 s with a list of thousands (a collection's install
-        # refreshes after each mod). A plugin resaved in place is seen within
-        # the minute
-        self.__last: tuple[tuple[str, ...], float, bool] | None = None
+        # the last answer, until the next refresh and for the same plugin list:
+        # the check runs on the interface's thread at every problem check (a
+        # toggle, a download, the notifications button), and a stat per plugin
+        # is ~0.5 s with a list of thousands. A refresh (after an install, or
+        # the user's) reads the plugins again
+        self.__last: tuple[tuple[str, ...], bool] | None = None
+        self.__forgetQueued = False
 
     def init(self, organizer: mobase.IOrganizer):
         self.__organizer = organizer
@@ -120,13 +120,19 @@ class Form43Checker(mobase.IPluginDiagnose):
             return False
 
         files = tuple(self.__organizer.findFiles("", "*.es[pml]"))
-        now = time.monotonic()
-        if self.__last is not None and self.__last[0] == files and now - self.__last[1] < 60:
-            return self.__last[2]
+        if self.__last is not None and self.__last[0] == files:
+            return self.__last[1]
         # True if there is at least one invalid file
         found = any(self.__testFile(file) for file in files)
-        self.__last = (files, now, found)
+        self.__last = (files, found)
+        if not self.__forgetQueued:
+            self.__forgetQueued = True
+            self.__organizer.onNextRefresh(self.__forget, False)
         return found
+
+    def __forget(self):
+        self.__last = None
+        self.__forgetQueued = False
 
     def __listPlugins(self):
         return [
