@@ -74,11 +74,16 @@ QImage svgGlyph(char16_t codepoint, int pixels, const QColor& ink)
   // shipped). Not through QIcon: without the svg icon engine (iconengines,
   // not shipped) a QIcon reads an SVG once as a bitmap of its own 20 px and
   // never scales it up, so every glyph above 20 device pixels came out 20 px
+  // Fluent UI System Icons keep 2 px free around a 20 px icon, where a font
+  // glyph fills its em: read 20/16 larger and centered, the shapes reach the
+  // same extent as the font's (3 px more at 16 px) and stay inside the square
+  const int drawn  = qRound(pixels * 1.25);
+  const int offset = (pixels - drawn) / 2;
   QImageReader reader(path, "svg");
-  reader.setScaledSize(QSize(pixels, pixels));
+  reader.setScaledSize(QSize(drawn, drawn));
   const QImage shapes = reader.read();
   QPainter painter(&image);
-  painter.drawImage(0, 0, shapes);
+  painter.drawImage(offset, offset, shapes);
   painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
   painter.fillRect(image.rect(), ink);
   return image;
