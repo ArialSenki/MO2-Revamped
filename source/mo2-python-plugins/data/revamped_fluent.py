@@ -50,10 +50,50 @@ def glyph_font(pixels: int) -> QFont:
     return font
 
 
+def has_glyph_font() -> bool:
+    """Whether an icon font is installed (not on Wine or Proton): without one
+    the glyphs come from MO2's own pictures of them (:/MO/glyphs)."""
+    from PyQt6.QtGui import QFontDatabase
+
+    return any(QFontDatabase.hasFamily(family) for family in GLYPH_FAMILIES)
+
+
+def glyph_pixmap(glyph: int, pixels: int, color: QColor, ratio: float = 2.0) -> QPixmap:
+    """The glyph drawn in the color: from the icon font, or else from MO2's
+    picture of it (an SVG, drawn at the size asked for)."""
+    pixmap = QPixmap(round(pixels * ratio), round(pixels * ratio))
+    pixmap.setDevicePixelRatio(ratio)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    if has_glyph_font():
+        painter.setFont(glyph_font(pixels))
+        painter.setPen(color)
+        painter.drawText(QRectF(0, 0, pixels, pixels), Qt.AlignmentFlag.AlignCenter, chr(glyph))
+    else:
+        from PyQt6.QtCore import QSize
+        from PyQt6.QtGui import QImageReader
+
+        reader = QImageReader(f":/MO/glyphs/{glyph:04X}", b"svg")
+        reader.setScaledSize(QSize(pixmap.width(), pixmap.height()))
+        shapes = reader.read()
+        if not shapes.isNull():
+            shapes.setDevicePixelRatio(ratio)
+            painter.drawImage(0, 0, shapes)
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+            painter.fillRect(QRectF(0, 0, pixels, pixels), color)
+    painter.end()
+    return pixmap
+
+
 def glyph_label(glyph: int, parent: QWidget | None = None) -> QLabel:
     """A 16 px glyph at the start of a setting row."""
     label = QLabel(chr(glyph), parent)
     label.setObjectName("instanceRowGlyph")
+    if not has_glyph_font():
+        # MO2's picture of it, in the text color (no icon font to draw it)
+        label.setText("")
+        label.setPixmap(glyph_pixmap(glyph, 16, label.palette().color(QPalette.ColorRole.WindowText)))
     label.setFont(glyph_font(16))
     label.setFixedWidth(24)
     label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -73,16 +113,7 @@ def glyph_icon(glyph: int, muted: bool = False) -> QIcon:
         if palette is not None
         else QColor("#808080")
     )
-    pixmap = QPixmap(32, 32)
-    pixmap.setDevicePixelRatio(2.0)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setFont(glyph_font(16))
-    painter.setPen(color)
-    painter.drawText(QRectF(0, 0, 16, 16), Qt.AlignmentFlag.AlignCenter, chr(glyph))
-    painter.end()
-    return QIcon(pixmap)
+    return QIcon(glyph_pixmap(glyph, 16, color))
 
 
 def make_switch(box: QCheckBox, title: str, description: str = "") -> QCheckBox:
