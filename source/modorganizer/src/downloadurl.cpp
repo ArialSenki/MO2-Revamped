@@ -53,6 +53,16 @@ QString fileNameFromDisposition(const QString& disposition)
 QString fileNameFromUrl(const QString& url)
 {
   QString fileName = QFileInfo(url).fileName();
+  // MO2 Revamped: the last part of the path, not of the whole link: a "/" in
+  // the query or the fragment (?token=ab/cd, #part/2) named the file after it,
+  // and a fragment stayed in the name. A path without a name keeps the old
+  // result, so the Content-Disposition of the answer can still name the file
+  if (const QUrl parsed(url); parsed.isValid() && (parsed.hasQuery() || parsed.hasFragment())) {
+    const QString pathName = QFileInfo(parsed.path(QUrl::FullyEncoded)).fileName();
+    if (!pathName.isEmpty()) {
+      fileName = pathName;
+    }
+  }
   if (fileName.isEmpty()) {
     fileName = "unknown";
   } else {
