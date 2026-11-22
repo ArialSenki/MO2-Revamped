@@ -38,6 +38,43 @@ using namespace MOBase;
 namespace
 {
 
+// MO2 Revamped: the start of a file cut where a character ends, so it decodes
+// as the rest of the file would: a cut inside a UTF-8 character made the whole
+// start read as the system code page (Cyrillic or CJK logs garbled), and an odd
+// length made UTF-16 text read as UTF-8 with a NUL between letters. At the last
+// line break when there is one
+void cutAtCharacter(QByteArray& bytes)
+{
+  if (bytes.isEmpty()) {
+    return;
+  }
+  const bool utf16 = bytes.startsWith("\xFF\xFE") || bytes.startsWith("\xFE\xFF") ||
+                     bytes.at(0) == '\0' || (bytes.size() > 1 && bytes.at(1) == '\0');
+  const qsizetype line = bytes.lastIndexOf('\n');
+  qsizetype length     = line > 0 ? line + 1 : bytes.size();
+  if (utf16) {
+    // a line break is 0A 00 (little endian) or 00 0A (big endian): its second
+    // byte stays
+    length += length % 2;
+    bytes.truncate(qMin(length, bytes.size() - bytes.size() % 2));
+    return;
+  }
+  bytes.truncate(length);
+  if (line > 0) {
+    return;
+  }
+  // no line break: an unfinished UTF-8 sequence at the end goes
+  qsizetype lead = bytes.size() - 1;
+  while (lead > 0 && bytes.size() - lead < 4 && (uchar(bytes.at(lead)) & 0xC0) == 0x80) {
+    --lead;
+  }
+  const uchar first = uchar(bytes.at(lead));
+  const int needed  = first >= 0xF0 ? 4 : first >= 0xE0 ? 3 : first >= 0xC0 ? 2 : 1;
+  if (bytes.size() - lead < needed) {
+    bytes.truncate(lead);
+  }
+}
+
 // MO2 Revamped: the picture scaled to fit the preview with its proportions,
 // never above its own size, so a large picture never makes the window grow and
 // a small one stays sharp. An animated GIF plays
@@ -55,7 +92,11 @@ public:
     } else {
       m_movie.setFileName(fileName);
     }
-    if (m_movie.isValid() && m_movie.frameCount() > 1) {
+    // only a format that animates: an .ico, .icns or .tiff also has several
+    // frames (its sizes, its pages), which flashed past to the last one
+    const QByteArray format = m_movie.format().toLower();
+    if (m_movie.isValid() && m_movie.frameCount() > 1 &&
+        (format == "gif" || format == "webp" || format == "apng")) {
       QObject::connect(&m_movie, &QMovie::frameChanged, this, [this] {
         m_picture = m_movie.currentPixmap();
         update();
@@ -260,12 +301,7 @@ QWidget* PreviewBase::genTxtPreview(const QString& fileName, const QSize&,
     }
   }
   if (cut) {
-    // at the last line break: a cut inside a UTF-8 character made the whole
-    // start read as the system code page (Cyrillic or CJK logs garbled)
-    const qsizetype end = bytes.lastIndexOf('\n');
-    if (end > 0) {
-      bytes.truncate(end + 1);
-    }
+    cutAtCharacter(bytes);
   }
   QString text;
   if (cut) {
