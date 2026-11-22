@@ -157,11 +157,29 @@ static void releaseCandidates()
   CHECK_STR(V("1.0-src").displayString(), "1.0-src");
   CHECK(less(V("1.0"), V("1.0source")));
 
-  // the canonical string still parses back
-  for (const char* s : {"1.0rc1", "1.0-rc.3", "1.0source"}) {
-    const VersionInfo a(s);
-    CHECK(same(a, VersionInfo(a.canonicalString())));
+  // after another separator than "-._ " too, as before the word rule
+  for (const char* s : {"1.0~rc1", "1.0+rc1", "1.0 (RC1)"}) {
+    const bool rc = less(V(s), V("1.0")) && less(V("1.0beta"), V(s));
+    if (!rc) {
+      std::printf("  \"%s\" not a release candidate\n", s);
+    }
+    CHECK(rc);
   }
+
+  // the canonical string still parses back, also with text between the
+  // number and "rc": "2.0-SE-RC1" was saved as "2.0.0.0rc-SE-1", which read
+  // back as a final version newer than the same one from Nexus
+  for (const char* s : {"1.0rc1", "1.0-rc.3", "1.0source", "2.0-SE-RC1", "2.0 Full RC1",
+                        "1.0-hotfix rc", "1.0 RC 5", "1.0~rc1"}) {
+    const VersionInfo a(s);
+    const VersionInfo back(a.canonicalString());
+    if (!same(a, back)) {
+      std::printf("  \"%s\" saved as \"%s\" reads back another version\n", s,
+                  a.canonicalString().toUtf8().constData());
+    }
+    CHECK(same(a, back));
+  }
+  CHECK(less(VersionInfo(V("2.0-SE-RC1").canonicalString()), V("2.0-SE")));
 }
 
 static void schemes()
@@ -241,6 +259,15 @@ static void oddInputs()
   CHECK(V("2147483647.2147483647").scheme() == VersionInfo::SCHEME_REGULAR);
   CHECK(V("2147483648").scheme() == VersionInfo::SCHEME_LITERAL);
   CHECK(V(QString(100000, '9')).scheme() == VersionInfo::SCHEME_LITERAL);
+  // the numbers before the one that doesn't fit still order it: a date and
+  // time as the build ("1.6.2511221530") isn't a 0.0 older than everything
+  CHECK(less(V("1.5"), V("1.6.2511221530")));
+  CHECK(less(V("1.6"), V("1.6.2511221530")));
+  CHECK(less(V("1.6.2511221530"), V("1.7")));
+  CHECK(less(V("1.6.2511221530"), V("1.6.2512011200")));
+  CHECK(less(V("1.9.2511221530"), V("1.10.2511221530")));
+  CHECK_STR(V("1.6.2511221530").displayString(), "1.6.2511221530");
+  CHECK(same(V("1.6.2511221530"), VersionInfo(V("1.6.2511221530").canonicalString())));
   // the same VersionInfo parsed again
   VersionInfo big("1.2.3");
   big.parse("4294967296.1");

@@ -115,6 +115,15 @@ QString VersionInfo::canonicalString() const
     result.append("b");
   } break;
   case RELEASE_CANDIDATE: {
+    // MO2 Revamped: "rc" is read back only before a number or at the end
+    // (parseReleaseType). A rest that starts otherwise ("2.0-SE-RC1" leaves
+    // "-SE-1") goes first, with " rc" at the end: written as "rc-SE-1" the
+    // version came back from meta.ini as a final one, newer than the same
+    // version from Nexus
+    static const QRegularExpression afterRc(QStringLiteral("^[-._ ]*[0-9]"));
+    if (!m_Rest.isEmpty() && !afterRc.match(m_Rest).hasMatch()) {
+      return result + m_Rest + QStringLiteral(" rc");
+    }
     result.append("rc");
   } break;
   case RELEASE_FINAL:  // fall-through
@@ -223,8 +232,10 @@ QString VersionInfo::parseReleaseType(QString versionString)
   // separator and before a number, a separator or the end ("1.0rc1",
   // "1.1.0-rc.2", "1.0 RC"): any "rc" inside the rest ("1.0source", "-src")
   // made a release candidate, with the "rc" cut out of the text
+  // Not after a letter rather than only after "-._ ": "1.0~rc1", "1.0+rc1"
+  // and "1.0 (RC1)" are candidates too, as they were
   static const QRegularExpression rcToken(
-      QStringLiteral("(?:^|[-._ ])(rc)(?=[-._ ]*(?:[0-9]|$))"),
+      QStringLiteral("(?<![a-z])(rc)(?=[-._ ]*(?:[0-9]|$))"),
       QRegularExpression::CaseInsensitiveOption);
 
   for (const auto& [name, type] : typeStrings) {
@@ -342,6 +353,21 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
     temp.remove(VERSION_REGEX);
   } else {
     m_Scheme = SCHEME_LITERAL;
+    // the numbers before the one that doesn't fit still order it against other
+    // versions: "1.6.2511221530" (a date and time as its build) is after 1.5
+    // and before 1.10.x, not a 0.0 older than everything. Its text stays whole
+    if (match.hasMatch()) {
+      int* const fields[] = {&m_Major, &m_Minor, &m_SubMinor, &m_SubSubMinor};
+      int field           = 0;
+      for (int group : {1, 3, 5, 7}) {
+        bool fits       = false;
+        const int value = match.captured(group).toInt(&fits);
+        if (!fits) {
+          break;
+        }
+        *fields[field++] = value;
+      }
+    }
   }
 
   if (m_Scheme == SCHEME_REGULAR) {
