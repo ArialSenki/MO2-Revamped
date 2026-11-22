@@ -3184,6 +3184,25 @@ void DownloadManager::downloadFinished(int index)
       }
     }
 
+    // MO2 Revamped: setState() tells plugins and can run events (a plugin's
+    // message box on a failed download, the .meta written on pausing): the
+    // download may be deleted meanwhile, or resumed with a new reply. Looked up
+    // again after each; this reply is then only closed. A resumed one took the
+    // "finished" branch below and renamed its partial file as complete
+    const auto stillOurs = [&]() {
+      info = downloadInfoByID(downloadID);
+      if (info != nullptr && info->m_Reply == reply) {
+        return true;
+      }
+      log::debug("download {} was removed or resumed while it finished", downloadID);
+      reply->close();
+      reply->deleteLater();
+      return false;
+    };
+    if (!stillOurs()) {
+      return;
+    }
+
     if (info->m_State == STATE_CANCELING) {
       setState(info, STATE_CANCELED);
     } else if (info->m_State == STATE_PAUSING) {
@@ -3197,6 +3216,9 @@ void DownloadManager::downloadFinished(int index)
       }
       setState(info, STATE_PAUSED);
     }
+    if (!stillOurs()) {
+      return;
+    }
 
     // set once info is deleted below: nothing may read it after that
     bool removed = false;
@@ -3206,6 +3228,9 @@ void DownloadManager::downloadFinished(int index)
     const bool outOfRetries = error && info->m_Tries == 0;
     if (outOfRetries) {
       setState(info, STATE_PAUSED);
+      if (!stillOurs()) {
+        return;
+      }
     }
 
     if (info->m_State == STATE_CANCELED) {
