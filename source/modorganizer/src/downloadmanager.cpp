@@ -264,6 +264,7 @@ void DownloadManager::DownloadInfo::setName(QString newName, bool renameFile)
   // while it downloads, also when it is renamed on finishing), not the new name
   const QString oldMetaPath =
       m_Output.fileName().isEmpty() ? QString() : m_Output.fileName() + ".meta";
+  const QString oldFileName = m_FileName;
   m_FileName = QFileInfo(newName).fileName();
   // MO2 Revamped: every state before the download is complete (pausing, as
   // during the "Download again?" question, too): the file is still .unfinished
@@ -275,6 +276,9 @@ void DownloadManager::DownloadInfo::setName(QString newName, bool renameFile)
       reportError(tr("failed to rename \"%1\" to \"%2\"")
                       .arg(m_Output.fileName())
                       .arg(newName));
+      // MO2 Revamped: the name it still has, so the row doesn't point at
+      // another file
+      m_FileName = oldFileName;
       return;
     }
 
@@ -3257,8 +3261,19 @@ void DownloadManager::downloadFinished(int index)
       if (!newName.isEmpty() && (oldName.isEmpty())) {
         info->setName(getDownloadFileName(newName), true);
       } else {
-        info->setName(m_OutputDirectory + "/" + info->m_FileName,
-                      true);  // don't rename but remove the ".unfinished" extension
+        // MO2 Revamped: a file of that name arrived meanwhile (dropped onto the
+        // list while this downloaded): the rename failed and the row pointed at
+        // the other file (installing, deleting it). This one gets a free name
+        QString target = m_OutputDirectory + "/" + info->m_FileName;
+        if (QFile::exists(target) &&
+            QFileInfo(target).absoluteFilePath().compare(
+                QFileInfo(info->m_Output.fileName()).absoluteFilePath(),
+                Qt::CaseInsensitive) != 0) {
+          target = getDownloadFileName(info->m_FileName, true);
+          log::warn("\"{}\" is already in the downloads, the download is saved as \"{}\"",
+                    info->m_FileName, QFileInfo(target).fileName());
+        }
+        info->setName(target, true);  // removes the ".unfinished" extension
       }
       endDisableDirWatcher();
 
