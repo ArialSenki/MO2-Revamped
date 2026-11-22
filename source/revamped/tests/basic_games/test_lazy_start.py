@@ -157,13 +157,21 @@ class LazyStart(unittest.TestCase):
 
         steam_utils.find_games = broken
         QMessageBox.critical = staticmethod(lambda *args: shown.append(args[2]))
+        from PyQt6.QtCore import QCoreApplication
+
+        basic_game._make_gui_reporter()
+        self.assertIsNotNone(basic_game._gui_reporter)
         try:
             worker = threading.Thread(target=lambda: BasicGame.steam_games)
             worker.start()
             worker.join(10)
             self.assertEqual(shown, [])
+            # handed to the GUI thread: shown once its event loop runs
+            for _ in range(20):
+                QCoreApplication.processEvents()
+                if shown:
+                    break
             self.assertEqual(BasicGame.steam_games, {})
-            basic_game._report_store_errors()
         finally:
             steam_utils.find_games, QMessageBox.critical = saved
         self.assertEqual(len(shown), 1)

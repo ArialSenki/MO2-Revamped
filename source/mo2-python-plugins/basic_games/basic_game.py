@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Callable, Generic, TypeVar
 
 import mobase
-from PyQt6.QtCore import QDir, QFileInfo, QStandardPaths
+from PyQt6.QtCore import QDir, QFileInfo, QObject, QStandardPaths, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QMessageBox  # MO2 Revamped: from MO2 9e30d7d
 
@@ -399,6 +399,35 @@ _detect_lock = threading.RLock()
 _store_errors: list[tuple[str, Exception]] = []
 # how deep this thread is in a scan: the message waits until it is out
 _scan_depth = threading.local()
+_errors_lock = threading.Lock()
+
+
+def _take_store_errors() -> list[tuple[str, Exception]]:
+    with _errors_lock:
+        errors = list(_store_errors)
+        _store_errors.clear()
+        return errors
+
+
+class _GuiReporter(QObject):
+    """Made on the GUI thread (when the package is imported): a scan on
+    another thread hands its errors over through this signal, queued to the
+    GUI thread, instead of leaving them unshown."""
+
+    report = pyqtSignal()
+
+
+_gui_reporter: _GuiReporter | None = None
+
+
+def _make_gui_reporter() -> None:
+    global _gui_reporter
+    from PyQt6.QtCore import QCoreApplication, QThread
+
+    app = QCoreApplication.instance()
+    if _gui_reporter is None and app is not None and QThread.currentThread() is app.thread():
+        _gui_reporter = _GuiReporter()
+        _gui_reporter.report.connect(_report_store_errors)
 
 
 def _report_store_errors() -> None:
@@ -410,10 +439,16 @@ def _report_store_errors() -> None:
     from PyQt6.QtCore import QCoreApplication, QThread
 
     app = QCoreApplication.instance()
-    if getattr(_scan_depth, "count", 0) or app is None or QThread.currentThread() is not app.thread():
+    if getattr(_scan_depth, "count", 0) or app is None:
         return
-    errors = list(_store_errors)
-    _store_errors.clear()
+    if QThread.currentThread() is not app.thread():
+        # shown on the GUI thread once it runs its event loop
+        if _gui_reporter is not None:
+            _gui_reporter.report.emit()
+        return
+    errors = _take_store_errors()
+    if not errors:
+        return
     QMessageBox.critical(
         None,
         "Errors loading game list",
@@ -484,7 +519,8 @@ class BasicGame(mobase.IPluginGame):
         for name in ("steam_games", "gog_games", "origin_games", "epic_games", "eadesktop_games"):
             setattr(BasicGame, name, found.get(name, {}))
         # shown by _report_store_errors(), outside the lock, from the GUI thread
-        _store_errors.extend(errors)
+        with _errors_lock:
+            _store_errors.extend(errors)
         for store, error in errors:
             print(f"basic_games: {store} games couldn't be read: {error}", file=sys.stderr)
 
@@ -802,3 +838,7 @@ class BasicGame(mobase.IPluginGame):
 
     def savesDirectory(self) -> QDir:
         return self._mappings.savesDirectory.get()
+
+
+# MO2 Revamped: the package is imported on the GUI thread
+_make_gui_reporter()

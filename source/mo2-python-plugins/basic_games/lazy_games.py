@@ -205,7 +205,9 @@ class ManifestGame(BasicGame):
     def _real(self) -> BasicGame:
         # MO2 Revamped: made once, even when two threads first ask together
         # (two would each run init() and register the game's features twice)
-        if self._real_game is not None:
+        # only a finished one is taken without the lock: the class's own
+        # detectGame() runs with the object already set (see _make_real)
+        if self.__dict__.get("_real_ready"):
             return self._real_game
         with _real_lock:
             return self._make_real()
@@ -234,10 +236,14 @@ class ManifestGame(BasicGame):
             if self._stub_variant is not None:
                 real.setGameVariant(self._stub_variant)
             self._real_game = real
+            self.__dict__["_real_ready"] = True
         return self._real_game
 
 
-_real_lock = threading.RLock()
+# the path detection's lock (basic_game._detect_lock): a detection can build
+# the real game and the real game's detectGame() can read a path, so one lock
+# for both, never two taken in opposite orders
+from .basic_game import _detect_lock as _real_lock  # noqa: E402
 
 # MO2 Revamped: a check inside basic_games' own games package, nothing else
 # (the manifest is a file: "os:abort" would call any function)
