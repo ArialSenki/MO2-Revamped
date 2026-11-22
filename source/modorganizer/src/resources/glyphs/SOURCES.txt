@@ -84,7 +84,7 @@ E8C8	Copy	ic_fluent_copy_20_regular.svg
 E8CB	Arrow Sort	ic_fluent_arrow_sort_20_regular.svg
 E8D3	Text Color	ic_fluent_text_color_20_regular.svg
 E8D6	Music Note 2	ic_fluent_music_note_2_20_regular.svg
-E8DA	Folder Open	ic_fluent_folder_open_20_regular.svg
+E8DA	Folder Arrow Right	ic_fluent_folder_arrow_right_20_regular.svg
 E8DE	Folder Arrow Right	ic_fluent_folder_arrow_right_20_regular.svg
 E8E0	Thumb Dislike	ic_fluent_thumb_dislike_20_regular.svg
 E8E1	Thumb Like	ic_fluent_thumb_like_20_regular.svg
@@ -101,14 +101,14 @@ E915	Circle Small	ic_fluent_circle_small_20_filled.svg
 E916	Timer	ic_fluent_timer_20_regular.svg
 E91B	Image	ic_fluent_image_20_regular.svg
 E930	Checkmark Circle	ic_fluent_checkmark_circle_20_regular.svg
-E943	Code	ic_fluent_code_20_regular.svg
+E943	Braces	ic_fluent_braces_20_regular.svg
 E945	Flash	ic_fluent_flash_20_regular.svg
 E946	Info	ic_fluent_info_20_regular.svg
 E950	Developer Board	ic_fluent_developer_board_20_regular.svg
 E9CE	Question Circle	ic_fluent_question_circle_20_regular.svg
 E9D2	Data Area	ic_fluent_data_area_20_regular.svg
 E9D5	Task List LTR	ic_fluent_task_list_ltr_20_regular.svg
-E9D9	Pulse	ic_fluent_pulse_20_regular.svg
+E9D9	Pulse Square	ic_fluent_pulse_square_20_regular.svg
 E9F9	Document Bullet List	ic_fluent_document_bullet_list_20_regular.svg
 EA35	Save Multiple	ic_fluent_save_multiple_20_regular.svg
 EA37	List	ic_fluent_list_20_regular.svg
