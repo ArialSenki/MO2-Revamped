@@ -890,15 +890,16 @@ boost::shared_array<unsigned char> Archive::decompress(unsigned char* inBuffer,
       return boost::shared_array<unsigned char>();
     }
 
-    do {
-      stream.avail_out = outSize;
-      stream.next_out  = reinterpret_cast<Bytef*>(outBuffer.get());
-      zlibRet          = inflate(&stream, Z_NO_FLUSH);
-      if ((zlibRet != Z_OK) && (zlibRet != Z_STREAM_END) && (zlibRet != Z_BUF_ERROR)) {
-#pragma message("pass result code to caller")
-        throw std::runtime_error("invalid data");
-      }
-    } while (stream.avail_out == 0);
+    // MO2 Revamped: the stream must end and fill the buffer exactly. A
+    // truncated stream (Z_BUF_ERROR or Z_OK) passed, and the rest of the
+    // buffer was written out uninitialised; a stream longer than the declared
+    // size went round again and wrote over the start of the buffer
+    stream.avail_out = outSize;
+    stream.next_out  = reinterpret_cast<Bytef*>(outBuffer.get());
+    zlibRet          = inflate(&stream, Z_FINISH);
+    if (zlibRet != Z_STREAM_END || stream.total_out != outSize) {
+      throw std::runtime_error("invalid data");
+    }
     inflateEnd(&stream);
     return outBuffer;
   } catch (const std::exception&) {
