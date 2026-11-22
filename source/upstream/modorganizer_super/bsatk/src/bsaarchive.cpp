@@ -858,6 +858,10 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
 
       for (BSAUInt i = 0; i < file->m_TextureChunks.size(); ++i) {
         BSAULong length = file->m_TextureChunks[i].unpackedSize;
+        // MO2 Revamped: each chunk from its own offset. Packers that share
+        // identical mips between textures don't store a texture's chunks
+        // one after the other
+        m_File.seekg(static_cast<std::streamoff>(file->m_TextureChunks[i].offset));
         if (!remains(length)) {
           return ERROR_INVALIDDATA;
         }
@@ -1017,6 +1021,8 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
 
       for (BSAUInt i = 0; i < file->m_TextureChunks.size(); ++i) {
         BSAULong length = file->m_TextureChunks[i].unpackedSize;
+        // MO2 Revamped: each chunk from its own offset (see extractDirect)
+        m_File.seekg(static_cast<std::streamoff>(file->m_TextureChunks[i].offset));
         if (file->m_TextureChunks[i].packedSize > 0) {
           if (!remains(file->m_TextureChunks[i].packedSize) ||
               !plausibleUnpacked(file->m_TextureChunks[i].packedSize, length)) {
@@ -1239,6 +1245,12 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
           if (length > totalSize - currentPos) {
             throw data_invalid_exception("texture chunks larger than the texture");
           }
+          // MO2 Revamped: each chunk from its own offset. Packers that share
+          // identical mips between textures don't store a texture's chunks one
+          // after the other; reading on from the first chunk unpacked another
+          // texture's data (and crashed beta 15)
+          m_File.seekg(
+              static_cast<std::streamoff>(fileInfo.file->m_TextureChunks[i].offset));
           if (!remains(fileInfo.file->m_TextureChunks[i].packedSize > 0
                            ? fileInfo.file->m_TextureChunks[i].packedSize
                            : length)) {
@@ -1361,6 +1373,10 @@ void Archive::extractFiles(const std::filesystem::path& targetDirectory,
             if (buffer.get() != nullptr) {
               outputFile.write(reinterpret_cast<char*>(buffer.get()), length);
               buffer.reset();
+            } else if (result == ERROR_NONE && length == 0) {
+              // MO2 Revamped: an empty file stored compressed (just its size,
+              // 0) is extracted as such: Fallout 3's Fallout - Meshes.bsa and
+              // New Vegas' Fallout - Misc.bsa have placeholders like that
             } else {
               ++failures;
             }
