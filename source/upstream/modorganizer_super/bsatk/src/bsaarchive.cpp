@@ -250,6 +250,10 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
   if (!m_File.is_open()) {
     return ERROR_FILENOTFOUND;
   }
+  m_File.seekg(0, std::ios::end);
+  const std::streamoff end = m_File.tellg();
+  m_ArchiveSize            = end > 0 ? static_cast<uint64_t>(end) : 0;
+  m_File.seekg(0, std::ios::beg);
   m_File.exceptions(std::ios_base::badbit);
   try {
     Header header;
@@ -773,6 +777,9 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
   if (ba2) {
     if (!file->m_TextureChunks.size()) {
       BSAULong size = file->m_UncompressedFileSize;
+      if (!remains(size)) {
+        return ERROR_INVALIDDATA;
+      }
       std::unique_ptr<char[]> buffer(new char[size]);
       m_File.read(buffer.get(), size);
       if (m_File.gcount() != static_cast<std::streamsize>(size)) {
@@ -800,6 +807,9 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
 
       for (BSAUInt i = 0; i < file->m_TextureChunks.size(); ++i) {
         BSAULong length = file->m_TextureChunks[i].unpackedSize;
+        if (!remains(length)) {
+          return ERROR_INVALIDDATA;
+        }
         std::unique_ptr<char[]> chunk(new char[length]);
         m_File.read(chunk.get(), length);
         if (m_File.gcount() != static_cast<std::streamsize>(length)) {
@@ -817,6 +827,9 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
         return result;
       }
       size -= fullName.length() + 1;
+    }
+    if (!remains(size)) {
+      return ERROR_INVALIDDATA;
     }
     std::unique_ptr<unsigned char[]> buffer(new unsigned char[size]);
     m_File.read(reinterpret_cast<char*>(buffer.get()), size);
@@ -841,12 +854,24 @@ boost::shared_array<unsigned char> Archive::decompress(unsigned char* inBuffer,
                                                        BSAULong& outSize)
 {
   if (outSize == 0) {
+    // MO2 Revamped: the size is the first 4 bytes, which a damaged record may
+    // not have (inSize then wrapped around and zlib read past the buffer)
+    if (inSize < sizeof(BSAULong)) {
+      result = ERROR_INVALIDDATA;
+      return boost::shared_array<unsigned char>();
+    }
     memcpy(&outSize, inBuffer, sizeof(BSAULong));
     inBuffer += sizeof(BSAULong);
     inSize -= sizeof(BSAULong);
   }
 
   if ((inSize == 0) || (outSize == 0)) {
+    return boost::shared_array<unsigned char>();
+  }
+  // a declared size of 4 GB for a few bytes of data (a zip bomb, or a damaged
+  // record) was allocated as such
+  if (!plausibleUnpacked(inSize, outSize)) {
+    result = ERROR_INVALIDDATA;
     return boost::shared_array<unsigned char>();
   }
 
@@ -900,6 +925,9 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
       m_Type == TYPE_FALLOUT4NG_8) {
     if (!file->m_TextureChunks.size()) {
       BSAULong inSize = file->m_FileSize;
+      if (!remains(inSize)) {
+        return ERROR_INVALIDDATA;
+      }
       std::unique_ptr<unsigned char[]> inBuffer(new unsigned char[inSize]);
       m_File.read(reinterpret_cast<char*>(inBuffer.get()), inSize);
       BSAULong length = file->m_UncompressedFileSize;
@@ -930,6 +958,10 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
       for (BSAUInt i = 0; i < file->m_TextureChunks.size(); ++i) {
         BSAULong length = file->m_TextureChunks[i].unpackedSize;
         if (file->m_TextureChunks[i].packedSize > 0) {
+          if (!remains(file->m_TextureChunks[i].packedSize) ||
+              !plausibleUnpacked(file->m_TextureChunks[i].packedSize, length)) {
+            return ERROR_INVALIDDATA;
+          }
           unsigned char* chunk = new unsigned char[file->m_TextureChunks[i].packedSize];
           m_File.read(reinterpret_cast<char*>(chunk),
                       file->m_TextureChunks[i].packedSize);
@@ -948,6 +980,9 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
           }
           delete[] chunk;
         } else {
+          if (!remains(length)) {
+            return ERROR_INVALIDDATA;
+          }
           char* chunk = new char[length];
           m_File.read(chunk, length);
           outFile.write(chunk, length);
@@ -965,8 +1000,16 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
       }
       inSize -= fullName.length() + 1;
     }
+    // the record holds the unpacked size first: a shorter one wrapped inSize
+    // around to 4 GB
+    if (inSize < sizeof(BSAULong) || !remains(inSize)) {
+      return ERROR_INVALIDDATA;
+    }
     BSAULong outSize = readType<BSAULong>(m_File);
     inSize -= sizeof(BSAULong);
+    if (!plausibleUnpacked(inSize, outSize)) {
+      return ERROR_INVALIDDATA;
+    }
     std::unique_ptr<unsigned char[]> inBuffer(new unsigned char[inSize]);
     m_File.read(reinterpret_cast<char*>(inBuffer.get()), inSize);
 
@@ -990,6 +1033,9 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
         return result;
       }
       inSize -= fullName.length() + 1;
+    }
+    if (!remains(inSize)) {
+      return ERROR_INVALIDDATA;
     }
     std::unique_ptr<unsigned char[]> inBuffer(new unsigned char[inSize]);
     m_File.read(reinterpret_cast<char*>(inBuffer.get()), inSize);
@@ -1063,8 +1109,17 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
         size -= fullName.length() + 1;
       }
       if (m_Type == TYPE_SKYRIMSE && compressed(fileInfo.file)) {
+        if (size < sizeof(BSAULong)) {
+          throw data_invalid_exception("record shorter than its size");
+        }
         fileInfo.file->m_UncompressedFileSize = readType<BSAULong>(m_File);
         size -= 4;
+        if (!plausibleUnpacked(size, fileInfo.file->m_UncompressedFileSize)) {
+          throw data_invalid_exception("invalid unpacked size");
+        }
+      }
+      if (!remains(size)) {
+        throw data_invalid_exception("file past the end of the archive");
       }
       if (!fileInfo.file->m_TextureChunks.size()) {
         fileInfo.data =
@@ -1076,22 +1131,42 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
       if (!fileInfo.file->m_TextureChunks.size()) {
         if (size == 0)
           size = fileInfo.file->m_UncompressedFileSize;
+        if (!remains(size)) {
+          throw data_invalid_exception("file past the end of the archive");
+        }
         fileInfo.data =
             std::make_pair(boost::shared_array<unsigned char>(new unsigned char[size]),
                            static_cast<BSAULong>(size));
         readExactly(m_File, fileInfo.data.first.get(), size);
       } else {
         fileInfo.file->m_UncompressedFileSize = 0L;
-        BSAULong totalSize                    = 0U;
-        for (BSAUInt i = 0; i < fileInfo.file->m_TextureChunks.size(); ++i) {
-          totalSize += fileInfo.file->m_TextureChunks[i].unpackedSize;
+        // the sum wrapped around past 4 GB, and the chunks were then copied
+        // past the end of a small buffer
+        uint64_t total = 0;
+        for (const FO4TextureChunk& chunk : fileInfo.file->m_TextureChunks) {
+          const bool fits = chunk.packedSize > 0
+                                ? plausibleUnpacked(chunk.packedSize, chunk.unpackedSize)
+                                : chunk.unpackedSize <= m_ArchiveSize;
+          if (!fits) {
+            throw data_invalid_exception("invalid texture chunk size");
+          }
+          total += chunk.unpackedSize;
         }
+        if (total > UINT32_MAX) {
+          throw data_invalid_exception("invalid texture size");
+        }
+        BSAULong totalSize = static_cast<BSAULong>(total);
         std::unique_ptr<char[]> chunkData(new char[totalSize]);
         BSAULong currentPos = 0U;
         for (BSAUInt i = 0; i < fileInfo.file->m_TextureChunks.size(); ++i) {
           BSAULong length = fileInfo.file->m_TextureChunks[i].unpackedSize;
           if (length > totalSize - currentPos) {
             throw data_invalid_exception("texture chunks larger than the texture");
+          }
+          if (!remains(fileInfo.file->m_TextureChunks[i].packedSize > 0
+                           ? fileInfo.file->m_TextureChunks[i].packedSize
+                           : length)) {
+            throw data_invalid_exception("texture chunk past the end of the archive");
           }
           if (fileInfo.file->m_TextureChunks[i].packedSize > 0) {
             std::unique_ptr<char[]> chunk(
