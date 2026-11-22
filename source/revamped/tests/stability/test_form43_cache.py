@@ -37,10 +37,23 @@ class Organizer:
     def __init__(self, files):
         self.files = files
         self.refreshed = []
+        self.enabled = []
 
     def onNextRefresh(self, callback, immediate):
         self.refreshed.append(callback)
         return True
+
+    def onPluginEnabled(self, name, callback):
+        self.enabled.append(callback)
+        return True
+
+    def refresh_while_off(self):
+        # MO2 drops the callbacks of a plugin that is off when they're due
+        self.refreshed = []
+
+    def turn_on(self):
+        for callback in self.enabled:
+            callback()
 
     def refresh(self):
         callbacks, self.refreshed = self.refreshed, []
@@ -88,10 +101,27 @@ class Cache(unittest.TestCase):
         self.assertGreater(self.stats(), 0)
         self.assertEqual(self.problems, [0])
 
+    def test_read_again_after_being_off_during_a_refresh(self):
+        # its refresh callback was dropped while it was off: turned on again,
+        # it doesn't keep the answer from before the refresh
+        self.stats()
+        plugin(self.dir / "p3.esp", 43)
+        later = os.stat(self.dir / "p3.esp").st_mtime_ns + 10**9
+        os.utime(self.dir / "p3.esp", ns=(later, later))
+        self.organizer.refresh_while_off()
+        self.organizer.turn_on()
+        self.assertGreater(self.stats(), 0)
+        self.assertEqual(self.problems, [0])
+        self.assertEqual(len(self.organizer.refreshed), 1)
+
     def test_read_again_after_a_refresh(self):
         # a mod replaced in place: same paths, another form
         self.stats()
         plugin(self.dir / "p3.esp", 43)
+        # a later time than setUp's write: written within the same clock tick,
+        # the cache would rightly take it for the same file
+        later = os.stat(self.dir / "p3.esp").st_mtime_ns + 10**9
+        os.utime(self.dir / "p3.esp", ns=(later, later))
         self.assertEqual(self.stats(), 0)
         self.organizer.refresh()
         self.assertGreater(self.stats(), 0)
