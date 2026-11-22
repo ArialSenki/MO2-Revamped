@@ -873,6 +873,23 @@ std::vector<Case> cases()
                  w.put32(4, 12 + 6);
                  wellFormed(save(w.b), {{"x.txt", a}}, false);
                }});
+  c.push_back({"Morrowind BSA whose last name starts past its name table is refused", [] {
+                 // the same layout, with the name's offset past the 6 bytes of
+                 // the table: a file without a name before, a damaged archive now
+                 Writer w;
+                 const Bytes a = pattern(30, 15);
+                 w.u32(0x100);
+                 w.u32(12 + 6 + 8);
+                 w.u32(1);
+                 w.u32(static_cast<uint32_t>(a.size()));
+                 w.u32(0);
+                 w.u32(40);
+                 w.zstr("x.txt");
+                 w.u64(0);
+                 w.bytes(a);
+                 w.put32(4, 12 + 6);
+                 damaged(save(w.b));
+               }});
   c.push_back({"empty BSA (no folders, no files) reads and extracts nothing", [] {
                  const auto p = save(bsa(104, kStd, {}).w.b);
                  Opened o     = open(p);

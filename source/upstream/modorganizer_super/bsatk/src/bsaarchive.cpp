@@ -404,8 +404,15 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
       for (uint32_t i = 0; i < header.fileCount; ++i) {
         uint32_t index = 0;
         if (i + 1 == header.fileCount) {
-          // the last name runs to the end of the names' table
-          index = last >= fileNameOffset[i] ? last - fileNameOffset[i] : 0;
+          // the last name runs to the end of the names' table; one starting
+          // past that end (or at it: no name) is a damaged archive, not a file
+          // without a name
+          if (fileNameOffset[i] >= last) {
+            throw data_invalid_exception(makeString(
+                "the archive's last name starts past its name table (filename: %s)",
+                pathForMessage(fileName).c_str()));
+          }
+          index = last - fileNameOffset[i];
         } else if (fileNameOffset[i + 1] < fileNameOffset[i]) {
           throw data_invalid_exception(makeString(
               "the archive's name table goes backwards (filename: %s)",
