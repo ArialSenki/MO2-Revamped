@@ -37,7 +37,8 @@ MOBase::ModRepositoryFileInfo::createFromJson(const QString& data)
   newInfo.version.parse(result.at(4).toString());
   newInfo.description = result.at(5).toString();
   newInfo.categoryID  = result.at(6).toInt();
-  newInfo.fileSize    = result.at(7).toUInt();
+  // MO2 Revamped: 64-bit, as fileSize is; toUInt() made a file past 4 GB 0
+  newInfo.fileSize = result.at(7).toULongLong();
   newInfo.modID       = result.at(8).toInt();
   newInfo.modName     = result.at(9).toString();
   newInfo.newestVersion.parse(result.at(10).toString());
