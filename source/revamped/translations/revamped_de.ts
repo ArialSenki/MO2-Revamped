@@ -12054,7 +12054,11 @@ Firefox.exe</translation>
       <source>Shows the parts that have a new version (the Instances window, the summary tiles of the main window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
       <translation>Zeigt die Teile, die eine neue Version haben (das Instanzen-Fenster, die Übersicht im Hauptfenster und die Themenfrage einer neuen Instanz), darin an, mit Qt Quick gezeichnet. Sie funktionieren gleich und brauchen etwas mehr Arbeitsspeicher. Gilt ab dem nächsten Start von Mod Organizer.</translation>
     </message>
-</context>
+  <message>
+      <source>Theme</source>
+      <translation>Design</translation>
+    </message>
+  </context>
   <context>
     <name>QueryOverwriteDialog</name>
     <message>

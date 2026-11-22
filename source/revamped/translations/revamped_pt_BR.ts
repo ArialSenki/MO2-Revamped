@@ -12038,7 +12038,11 @@ Exemplos:
       <source>Shows the parts that have a new version (the Instances window, the summary tiles of the main window and the theme question of a new instance) in it, drawn with Qt Quick. They work the same and use a little more memory. It applies when Mod Organizer starts again.</source>
       <translation>Mostra nela as partes que têm uma versão nova (a janela de instâncias, o resumo da janela principal e a pergunta do tema de uma instância nova), desenhadas com Qt Quick. Funcionam do mesmo jeito e usam um pouco mais de memória. Vale quando o Mod Organizer abrir de novo.</translation>
     </message>
-</context>
+  <message>
+      <source>Theme</source>
+      <translation>Tema</translation>
+    </message>
+  </context>
   <context>
     <name>QueryOverwriteDialog</name>
     <message>
