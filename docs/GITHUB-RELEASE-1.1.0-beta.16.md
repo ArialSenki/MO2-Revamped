@@ -137,6 +137,11 @@ longer keeps rereading a pak it can't read.
 Plugins with no fixed place now get the same order at every start (before, the
 same list could come out in different orders).
 
+Switching several mods on or off at once, quickly, in a large list no longer
+closes MO2: the background problem check could read the plugin list while it
+was being rebuilt. A bug report from a linked instance (such as Nolvus) now
+includes its logs and its last crash dump.
+
 ## Collections and Wabbajack
 
 - **An install no longer stops halfway in big collections.** NCR Core stopped
