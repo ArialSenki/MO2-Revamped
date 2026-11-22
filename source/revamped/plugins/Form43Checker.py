@@ -1,5 +1,6 @@
 import os
 import stat
+import time
 from pathlib import Path
 
 import mobase
@@ -15,6 +16,12 @@ class Form43Checker(mobase.IPluginDiagnose):
         # modification time stay the same. Every problem check opened all the
         # plugins again (~0.5 s with a large Skyrim list, holding Python's lock)
         self.__forms: dict[str, tuple[tuple[int, int], int]] = {}
+        # the last answer, for the same plugin list within a minute: the check
+        # runs on the interface's thread after every refresh, and a stat per
+        # plugin is ~0.5 s with a list of thousands (a collection's install
+        # refreshes after each mod). A plugin resaved in place is seen within
+        # the minute
+        self.__last: tuple[tuple[str, ...], float, bool] | None = None
 
     def init(self, organizer: mobase.IOrganizer):
         self.__organizer = organizer
@@ -112,8 +119,14 @@ class Form43Checker(mobase.IPluginDiagnose):
         if self.__organizer.managedGame().gameName() != "Skyrim Special Edition":
             return False
 
-        # Return True if there is at least one invalid file:
-        return next(self.__listInvalidFiles(), False)
+        files = tuple(self.__organizer.findFiles("", "*.es[pml]"))
+        now = time.monotonic()
+        if self.__last is not None and self.__last[0] == files and now - self.__last[1] < 60:
+            return self.__last[2]
+        # True if there is at least one invalid file
+        found = any(self.__testFile(file) for file in files)
+        self.__last = (files, now, found)
+        return found
 
     def __listPlugins(self):
         return [
