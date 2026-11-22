@@ -140,6 +140,15 @@ class Reading(unittest.TestCase):
         self.assertEqual(mini_yaml.loads("|\n  top\n"), "top\n")
         self.assertEqual(mini_yaml.loads("a: |\n  # not a comment\n  b\n"), {"a": "# not a comment\nb\n"})
 
+    def test_block_indentation_indicator(self):
+        # the text starts N columns in from its parent: its own leading spaces stay
+        self.assertEqual(mini_yaml.loads("a: |2\n    x\n  y\nb: 1\n"), {"a": "  x\ny\n", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: >2\n   x\nb: 1\n"), {"a": " x\n", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: |-2\n   x\n"), {"a": " x"})
+        self.assertEqual(mini_yaml.loads("- |+2\n   x\n- |-1\n  y\n"), [" x\n", " y"])
+        self.assertEqual(mini_yaml.loads("k:\n  n: |1\n     x\n   y\nm: 2\n"), {"k": {"n": "  x\ny\n"}, "m": 2})
+        self.assertEqual(mini_yaml.loads("|2\n   top\n"), " top\n")
+
     def test_comment_after_a_block_scalar_ends_it(self):
         # the comment line was read as part of the block, cut at its column
         self.assertEqual(mini_yaml.loads("a: |\n  x\n# c\nb: 1\n"), {"a": "x\n", "b": 1})
