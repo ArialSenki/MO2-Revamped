@@ -2,10 +2,14 @@
 #include "fluenticons.h"
 #include "fluentswitch.h"
 
+#include <cmath>
+
+
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QEvent>
+#include <QFontMetricsF>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QPainter>
@@ -156,7 +160,13 @@ QSize ElidedLabel::minimumSizeHint() const
 
 QSize ElidedLabel::sizeHint() const
 {
-  return QSize(fontMetrics().horizontalAdvance(m_full), fontMetrics().height());
+  // the text is drawn in the contents rectangle, inside the style sheet's
+  // padding, and its width can have a fraction: both count, or a label given
+  // just its hint cuts its last letters ("Last saved 3 da…" with room beside it)
+  const QMargins margins = contentsMargins();
+  const int text = static_cast<int>(std::ceil(QFontMetricsF(font()).horizontalAdvance(m_full)));
+  return QSize(text + margins.left() + margins.right() + 1,
+               fontMetrics().height() + margins.top() + margins.bottom());
 }
 
 void ElidedLabel::paintEvent(QPaintEvent*)
