@@ -108,8 +108,15 @@ std::optional<CollectionLink> parseCollectionLink(const QString& text)
     return {};
   }
 
+  // MO2 Revamped: a revision that isn't one (0, or past an int) is no link,
+  // not revision 0
   if (auto m = nxmCollectionExp().match(t); m.hasMatch()) {
-    return CollectionLink{m.captured(1), m.captured(2), m.captured(3).toInt()};
+    bool ok            = false;
+    const int revision = m.captured(3).toInt(&ok);
+    if (!ok || revision <= 0) {
+      return {};
+    }
+    return CollectionLink{m.captured(1), m.captured(2), revision};
   }
 
   // the website: nexusmods.com/games/<game>/collections/<slug> and the older
@@ -122,7 +129,11 @@ std::optional<CollectionLink> parseCollectionLink(const QString& text)
   if (auto m = web.match(t); m.hasMatch()) {
     CollectionLink link{m.captured(1), m.captured(2), -1};
     if (!m.captured(3).isEmpty()) {
-      link.revision = m.captured(3).toInt();
+      bool ok       = false;
+      link.revision = m.captured(3).toInt(&ok);
+      if (!ok || link.revision <= 0) {
+        return {};
+      }
     }
     return link;
   }
