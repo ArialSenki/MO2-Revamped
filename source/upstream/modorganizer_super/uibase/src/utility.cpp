@@ -1008,11 +1008,16 @@ QString getFileVersion(QString const& filepath)
     return "";
   }
 
-  VS_FIXEDFILEINFO* pFileInfo;
-  UINT buf_len;
+  VS_FIXEDFILEINFO* pFileInfo = nullptr;
+  UINT buf_len                = 0;
   if (!::VerQueryValueW(buff.data(), L"\\", reinterpret_cast<LPVOID*>(&pFileInfo),
                         &buf_len)) {
     log::debug("VerQueryValueW Error %d", ::GetLastError());
+    return "";
+  }
+  // MO2 Revamped: a damaged version resource can answer with no block or a short one
+  if (pFileInfo == nullptr || buf_len < sizeof(VS_FIXEDFILEINFO)) {
+    log::debug("VerQueryValueW returned no fixed file info");
     return "";
   }
   return QString("%1.%2.%3.%4")
@@ -1043,24 +1048,38 @@ QString getProductVersion(QString const& filepath)
 
   // The following is from https://stackoverflow.com/a/12408544/2666289
 
-  UINT uiSize;
-  BYTE* lpb;
+  UINT uiSize = 0;
+  BYTE* lpb   = nullptr;
   if (!::VerQueryValueW(buff.data(), TEXT("\\VarFileInfo\\Translation"), (void**)&lpb,
                         &uiSize)) {
     log::debug("VerQueryValue Error %d", ::GetLastError());
+    return "";
+  }
+  // MO2 Revamped: the language and code page are two WORDs; a damaged resource
+  // can answer with no block or a shorter one
+  if (lpb == nullptr || uiSize < 2 * sizeof(WORD)) {
+    log::debug("VerQueryValue returned no translation");
     return "";
   }
 
   WORD* lpw = (WORD*)lpb;
   auto query =
       std::format(L"\\StringFileInfo\\{:04x}{:04x}\\ProductVersion", lpw[0], lpw[1]);
-  if (!::VerQueryValueW(buff.data(), query.data(), (void**)&lpb, &uiSize) &&
-      uiSize > 0) {
+  // MO2 Revamped: was `!ok && uiSize > 0`, which read the string even when the
+  // query failed; uiSize is the length in characters, terminator included
+  lpb    = nullptr;
+  uiSize = 0;
+  if (!::VerQueryValueW(buff.data(), query.data(), (void**)&lpb, &uiSize)) {
     log::debug("VerQueryValue Error %d", ::GetLastError());
     return "";
   }
+  if (lpb == nullptr || uiSize == 0) {
+    return "";
+  }
 
-  return QString::fromWCharArray((LPCWSTR)lpb);
+  // bounded: the string isn't guaranteed to be terminated in a damaged resource
+  const auto* text = reinterpret_cast<LPCWSTR>(lpb);
+  return QString::fromWCharArray(text, static_cast<qsizetype>(wcsnlen(text, uiSize)));
 }
 
 void deleteChildWidgets(QWidget* w)
