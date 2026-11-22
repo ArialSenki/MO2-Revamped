@@ -722,6 +722,13 @@ void DownloadManager::addReadOnlySources(std::set<std::wstring>& seen,
 bool DownloadManager::addDownload(const QStringList& URLs, QString gameName, int modID,
                                   int fileID, const ModRepositoryFileInfo* fileInfo)
 {
+  // MO2 Revamped: first() of an empty list (a plugin's empty list, or an nxm
+  // answer whose links were all dropped as not https) read past the end
+  if (URLs.isEmpty()) {
+    log::warn("download not started: no link");
+    return false;
+  }
+
   // the name from the link, or from its response-content-disposition
   const QString fileName = DownloadUrl::fileNameFromUrl(URLs.first());
 
