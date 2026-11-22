@@ -25,6 +25,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFontDatabase>
 #include <QHBoxLayout>
 #include <QImageReader>
+#include <utility.h>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QListWidget>
@@ -87,6 +88,8 @@ QPushButton* glyphButton(char16_t glyph, const QString& name, QWidget* parent)
 QIcon thumbnail(const QString& path)
 {
   QImageReader reader(path);
+  // MO2 Revamped: as its extension says, never SVG (see restrictImageReader)
+  MOBase::restrictImageReader(reader);
   reader.setAutoTransform(true);
   const QSize size = reader.size();
   if (size.isValid()) {

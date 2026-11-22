@@ -11,6 +11,28 @@
 using namespace MOBase;
 using namespace ImagesTabHelpers;
 
+namespace
+{
+// MO2 Revamped: a mod's picture read as its extension's format only, never SVG
+// or PDF, never decided again from the content, with a decoding cap. The same
+// rule as uibase's MOBase::restrictImageReader (utility.h), kept here so the
+// organizer builds against any uibase: QImageReader fell back to the content
+// when the extension's reader couldn't read the file, so an SVG named .png
+// reached the SVG reader, whose <image href="\\server\..."> made Windows send
+// the user's password hash to that server
+void restrictPicture(QImageReader& reader)
+{
+  const QByteArray format = QFileInfo(reader.fileName()).suffix().toLower().toLatin1();
+  const bool refused      = format.isEmpty() || format == "svg" || format == "svgz" ||
+                       format == "pdf" ||
+                       !QImageReader::supportedImageFormats().contains(format);
+  reader.setFormat(refused ? QByteArrayLiteral("mo2r-refused") : format);
+  reader.setAutoDetectImageFormat(false);
+  reader.setDecideFormatFromContent(false);
+  reader.setAllocationLimit(128);
+}
+}  // namespace
+
 QSize resizeWithAspectRatio(const QSize& original, const QSize& available)
 {
   const auto ratio =
@@ -293,6 +315,12 @@ void ImagesTab::getSupportedFormats()
   for (const auto& entry : QImageReader::supportedImageFormats()) {
     QString s(entry);
     if (s.isNull() || s.isEmpty()) {
+      continue;
+    }
+    // MO2 Revamped: never listed or read (see MOBase::restrictImageReader)
+    if (s.compare("svg", Qt::CaseInsensitive) == 0 ||
+        s.compare("svgz", Qt::CaseInsensitive) == 0 ||
+        s.compare("pdf", Qt::CaseInsensitive) == 0) {
       continue;
     }
 
@@ -812,7 +840,10 @@ void ScalableImage::paintEvent(QPaintEvent* e)
       return;
     }
 
-    m_original.load(m_path);
+    // MO2 Revamped: as its extension says, never SVG (see restrictImageReader)
+    QImageReader reader(m_path);
+    restrictPicture(reader);
+    m_original = reader.read();
 
     if (m_original.isNull()) {
       return;
@@ -958,6 +989,8 @@ void File::ensureOriginalLoaded()
   }
 
   QImageReader reader(m_path);
+  // MO2 Revamped: as its extension says, never SVG (see restrictImageReader)
+  restrictPicture(reader);
 
   if (!reader.read(&m_original)) {
     log::error("failed to load '{}'\n{} (error {})", m_path, reader.errorString(),

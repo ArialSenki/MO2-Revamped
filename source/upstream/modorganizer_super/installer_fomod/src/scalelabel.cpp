@@ -1,6 +1,7 @@
 #include "scalelabel.h"
 #include <QFileInfo>
 #include <QImageReader>
+#include <utility.h>
 #include <QResizeEvent>
 
 static bool isResourceMovie(const QString& path)
@@ -90,6 +91,8 @@ void ScaleLabel::setScalableImage(const QString& path)
     image = *cached;
   } else {
     QImageReader reader(path);
+    // MO2 Revamped: as its extension says, never SVG (see restrictImageReader)
+    MOBase::restrictImageReader(reader);
     reader.setAutoTransform(true);
     const QSize size = reader.size();
     if (size.isValid() && qMax(size.width(), size.height()) > 2048) {

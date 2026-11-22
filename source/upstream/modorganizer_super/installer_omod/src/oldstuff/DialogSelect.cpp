@@ -7,6 +7,7 @@
 #include <QDialog>
 #include <QDebug>
 #include <QImageReader>
+#include <utility.h>
 #include <QPlainTextEdit>
 #include <QRadioButton>
 #include <QScrollArea>
@@ -184,10 +185,10 @@ std::optional<QVector<int>> DialogSelect(
     if (hasPixmaps) {
       if (i < pixmaps.size() && !tried[i]) {
         tried[i] = true;
-        // QImageReader decides the format from the content: QPixmap goes by
-        // the extension, which OMODs get wrong
+        // the format from the content: QPixmap goes by the extension, which
+        // OMODs get wrong. Never SVG or PDF (see restrictImageReader)
         QImageReader reader(pixmaps[i]);
-        reader.setDecideFormatFromContent(true);
+        MOBase::restrictImageReader(reader, true);
         const QImage image = reader.read();
         if (!image.isNull()) {
           loaded[i] = QPixmap::fromImage(image);

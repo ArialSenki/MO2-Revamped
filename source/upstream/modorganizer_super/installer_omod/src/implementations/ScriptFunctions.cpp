@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QInputDialog>
 #include <QImageReader>
+#include <utility.h>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -80,6 +81,9 @@ void ScriptFunctionsHelper::InputStringSlot(QString& textOut, QWidget* parentWid
 void ScriptFunctionsHelper::DisplayImageSlot(QWidget* parentWidget, const QString& path, const QString& title)
 {
   QImageReader reader(path);
+  // MO2 Revamped: from the content (OMODs name pictures wrong), never SVG or
+  // PDF (see restrictImageReader)
+  MOBase::restrictImageReader(reader, true);
   QImage image = reader.read();
   if (!image.isNull())
   {
