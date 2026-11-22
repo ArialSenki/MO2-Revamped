@@ -86,9 +86,9 @@ VersionInfo IniEditor::version() const
 QList<PluginSetting> IniEditor::settings() const
 {
   QList<PluginSetting> result;
-  result.push_back(PluginSetting("external", "Use an external editor to open the files", QVariant(false)));
-  result.push_back(PluginSetting("associated", "When using an external editor, use the application associated with \"INI\" files. "
-                                 "If false, uses the \"edit\" command which usually invokes regular notepad.", QVariant(true)));
+  result.push_back(PluginSetting("external", "Open the files in another program instead of the built-in editor.", QVariant(false)));
+  result.push_back(PluginSetting("associated", "With an external editor, open the files in the program Windows uses for .ini "
+                                 "files. When off, Windows' Edit command opens them, usually in Notepad.", QVariant(true)));
   return result;
 }
 
@@ -122,13 +122,13 @@ void IniEditor::display() const
 		}
 	}
 	else {
-		TextViewer *viewer = new TextViewer("INI Files", parentWidget());
+		TextViewer *viewer = new TextViewer(tr("INI files"), parentWidget());
 		if (m_MOInfo->profile()->localSettingsEnabled())
 		{
-			viewer->setDescription(tr(" Editing profile-specific INIs. Profile-specific game INI files are Enabled.\n \n You can change the INI Editor settings (in the main Mod Organizer settings under the plugins tab) to use an external text editor,\n either notepad or your windows associated program to .INI files."));
+			viewer->setDescription(tr("These are this profile's own INI files.\n\nTo open them in another program, turn on Use an external editor in Settings > Plugins > INI Editor."));
 		}
 		else {
-			viewer->setDescription(tr(" Editing global INIs (in 'myGames' folder). Profile-specific game INI files are Disabled.\n \n You can change the INI Editor settings (in the main Mod Organizer settings under the plugins tab) to use an external text editor,\n either notepad or your windows associated program to .INI files."));
+			viewer->setDescription(tr("These are the game's INI files in Documents\\My Games, shared by the profiles without their own INI files.\n\nTo open them in another program, turn on Use an external editor in Settings > Plugins > INI Editor."));
 		}
 		for (QString const& file : iniFiles) {
 			QString fileName = m_MOInfo->profile()->absoluteIniFilePath(file);
@@ -139,8 +139,7 @@ void IniEditor::display() const
 				}
 				else {
 					QMessageBox::warning(parentWidget(), tr("File too big"),
-						tr("Sorry, the file %1 is too large"
-							" to be handled by the INI Editor").arg(fileName));
+						tr("%1 is larger than 1 MB, too large for the INI Editor.").arg(fileName));
 				}
 			}
 		}

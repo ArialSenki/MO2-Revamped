@@ -8534,15 +8534,18 @@ void MainWindow::logDragDropState()
 
   const bool sta = SUCCEEDED(apt) &&
                    (type == APTTYPE_STA || type == APTTYPE_MAINSTA);
-  if (!sta || ole == RPC_E_CHANGED_MODE || elevated) {
-    log::warn("drag and drop may not work: apartment {} (hr 0x{:x}), "
-              "OleInitialize 0x{:x}, elevated {}",
-              static_cast<int>(type), static_cast<unsigned>(apt),
-              static_cast<unsigned>(ole), elevated);
-  } else {
-    log::info("drag and drop: apartment {}, OleInitialize 0x{:x}, elevated {}",
-              static_cast<int>(type), static_cast<unsigned>(ole), elevated);
+  // the log panel shows warnings to everyone: say it in words, keep the codes
+  // for the debug level
+  if (elevated) {
+    log::warn("Dragging files from Explorer into MO2 won't work while MO2 runs as "
+              "administrator.");
+  } else if (!sta || ole == RPC_E_CHANGED_MODE) {
+    log::warn("Dragging files from other programs into MO2 may not work.");
   }
+  log::debug("drag and drop: apartment {} (hr 0x{:x}), OleInitialize 0x{:x}, "
+             "elevated {}",
+             static_cast<int>(type), static_cast<unsigned>(apt),
+             static_cast<unsigned>(ole), elevated);
 }
 
 void MainWindow::dropEvent(QDropEvent* event)

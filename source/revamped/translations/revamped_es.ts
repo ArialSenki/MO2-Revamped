@@ -22491,4 +22491,31 @@ Download LSLib from GitHub (github.com/Norbyte/lslib)? Without it, these mods st
       <translation>Usar el programa asignado a los .ini</translation>
     </message>
   </context>
+  <context>
+    <name>IniEditor</name>
+    <message>
+      <source>INI files</source>
+      <translation>Archivos INI</translation>
+    </message>
+    <message>
+      <source>These are this profile&apos;s own INI files.
+
+To open them in another program, turn on Use an external editor in Settings &gt; Plugins &gt; INI Editor.</source>
+      <translation>Son los archivos INI propios de este perfil.
+
+Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Plugins &gt; INI Editor.</translation>
+    </message>
+    <message>
+      <source>These are the game&apos;s INI files in Documents\My Games, shared by the profiles without their own INI files.
+
+To open them in another program, turn on Use an external editor in Settings &gt; Plugins &gt; INI Editor.</source>
+      <translation>Son los archivos INI del juego en Documentos\My Games, compartidos por los perfiles sin archivos INI propios.
+
+Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Plugins &gt; INI Editor.</translation>
+    </message>
+    <message>
+      <source>%1 is larger than 1 MB, too large for the INI Editor.</source>
+      <translation>%1 ocupa más de 1 MB, demasiado para el INI Editor.</translation>
+    </message>
+  </context>
 </TS>
