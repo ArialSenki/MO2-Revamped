@@ -113,6 +113,9 @@ struct DeployOptions
 // (<instance>/rootcopy-backup/<game>), overwriteRoot is where a file the
 // program changed goes on restore. With a manifest already there (another
 // program still runs), only the files it doesn't have are added
+// whether deploy() can write into gameDir at all (it copies nothing when not)
+bool gameDirWritable(const QString& gameDir);
+
 Result deploy(const std::vector<File>& files, const QString& gameDir,
               const QString& stateDir, const QString& overwriteRoot,
               const DeployOptions& options = {});

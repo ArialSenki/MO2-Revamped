@@ -44,6 +44,26 @@ class ProblemListTest(PluginBase):
         finally:
             lspk.Package = real
 
+    def test_an_unreadable_pak_is_read_once_until_it_changes(self):
+        # a pak the worker can't read wasn't cached: every check listed it as
+        # unread again and started the worker again, about every 0.8 s
+        self.install()
+        pak = self.pak_mod("A", UA) / "A.pak"
+        pak.write_bytes(b"not a pak")
+        launch = self.game.launch()
+        launch.quick_plan()
+        self.assertTrue(launch.read_in_background())
+        launch._background.join(10)
+        launch.quick_plan()
+        self.assertEqual([p.name for p in launch.unread], ["A.pak"])
+        self.assertFalse(launch.read_in_background())
+        # changed: read again
+        time.sleep(0.01)
+        pak.write_bytes(b"still not a pak")
+        launch.quick_plan()
+        self.assertTrue(launch.read_in_background())
+        launch._background.join(10)
+
     def test_logs_moved_without_mod_files_or_overwriting(self):
         overwrite = self.organizer.overwrite
         for rel in ("bin/a.log", "x/a.log", "Script Extender/log.txt", "readme/changelog.txt"):

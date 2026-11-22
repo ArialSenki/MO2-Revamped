@@ -112,14 +112,23 @@ IPluginInstallerSimple* FomodCSharpShim::real()
 {
   if (m_Real == nullptr && !m_Failed) {
     // one try: init() can't be run twice on the same object
-    m_Failed    = true;
-    auto* plugin = RevampedDotNet::loadReal<IPluginInstallerSimple>(
-        m_Loader, "installer_fomod_csharp/dotnet/installer_fomod_csharp.dll");
-    if (plugin != nullptr && plugin->init(m_MOInfo)) {
-      m_Real   = plugin;
-      m_Failed = false;
-    } else if (plugin != nullptr) {
-      log::error("the C# FOMOD installer failed to initialize");
+    m_Failed = true;
+    // MO2 Revamped: a .NET error turned into a C++ exception while loading
+    // (the WinForms set-up, an incomplete dotnet folder) ended MO2 at the first
+    // C# FOMOD install; the installer stays unavailable instead
+    try {
+      auto* plugin = RevampedDotNet::loadReal<IPluginInstallerSimple>(
+          m_Loader, "installer_fomod_csharp/dotnet/installer_fomod_csharp.dll");
+      if (plugin != nullptr && plugin->init(m_MOInfo)) {
+        m_Real   = plugin;
+        m_Failed = false;
+      } else if (plugin != nullptr) {
+        log::error("the C# FOMOD installer failed to initialize");
+      }
+    } catch (const std::exception& e) {
+      log::error("the C# FOMOD installer failed to load: {}", e.what());
+    } catch (...) {
+      log::error("the C# FOMOD installer failed to load");
     }
   }
   if (m_Real != nullptr) {

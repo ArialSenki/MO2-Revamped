@@ -356,6 +356,9 @@ public:
 
   void updateModInDirectoryStructure(unsigned int index, ModInfo::Ptr modInfo);
   void updateModsInDirectoryStructure(QMap<unsigned int, ModInfo::Ptr> modInfos);
+  // switches on the plugins of mods enabled during a refresh, once a refresh
+  // that has them is done
+  void activateModsAfterRefresh(const QStringList& names);
 
   void doAfterLogin(const std::function<void()>& function)
   {

@@ -23,13 +23,22 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "xml_info_reader.h"
 
 #include <QCoreApplication>
+#include <log.h>
 
 using namespace MOBase;
 
 bool InstallerFomodCSharp::init(IOrganizer* moInfo)
 {
   m_MOInfo = moInfo;
-  CSharp::init(moInfo);
+  // MO2 Revamped: a .NET error here (an assembly missing from the dotnet
+  // folder) reached the native stand-in, whose catch doesn't see managed
+  // exceptions, and ended MO2; the installer is unavailable instead
+  try {
+    CSharp::init(moInfo);
+  } catch (System::Exception^) {
+    log::error("the C# FOMOD installer's .NET set-up failed");
+    return false;
+  }
   return true;
 }
 

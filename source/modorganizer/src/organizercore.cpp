@@ -2096,6 +2096,44 @@ void OrganizerCore::updateModsActiveState(const QList<unsigned int>& modIndices,
              active ? "on" : "off", tStates, tLoadOrder, stage.elapsed());
 }
 
+void OrganizerCore::activateModsAfterRefresh(const QStringList& names)
+{
+  onNextRefresh(
+      [this, names] {
+        // the refresh that just ended started before the mods were enabled;
+        // the one queued after it has them
+        // and after a failed one, the next that works (refreshESPList() skips
+        // a failed one too)
+        if (m_RefreshPending || m_LastRefreshFailed) {
+          activateModsAfterRefresh(names);
+          return;
+        }
+        if (m_CurrentProfile == nullptr) {
+          return;
+        }
+        // by name: mods installed meanwhile moved the indices
+        QList<unsigned int> indices;
+        for (const QString& name : names) {
+          const unsigned int index = ModInfo::getIndex(name);
+          if (index != UINT_MAX && m_CurrentProfile->modEnabled(index)) {
+            indices.append(index);
+          }
+        }
+        if (indices.isEmpty()) {
+          return;
+        }
+        refreshESPList(true);
+        m_PluginList.blockSignals(true);
+        updateModsActiveState(indices, true);
+        m_PluginList.blockSignals(false);
+        refreshBSAList();
+        if (m_UserInterface != nullptr) {
+          m_UserInterface->archivesWriter().writeImmediately(false);
+        }
+      },
+      RefreshCallbackGroup::CORE, RefreshCallbackMode::FORCE_WAIT_FOR_REFRESH);
+}
+
 void OrganizerCore::updateModInDirectoryStructure(unsigned int index,
                                                   ModInfo::Ptr modInfo)
 {
@@ -2137,7 +2175,19 @@ void OrganizerCore::updateModsInDirectoryStructure(
   // it
   // not after a failed refresh: the plugin list wasn't rebuilt above, and each
   // plugin it doesn't know would be reported as an error
-  if (!m_LastRefreshFailed) {
+  if (m_DirectoryUpdate) {
+    // MO2 Revamped: during a refresh the rebuild above only got queued, and the
+    // list doesn't know the mod's plugins yet: each one was reported as "Plugin
+    // not found" and plugins.txt was saved without them, so they stayed off.
+    // They're switched on once a refresh that has the mod is done.
+    QStringList names;
+    for (const auto& info : modInfo) {
+      names.append(info->internalName());
+    }
+    // the structure being built doesn't have the mods: one more refresh after it
+    m_RefreshPending = true;
+    activateModsAfterRefresh(names);
+  } else if (!m_LastRefreshFailed) {
     m_PluginList.blockSignals(true);
     updateModsActiveState(modInfo.keys(), true);
     m_PluginList.blockSignals(false);

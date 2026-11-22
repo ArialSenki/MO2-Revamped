@@ -909,7 +909,11 @@ std::optional<ProcessRunner::Results> ProcessRunner::runBinary()
   // two Script Extenders and two Native Mod Loaders in BG3 (their DLLs copied
   // because bg3_dx11.exe names bg3.exe, and the plugin forcing every DLL in
   // bin). Such a forced load is left out; the copy is what the game loads
-  if (!rootPlan.copies.empty() && !m_forcedLibraries.isEmpty()) {
+  // Not when the game folder can't be written to: the copies don't arrive then,
+  // and the game started with neither the copy nor the forced load (no Script
+  // Extender, no Native Mod Loader)
+  if (!rootPlan.copies.empty() && !m_forcedLibraries.isEmpty() &&
+      RootCopy::gameDirWritable(game->gameDirectory().absolutePath())) {
     const QDir gameDir = game->gameDirectory();
     const QDir exeDir  = m_sp.binary.absoluteDir();
     QSet<QString> copiedPaths;

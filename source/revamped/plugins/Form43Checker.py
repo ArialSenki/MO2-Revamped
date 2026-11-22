@@ -15,6 +15,13 @@ class Form43Checker(mobase.IPluginDiagnose):
         # modification time stay the same. Every problem check opened all the
         # plugins again (~0.5 s with a large Skyrim list, holding Python's lock)
         self.__forms: dict[str, tuple[tuple[int, int], int]] = {}
+        # the last answer, until the next refresh and for the same plugin list:
+        # the check runs on the interface's thread at every problem check (a
+        # toggle, a download, the notifications button), and a stat per plugin
+        # is ~0.5 s with a list of thousands. A refresh (after an install, or
+        # the user's) reads the plugins again
+        self.__last: tuple[tuple[str, ...], bool] | None = None
+        self.__forgetQueued = False
 
     def init(self, organizer: mobase.IOrganizer):
         self.__organizer = organizer
@@ -112,8 +119,20 @@ class Form43Checker(mobase.IPluginDiagnose):
         if self.__organizer.managedGame().gameName() != "Skyrim Special Edition":
             return False
 
-        # Return True if there is at least one invalid file:
-        return next(self.__listInvalidFiles(), False)
+        files = tuple(self.__organizer.findFiles("", "*.es[pml]"))
+        if self.__last is not None and self.__last[0] == files:
+            return self.__last[1]
+        # True if there is at least one invalid file
+        found = any(self.__testFile(file) for file in files)
+        self.__last = (files, found)
+        if not self.__forgetQueued:
+            self.__forgetQueued = True
+            self.__organizer.onNextRefresh(self.__forget, False)
+        return found
+
+    def __forget(self):
+        self.__last = None
+        self.__forgetQueued = False
 
     def __listPlugins(self):
         return [
