@@ -138,6 +138,16 @@ class Stress(mobase.IPlugin):
         self._after(30, lambda: self._enable_during_refresh(round_))
 
     def _enable_during_refresh(self, round_):
+        # the refresh must still be running, or this tests the plain enable:
+        # onNextRefresh(..., True) runs the callback at once when no refresh
+        # is running, and keeps it for the refresh's end when one is
+        ran_at_once = []
+        self._org.onNextRefresh(lambda: ran_at_once.append(True), True)
+        self._during = not ran_at_once
+        if not self._during:
+            self._result["errors"].append(
+                f"{self._pending}: the refresh had ended before the mod was enabled; "
+                "the round doesn't test enabling during a refresh")
         self._org.modList().setActive(self._pending, True)
         self._waited = 0
         self._after(2000, lambda: self._check_enabled(round_))
@@ -151,7 +161,8 @@ class Stress(mobase.IPlugin):
             self._after(2000, lambda: self._check_enabled(round_))
             return
         self._result.setdefault("enable_during_refresh", []).append(
-            {"mod": mod, "plugins": plugins, "inactive": off, "waited_s": self._waited + 2})
+            {"mod": mod, "plugins": plugins, "inactive": off, "waited_s": self._waited + 2,
+             "during_refresh": self._during})
         if off:
             self._result["errors"].append(f"{mod}: plugins still off after a refresh: {off}")
         if round_ < 5:
