@@ -4018,7 +4018,11 @@ void MainWindow::activateSelectedProfile()
   m_OrganizerCore.setCurrentProfile(ui->profileBox->currentText());
 
   m_SavesTab->refreshSaveList();
-  m_OrganizerCore.refresh();
+  // MO2 Revamped: choosing the profile already refreshed the files for it; the
+  // mods folder is the same for every profile, so the full refresh read all
+  // of them again on this thread (1 s on a Nolvus list), while the refresh just
+  // started was still running with the mods as they were
+  updateSortButton();
   ui->modList->updateModCount();
   ui->espList->updatePluginCount();
   ui->statusBar->updateNormalMessage(m_OrganizerCore);
