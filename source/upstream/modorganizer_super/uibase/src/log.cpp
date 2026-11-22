@@ -217,7 +217,12 @@ void Logger::setLevel(Levels lv)
 
 void Logger::setPattern(const std::string& s)
 {
-  m_logger->set_pattern(s);
+  // MO2 Revamped: kept for the sinks added later (addSink() formats them with
+  // m_conf.pattern: a file set after this used the old pattern), and with the
+  // configured time type (this always used local time)
+  m_conf.pattern = s;
+  m_logger->set_pattern(s, m_conf.utc ? spdlog::pattern_time_type::utc
+                                      : spdlog::pattern_time_type::local);
 }
 
 void Logger::setFile(const File& f)
