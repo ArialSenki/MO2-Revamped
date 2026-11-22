@@ -102,6 +102,42 @@
     <qresource prefix="/qt/etc">
         <file>qt.conf</file>
     </qresource>
+    <!-- MO2 Revamped: 2.5.2's icon paths, kept for plugins that still load them;
+         they now give the Fluent glyph (fluenticons.cpp recolors it) -->
+    <qresource prefix="/MO/gui">
+        <file alias="unchecked-checkbox">resources/glyphs/E739.svg</file>
+        <file alias="checked-checkbox">resources/glyphs/E73D.svg</file>
+        <file alias="indeterminate-checkbox">resources/glyphs/E711.svg</file>
+        <file alias="save">resources/glyphs/E74E.svg</file>
+        <file alias="word-wrap">resources/glyphs/E8E4.svg</file>
+        <file alias="remove">resources/glyphs/E711.svg</file>
+        <file alias="executable">resources/glyphs/ECAA.svg</file>
+        <file alias="next">resources/glyphs/E72A.svg</file>
+        <file alias="previous">resources/glyphs/E72B.svg</file>
+        <file alias="refresh">resources/glyphs/E72C.svg</file>
+        <file alias="check">resources/glyphs/E73E.svg</file>
+        <file alias="warning">resources/glyphs/E7BA.svg</file>
+        <file alias="edit_clear">resources/glyphs/E894.svg</file>
+        <file alias="icon_favorite">resources/glyphs/E735.svg</file>
+        <file alias="tracked">resources/glyphs/E7B3.svg</file>
+        <file alias="resources/internet-web-browser.png">resources/glyphs/E774.svg</file>
+    </qresource>
+    <qresource prefix="/MO/gui/content">
+        <file alias="plugin">resources/glyphs/EA86.svg</file>
+        <file alias="skyproc">resources/glyphs/E945.svg</file>
+        <file alias="texture">resources/glyphs/EB9F.svg</file>
+        <file alias="music">resources/glyphs/EC4F.svg</file>
+        <file alias="sound">resources/glyphs/E8D6.svg</file>
+        <file alias="interface">resources/glyphs/E7F4.svg</file>
+        <file alias="skse">resources/glyphs/E943.svg</file>
+        <file alias="script">resources/glyphs/E943.svg</file>
+        <file alias="mesh">resources/glyphs/F158.svg</file>
+        <file alias="bsa">resources/glyphs/F012.svg</file>
+        <file alias="menu">resources/glyphs/E8FD.svg</file>
+        <file alias="inifile">resources/glyphs/E713.svg</file>
+        <file alias="modgroup">resources/glyphs/E8F1.svg</file>
+        <file alias="facegen">resources/glyphs/E77B.svg</file>
+    </qresource>
     <!-- MO2 Revamped: the glyphs drawn without the icon font (fluenticons.cpp) -->
     <qresource prefix="/MO/glyphs">
         <file alias="E700">resources/glyphs/E700.svg</file>
