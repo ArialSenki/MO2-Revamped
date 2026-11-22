@@ -1569,7 +1569,27 @@ void DownloadManager::resumeDownloadInt(int index)
       info->m_CurrentUrl = (info->m_CurrentUrl + 1) % info->m_Urls.count();
     }
     log::debug("request resume from url {}", withoutQuery(info->currentURL()));
-    QNetworkRequest request(QUrl::fromEncoded(info->currentURL().toUtf8()));
+    // MO2 Revamped: web addresses only, as a new download (see
+    // startDownloadURLs()): the address comes back from the download's .meta
+    // file, and a file://server one sent the password hash to that server
+    const auto isWeb = [](const QUrl& url) {
+      const QString scheme = url.scheme().toLower();
+      return (scheme == "http" || scheme == "https") && !url.host().isEmpty();
+    };
+    QUrl resumeUrl = QUrl::fromEncoded(info->currentURL().toUtf8());
+    // the download's next address when this one isn't a web address
+    for (int tries = 1; !isWeb(resumeUrl) && tries < info->m_Urls.count(); ++tries) {
+      info->m_CurrentUrl = (info->m_CurrentUrl + 1) % info->m_Urls.count();
+      resumeUrl          = QUrl::fromEncoded(info->currentURL().toUtf8());
+    }
+    if (!isWeb(resumeUrl)) {
+      log::warn("download not resumed, not a web address: '{}'",
+                resumeUrl.scheme().isEmpty() ? QString("?") : resumeUrl.scheme());
+      emit showMessage(tr("This download can't be resumed: its address isn't a web address."));
+      setState(info, STATE_PAUSED);
+      return;
+    }
+    QNetworkRequest request(resumeUrl);
     request.setHeader(QNetworkRequest::UserAgentHeader,
                       m_NexusInterface->getAccessManager()->userAgent());
     // MO2 Revamped: as a new download asks (see startDownloadURLs()): never from

@@ -249,6 +249,24 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
     }
     m_ArchiveFlags = header.archiveFlags;
     m_Type         = header.type;
+
+    // MO2 Revamped: a mod's archive is untrusted. Its counts must fit its size
+    // (every file record takes at least 8 bytes), and no name in it is longer
+    // than a game's paths: a crafted header asked for gigabytes, a name table
+    // that went backwards overflowed the heap, and a name of thousands of
+    // folders overflowed the stack
+    constexpr BSAUInt MaxNameLength = 1024;
+    std::error_code sizeError;
+    const unsigned long long fileSize = std::filesystem::file_size(fileName, sizeError);
+    if (sizeError || header.fileCount > fileSize / 8 ||
+        (m_Type != TYPE_MORROWIND && m_Type != TYPE_FALLOUT4 && m_Type != TYPE_STARFIELD &&
+         m_Type != TYPE_STARFIELD_LZ4_TEXTURE && m_Type != TYPE_FALLOUT4NG_7 &&
+         m_Type != TYPE_FALLOUT4NG_8 && header.folderCount > fileSize / 16)) {
+      throw data_invalid_exception(makeString(
+          "the archive's counts don't fit its size (filename: %s)",
+          pathForMessage(fileName).c_str()));
+    }
+    Folder::setFileRecordBudget(header.fileCount);
     if (m_Type == TYPE_FALLOUT4 || m_Type == TYPE_STARFIELD ||
         m_Type == TYPE_STARFIELD_LZ4_TEXTURE || m_Type == TYPE_FALLOUT4NG_7 ||
         m_Type == TYPE_FALLOUT4NG_8) {
@@ -259,13 +277,14 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
       std::vector<std::string> fileNames;
       for (unsigned int i = 0; i < header.fileCount; ++i) {
         BSAUShort length = readType<BSAUShort>(m_File);
-
-        char* file = new char[length + 1];
-        m_File.read(file, length);
-        file[length] = '\0';
-
-        fileNames.push_back(file);
-        delete[] file;
+        if (length > MaxNameLength) {
+          throw data_invalid_exception("a file name in the archive is too long");
+        }
+        std::string file(length, '\0');
+        if (!m_File.read(file.data(), length)) {
+          throw data_invalid_exception("the archive's name table is cut short");
+        }
+        fileNames.push_back(file.c_str());
       }
       std::streamoff offset;
       switch (m_Type) {
@@ -362,23 +381,34 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
                   header.fileCount * sizeof(MorrowindFileOffset));
       std::vector<BSAUInt> fileNameOffset(header.fileCount);
       m_File.read((char*)fileNameOffset.data(), header.fileCount * sizeof(BSAUInt));
+      if (!m_File || uint64_t(header.offset) < 12ull * header.fileCount) {
+        throw data_invalid_exception("the archive's name table doesn't fit its header");
+      }
       BSAUInt last = header.offset - 12 * header.fileCount;
       for (uint32_t i = 0; i < header.fileCount; ++i) {
         uint32_t index = 0;
-        if (i + 1 == header.fileCount)
-          index = last;
-        else if (fileNameOffset[i + 1] >= fileNameOffset[i])
+        if (i + 1 == header.fileCount) {
+          // the last name runs to the end of the names' table
+          index = last >= fileNameOffset[i] ? last - fileNameOffset[i] : 0;
+        } else if (fileNameOffset[i + 1] < fileNameOffset[i]) {
+          throw data_invalid_exception(makeString(
+              "the archive's name table goes backwards (filename: %s)",
+              pathForMessage(fileName).c_str()));
+        } else {
           index = fileNameOffset[i + 1] - fileNameOffset[i];
-        else
-          index = UINT32_MAX;
-        // a name can't be longer than the names' table
-        if (index > header.offset - tables) {
+        }
+        // a name can't be longer than the names' table, nor than a game's paths
+        if (index > header.offset - tables || index > MaxNameLength) {
           throw data_invalid_exception(makeString(
               "invalid file name (filename: %s)", pathForMessage(fileName).c_str()));
         }
-        char* filePath = new char[index + 1];
-        m_File.read(filePath, index);
-        filePath[index] = '\0';
+        std::string name(index, '\0');
+        if (!m_File.read(name.data(), index)) {
+          throw data_invalid_exception(makeString(
+              "the archive's name table is cut short (filename: %s)",
+              pathForMessage(fileName).c_str()));
+        }
+        const char* filePath = name.c_str();
 
         std::vector<FO4TextureChunk> dummy;
         Folder::Ptr newDir = m_RootFolder->addFolderFromFile(
@@ -386,8 +416,6 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
             {}, dummy);
         if (std::find(folders.begin(), folders.end(), newDir) == folders.end())
           folders.push_back(newDir);
-
-        delete[] filePath;
       }
       return ERROR_NONE;
     } else {

@@ -173,9 +173,17 @@ void appendModuleDetails(char* buffer, size_t capacity, size_t& length,
     return;
   }
 
+  // MO2 Revamped: the file name only: the folder can hold the user's name
+  // (C:\Users\<name>\...), and this log is sent with bug reports
+  DWORD nameStart = 0;
+  for (DWORD i = 0; i < pathLength; ++i) {
+    if (modulePath[i] == L'\\' || modulePath[i] == L'/') {
+      nameStart = i + 1;
+    }
+  }
   char utf8Path[kDiagnosticPathCapacity * 4] = {};
   const int utf8Length = WideCharToMultiByte(
-      CP_UTF8, 0, modulePath, static_cast<int>(pathLength), utf8Path,
+      CP_UTF8, 0, modulePath + nameStart, static_cast<int>(pathLength - nameStart), utf8Path,
       static_cast<int>(sizeof(utf8Path) - 1), nullptr, nullptr);
   if (utf8Length <= 0) {
     return;

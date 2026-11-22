@@ -117,6 +117,8 @@ class LaunchMixin:
             return False
         if not self._seamless_password_ready(app_path):
             return False
+        if not self._convergence_seamless_ready(app_path):
+            return False
         if not self._regulation_conflict_ready(app_path):
             return False
         if not self._file_loader_ready(app_path):

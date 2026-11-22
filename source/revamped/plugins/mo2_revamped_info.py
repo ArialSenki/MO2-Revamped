@@ -1446,12 +1446,14 @@ class _Redactor:
         self._secrets = [
             # Nexus links and API requests: the download key and the account
             (re.compile(r"(?i)(\b(?:key|apikey|api_key|api-key|access_token|"
-                        r"refresh_token|id_token|token|password|secret|session|"
+                        r"refresh_token|id_token|token|password|cooppassword|secret|session|"
                         r"user_id|userid)\b[\"']?\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
             # a Nexus API key: base64 pieces joined by "--" ("...==--...--...=="),
             # which can hold "/" and so isn't caught below
             (re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{8,}={0,2}--[A-Za-z0-9+/]{8,}={0,2}"
                         r"(?:--[A-Za-z0-9+/]{8,}={0,2})+(?![A-Za-z0-9+/=])"), self.Removed),
+            # Seamless Co-op's password, which may hold spaces: to the end of the line
+            (re.compile(r"(?im)^([ \t]*cooppassword[ \t]*[=:][ \t]*).+$"), r"\1" + self.Removed),
             # headers with keys and cookies, to the end of the line
             (re.compile(r"(?im)^(.*?\b(?:cookie|set-cookie|authorization|apikey)\s*:\s*).*$"),
              r"\1" + self.Removed),

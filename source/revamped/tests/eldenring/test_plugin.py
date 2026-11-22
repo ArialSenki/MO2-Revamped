@@ -364,6 +364,77 @@ class ConvergenceWithSeamless(unittest.TestCase):
         self.assertIn("cooppassword = contraseña".encode("cp1252"), data)
         self.assertIn(b"save_file_extension = cnvco2", data)
 
+    def test_other_save_extensions_from_a_mod_are_refused(self):
+        # a Convergence settings file naming the game's own save (or Reforged's,
+        # or a path) would aim the co-op copy at that save
+        for bad in ("sl2", "SL2", "err", "cnv", "co2", "x/../y", "**", "a" * 20, "ｃｎｖ"):
+            with self.subTest(extension=bad):
+                self.organizer = FakeOrganizer()
+                root = self.organizer.add_mod("Seamless", ["SeamlessCoop/ersc.dll"])
+                (root / "SeamlessCoop" / "ersc_settings.ini").write_text(self.SEAMLESS_INI, encoding="utf-8")
+                self.seamless_root = root
+                self.add_convergence(extension=bad)
+                game = game_for(self.organizer)
+                self.assertEqual(game._convergence_coop_extension(), game.ConvergenceCoopSaveExtension)
+        self.assertTrue(type(game)._usable_coop_extension("cnvco2"))
+        self.assertTrue(type(game)._usable_coop_extension("co3"))
+
+    def test_extension_read_as_the_save_tool_reads_it(self):
+        # "; note", quotes and a leading dot: the same value in both
+        self.add_convergence(extension='".cnvx" ; Convergence co-op')
+        self.assertEqual(game_for(self.organizer)._convergence_coop_extension(), "cnvx")
+
+    def test_no_launch_stop_without_native_dlls(self):
+        # with the mods' DLLs not loaded, a copy that can't be made stops nothing
+        self.add_convergence()
+        game = game_for(self.organizer)
+        blocker = Path(self.organizer.base) / game.ConvergenceSeamlessFolder
+        blocker.parent.mkdir(parents=True, exist_ok=True)
+        blocker.write_text("not a folder", encoding="utf-8")
+        saved = self.organizer.pluginSetting
+        self.organizer.pluginSetting = lambda plugin, key: (
+            False if key == game.NativeDllSetting else saved(plugin, key))
+        try:
+            self.assertTrue(game._convergence_seamless_ready(str(Path("eldenring.exe"))))
+        finally:
+            self.organizer.pluginSetting = saved
+
+    def test_a_failed_copy_loads_no_seamless(self):
+        # with the copy impossible, the mod's own DLL would save Convergence's
+        # characters into ER0000.co2: no Seamless DLL, and the launch says why
+        self.add_convergence()
+        game = game_for(self.organizer)
+        blocker = Path(self.organizer.base) / game.ConvergenceSeamlessFolder
+        blocker.parent.mkdir(parents=True, exist_ok=True)
+        blocker.write_text("not a folder", encoding="utf-8")
+        loads = [Path(l.library()).name for l in game.executableForcedLoads()]
+        self.assertNotIn("ersc.dll", loads)
+        self.assertTrue(game._convergence_seamless_error)
+
+    def test_password_characters_and_utf16_survive(self):
+        cls = type(game_for(self.organizer))
+        text = cls._with_save_extension("[PASSWORD]\r\ncooppassword = a\x0bb c\r\n[SAVE]\r\n", "cnvco2")
+        self.assertIn("cooppassword = a\x0bb c", text)
+        self.add_convergence()
+        own = self.seamless_root / "SeamlessCoop" / "ersc_settings.ini"
+        own.write_bytes(self.SEAMLESS_INI.replace("secret", "ü").encode("utf-16"))
+        dll = self.seamless_load(game_for(self.organizer))
+        data = (dll.parent / "ersc_settings.ini").read_bytes().decode("utf-16")
+        self.assertIn("cooppassword = ü", data)
+        self.assertIn("save_file_extension = cnvco2", data)
+
+    def test_links_in_seamless_folder_are_not_followed(self):
+        outside = Path(tempfile.mkdtemp(prefix="er-outside-"))
+        (outside / "secret.txt").write_text("x", encoding="utf-8")
+        link = self.seamless_root / "SeamlessCoop" / "elsewhere"
+        if subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                          capture_output=True).returncode != 0:
+            self.skipTest("no junction")
+        self.add_convergence()
+        dll = self.seamless_load(game_for(self.organizer))
+        self.assertTrue((dll.parent / "locale" / "en.json").is_file())
+        self.assertFalse((dll.parent / "elsewhere" / "secret.txt").exists())
+
     def test_save_section_added_when_missing(self):
         cls = type(game_for(self.organizer))
         text = cls._with_save_extension("[PASSWORD]\ncooppassword = x\n", "cnvco2")

@@ -369,6 +369,31 @@ class LaunchChecksMixin:
                 qWarning(f"Elden Ring MO2: could not save the save extension choice: {error}")
         return True
 
+    def _convergence_seamless_ready(self, app_path: str) -> bool:
+        """With The Convergence, Seamless Co-op runs from a copy that saves
+        apart (see _seamless_load_dll). When that copy can't be made, the game
+        isn't started: Seamless would otherwise write Convergence's characters
+        into the co-op save it uses without Convergence."""
+        if self._runs_outside_vfs(app_path):
+            return True
+        if not bool(self._organizer.pluginSetting(self.name(), self.NativeDllSetting)):
+            # MO2 loads no mod DLL then, Seamless's neither
+            return True
+        self._seamless_load_dll()
+        error = getattr(self, "_convergence_seamless_error", None)
+        if not error:
+            return True
+        qWarning(f"Elden Ring MO2: Seamless Co-op's copy for The Convergence couldn't be made "
+                 f"({error}); launch stopped.")
+        QMessageBox.warning(
+            self._message_parent(),
+            _tr("Seamless Co-op"),
+            _tr("Seamless Co-op couldn't be set up for The Convergence, so the game was not "
+                "started: it would save Convergence's characters into the co-op save it uses "
+                "without Convergence.\n\n{0}").format(error),
+        )
+        return False
+
     def _seamless_password_ready(self, app_path: str) -> bool:
         """Seamless Co-op quits the game at start without a session password
         in its settings file: MO2 says so before the launch instead."""

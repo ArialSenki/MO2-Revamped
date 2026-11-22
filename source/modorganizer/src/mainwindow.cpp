@@ -7344,9 +7344,18 @@ void MainWindow::extractBSATriggered(QTreeWidgetItem* item)
       // the archive library takes wide paths, so names outside the system code
       // page work; the short 8.3 form used before is missing on volumes without
       // short names
-      BSA::EErrorCode result = archive.read(
-          std::filesystem::path(QDir::toNativeSeparators(archivePath).toStdWString()),
-          true);
+      BSA::EErrorCode result = BSA::ERROR_INVALIDDATA;
+      try {
+        result = archive.read(
+            std::filesystem::path(QDir::toNativeSeparators(archivePath).toStdWString()),
+            true);
+      } catch (const std::exception& e) {
+        // MO2 Revamped: a damaged or crafted archive is refused with an
+        // exception (bsatk); out of this slot it closed MO2
+        log::error("failed to read archive {}: {}", archivePath, e.what());
+        reportError(tr("failed to read %1: %2").arg(archivePath).arg(e.what()));
+        return;
+      }
       if ((result != BSA::ERROR_NONE) && (result != BSA::ERROR_INVALIDHASHES)) {
         reportError(
             tr("failed to read %1: %2").arg(archivePath, QString::number(result)));

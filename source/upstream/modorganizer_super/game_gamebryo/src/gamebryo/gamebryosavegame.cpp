@@ -499,9 +499,11 @@ bool GamebryoSaveGame::FileWrapper::readNextChunk()
       return false;
     }
     do {
-      stream.avail_in = m_File.read(inBuffer.get(), CHUNK);
+      // MO2 Revamped: -1 (a read error) was taken as 4 GB of input
+      const qint64 got = m_File.read(inBuffer.get(), CHUNK);
+      stream.avail_in  = got > 0 ? static_cast<uInt>(got) : 0;
       read += stream.avail_in;
-      if (!m_File.isReadable()) {
+      if (got < 0 || !m_File.isReadable()) {
         (void)inflateEnd(&stream);
         return false;
       }

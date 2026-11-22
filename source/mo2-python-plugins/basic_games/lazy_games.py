@@ -23,7 +23,9 @@ import hashlib
 import importlib
 import json
 import os
+import re
 import sys
+import threading
 from typing import Any
 
 import mobase
@@ -201,6 +203,16 @@ class ManifestGame(BasicGame):
             self._real_game.setGameVariant(variant)
 
     def _real(self) -> BasicGame:
+        # MO2 Revamped: made once, even when two threads first ask together
+        # (two would each run init() and register the game's features twice)
+        # only a finished one is taken without the lock: the class's own
+        # detectGame() runs with the object already set (see _make_real)
+        if self.__dict__.get("_real_ready"):
+            return self._real_game
+        with _real_lock:
+            return self._make_real()
+
+    def _make_real(self) -> BasicGame:
         if self._real_game is None:
             module = importlib.import_module(self._manifest_module, __package__)
             real = getattr(module, self._manifest_class)()
@@ -224,7 +236,18 @@ class ManifestGame(BasicGame):
             if self._stub_variant is not None:
                 real.setGameVariant(self._stub_variant)
             self._real_game = real
+            self.__dict__["_real_ready"] = True
         return self._real_game
+
+
+# the path detection's lock (basic_game._detect_lock): a detection can build
+# the real game and the real game's detectGame() can read a path, so one lock
+# for both, never two taken in opposite orders
+from .basic_game import _detect_lock as _real_lock  # noqa: E402
+
+# MO2 Revamped: a check inside basic_games' own games package, nothing else
+# (the manifest is a file: "os:abort" would call any function)
+_INIT_PROBE = re.compile(r"\.games(\.[A-Za-z_][A-Za-z0-9_]*)+:[A-Za-z_][A-Za-z0-9_]*")
 
 
 def _init_probe_says_so(probe: Any) -> bool:
@@ -232,6 +255,11 @@ def _init_probe_says_so(probe: Any) -> bool:
     arguments; False when there is none or it fails."""
     if not isinstance(probe, str) or ":" not in probe:
         return False
+    if _INIT_PROBE.fullmatch(probe) is None:
+        print(f"basic_games: the init check {probe} isn't one of basic_games' games; ignored",
+              file=sys.stderr)
+        # unsure: the real init() decides
+        return True
     module_name, function = probe.split(":", 1)
     try:
         return bool(getattr(importlib.import_module(module_name, __package__), function)())

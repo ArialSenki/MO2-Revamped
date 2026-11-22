@@ -10,7 +10,9 @@ from __future__ import annotations
 import codecs
 import configparser
 import os
+import re
 import shutil
+import stat
 from pathlib import Path
 
 import mobase
@@ -330,6 +332,23 @@ class ForcedLoadsMixin:
     # where Seamless Co-op runs from with The Convergence, in the instance
     ConvergenceSeamlessFolder = "Elden Ring MO2 - Seamless for The Convergence"
 
+    # a co-op save extension a mod's settings may give Seamless's copy: a short
+    # plain word that is none of the game's other saves (sl2, Reforged's err,
+    # Convergence's cnv, Seamless's shared co2) nor a file type of their folders
+    _CoopExtensionPattern = re.compile(r"[a-z0-9]{2,8}")
+    _ReservedSaveExtensions = frozenset(
+        {"sl2", "co2", "err", "cnv", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
+    )
+
+    @classmethod
+    def _usable_coop_extension(cls, value: str | None) -> bool:
+        folded = (value or "").casefold()
+        return (
+            value is not None and value.isascii()
+            and cls._CoopExtensionPattern.fullmatch(folded) is not None
+            and folded not in cls._ReservedSaveExtensions
+        )
+
     def _seamless_load_dll(self) -> Path | None:
         """The Seamless Co-op DLL this run loads. With The Convergence it is a
         copy of Seamless's folder in the instance whose settings save to
@@ -339,6 +358,7 @@ class ForcedLoadsMixin:
         settings next to its DLL, a real file the VFS doesn't change; the copy
         keeps everything else of the user's settings (the password). Without
         Convergence, or when the copy can't be made, the mod's own DLL."""
+        self._convergence_seamless_error = None
         seamless = self._active_seamless_dll()
         if seamless is None or self.GameShortName != "eldenring":
             return seamless
@@ -348,13 +368,17 @@ class ForcedLoadsMixin:
         try:
             copy = self._convergence_seamless_copy(seamless, extension)
         except (OSError, UnicodeError) as error:
+            # MO2 Revamped: not the mod's own DLL then: it would write
+            # Convergence's characters into ER0000.co2, Seamless's save without
+            # Convergence. The launch check says why (_convergence_seamless_ready)
+            self._convergence_seamless_error = str(error)
             self._log_when_changed("convergence-seamless", [(
                 qWarning,
                 f"Elden Ring MO2: Seamless Co-op can't get The Convergence's save "
-                f"extension ({error}); it saves to its own, shared with Seamless "
-                "without Convergence.",
+                f"extension ({error}); it isn't loaded, so it can't write into the "
+                "save of Seamless without Convergence.",
             )])
-            return seamless
+            return None
         self._log_when_changed("convergence-seamless", [(
             _module_qinfo,
             f"Elden Ring MO2: The Convergence is active; Seamless Co-op runs from "
@@ -374,8 +398,18 @@ class ForcedLoadsMixin:
             if not settings.is_file():
                 continue
             value = self._ini_value(settings, "SAVE", "save_file_extension")
-            if value and value.casefold() != "co2" and value.isalnum():
+            # read as the save tool reads it (_settings_extension): without a
+            # "; note", quotes or a leading dot
+            if value:
+                value = value.split(";", 1)[0].strip().strip("\"'").lstrip(".") or None
+            # MO2 Revamped: "sl2" (or Reforged's err) would aim Convergence's
+            # co-op saves at another game save
+            if self._usable_coop_extension(value):
                 return value
+            if value:
+                qWarning(f"Elden Ring MO2: save_file_extension '{value}' in '{settings}' "
+                         f"isn't one Seamless Co-op can use with The Convergence; "
+                         f"{self.ConvergenceCoopSaveExtension} instead.")
         return self.ConvergenceCoopSaveExtension
 
     @staticmethod
@@ -393,7 +427,7 @@ class ForcedLoadsMixin:
         source_dir = seamless.parent
         target_dir = Path(self._organizer.basePath()) / self.ConvergenceSeamlessFolder / source_dir.name
         settings_name = f"{seamless.stem}_settings.ini".casefold()
-        for source in source_dir.rglob("*"):
+        for source in self._files_without_links(source_dir):
             relative = source.relative_to(source_dir)
             target = target_dir / relative
             if source.is_dir():
@@ -415,23 +449,68 @@ class ForcedLoadsMixin:
         # bytes that aren't UTF-8 (a password saved in the system's code
         # page) go back as they were
         raw = settings_source.read_bytes() if settings_source.is_file() else b""
-        text = raw.removeprefix(codecs.BOM_UTF8).decode("utf-8", errors="surrogateescape")
+        if raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+            # saved as UTF-16 by an editor: written back the same way
+            text = raw.decode("utf-16")
+            encode = lambda value: value.encode("utf-16")  # noqa: E731
+        else:
+            text = raw.removeprefix(codecs.BOM_UTF8).decode("utf-8", errors="surrogateescape")
+            encode = lambda value: value.encode("utf-8", errors="surrogateescape")  # noqa: E731
         settings_target = target_dir / settings_source.name
-        new_data = self._with_save_extension(text, extension).encode("utf-8", errors="surrogateescape")
+        new_data = encode(self._with_save_extension(text, extension))
         try:
             unchanged = settings_target.read_bytes() == new_data
         except OSError:
             unchanged = False
         if not unchanged:
             target_dir.mkdir(parents=True, exist_ok=True)
-            settings_target.write_bytes(new_data)
-        return target_dir / seamless.name
+            # whole or not at all: a half-written file would lose the password,
+            # and Seamless closes the game without one
+            partial = settings_target.with_name(settings_target.name + ".mo2r-tmp")
+            partial.write_bytes(new_data)
+            os.replace(partial, settings_target)
+        copy = target_dir / seamless.name
+        if not copy.is_file():
+            # its own DLL a link (left out of the copy above) or not copied
+            raise OSError(f"{copy} wasn't copied")
+        return copy
+
+    @staticmethod
+    def _files_without_links(folder: Path):
+        """Everything below folder, never through a junction or symbolic link
+        (one in a mod's SeamlessCoop folder would copy files from elsewhere on
+        the disk into the instance, or loop)."""
+        for root, dirs, files in os.walk(folder, followlinks=False):
+            kept = []
+            for name in dirs:
+                path = os.path.join(root, name)
+                try:
+                    attributes = os.lstat(path).st_file_attributes
+                except (OSError, AttributeError):
+                    continue
+                if attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                    continue
+                kept.append(name)
+                yield Path(path)
+            dirs[:] = kept
+            for name in files:
+                path = os.path.join(root, name)
+                try:
+                    if os.lstat(path).st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                        continue
+                except (OSError, AttributeError):
+                    continue
+                yield Path(path)
 
     @staticmethod
     def _with_save_extension(text: str, extension: str) -> str:
         """Seamless's settings with save_file_extension set in [SAVE], the
         rest as the user wrote it."""
-        lines = text.splitlines()
+        # only line breaks a settings file has: str.splitlines() also splits
+        # on characters a password may hold (\x0b, \x1c, U+2028...)
+        lines = re.split(r"\r\n|\n|\r", text)
+        if lines and lines[-1] == "":
+            lines.pop()
         section = None
         save_section = None
         for index, line in enumerate(lines):

@@ -38,6 +38,26 @@ Folder::Folder() : m_Parent(nullptr), m_Name()
   m_Offset    = ULONG_MAX;
 }
 
+unsigned long long& Folder::fileRecordBudget()
+{
+  static thread_local unsigned long long budget = ULLONG_MAX;
+  return budget;
+}
+
+void Folder::setFileRecordBudget(unsigned long long files)
+{
+  fileRecordBudget() = files;
+}
+
+void Folder::takeFromBudget(unsigned long long files)
+{
+  unsigned long long& budget = fileRecordBudget();
+  if (files > budget) {
+    throw data_invalid_exception("the archive's folders list more files than it has");
+  }
+  budget -= files;
+}
+
 Folder::Ptr Folder::readFolder(std::fstream& file, BSAUInt fileNamesLength,
                                BSAUInt& endPos)
 {
@@ -45,6 +65,7 @@ Folder::Ptr Folder::readFolder(std::fstream& file, BSAUInt fileNamesLength,
   result->m_NameHash  = readType<BSAHash>(file);
   result->m_FileCount = readType<unsigned long>(file);
   result->m_Offset    = readType<unsigned long>(file);
+  takeFromBudget(result->m_FileCount);
   std::streamoff pos  = file.tellg();
 
   file.seekg(result->m_Offset - fileNamesLength, fstream::beg);
@@ -72,6 +93,7 @@ Folder::Ptr Folder::readFolderSE(std::fstream& file, BSAUInt fileNamesLength,
   result->m_FileCount = readType<BSAUInt>(file);
   readType<BSAUInt>(file);
   result->m_Offset   = readType<BSAHash>(file);
+  takeFromBudget(result->m_FileCount);
   std::streamoff pos = file.tellg();
 
   file.seekg(result->m_Offset - fileNamesLength, fstream::beg);

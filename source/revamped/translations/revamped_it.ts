@@ -1224,6 +1224,10 @@ Vuoi davvero continuare?</translation>
   <context>
     <name>DownloadManager</name>
     <message>
+      <source>This download can't be resumed: its address isn't a web address.</source>
+      <translation>Questo download non può riprendere: il suo indirizzo non è un indirizzo web.</translation>
+    </message>
+    <message>
       <source>These downloads were not deleted. They may be in use, or the deletion was cancelled:
 %1</source>
       <translation>Questi download non sono stati eliminati. Potrebbero essere in uso, oppure l'eliminazione è stata annullata:
