@@ -303,12 +303,11 @@ namespace
     {
       QPainter p(this);
       p.setRenderHint(QPainter::Antialiasing);
-      p.setFont(FluentIcons::font(10));
-      p.setPen(m_button->palette().color(
-          m_button->isEnabled() ? QPalette::Active : QPalette::Disabled, QPalette::ButtonText));
+      const QColor ink = m_button->palette().color(
+          m_button->isEnabled() ? QPalette::Active : QPalette::Disabled, QPalette::ButtonText);
       p.translate(width() - m_right, height() / 2.0 + m_drop);
       p.rotate(angle());
-      p.drawText(QRectF(-6, -6, 12, 12), Qt::AlignCenter, QString(QChar(0xE70D)));  // ChevronDown
+      FluentIcons::drawGlyph(p, QRectF(-6, -6, 12, 12), 0xE70D, ink, 10);  // ChevronDown
     }
 
   private:

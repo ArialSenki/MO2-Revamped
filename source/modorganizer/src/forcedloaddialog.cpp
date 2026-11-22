@@ -228,9 +228,10 @@ void ForcedLoadDialog::buildFluentLayout()
   auto* head = new QHBoxLayout;
   head->setContentsMargins(18, 14, 12, 14);
   head->setSpacing(12);
-  auto* glyph = new QLabel(QString(QChar(char16_t(0xE950))), card);
+  auto* glyph = new QLabel(card);
   glyph->setObjectName(QStringLiteral("instanceRowGlyph"));
   glyph->setFont(FluentIcons::font(24));
+  FluentIcons::setGlyph(glyph, 0xE950, 24, FluentIcons::Tone::Muted);
   glyph->setFixedSize(32, 32);
   glyph->setAlignment(Qt::AlignCenter);
   head->addWidget(glyph, 0, Qt::AlignVCenter);

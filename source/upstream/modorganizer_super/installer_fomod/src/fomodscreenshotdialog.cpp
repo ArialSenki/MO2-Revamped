@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "scalelabel.h"
 
 #include <QFont>
+#include <QFontDatabase>
 #include <QHBoxLayout>
 #include <QImageReader>
 #include <QKeyEvent>
@@ -45,9 +46,33 @@ QFont glyphFont(int pixels)
   return font;
 }
 
+// MO2 Revamped: without either font (a Wine prefix has neither, and they can't
+// be shipped) a glyph is an empty box: the buttons use text characters that
+// any font has instead. MO2R_GLYPH_SVG=1 forces that, as it does in MO2
+QString glyphText(char16_t glyph)
+{
+  static const bool fonts =
+      qEnvironmentVariableIntValue("MO2R_GLYPH_SVG") != 1 &&
+      (QFontDatabase::hasFamily(QStringLiteral("Segoe Fluent Icons")) ||
+       QFontDatabase::hasFamily(QStringLiteral("Segoe MDL2 Assets")));
+  if (fonts) {
+    return QString(QChar(glyph));
+  }
+  switch (glyph) {
+  case 0xE711:
+    return QString(QChar(0x00D7));  // multiplication sign
+  case 0xE76B:
+    return QString(QChar(0x2039));  // single left angle quotation mark
+  case 0xE76C:
+    return QString(QChar(0x203A));  // single right angle quotation mark
+  default:
+    return QString(QChar(glyph));
+  }
+}
+
 QPushButton* glyphButton(char16_t glyph, const QString& name, QWidget* parent)
 {
-  auto* button = new QPushButton(QString(QChar(glyph)), parent);
+  auto* button = new QPushButton(glyphText(glyph), parent);
   button->setObjectName(QStringLiteral("fomodViewerButton"));
   button->setFont(glyphFont(16));
   button->setAccessibleName(name);

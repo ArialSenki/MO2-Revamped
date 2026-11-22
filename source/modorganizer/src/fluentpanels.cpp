@@ -170,9 +170,10 @@ void ElidedLabel::paintEvent(QPaintEvent*)
 
 QLabel* glyphLabel(char16_t glyph, QWidget* parent)
 {
-  auto* label = new QLabel(QString(QChar(glyph)), parent);
+  auto* label = new QLabel(parent);
   label->setObjectName(QStringLiteral("instanceRowGlyph"));
   label->setFont(FluentIcons::font(16));
+  FluentIcons::setGlyph(label, glyph, 16, FluentIcons::Tone::Muted);
   label->setFixedWidth(24);
   label->setAlignment(Qt::AlignCenter);
   return label;

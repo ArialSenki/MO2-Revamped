@@ -318,9 +318,10 @@ void OverwriteInfoDialog::buildFluentLayout()
   auto* hintLayout = new QHBoxLayout(hint);
   hintLayout->setContentsMargins(18, 10, 18, 10);
   hintLayout->setSpacing(12);
-  auto* glyph = new QLabel(QString(QChar(0xE946)), hint);
+  auto* glyph = new QLabel(hint);
   glyph->setObjectName(QStringLiteral("instanceRowGlyph"));
   glyph->setFont(FluentIcons::font(16));
+  FluentIcons::setGlyph(glyph, 0xE946, 16, FluentIcons::Tone::Muted);
   hintLayout->addWidget(glyph, 0, Qt::AlignTop);
   ui->overwriteContextHint->setParent(hint);
   ui->overwriteContextHint->setObjectName(QStringLiteral("fluentSettingDescription"));

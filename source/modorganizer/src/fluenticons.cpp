@@ -8,8 +8,11 @@
 #include <QAction>
 #include <QApplication>
 #include <QCache>
+#include <QFile>
 #include <QFileInfo>
 #include <QFontDatabase>
+#include <QLabel>
+#include <QSet>
 #include <log.h>
 #include <QHash>
 #include <QIconEngine>
@@ -47,6 +50,32 @@ const char* const GapSizeProperty  = "fluentGapSize";
 // Windows 11 leaves 8 px between a button's icon and its text; Qt's button
 // label leaves 2, so the icon carries the other 6 on its right
 constexpr int IconGap = 6;
+
+// the glyph's SVG (Fluent UI System Icons, resources/glyphs) in the ink, on a
+// pixels-wide square; transparent when the glyph has no SVG. Its shapes are one
+// color, so painting the ink over them where they are keeps their edges
+QImage svgGlyph(char16_t codepoint, int pixels, const QColor& ink)
+{
+  QImage image(pixels, pixels, QImage::Format_ARGB32_Premultiplied);
+  image.fill(Qt::transparent);
+  const QString path =
+      QStringLiteral(":/MO/glyphs/") + QString::number(int(codepoint), 16).toUpper();
+  if (!QFile::exists(path)) {
+    static QSet<int> told;
+    if (!told.contains(codepoint)) {
+      told.insert(codepoint);
+      log::warn("no image for the icon glyph {:04X} without the icon font", int(codepoint));
+    }
+    return image;
+  }
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHint(QPainter::SmoothPixmapTransform);
+  QIcon(path).paint(&painter, QRect(0, 0, pixels, pixels));
+  painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+  painter.fillRect(image.rect(), ink);
+  return image;
+}
 
 struct Glyph
 {
@@ -314,10 +343,14 @@ public:
       QPainter p(&pm);
       p.setRenderHint(QPainter::Antialiasing);
       p.setRenderHint(QPainter::TextAntialiasing);
-      p.setFont(FluentIcons::font(pixels));
-      p.setPen(ink);
-      p.drawText(QRect(0, 0, pixels, pixels), Qt::AlignCenter,
-                 QString(QChar(m_codepoint)));
+      if (FluentIcons::hasGlyphFont()) {
+        p.setFont(FluentIcons::font(pixels));
+        p.setPen(ink);
+        p.drawText(QRect(0, 0, pixels, pixels), Qt::AlignCenter,
+                   QString(QChar(m_codepoint)));
+      } else {
+        p.drawImage(0, 0, svgGlyph(m_codepoint, pixels, ink));
+      }
       p.end();
 
       // the ratio is part of the cached pixmap, so painting never detaches it
@@ -500,6 +533,100 @@ QIcon glyph(char16_t codepoint, Tone tone)
   return QIcon(new GlyphEngine(codepoint, tone));
 }
 
+bool hasGlyphFont()
+{
+  static const bool found = [] {
+    if (qEnvironmentVariableIntValue("MO2R_GLYPH_SVG") == 1) {
+      log::info("MO2R_GLYPH_SVG=1: icon glyphs are drawn from their SVGs");
+      return false;
+    }
+    const bool installed = QFontDatabase::hasFamily(QStringLiteral("Segoe Fluent Icons")) ||
+                           QFontDatabase::hasFamily(QStringLiteral("Segoe MDL2 Assets"));
+    if (!installed) {
+      log::warn("neither Segoe Fluent Icons nor Segoe MDL2 Assets is installed: icon "
+                "glyphs are drawn from their SVGs (Fluent UI System Icons)");
+    }
+    return installed;
+  }();
+  return found;
+}
+
+void drawGlyph(QPainter& painter, const QRectF& rect, char16_t codepoint,
+               const QColor& ink, int pixelSize, Qt::Alignment alignment)
+{
+  pixelSize = qMax(1, pixelSize);
+  if (hasGlyphFont()) {
+    painter.save();
+    painter.setFont(font(pixelSize));
+    painter.setPen(ink);
+    painter.drawText(rect, alignment, QString(QChar(codepoint)));
+    painter.restore();
+    return;
+  }
+
+  // the square the glyph's em box would take, placed as the text would be
+  QRectF box(0, 0, pixelSize, pixelSize);
+  if (alignment & Qt::AlignLeft) {
+    box.moveLeft(rect.left());
+  } else if (alignment & Qt::AlignRight) {
+    box.moveRight(rect.right());
+  } else {
+    box.moveLeft(rect.center().x() - pixelSize / 2.0);
+  }
+  if (alignment & Qt::AlignTop) {
+    box.moveTop(rect.top());
+  } else if (alignment & Qt::AlignBottom) {
+    box.moveBottom(rect.bottom());
+  } else {
+    box.moveTop(rect.center().y() - pixelSize / 2.0);
+  }
+
+  // in the ink asked for, cached as the glyph engine's pixmaps are: item views
+  // draw these on every row
+  const qreal scale = painter.device() ? painter.device()->devicePixelRatioF() : 1.0;
+  const int pixels  = qMax(1, qRound(pixelSize * scale));
+  const QString key = QStringLiteral("fluentsvgglyph-%1-%2-%3")
+                          .arg(int(codepoint), 0, 16)
+                          .arg(pixels)
+                          .arg(ink.rgba(), 0, 16);
+  QPixmap pm;
+  if (!QPixmapCache::find(key, &pm)) {
+    pm = QPixmap::fromImage(svgGlyph(codepoint, pixels, ink));
+    QPixmapCache::insert(key, pm);
+  }
+  painter.save();
+  painter.setRenderHint(QPainter::SmoothPixmapTransform);
+  painter.drawPixmap(box, pm, QRectF(pm.rect()));
+  painter.restore();
+}
+
+void setGlyph(QLabel* label, char16_t codepoint, int pixelSize, Tone tone)
+{
+  if (hasGlyphFont()) {
+    label->setText(QString(QChar(codepoint)));
+    return;
+  }
+  label->setText({});
+  label->setPixmap(glyph(codepoint, tone).pixmap(QSize(pixelSize, pixelSize),
+                                                 label->devicePixelRatioF()));
+}
+
+void setGlyph(QAbstractButton* button, char16_t codepoint, int pixelSize, Tone tone)
+{
+  if (hasGlyphFont()) {
+    button->setText(QString(QChar(codepoint)));
+    return;
+  }
+  button->setText({});
+  button->setIcon(glyph(codepoint, tone));
+  button->setIconSize(QSize(pixelSize, pixelSize));
+  if (auto* tool = qobject_cast<QToolButton*>(button)) {
+    if (tool->toolButtonStyle() == Qt::ToolButtonTextOnly) {
+      tool->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
+  }
+}
+
 QIcon icon(const QString& resource)
 {
   // glyph icons pick their colors when painted, so one per resource serves
@@ -512,22 +639,9 @@ QIcon icon(const QString& resource)
     return *cached;
   }
 
-  // without the glyph fonts (a Wine prefix has neither, and they can't be
-  // shipped) a glyph would paint as an empty box: the resource's own image
-  // is drawn instead
-  static const bool glyphFont = [] {
-    const bool found = QFontDatabase::hasFamily(QStringLiteral("Segoe Fluent Icons")) ||
-                       QFontDatabase::hasFamily(QStringLiteral("Segoe MDL2 Assets"));
-    if (!found) {
-      MOBase::log::warn("neither Segoe Fluent Icons nor Segoe MDL2 Assets is installed: "
-                        "icons with an image of their own use it");
-    }
-    return found;
-  }();
-
   const auto& table = glyphTable();
   auto it           = table.find(resource);
-  if (it != table.end() && glyphFont) {
+  if (it != table.end()) {
     return *glyphs.insert(resource, glyph(it->codepoint, it->tone));
   }
 

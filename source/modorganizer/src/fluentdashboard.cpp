@@ -1,4 +1,5 @@
 #include "fluentdashboard.h"
+#include "fluenticons.h"
 #include "fluentpanels.h"
 #include "quickui.h"
 #include "summaryquickbridge.h"
@@ -54,6 +55,18 @@ QFont iconFont(int pointSize)
   return f;
 }
 
+// the badge's glyph: the style sheet colors it by its tone property; without
+// the icon font it is an image, drawn in that tone (13 pt, about 17 px)
+void setBadgeGlyph(QLabel* badge, char16_t glyph)
+{
+  const QString tone = badge->property("tone").toString();
+  const auto ink     = tone == QLatin1String("accent")     ? FluentIcons::Tone::Accent
+                       : tone == QLatin1String("caution")  ? FluentIcons::Tone::Caution
+                       : tone == QLatin1String("critical") ? FluentIcons::Tone::Critical
+                                                           : FluentIcons::Tone::Muted;
+  FluentIcons::setGlyph(badge, glyph, 17, ink);
+}
+
 void repolish(QWidget* w)
 {
   w->style()->unpolish(w);
@@ -82,9 +95,10 @@ FluentStatTile::FluentStatTile(char16_t glyph, const QString& caption, QWidget* 
   m_layout->setContentsMargins(14, 8, 14, 8);
   m_layout->setSpacing(14);
 
-  m_badge = new QLabel(QString(QChar(glyph)), this);
+  m_badge = new QLabel(this);
   m_badge->setObjectName(QStringLiteral("fluentStatBadge"));
   m_badge->setFont(iconFont(15));
+  setBadgeGlyph(m_badge, glyph);
   m_badge->setAlignment(Qt::AlignCenter);
   m_badge->setFixedSize(34, 34);
   m_layout->addWidget(m_badge);
@@ -105,6 +119,9 @@ void FluentStatTile::setValue(const QString& value, const QString& tone)
   m_value->setText(value);
   if (m_badge->property("tone").toString() != tone) {
     m_badge->setProperty("tone", tone);
+    if (!FluentIcons::hasGlyphFont()) {
+      setBadgeGlyph(m_badge, m_glyph);
+    }
     repolish(m_badge);
   }
 }

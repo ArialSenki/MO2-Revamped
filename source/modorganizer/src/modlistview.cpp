@@ -1423,12 +1423,9 @@ void ModListView::paintSeparatorArrow(QPainter* painter, const QRect& slot,
                                       const QModelIndex& index, const QColor& ink) const
 {
   // chevron right, chevron down
-  const QChar glyph(isExpanded(index) ? 0xE70D : 0xE76C);
   painter->save();
   painter->setRenderHint(QPainter::TextAntialiasing);
-  painter->setFont(FluentIcons::font(12));
-  painter->setPen(ink);
-  painter->drawText(slot, Qt::AlignCenter, QString(glyph));
+  FluentIcons::drawGlyph(*painter, slot, isExpanded(index) ? 0xE70D : 0xE76C, ink, 12);
   painter->restore();
 }
 
