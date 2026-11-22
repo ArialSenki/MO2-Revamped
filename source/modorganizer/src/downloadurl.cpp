@@ -17,17 +17,96 @@ QString withoutQuery(QString text)
   return text.replace(query, QString());
 }
 
+namespace
+{
+
+// one parameter of a Content-Disposition value
+struct DispositionParameter
+{
+  QString name;
+  QString value;
+};
+
+// MO2 Revamped: the parameters of a Content-Disposition value, split at the
+// ";" outside quoted-strings, and the quoted-strings with their backslash
+// escapes taken (RFC 6266 / 2616: \" is a quote, \\ a backslash). The
+// regexes before cut filename="a\"b.7z" at the escaped quote and took the
+// filename= inside xfilename= or inside another parameter's quoted value.
+// An unterminated quoted-string gives no value
+QList<DispositionParameter> dispositionParameters(const QString& text)
+{
+  QList<DispositionParameter> params;
+  const qsizetype n = text.size();
+  qsizetype i       = 0;
+  while (i < n) {
+    // the name, up to "=" or the end of the parameter
+    const qsizetype nameStart = i;
+    while (i < n && text[i] != u'=' && text[i] != u';') {
+      ++i;
+    }
+    const QString name = text.mid(nameStart, i - nameStart).trimmed();
+    if (i >= n || text[i] == u';') {
+      // a parameter without a value (the disposition type)
+      ++i;
+      continue;
+    }
+    ++i;  // "="
+    while (i < n && text[i].isSpace()) {
+      ++i;
+    }
+    QString value;
+    bool ok = true;
+    if (i < n && text[i] == u'"') {
+      ++i;
+      bool closed = false;
+      while (i < n) {
+        const QChar c = text[i++];
+        if (c == u'"') {
+          closed = true;
+          break;
+        }
+        if (c == u'\\' && i < n) {
+          value += text[i++];
+        } else {
+          value += c;
+        }
+      }
+      ok = closed;
+      // whatever follows the closing quote up to the next ";" isn't part of it
+      while (i < n && text[i] != u';') {
+        ++i;
+      }
+    } else {
+      const qsizetype valueStart = i;
+      while (i < n && text[i] != u';') {
+        ++i;
+      }
+      value = text.mid(valueStart, i - valueStart).trimmed();
+    }
+    ++i;  // ";"
+    if (ok) {
+      params.append({name, value});
+    }
+  }
+  return params;
+}
+
+}  // namespace
+
 QString fileNameFromDisposition(const QString& disposition)
 {
-  static const QRegularExpression extended(R"re(filename\*\s*=\s*([^']*)'[^']*'([^;\s]+))re",
-                                           QRegularExpression::CaseInsensitiveOption);
-  static const QRegularExpression quoted(R"re(filename\s*=\s*"([^"]*)")re",
-                                         QRegularExpression::CaseInsensitiveOption);
-  static const QRegularExpression bare(R"re(filename\s*=\s*([^;"\s][^;]*))re",
-                                       QRegularExpression::CaseInsensitiveOption);
+  const auto params = dispositionParameters(disposition);
 
-  auto match = extended.match(disposition);
-  if (match.hasMatch()) {
+  // filename*=UTF-8''... first (RFC 6266), wherever it is
+  static const QRegularExpression extended(R"re(^([^']*)'[^']*'(\S+)$)re");
+  for (const auto& p : params) {
+    if (p.name.compare(QStringLiteral("filename*"), Qt::CaseInsensitive) != 0) {
+      continue;
+    }
+    const auto match = extended.match(p.value);
+    if (!match.hasMatch()) {
+      continue;
+    }
     const QByteArray raw = QByteArray::fromPercentEncoding(match.captured(2).toLatin1());
     const QString name   = match.captured(1).compare("UTF-8", Qt::CaseInsensitive) == 0
                                ? QString::fromUtf8(raw)
@@ -37,14 +116,11 @@ QString fileNameFromDisposition(const QString& disposition)
     }
   }
 
-  match = quoted.match(disposition);
-  if (match.hasMatch() && !match.captured(1).isEmpty()) {
-    return match.captured(1);
-  }
-
-  match = bare.match(disposition);
-  if (match.hasMatch()) {
-    return match.captured(1).trimmed();
+  for (const auto& p : params) {
+    if (p.name.compare(QStringLiteral("filename"), Qt::CaseInsensitive) == 0 &&
+        !p.value.isEmpty()) {
+      return p.value;
+    }
   }
 
   return QString();
