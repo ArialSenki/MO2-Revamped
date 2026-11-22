@@ -25,6 +25,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFile>
 #include <QFileSystemWatcher>
 #include <QMap>
+#include <QSet>
 #include <QNetworkReply>
 #include <QObject>
 #include <QQueue>
@@ -702,6 +703,10 @@ private:
   QVector<std::tuple<QString, int, int>> m_PendingDownloads;
 
   QVector<DownloadInfo*> m_ActiveDownloads;
+  // MO2 Revamped: names (lower case) of downloads between addDownload() and
+  // their place in m_ActiveDownloads: events run in between, and a second
+  // download started then took the same name and wrote into the same file
+  QSet<QString> m_StartingNames;
 
   // lists the archives of m_ReadOnlySources not seen yet (refreshList())
   void addReadOnlySources(std::set<std::wstring>& seen,

@@ -795,6 +795,7 @@ bool DownloadManager::addDownload(QNetworkReply* reply, const QStringList& URLs,
       getDownloadFileName(baseName,
                           isDownloadNameTaken(MOBase::sanitizeFileName(baseName), true)),
       false);
+  m_StartingNames.insert(newDownload->m_FileName.toLower());
   endDisableDirWatcher();
 
   //  emit update(-1);
@@ -900,6 +901,7 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
       removePending(newDownload->m_FileInfo->gameName, newDownload->m_FileInfo->modID,
                     newDownload->m_FileInfo->fileID);
       TaskProgressManager::instance().forgetMe(newDownload->m_TaskProgressId);
+      m_StartingNames.remove(newDownload->m_FileName.toLower());
       delete newDownload;
     }
     reportError(error);
@@ -932,6 +934,7 @@ bool DownloadManager::startDownload(QNetworkReply* reply, DownloadInfo* newDownl
 
     emit aboutToUpdate();
     m_ActiveDownloads.append(newDownload);
+    m_StartingNames.remove(newDownload->m_FileName.toLower());
 
     emit update(-1);
     emit downloadAdded();
@@ -2180,6 +2183,9 @@ bool DownloadManager::isDownloadNameTaken(const QString& fileName,
 {
   const QString path = m_OutputDirectory + "/" + fileName;
   if ((!inProgressOnly && QFile::exists(path)) || QFile::exists(path + UNFINISHED)) {
+    return true;
+  }
+  if (m_StartingNames.contains(fileName.toLower())) {
     return true;
   }
 
