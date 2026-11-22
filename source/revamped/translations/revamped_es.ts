@@ -18801,17 +18801,17 @@ Los tamaños son estimados. Si el espacio se acaba a mitad, las descargas y las 
       <translation>de %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n endorsement(s)</source>
+      <source>%Ln endorsement(s)</source>
       <translation>
-        <numerusform>%n recomendación</numerusform>
-        <numerusform>%n recomendaciones</numerusform>
+        <numerusform>%Ln recomendación</numerusform>
+        <numerusform>%Ln recomendaciones</numerusform>
       </translation>
     </message>
     <message numerus="yes">
-      <source>%n download(s)</source>
+      <source>%Ln download(s)</source>
       <translation>
-        <numerusform>%n descarga</numerusform>
-        <numerusform>%n descargas</numerusform>
+        <numerusform>%Ln descarga</numerusform>
+        <numerusform>%Ln descargas</numerusform>
       </translation>
     </message>
     <message>
@@ -18835,10 +18835,10 @@ Los tamaños son estimados. Si el espacio se acaba a mitad, las descargas y las 
       <translation>revisión %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n mod(s)</source>
+      <source>%Ln mod(s)</source>
       <translation>
-        <numerusform>%n mod</numerusform>
-        <numerusform>%n mods</numerusform>
+        <numerusform>%Ln mod</numerusform>
+        <numerusform>%Ln mods</numerusform>
       </translation>
     </message>
     <message>

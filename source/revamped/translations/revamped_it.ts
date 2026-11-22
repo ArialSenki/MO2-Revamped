@@ -18762,17 +18762,17 @@ Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni
       <translation>di %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n endorsement(s)</source>
+      <source>%Ln endorsement(s)</source>
       <translation>
-        <numerusform>%n approvazione</numerusform>
-        <numerusform>%n approvazioni</numerusform>
+        <numerusform>%Ln approvazione</numerusform>
+        <numerusform>%Ln approvazioni</numerusform>
       </translation>
     </message>
     <message numerus="yes">
-      <source>%n download(s)</source>
+      <source>%Ln download(s)</source>
       <translation>
-        <numerusform>%n download</numerusform>
-        <numerusform>%n download</numerusform>
+        <numerusform>%Ln download</numerusform>
+        <numerusform>%Ln download</numerusform>
       </translation>
     </message>
     <message>
@@ -18796,10 +18796,10 @@ Le dimensioni sono stime. Se lo spazio finisce a metà, download e installazioni
       <translation>revisione %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n mod(s)</source>
+      <source>%Ln mod(s)</source>
       <translation>
-        <numerusform>%n mod</numerusform>
-        <numerusform>%n mod</numerusform>
+        <numerusform>%Ln mod</numerusform>
+        <numerusform>%Ln mod</numerusform>
       </translation>
     </message>
     <message>

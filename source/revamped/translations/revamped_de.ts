@@ -18540,17 +18540,17 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       <translation>von %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n endorsement(s)</source>
+      <source>%Ln endorsement(s)</source>
       <translation>
-        <numerusform>%n Empfehlung</numerusform>
-        <numerusform>%n Empfehlungen</numerusform>
+        <numerusform>%Ln Empfehlung</numerusform>
+        <numerusform>%Ln Empfehlungen</numerusform>
       </translation>
     </message>
     <message numerus="yes">
-      <source>%n download(s)</source>
+      <source>%Ln download(s)</source>
       <translation>
-        <numerusform>%n Download</numerusform>
-        <numerusform>%n Downloads</numerusform>
+        <numerusform>%Ln Download</numerusform>
+        <numerusform>%Ln Downloads</numerusform>
       </translation>
     </message>
     <message>
@@ -18574,10 +18574,10 @@ Die Größen sind Schätzungen. Geht der Speicher unterwegs aus, schlagen Downlo
       <translation>Revision %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n mod(s)</source>
+      <source>%Ln mod(s)</source>
       <translation>
-        <numerusform>%n Mod</numerusform>
-        <numerusform>%n Mods</numerusform>
+        <numerusform>%Ln Mod</numerusform>
+        <numerusform>%Ln Mods</numerusform>
       </translation>
     </message>
     <message>

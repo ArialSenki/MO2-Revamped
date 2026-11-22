@@ -180,6 +180,17 @@ QPixmap thumbnail(const QImage& image, QSize size, qreal dpr)
 }  // namespace CollectionImages
 
 
+namespace
+{
+// a translation has its plural forms; English, which has no translation
+// file, would show the source's "(s)"
+QString englishPlural(QString text, int count)
+{
+  return text.replace(QStringLiteral("(s)"),
+                      count == 1 ? QString() : QStringLiteral("s"));
+}
+}  // namespace
+
 CollectionBrowser::CollectionBrowser(std::vector<Game> games,
                                      const QStringList& instanceDomains,
                                      std::function<void(const QString&)> open,
@@ -816,8 +827,8 @@ void CollectionBrowser::readPage(const QVariantMap& data)
   m_more->setEnabled(m_loaded < m_total);
   m_status->setText(m_total == 0 ? tr("No collections found.")
                                  : tr("%1 of %2 collections")
-                                       .arg(m_list->topLevelItemCount())
-                                       .arg(m_total));
+                                       .arg(QLocale().toString(m_list->topLevelItemCount()))
+                                       .arg(QLocale().toString(m_total)));
   if (m_list->currentItem() == nullptr && m_list->topLevelItemCount() > 0) {
     m_list->setCurrentItem(m_list->topLevelItem(0));
   }
@@ -939,12 +950,13 @@ void CollectionBrowser::showDetails()
     lines << e->summary;
   }
   QStringList facts;
-  facts << tr("%n mod(s)", nullptr, e->mods);
+  facts << englishPlural(tr("%Ln mod(s)", nullptr, e->mods), e->mods);
   if (e->size > 0) {
     facts << tr("%1 to download").arg(localizedByteSize(e->size));
   }
-  facts << tr("%n endorsement(s)", nullptr, e->endorsements);
-  facts << tr("%n download(s)", nullptr, e->downloads);
+  facts << englishPlural(tr("%Ln endorsement(s)", nullptr, e->endorsements),
+                         e->endorsements);
+  facts << englishPlural(tr("%Ln download(s)", nullptr, e->downloads), e->downloads);
   if (!e->category.isEmpty()) {
     facts << e->category;
   }

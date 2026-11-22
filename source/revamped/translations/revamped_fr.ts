@@ -18704,17 +18704,17 @@ Les tailles sont estimées. Si l&apos;espace manque en cours de route, les tél�
       <translation>par %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n endorsement(s)</source>
+      <source>%Ln endorsement(s)</source>
       <translation>
-        <numerusform>%n recommandation</numerusform>
-        <numerusform>%n recommandations</numerusform>
+        <numerusform>%Ln recommandation</numerusform>
+        <numerusform>%Ln recommandations</numerusform>
       </translation>
     </message>
     <message numerus="yes">
-      <source>%n download(s)</source>
+      <source>%Ln download(s)</source>
       <translation>
-        <numerusform>%n téléchargement</numerusform>
-        <numerusform>%n téléchargements</numerusform>
+        <numerusform>%Ln téléchargement</numerusform>
+        <numerusform>%Ln téléchargements</numerusform>
       </translation>
     </message>
     <message>
@@ -18738,10 +18738,10 @@ Les tailles sont estimées. Si l&apos;espace manque en cours de route, les tél�
       <translation>révision %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n mod(s)</source>
+      <source>%Ln mod(s)</source>
       <translation>
-        <numerusform>%n mod</numerusform>
-        <numerusform>%n mods</numerusform>
+        <numerusform>%Ln mod</numerusform>
+        <numerusform>%Ln mods</numerusform>
       </translation>
     </message>
     <message>

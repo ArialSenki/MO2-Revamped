@@ -18516,17 +18516,17 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
       <translation>por %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n endorsement(s)</source>
+      <source>%Ln endorsement(s)</source>
       <translation>
-        <numerusform>%n recomendação</numerusform>
-        <numerusform>%n recomendações</numerusform>
+        <numerusform>%Ln recomendação</numerusform>
+        <numerusform>%Ln recomendações</numerusform>
       </translation>
     </message>
     <message numerus="yes">
-      <source>%n download(s)</source>
+      <source>%Ln download(s)</source>
       <translation>
-        <numerusform>%n download</numerusform>
-        <numerusform>%n downloads</numerusform>
+        <numerusform>%Ln download</numerusform>
+        <numerusform>%Ln downloads</numerusform>
       </translation>
     </message>
     <message>
@@ -18550,10 +18550,10 @@ Os tamanhos são estimativas. Se o espaço acabar no meio, os downloads e as ins
       <translation>revisão %1</translation>
     </message>
     <message numerus="yes">
-      <source>%n mod(s)</source>
+      <source>%Ln mod(s)</source>
       <translation>
-        <numerusform>%n mod</numerusform>
-        <numerusform>%n mods</numerusform>
+        <numerusform>%Ln mod</numerusform>
+        <numerusform>%Ln mods</numerusform>
       </translation>
     </message>
     <message>
