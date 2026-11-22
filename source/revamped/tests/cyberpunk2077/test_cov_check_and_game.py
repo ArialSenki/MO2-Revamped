@@ -203,6 +203,20 @@ class RedscriptPathsTest(unittest.TestCase):
         )
         self.assertTrue(redscript_log.failed(log))
 
+    def test_unix_paths(self):
+        # a native Linux redscript names the scripts by their Unix path
+        log = (
+            "[ERROR - x] At /home/deck/.steam/steamapps/common/Cyberpunk 2077/r6/scripts/Three/c.reds:5:1:\n"
+            "    bad\n"
+            "[ERROR - x] At /mnt/games/red4ext/plugins/P/d.reds:6:1:\n  bad2\n"
+            "[ERROR - x] At Mod/main.reds:2:1:\n  bad3\n"
+        )
+        errors = redscript_log.parse(log, "Z:\\home\\deck\\.steam\\steamapps\\common\\Cyberpunk 2077")
+        self.assertEqual(
+            [(e.script, e.line) for e in errors],
+            [("r6/scripts/Three/c.reds", 5), ("red4ext/plugins/P/d.reds", 6), ("r6/scripts/Mod/main.reds", 2)],
+        )
+
     def test_logs_that_say_nothing(self):
         self.assertFalse(redscript_log.failed(""))
         self.assertFalse(redscript_log.failed("plain text\nno headers\n"))
