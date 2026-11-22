@@ -1290,17 +1290,10 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
       log::warn("install: the mod name '{}' can't be a folder name, not used", initModName);
     }
   }
-  // MO2 Revamped: caught as installDownload() does: an extraction error left
-  // doInstall() halfway (installer plugins never heard the end, nothing
-  // refreshed after a replaced mod was put back) and reached the caller
-  ModInfo::Ptr installed;
-  try {
-    installed = doInstall(archivePath, modName, currentMod, priority, reinstallation).second;
-  } catch (const std::exception& e) {
-    reportError(QString(e.what()));
-    return nullptr;
-  }
-  const ModInfo::Ptr modInfo = installed;
+  // not caught here: a collection's install catches it and shows the reason in
+  // the mod's row, without a dialog in the middle of the run
+  const auto [modIndex, modInfo] =
+      doInstall(archivePath, modName, currentMod, priority, reinstallation);
   if (m_CurrentProfile == nullptr) {
     return nullptr;
   }

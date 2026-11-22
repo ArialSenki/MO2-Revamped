@@ -3289,11 +3289,9 @@ void DownloadManager::downloadFinished(int index)
         // MO2 Revamped: a file of that name arrived meanwhile (dropped onto the
         // list while this downloaded): the rename failed and the row pointed at
         // the other file (installing, deleting it). This one gets a free name
+        // (this one is still X.unfinished, so any X is another file)
         QString target = m_OutputDirectory + "/" + info->m_FileName;
-        if (QFile::exists(target) &&
-            QFileInfo(target).absoluteFilePath().compare(
-                QFileInfo(info->m_Output.fileName()).absoluteFilePath(),
-                Qt::CaseInsensitive) != 0) {
+        if (QFile::exists(target)) {
           target = getDownloadFileName(info->m_FileName, true);
           log::warn("\"{}\" is already in the downloads, the download is saved as \"{}\"",
                     info->m_FileName, QFileInfo(target).fileName());
