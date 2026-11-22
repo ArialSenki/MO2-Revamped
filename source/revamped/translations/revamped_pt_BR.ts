@@ -1185,6 +1185,10 @@ Tem certeza de que deseja continuar?</translation>
         <numerusform>Instalar %n selecionados</numerusform>
       </translation>
     </message>
+    <message>
+      <source>…and %1 more</source>
+      <translation>…e mais %1</translation>
+    </message>
   </context>
   <context>
     <name>ESPsTab</name>
@@ -18733,7 +18737,7 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
       <translation>Opções do perfil</translation>
     </message>
     <message>
-      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves...&lt;/b&gt; copies saves between profiles.</source>
+      <source>&lt;b&gt;Profile-specific saves&lt;/b&gt; and &lt;b&gt;Profile-specific game INI files&lt;/b&gt; keep saves and game settings apart for each profile. &lt;b&gt;Transfer saves…&lt;/b&gt; copies saves between profiles.</source>
       <translation>&lt;b&gt;Saves específicos do perfil&lt;/b&gt; e &lt;b&gt;Arquivos INI do jogo específicos do perfil&lt;/b&gt; separam saves e configurações do jogo de cada perfil. &lt;b&gt;Transferir saves…&lt;/b&gt; copia saves entre perfis.</translation>
     </message>
     <message>
