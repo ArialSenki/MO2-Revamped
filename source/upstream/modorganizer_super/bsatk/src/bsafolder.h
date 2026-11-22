@@ -113,6 +113,16 @@ private:
    */
   Folder::Ptr readFolder(std::fstream& file, BSAUInt fileNamesLength, BSAUInt& endPos);
 
+public:
+  // MO2 Revamped: how many file records the folder records of the archive
+  // being read may still add up to (its header's count): folders pointing at
+  // the same records made billions of files out of a small file
+  static void setFileRecordBudget(unsigned long long files);
+
+private:
+  static unsigned long long& fileRecordBudget();
+  static void takeFromBudget(unsigned long long files);
+
   Folder::Ptr readFolderSE(std::fstream& file, BSAUInt fileNamesLength,
                            BSAUInt& endPos);
 
