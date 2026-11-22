@@ -168,6 +168,17 @@ void testUrlNames()
     CHECK_EQ(downloadBaseName(fileNameFromUrl("https://h/dl/a.7z?md5=1"), &fallback), "a.7z");
     CHECK(!fallback);
     CHECK_EQ(downloadBaseName("file.7z?x=1", &fallback), "file.7z");
+  // a device's name would be written to the device, not to a file
+  CHECK_EQ(downloadBaseName("aux.zip", &fallback), "_aux.zip");
+  CHECK(!fallback);
+  CHECK_EQ(downloadBaseName("CON", &fallback), "_CON");
+  CHECK_EQ(withoutDeviceName("COM1.7z"), "_COM1.7z");
+  CHECK_EQ(withoutDeviceName("nul.tar.gz"), "_nul.tar.gz");
+  CHECK_EQ(withoutDeviceName("Lpt9 .rar"), "_Lpt9 .rar");
+  CHECK_EQ(withoutDeviceName("console.7z"), "console.7z");
+  CHECK_EQ(withoutDeviceName("auxiliary.zip"), "auxiliary.zip");
+  CHECK_EQ(withoutDeviceName("com10.7z"), "com10.7z");
+  CHECK_EQ(withoutDeviceName("my con.7z"), "my con.7z");
     CHECK(!fallback);
     CHECK_EQ(downloadBaseName("?id=5", &fallback), "unknown");
     CHECK(fallback);

@@ -1296,8 +1296,11 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
     // is attached later, and doesn't apply to a value already set): a plugin's
     // "Other mod/sub" installed into another mod's folder, ".." into the
     // instance's, and "Name." into a folder Windows named "Name"
+    // An installed mod's own name is its folder already, and stays as it is: a
+    // folder made outside MO2 ("A  B", with two spaces, in a list) was
+    // filtered to "A B", and its reinstall made a second mod beside it
     QString name = initModName;
-    if (fixDirectoryName(name)) {
+    if (ModInfo::getIndex(initModName) != UINT_MAX || fixDirectoryName(name)) {
       modName.update(name, GUESS_USER);
     } else {
       log::warn("install: the mod name '{}' can't be a folder name, not used", initModName);

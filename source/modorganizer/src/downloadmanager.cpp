@@ -182,6 +182,11 @@ DownloadManager::DownloadInfo::createFromMeta(const QString& filePath, bool show
     info->m_FileName =
         fileName.mid(0, fileName.length() - static_cast<int>(strlen(UNFINISHED)));
     info->m_State = STATE_PAUSED;
+    // MO2 Revamped: a nameless link's download, paused before the server named
+    // it ("unknown", or "1_unknown" beside another): still waiting for its
+    // name when it is resumed after a restart
+    static const QRegularExpression fallbackName(QStringLiteral("^(\\d+_)?unknown$"));
+    info->m_NameIsFallback = fallbackName.match(info->m_FileName).hasMatch();
   } else {
     info->m_FileName = fileName;
 
@@ -2211,7 +2216,8 @@ QString DownloadManager::getFileNameFromNetworkReply(QNetworkReply* reply)
     const QString name = fileNameFromDisposition(
         QString::fromUtf8(reply->rawHeader("Content-Disposition")));
     if (!name.isEmpty()) {
-      return MOBase::sanitizeFileName(name);
+      // MO2 Revamped: never a device's name (see withoutDeviceName())
+      return DownloadUrl::withoutDeviceName(MOBase::sanitizeFileName(name));
     }
   }
 
@@ -2858,6 +2864,16 @@ void DownloadManager::nxmDownloadURLsAvailable(QString gameName, int modID, int 
     return;
   }
 
+  // MO2 Revamped: no link left (all dropped as not https): nothing starts, so
+  // the pending row goes too. It stayed, and clicking the file on Nexus again
+  // said it was already queued
+  if (URLs.isEmpty()) {
+    removePending(gameName, modID, fileID);
+    emit showMessage(tr("Nexus gave no usable download link for this file."));
+    delete info;
+    return;
+  }
+
   addDownload(URLs, gameName, modID, fileID, info);
 }
 
@@ -3057,6 +3073,10 @@ void DownloadManager::downloadFinished(int index)
 
   if (info != nullptr && info->m_Reply != nullptr) {
     QNetworkReply* reply          = info->m_Reply;
+    // MO2 Revamped: the states set below run events (plugins' callbacks, a
+    // message box): a download resumed in one of them that finds its file
+    // already complete finishes there and frees this same reply
+    const QPointer<QNetworkReply> replyAlive(reply);
     const unsigned int downloadID = info->m_DownloadID;
     const int status              = httpStatus(reply);
     // MO2 Revamped: the last bytes go through the same checks as the rest (see
@@ -3197,8 +3217,10 @@ void DownloadManager::downloadFinished(int index)
         return true;
       }
       log::debug("download {} was removed or resumed while it finished", downloadID);
-      reply->close();
-      reply->deleteLater();
+      if (replyAlive) {
+        reply->close();
+        reply->deleteLater();
+      }
       return false;
     };
     if (!stillOurs()) {
@@ -3285,8 +3307,14 @@ void DownloadManager::downloadFinished(int index)
       QString oldName = QFileInfo(info->m_Output).fileName();
 
       startDisableDirWatcher();
-      if (!newName.isEmpty() && (oldName.isEmpty())) {
-        info->setName(getDownloadFileName(newName), true);
+      if (!newName.isEmpty() && (oldName.isEmpty() || info->m_NameIsFallback)) {
+        // MO2 Revamped: also one still named "unknown": its headers came
+        // before metaDataChanged() was connected (startDownload() runs events
+        // first), or it was paused and resumed after a restart. It finished as
+        // "unknown", without an extension, and left the list at its next
+        // refresh. A free name: another file of that name stays as it is
+        info->m_NameIsFallback = false;
+        info->setName(getDownloadFileName(newName, true), true);
       } else {
         // MO2 Revamped: a file of that name arrived meanwhile (dropped onto the
         // list while this downloaded): the rename failed and the row pointed at
@@ -3308,8 +3336,10 @@ void DownloadManager::downloadFinished(int index)
 
       emit update(index);
     }
-    reply->close();
-    reply->deleteLater();
+    if (replyAlive) {
+      reply->close();
+      reply->deleteLater();
+    }
 
     if (!removed) {
       // writing the .meta and renaming the file run events (see
@@ -3392,10 +3422,17 @@ void DownloadManager::metaDataChanged()
     info->m_LastDataAt = info->m_StartTime.elapsed();
     QString newName = getFileNameFromNetworkReply(info->m_Reply);
     if (!newName.isEmpty() && (info->m_FileName.isEmpty() || info->m_NameIsFallback)) {
-      info->m_NameIsFallback = false;
+      // MO2 Revamped: a free name. Two nameless links the server names alike
+      // (the same link started twice) took the same one: the second rename
+      // failed with an error box, or, with the first not yet on disk, both
+      // wrote one file. The name is still awaited when the rename failed
+      const QString target = getDownloadFileName(newName, true);
       startDisableDirWatcher();
-      info->setName(getDownloadFileName(newName), true);
+      info->setName(target, true);
       endDisableDirWatcher();
+      info->m_NameIsFallback =
+          info->m_NameIsFallback &&
+          info->m_FileName.compare(QFileInfo(target).fileName(), Qt::CaseInsensitive) != 0;
       refreshAlphabeticalTranslation();
       if (!info->m_Output.isOpen() &&
           !info->m_Output.open(QIODevice::WriteOnly | QIODevice::Append)) {

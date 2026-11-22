@@ -16875,6 +16875,10 @@ Revisa las opciones del juego antes de jugar.</translation>
       <source>Missing light plugins (ESL)</source>
       <translation>Plugins ligeros que faltan (ESL)</translation>
     </message>
+    <message>
+      <source>The plugin list of this save can&apos;t be read</source>
+      <translation>No se puede leer la lista de plugins de esta partida</translation>
+    </message>
   </context>
   <context>
     <name>MorrowindSaveGameInfoWidget</name>

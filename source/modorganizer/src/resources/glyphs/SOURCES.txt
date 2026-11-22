@@ -4,6 +4,7 @@
 # https://github.com/microsoft/fluentui-system-icons at commit 6c2c9075cf8952ef48369b2475233b6e9761efed.
 # codepoint<TAB>asset folder<TAB>file
 E700	Navigation	ic_fluent_navigation_20_regular.svg
+E708	(drawn for MO2 Revamped: a crescent moon, for the Python tools' rows)	E708.svg
 E70B	Note	ic_fluent_note_20_regular.svg
 E70D	Chevron Down	ic_fluent_chevron_down_20_regular.svg
 E70E	Chevron Up	ic_fluent_chevron_up_20_regular.svg
@@ -45,6 +46,7 @@ E76B	Chevron Left	ic_fluent_chevron_left_20_regular.svg
 E76C	Chevron Right	ic_fluent_chevron_right_20_regular.svg
 E76F	Re Order	ic_fluent_re_order_20_regular.svg
 E770	Desktop	ic_fluent_desktop_20_regular.svg
+E771	(drawn for MO2 Revamped: a screen with a brush stroke, for the Python tools' rows)	E771.svg
 E774	Globe	ic_fluent_globe_20_regular.svg
 E777	Arrow Reset	ic_fluent_arrow_reset_20_regular.svg
 E77B	Person	ic_fluent_person_20_regular.svg
@@ -82,6 +84,7 @@ E8B9	Image	ic_fluent_image_20_regular.svg
 E8BD	Chat	ic_fluent_chat_20_regular.svg
 E8C8	Copy	ic_fluent_copy_20_regular.svg
 E8CB	Arrow Sort	ic_fluent_arrow_sort_20_regular.svg
+E8D2	(drawn for MO2 Revamped: a capital A for text, for the Python tools' rows)	E8D2.svg
 E8D3	Text Color	ic_fluent_text_color_20_regular.svg
 E8D6	Music Note 2	ic_fluent_music_note_2_20_regular.svg
 E8DA	Folder Arrow Right	ic_fluent_folder_arrow_right_20_regular.svg
@@ -91,6 +94,7 @@ E8E1	Thumb Like	ic_fluent_thumb_like_20_regular.svg
 E8E4	Text Align Left	ic_fluent_text_align_left_20_regular.svg
 E8E5	Document Arrow Up	ic_fluent_document_arrow_up_20_regular.svg
 E8EC	Tag	ic_fluent_tag_20_regular.svg
+E8EF	(drawn for MO2 Revamped: a calculator, for the Python tools' rows)	E8EF.svg
 E8F1	Library	ic_fluent_library_20_regular.svg
 E8F4	Folder Add	ic_fluent_folder_add_20_regular.svg
 E8F7	Folder Sync	ic_fluent_folder_sync_20_regular.svg
@@ -100,6 +104,7 @@ E90F	Wrench	ic_fluent_wrench_20_regular.svg
 E915	Circle Small	ic_fluent_circle_small_20_filled.svg
 E916	Timer	ic_fluent_timer_20_regular.svg
 E91B	Image	ic_fluent_image_20_regular.svg
+E921	(drawn for MO2 Revamped: a minimize line, for the Python tools' rows)	E921.svg
 E930	Checkmark Circle	ic_fluent_checkmark_circle_20_regular.svg
 E943	Braces	ic_fluent_braces_20_regular.svg
 E945	Flash	ic_fluent_flash_20_regular.svg
@@ -119,6 +124,7 @@ EA8F	Alert	ic_fluent_alert_20_regular.svg
 EB51	Heart	ic_fluent_heart_20_regular.svg
 EB9F	Image	ic_fluent_image_20_regular.svg
 EBE8	Bug	ic_fluent_bug_20_regular.svg
+EC4A	(drawn for MO2 Revamped: a gauge, for the Python tools' rows)	EC4A.svg
 EC4F	Music Note 1	ic_fluent_music_note_1_20_regular.svg
 EC7A	Wrench Screwdriver	ic_fluent_wrench_screwdriver_20_regular.svg
 ECAA	App Generic	ic_fluent_app_generic_20_regular.svg
