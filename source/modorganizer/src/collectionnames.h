@@ -11,9 +11,14 @@
 namespace Collections
 {
 
+// the longest folder name makeFolderName gives, in UTF-16 units: a folder
+// name can have 255, and uniqueModName (collectionsession.cpp) adds " (2)"
+inline constexpr qsizetype MaxFolderName = 240;
+
 // a folder name from the collection (a mod, profile or instance name): what
 // fixDirectoryName leaves can still be "..", a device name or the original
-// text when it gave up, and ".." as a mod name is the instance folder.
+// text when it gave up, and ".." as a mod name is the instance folder. A
+// longer name is cut to MaxFolderName, never inside a surrogate pair.
 // False, with name emptied, when nothing safe is left
 bool makeFolderName(QString& name);
 
