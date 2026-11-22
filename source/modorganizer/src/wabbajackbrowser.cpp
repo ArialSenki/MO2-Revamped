@@ -416,6 +416,7 @@ void ListBrowser::loadGallery(bool fresh)
   m_status->setText(tr("Reading Wabbajack's gallery…"));
 
   QNetworkReply* summary = m_network.get(request(QUrl(QString::fromLatin1(SummaryUrl))));
+  limitReply(summary, MaxGalleryJsonBytes);
   connect(summary, &QNetworkReply::finished, this, [this, summary, generation] {
     summary->deleteLater();
     if (generation != m_generation) {
