@@ -92,6 +92,35 @@ void testDisposition()
   CHECK_EQ(fileNameFromDisposition("attachment; filename=\"\""), "");
   CHECK_EQ(fileNameFromDisposition("attachment; filename*=UTF-8''"), "");
   CHECK_EQ(fileNameFromDisposition("inline; name=\"field\""), "");
+  // quoted-strings (RFC 6266 / 2616): a backslash takes the next character
+  // as it is; "a\"b.7z" was cut at the escaped quote ("a\")
+  // (no raw strings in these macros: MSVC's preprocessor mangles them)
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"a\\\"b.7z\""), "a\"b.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"a\\\\b.7z\""), "a\\b.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"\\a\\b\\c.7z\""), "abc.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"x\\\"; y.7z\"; size=3"),
+           "x\"; y.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"end\\\\\"; size=3"), "end\\");
+  // unterminated: nothing, as before
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"open.7z"), "");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename=\"open\\\""), "");
+  // a quoted value of another parameter isn't read as parameters
+  CHECK_EQ(fileNameFromDisposition("attachment; note=\"filename=fake.7z\"; filename=real.7z"),
+           "real.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; note=\"x; filename=fake.7z\""), "");
+
+  // only the filename parameter itself: xfilename=, my_filename* are others
+  CHECK_EQ(fileNameFromDisposition("attachment; xfilename=wrong.7z"), "");
+  CHECK_EQ(fileNameFromDisposition("attachment; xfilename=\"wrong.7z\"; filename=right.7z"),
+           "right.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; my_filename*=UTF-8''wrong.7z; filename=right.7z"),
+           "right.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; originalfilename=\"wrong.7z\""), "");
+  CHECK_EQ(fileNameFromDisposition("attachment;filename=first.7z"), "first.7z");
+  CHECK_EQ(fileNameFromDisposition("filename=only.7z"), "only.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; FileName = \"spaced.7z\" "), "spaced.7z");
+  CHECK_EQ(fileNameFromDisposition("attachment; filename* = UTF-8''sp%20ace.7z"), "sp ace.7z");
+
   // traversal is the caller's to remove (sanitizeFileName)
   CHECK_EQ(fileNameFromDisposition("attachment; filename*=UTF-8''..%2F..%2Fevil.dll"),
            "../../evil.dll");
@@ -125,6 +154,35 @@ void testUrlNames()
   // a query on a path without a name is left as it was: addDownload() drops
   // it, and the answer's Content-Disposition names the file
   CHECK_EQ(fileNameFromUrl("https://h/download/?id=5"), "?id=5");
+
+  // what addDownload() starts the file name with: the query goes, and when no
+  // name is left, "unknown" (a link like https://h/download/?id=5 with no
+  // Content-Disposition was saved as ".unfinished")
+  {
+    bool fallback = false;
+    CHECK_EQ(downloadBaseName(fileNameFromUrl("https://h/download/?id=5"), &fallback),
+             "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName(fileNameFromUrl("https://h/dl/"), &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName(fileNameFromUrl("https://h/dl/a.7z?md5=1"), &fallback), "a.7z");
+    CHECK(!fallback);
+    CHECK_EQ(downloadBaseName("file.7z?x=1", &fallback), "file.7z");
+    CHECK(!fallback);
+    CHECK_EQ(downloadBaseName("?id=5", &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName("", &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName("...", &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName("???", &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName("unknown", &fallback), "unknown");
+    CHECK(fallback);
+    CHECK_EQ(downloadBaseName(u8("Ñandú 🎉.7z")), u8("Ñandú 🎉.7z"));
+    CHECK_EQ(downloadBaseName("a:b.7z"), "a:b.7z");  // sanitized later, as before
+    CHECK(MOBase::sanitizeFileName(downloadBaseName("?id=5")) == "unknown");
+  }
 
   // S3-style signed links name the file in the query
   CHECK_EQ(fileNameFromUrl("https://s3.example/b/obj?response-content-disposition="

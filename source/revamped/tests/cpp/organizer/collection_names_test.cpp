@@ -73,7 +73,8 @@ bool safeFolder(const QString& name)
       QStringLiteral("^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3]|"
                      "conin\\$|conout\\$|clock\\$)$"),
       QRegularExpression::CaseInsensitiveOption);
-  return !n.isEmpty() && !n.contains(u'/') && !n.contains(u'\\') && !n.endsWith(u'.') &&
+  return !n.isEmpty() && n.size() <= 255 && !n.back().isHighSurrogate() &&
+         !n.contains(u'/') && !n.contains(u'\\') && !n.endsWith(u'.') &&
          !n.endsWith(u' ') && n != u"." && n != u".." && isSafeRelativePath(n) &&
          !device.match(n.section(u'.', 0, 0).trimmed()).hasMatch();
 }
@@ -129,6 +130,43 @@ void testMakeFolderName()
 
   // control characters can't be in a folder name
   CHECK_EQ(folder(QString("a") + QChar(1) + "b"), "<false>");
+
+  // long names: cut to MaxFolderName UTF-16 units (a folder name can have 255;
+  // the rest is room for uniqueModName's " (2)"), never in a surrogate pair,
+  // with no dot or space left at the end
+  CHECK(MaxFolderName + QStringLiteral(" (2147483647)").size() <= 255);
+  CHECK_EQ(folder(QString(300, 'x')), QString(MaxFolderName, 'x'));
+  CHECK_EQ(folder(QString(MaxFolderName, 'y')), QString(MaxFolderName, 'y'));
+  CHECK_EQ(folder(QString(MaxFolderName - 1, 'y')), QString(MaxFolderName - 1, 'y'));
+  {
+    // an emoji (two units) across the cut goes whole
+    const QString emoji = QString::fromUtf8("🎉");
+    const QString name  = QString(MaxFolderName - 1, 'a') + emoji + "tail";
+    const QString got   = folder(name);
+    CHECK_EQ(got, QString(MaxFolderName - 1, 'a'));
+    CHECK(!got.isEmpty() && !got.back().isHighSurrogate());
+    // one that ends right at the cut stays
+    const QString fits = QString(MaxFolderName - 2, 'a') + emoji + "tail";
+    CHECK_EQ(folder(fits), QString(MaxFolderName - 2, 'a') + emoji);
+    // emojis only: an even cut
+    const QString many = folder(emoji.repeated(200));
+    CHECK(many.size() <= MaxFolderName && many.size() % 2 == 0 && !many.isEmpty());
+    CHECK(!many.back().isHighSurrogate());
+  }
+  // a dot or a space where it was cut goes too
+  CHECK_EQ(folder(QString(MaxFolderName - 1, 'z') + ".rest"), QString(MaxFolderName - 1, 'z'));
+  CHECK_EQ(folder(QString(MaxFolderName - 2, 'z') + " .rest"), QString(MaxFolderName - 2, 'z'));
+  // the cut and a device name: "Aux. Armors..." keeps its "_" within the cap
+  {
+    const QString got = folder("Aux. " + QString(400, 'A'));
+    CHECK(got.startsWith("_Aux. ") && got.size() <= MaxFolderName);
+  }
+  // made unique as uniqueModName does: still a valid folder name
+  {
+    const QString base = folder(QString(1000, 'm'));
+    const QString second = QStringLiteral("%1 (%2)").arg(base).arg(2);
+    CHECK(second.size() <= 255);
+  }
 
   // whatever comes out is safe
   const QStringList odd = {

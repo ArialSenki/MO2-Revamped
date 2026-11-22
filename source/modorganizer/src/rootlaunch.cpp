@@ -85,7 +85,19 @@ using Index = QMap<QString, Entry>;
 
 QString join(const QString& dir, const QString& name)
 {
-  return (dir.isEmpty() || dir == ".") ? name : dir + "/" + name;
+  // MO2 Revamped: a drive root ("D:/") already ends in its "/"
+  return (dir.isEmpty() || dir == ".") ? name
+         : dir.endsWith('/')            ? dir + name
+                                        : dir + "/" + name;
+}
+
+// MO2 Revamped: a clean folder with one "/" at the end, what the paths under
+// it start with: cleanPath keeps a drive root's "/" ("D:/"), and "D:/" + "/"
+// was "D://", which no path starts with
+QString under(const QString& dir)
+{
+  const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(dir));
+  return clean.endsWith('/') ? clean : clean + "/";
 }
 
 QString native(const QString& path)
@@ -496,6 +508,7 @@ Plan plan(const Input& in)
 
   const QStringList& roots  = in.rootFolders;
   const QString gameDir     = QDir::cleanPath(QDir::fromNativeSeparators(in.gameDir));
+  const QString gamePrefix  = under(in.gameDir);
   const QString gameBin     = QDir::cleanPath(QDir::fromNativeSeparators(in.gameBinary));
   QString exeDir            = QFileInfo(gameBin).path();
   if (exeDir == ".") {
@@ -503,7 +516,7 @@ Plan plan(const Input& in)
   }
   const QString gameExeName = QFileInfo(gameBin).fileName();
   const QString gameExeKey  = gameExeName.toLower();
-  const QString gameExeReal = gameDir + "/" + gameBin;
+  const QString gameExeReal = gamePrefix + gameBin;
 
   const Index index      = indexDir(roots, exeDir);
   const QStringList dlls = dllNames(index);
@@ -513,18 +526,18 @@ Plan plan(const Input& in)
   QString run   = QDir::cleanPath(QFileInfo(in.runBinary).absoluteFilePath());
   bool fromRoot = false;
   for (const QString& root : roots) {
-    const QString r = QDir::cleanPath(root);
-    if (run.startsWith(r + "/", Qt::CaseInsensitive)) {
-      const QString rel = run.mid(r.size() + 1);
+    const QString r = under(root);
+    if (run.startsWith(r, Qt::CaseInsensitive)) {
+      const QString rel = run.mid(r.size());
       info(QStringLiteral("root launch: %1 is in a mod's Root folder, it runs as %2")
-               .arg(native(run), native(gameDir + "/" + rel)));
-      run      = gameDir + "/" + rel;
+               .arg(native(run), native(gamePrefix + rel)));
+      run      = gamePrefix + rel;
       fromRoot = true;
       break;
     }
   }
-  const bool inGame = run.startsWith(gameDir + "/", Qt::CaseInsensitive);
-  const QString runRel = inGame ? run.mid(gameDir.size() + 1) : QString();
+  const bool inGame = run.startsWith(gamePrefix, Qt::CaseInsensitive);
+  const QString runRel = inGame ? run.mid(gamePrefix.size()) : QString();
   QString runDir       = QFileInfo(runRel).path();
   if (runDir == ".") {
     runDir.clear();
@@ -638,7 +651,7 @@ Plan plan(const Input& in)
         gameCopyReason = QStringLiteral("%1 starts the game itself").arg(loader.name);
       }
       if (fromRoot) {
-        p.runBinary = gameDir + "/" + join(exeDir, loader.name);
+        p.runBinary = gamePrefix + join(exeDir, loader.name);
       }
     }
   }
@@ -673,8 +686,8 @@ Plan plan(const Input& in)
         info(QStringLiteral("root launch: %1 is in %2's Root folder, it runs from there "
                             "with %3 as its working folder")
                  .arg(name, modName(roots, e.root), native(p.runDirectory)));
-      } else if (QFileInfo::exists(gameDir + "/" + runRel)) {
-        source = gameDir + "/" + runRel;
+      } else if (QFileInfo::exists(gamePrefix + runRel)) {
+        source = gamePrefix + runRel;
         if (sameDir) {
           startedPe   = cachedPe(source);
           startedName = name;
@@ -823,12 +836,12 @@ bool concerns(const QString& binary, const QString& gameDir, const QString& mods
               const QString& overwriteDir)
 {
   const QString bin = QDir::cleanPath(QDir::fromNativeSeparators(binary));
-  auto under        = [&](const QString& dir) {
-    return !dir.isEmpty() &&
-           bin.startsWith(QDir::cleanPath(QDir::fromNativeSeparators(dir)) + "/",
-                          Qt::CaseInsensitive);
+  auto inside       = [&](const QString& dir) {
+    const QString prefix = under(dir);
+    return !dir.isEmpty() && bin.size() > prefix.size() &&
+           bin.startsWith(prefix, Qt::CaseInsensitive);
   };
-  return under(gameDir) || under(modsDir) || under(overwriteDir);
+  return inside(gameDir) || inside(modsDir) || inside(overwriteDir);
 }
 
 }  // namespace RootLaunch

@@ -786,10 +786,12 @@ bool DownloadManager::addDownload(QNetworkReply* reply, const QStringList& URLs,
   }
 
   // baseName could be a URL at this point so strip out the URL query
-  int queryIndex = baseName.indexOf("?");
-  if (queryIndex >= 0) {
-    baseName.truncate(queryIndex);
-  }
+  // MO2 Revamped: and "unknown" when no name is left (https://h/download/?id=5
+  // made an empty name: the file was ".unfinished"); the server's
+  // Content-Disposition still names it (metaDataChanged())
+  bool nameIsFallback = false;
+  baseName            = DownloadUrl::downloadBaseName(baseName, &nameIsFallback);
+  newDownload->m_NameIsFallback = nameIsFallback;
 
   // MO2 Revamped: a name in use by another download in progress gets a new one
   // right away (it would empty that one's .unfinished file); a finished file of
@@ -3391,7 +3393,8 @@ void DownloadManager::metaDataChanged()
     // have waited in Qt's queue for a connection before)
     info->m_LastDataAt = info->m_StartTime.elapsed();
     QString newName = getFileNameFromNetworkReply(info->m_Reply);
-    if (!newName.isEmpty() && (info->m_FileName.isEmpty())) {
+    if (!newName.isEmpty() && (info->m_FileName.isEmpty() || info->m_NameIsFallback)) {
+      info->m_NameIsFallback = false;
       startDisableDirWatcher();
       info->setName(getDownloadFileName(newName), true);
       endDisableDirWatcher();

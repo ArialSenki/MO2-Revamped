@@ -83,6 +83,28 @@ static void fileNames()
   CHECK(!validFileName("trailing."));
   CHECK(!validFileName("trailing "));
   CHECK(!validFileName(QString::fromLatin1("nul\0in", 6)));
+
+  // device names, as fixDirectoryName refuses them, also with an extension
+  // or with spaces before it (Windows opens the device for "CON.txt")
+  for (const char* device : {"CON", "con", "PRN", "Aux", "NUL", "nul", "COM1", "com9",
+                             "LPT1", "lpt9", "CON.txt", "nul.tar.gz", "COM1.esp",
+                             "AUX .txt", "CON  .x"}) {
+    if (validFileName(device)) {
+      std::printf("  device name \"%s\" taken as valid\n", device);
+    }
+    CHECK(!validFileName(device));
+  }
+  // with trailing dots or spaces they were invalid already
+  CHECK(!validFileName("CON."));
+  CHECK(!validFileName("CON "));
+  // names that only start like one stay valid
+  CHECK(validFileName("Console"));
+  CHECK(validFileName("CONFIG.txt"));
+  CHECK(validFileName("COM10"));
+  CHECK(validFileName("LPT0.txt"));
+  CHECK(validFileName("Nul_patch.esp"));
+  CHECK(validFileName("my CON.txt"));
+  CHECK(validFileName(".CON"));
 }
 
 static void nxm()
@@ -174,6 +196,60 @@ static void json()
   CHECK(nums.fileID == -3);
   CHECK(nums.fileSize == 8589934592ull);
   CHECK(nums.modID == 2);
+
+  // nesting: past the limit the input fails as damaged input does (an empty
+  // info), it doesn't overflow the stack; within it, it parses
+  const QString head = R"(["G", 1, "", "", "", "", 0, 0, 7, "", "", "", 0, "", )";
+  const auto deepArrays = [&](int depth) {
+    return head + R"({"a": )" + QString(depth, '[') + "1" + QString(depth, ']') + "}]";
+  };
+  const auto deepObjects = [&](int depth) {
+    QString s = head;
+    for (int i = 0; i < depth; ++i) {
+      s += R"({"a": )";
+    }
+    s += "1";
+    s += QString(depth, '}');
+    return s + "]";
+  };
+  {
+    const auto ok = ModRepositoryFileInfo::createFromJson(deepArrays(100));
+    CHECK_STR(ok.gameName, "G");
+    CHECK(ok.modID == 7);
+    QVariant v = ok.userData.value("a");
+    int levels = 0;
+    while (v.typeId() == QMetaType::QVariantList && v.toList().size() == 1) {
+      v = v.toList().first();
+      ++levels;
+    }
+    CHECK(levels == 100);
+    CHECK(v.toInt() == 1);
+
+    const auto okObj = ModRepositoryFileInfo::createFromJson(deepObjects(100));
+    CHECK_STR(okObj.gameName, "G");
+    CHECK(okObj.modID == 7);
+    CHECK(okObj.userData.contains("a"));
+
+    // the limit: 512 open arrays and objects, the outer list and the userData
+    // object counted (and the userData object of deepObjects is its first)
+    CHECK_STR(ModRepositoryFileInfo::createFromJson(deepArrays(510)).gameName, "G");
+    CHECK_STR(ModRepositoryFileInfo::createFromJson(deepArrays(511)).gameName, "");
+    CHECK_STR(ModRepositoryFileInfo::createFromJson(deepObjects(511)).gameName, "G");
+    CHECK_STR(ModRepositoryFileInfo::createFromJson(deepObjects(512)).gameName, "");
+  }
+  for (int depth : {600, 10000, 200000}) {
+    const auto a = ModRepositoryFileInfo::createFromJson(deepArrays(depth));
+    CHECK_STR(a.gameName, "");
+    CHECK(a.modID == 0);
+    const auto o = ModRepositoryFileInfo::createFromJson(deepObjects(depth));
+    CHECK_STR(o.gameName, "");
+    CHECK(o.modID == 0);
+    // unterminated, too
+    CHECK(ModRepositoryFileInfo::createFromJson(QString(depth, '[')).modID == 0);
+    CHECK(ModRepositoryFileInfo::createFromJson(QString(depth, '{')).modID == 0);
+  }
+  // the same JSON after a deep one still parses (no state left over)
+  CHECK_STR(ModRepositoryFileInfo::createFromJson(good).gameName, "SkyrimSE");
 }
 
 int main(int argc, char** argv)

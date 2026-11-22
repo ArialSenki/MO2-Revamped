@@ -12,6 +12,28 @@
 namespace Collections
 {
 
+namespace
+{
+
+// MO2 Revamped: at most max UTF-16 units, not between the two halves of an
+// emoji, and without the dots and spaces a cut can leave at the end (a
+// folder name can have 255 units; 300 failed to be created)
+void cutFolderName(QString& name, qsizetype max)
+{
+  if (name.size() > max) {
+    qsizetype cut = max;
+    if (cut > 0 && name.at(cut - 1).isHighSurrogate()) {
+      --cut;
+    }
+    name.truncate(cut);
+  }
+  while (name.endsWith(u'.') || name.endsWith(u' ')) {
+    name.chop(1);
+  }
+}
+
+}  // namespace
+
 bool makeFolderName(QString& name)
 {
   QString fixed = name;
@@ -28,9 +50,7 @@ bool makeFolderName(QString& name)
     fixed = prefixed;
   }
   // fixDirectoryName trims dots before it drops characters: "J.R.R.?" ends in one
-  while (fixed.endsWith(u'.') || fixed.endsWith(u' ')) {
-    fixed.chop(1);
-  }
+  cutFolderName(fixed, MaxFolderName);
   if (fixed.isEmpty() || fixed.contains(u'/') || fixed.contains(u'\\')) {
     name.clear();
     return false;
@@ -44,6 +64,7 @@ bool makeFolderName(QString& name)
   // what's left that isn't a safe folder starts with a device name ("Aux. Armors")
   if (!isSafeRelativePath(fixed)) {
     fixed.prepend(u'_');
+    cutFolderName(fixed, MaxFolderName);
     if (!isSafeRelativePath(fixed)) {
       name.clear();
       return false;
