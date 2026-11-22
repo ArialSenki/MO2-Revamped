@@ -1,14 +1,18 @@
 # MO2 Python plugin for the stability stress run (copied into a test bed only,
 # never shipped). Once the interface is up: fast mod toggles, mods enabled
 # during a refresh, the plugin view's selection across a fast-path disable,
-# then a consistency check. Results go to MO2R_STRESS_OUT/result.json.
+# the plugin list asked by name from other threads while Space switches
+# several mods at once, then a consistency check. Results go to
+# MO2R_STRESS_OUT/result.json.
 import json
 import os
 import random
+import threading
 import time
 
 import mobase
-from PyQt6.QtCore import QItemSelectionModel, QTimer, Qt
+from PyQt6.QtCore import QEvent, QItemSelectionModel, QTimer, Qt
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QAbstractItemView, QApplication
 
 OUT = os.environ.get("MO2R_STRESS_OUT", "")
@@ -46,9 +50,9 @@ class Stress(mobase.IPlugin):
     def _plugin_active(self, name):
         return self._org.pluginList().state(name) == mobase.PluginState.ACTIVE
 
-    def _view(self):
+    def _view(self, name="espList"):
         for w in QApplication.topLevelWidgets():
-            view = w.findChild(QAbstractItemView, "espList")
+            view = w.findChild(QAbstractItemView, name)
             if view is not None:
                 return view
         return None
@@ -61,6 +65,9 @@ class Stress(mobase.IPlugin):
         self._note(f"start, {len(self._mods())} mods, {len(self._org.pluginList().pluginNames())} plugins")
         self._toggles = 0
         self._times = []
+        if os.environ.get("MO2R_STRESS_PHASES") == "readers":
+            self._readers_phase()
+            return
         self._toggle_step()
 
     def _toggle_step(self):
@@ -75,7 +82,7 @@ class Stress(mobase.IPlugin):
             for mod in self._mods():
                 if not self._active(mod):
                     self._org.modList().setActive(mod, True)
-            self._after(3000, self._selection_phase)
+            self._after(3000, self._readers_phase)
             return
         mod = self._rng.choice(self._mods()[:400])
         t = time.perf_counter()
@@ -83,6 +90,110 @@ class Stress(mobase.IPlugin):
         self._times.append((time.perf_counter() - t) * 1000)
         self._toggles += 1
         self._after(self._rng.choice([0, 0, 10, 50]), self._toggle_step)
+
+    # The problems check asks the plugin list by name on a worker thread while
+    # the interface thread rebuilds it after a switch: beta 16 crashed there
+    # (a lookup in the half-built name index) when several mods were switched
+    # at once, quickly. Here two threads ask by name without pause while Space
+    # switches a selection of mods again and again. The key presses are posted,
+    # so MO2 handles them with no Python on the stack and the readers really
+    # run at the same time. A crash ends the run with no result.
+    READER_ROUNDS = 40
+
+    def _readers_phase(self):
+        view = self._view("modList")
+        if view is None:
+            self._result["errors"].append("mod view not found")
+            self._after(0, self._after_readers)
+            return
+        model = view.model()
+        wanted = {f"Stress {m:04d}" for m in range(40, 400, 45)}
+        rows = [r for r in range(model.rowCount())
+                if model.index(r, 0).data(Qt.ItemDataRole.DisplayRole) in wanted]
+        if len(rows) < 2:
+            self._result["errors"].append(f"readers: only {len(rows)} of the mods found in the view")
+            self._after(0, self._after_readers)
+            return
+        selection = view.selectionModel()
+        selection.clearSelection()
+        for r in rows:
+            selection.select(model.index(r, 0),
+                             QItemSelectionModel.SelectionFlag.Select
+                             | QItemSelectionModel.SelectionFlag.Rows)
+        selection.setCurrentIndex(model.index(rows[0], 0),
+                                  QItemSelectionModel.SelectionFlag.NoUpdate)
+
+        self._stop_readers = threading.Event()
+        self._reads = [0, 0]
+        self._reader_errors = []
+        plugins = self._org.pluginList()
+
+        def read(slot):
+            try:
+                while not self._stop_readers.is_set():
+                    names = plugins.pluginNames()[slot::2]
+                    for start in range(0, len(names), 300):
+                        for name in names[start:start + 300]:
+                            plugins.state(name)
+                            plugins.masters(name)
+                            plugins.priority(name)
+                            plugins.loadOrder(name)
+                            plugins.origin(name)
+                        self._reads[slot] += 300
+                        # the interface thread's own Python callbacks need the
+                        # GIL too: without a pause the readers kept it and one
+                        # press took 18 s
+                        time.sleep(0.001)
+                        if self._stop_readers.is_set():
+                            break
+            except Exception as e:  # noqa: BLE001 - reported, the run goes on
+                self._reader_errors.append(repr(e))
+
+        self._readers = [threading.Thread(target=read, args=(i,), daemon=True) for i in (0, 1)]
+        for t in self._readers:
+            t.start()
+        self._note(f"readers: {len(rows)} mods selected, Space x{self.READER_ROUNDS}")
+        self._reader_view = view
+        self._reader_round = 0
+        self._after(200, self._readers_step)
+
+    def _readers_step(self):
+        if self._reader_round >= self.READER_ROUNDS:
+            # the last press and its problems check have run by then
+            self._after(4000, self._readers_done)
+            return
+        self._reader_round += 1
+        for kind in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+            QApplication.postEvent(
+                self._reader_view,
+                QKeyEvent(kind, Qt.Key.Key_Space, Qt.KeyboardModifier.NoModifier))
+        self._after(self._rng.choice([60, 120, 250, 700]), self._readers_step)
+
+    def _readers_done(self):
+        self._stop_readers.set()
+        for t in self._readers:
+            t.join(20)
+        stuck = [t for t in self._readers if t.is_alive()]
+        self._result["readers"] = {"presses": self._reader_round, "reads": sum(self._reads),
+                                   "errors": self._reader_errors, "stuck_threads": len(stuck)}
+        self._note(f"readers done {self._result['readers']}")
+        if stuck:
+            self._result["errors"].append("readers: a reader thread never came back")
+        if self._reader_errors:
+            self._result["errors"].append(f"readers: {self._reader_errors[:3]}")
+        if sum(self._reads) == 0:
+            self._result["errors"].append("readers: nothing was read")
+        self._reader_view.selectionModel().clearSelection()
+        for mod in self._mods():
+            if not self._active(mod):
+                self._org.modList().setActive(mod, True)
+        self._after(3000, self._after_readers)
+
+    def _after_readers(self):
+        if os.environ.get("MO2R_STRESS_PHASES") == "readers":
+            self._final()
+        else:
+            self._selection_phase()
 
     def _selection_phase(self, round_=0):
         view = self._view()
