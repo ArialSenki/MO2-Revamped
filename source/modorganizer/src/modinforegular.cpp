@@ -270,6 +270,18 @@ void ModInfoRegular::readMeta()
   }
   metaFile.endArray();
 
+  // MO2 Revamped: kept for getIniTweaks(). It opened meta.ini again for every
+  // enabled mod each time the tweaked INI was made (before every program run
+  // and at exit): ~0.5 s with a Nolvus list. Nothing in MO2 writes the list;
+  // a full refresh reads it again
+  m_IniTweakNames.clear();
+  const int numTweaks = metaFile.beginReadArray("INI Tweaks");
+  for (int i = 0; i < numTweaks; ++i) {
+    metaFile.setArrayIndex(i);
+    m_IniTweakNames.append(metaFile.value("name").toString());
+  }
+  metaFile.endArray();
+
   // Plugin settings:
   metaFile.beginGroup("Plugins");
   for (auto pluginName : metaFile.childGroups()) {
@@ -980,25 +992,16 @@ void ModInfoRegular::addInstalledFile(int modId, int fileId)
 
 std::vector<QString> ModInfoRegular::getIniTweaks() const
 {
-  QString metaFileName = absolutePath().append("/meta.ini");
-  QSettings metaFile(metaFileName, QSettings::IniFormat);
-
   std::vector<QString> result;
 
-  int numTweaks = metaFile.beginReadArray("INI Tweaks");
-
-  if (numTweaks != 0) {
-    log::debug("{} active ini tweaks in {}", numTweaks,
-               QDir::toNativeSeparators(metaFileName));
+  if (!m_IniTweakNames.isEmpty()) {
+    log::debug("{} active ini tweaks in {}", m_IniTweakNames.size(),
+               QDir::toNativeSeparators(absolutePath().append("/meta.ini")));
   }
 
-  for (int i = 0; i < numTweaks; ++i) {
-    metaFile.setArrayIndex(i);
-    QString filename =
-        absolutePath().append("/INI Tweaks/").append(metaFile.value("name").toString());
-    result.push_back(filename);
+  for (const QString& name : m_IniTweakNames) {
+    result.push_back(absolutePath().append("/INI Tweaks/").append(name));
   }
-  metaFile.endArray();
   return result;
 }
 
