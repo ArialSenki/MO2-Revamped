@@ -839,8 +839,9 @@ EErrorCode Archive::extractDirect(File::Ptr file, std::ofstream& outFile) const
     if (namePrefixed()) {
       std::string fullName = readBString(m_File);
       if (size <= fullName.length()) {
-#pragma message("report error!")
-        return result;
+        // MO2 Revamped: the record is shorter than the name it starts
+        // with: an error, not an empty file reported as extracted
+        return ERROR_INVALIDDATA;
       }
       size -= fullName.length() + 1;
     }
@@ -1019,8 +1020,9 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
     if (namePrefixed()) {
       std::string fullName = readBString(m_File);
       if (inSize <= fullName.length()) {
-#pragma message("report error!")
-        return result;
+        // MO2 Revamped: the record is shorter than the name it starts
+        // with: an error, not an empty file reported as extracted
+        return ERROR_INVALIDDATA;
       }
       inSize -= fullName.length() + 1;
     }
@@ -1060,8 +1062,9 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
     if (namePrefixed()) {
       std::string fullName = readBString(m_File);
       if (inSize <= fullName.length()) {
-#pragma message("report error!")
-        return result;
+        // MO2 Revamped: the record is shorter than the name it starts
+        // with: an error, not an empty file reported as extracted
+        return ERROR_INVALIDDATA;
       }
       inSize -= fullName.length() + 1;
     }
