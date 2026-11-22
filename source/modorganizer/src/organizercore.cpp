@@ -725,6 +725,9 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
   }
 
   log::debug("selecting profile '{}'", profileName);
+  if (m_CurrentProfile != nullptr) {
+    m_ProfileSwitch.start();
+  }
 
   QDir profileBaseDir(settings().paths().profiles());
 
@@ -815,6 +818,9 @@ void OrganizerCore::setCurrentProfile(const QString& profileName, bool reload)
 
   emit profileChanged(oldProfile.get(), m_CurrentProfile.get());
   m_ProfileChanged(oldProfile.get(), m_CurrentProfile.get());
+  if (m_ProfileSwitch.isValid()) {
+    log::debug("profile switch: chosen in {} ms", m_ProfileSwitch.elapsed());
+  }
 }
 
 MOBase::IModRepositoryBridge* OrganizerCore::createNexusBridge() const
@@ -2510,6 +2516,10 @@ void OrganizerCore::onDirectoryRefreshed()
   emit directoryStructureReady();
 
   log::debug("refresh done");
+  if (m_ProfileSwitch.isValid() && !m_RefreshPending) {
+    log::debug("profile switch: ready after {} ms", m_ProfileSwitch.elapsed());
+    m_ProfileSwitch.invalidate();
+  }
 
   // not when something above already started one: it may not include the change
   // that set this, and its own end looks at this again

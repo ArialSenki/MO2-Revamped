@@ -260,8 +260,11 @@ void ModListSortProxy::updateFilter(const QString& filter)
   // MO2_REVAMPED_PERF: the cost of one keystroke in the filter box
   FluentPerf::Timer perf("ModListSortProxy::updateFilter");
   updateFilterActive();
+  perf.lap("active");
   invalidateFilter();
+  perf.lap("filter");
   emit filterInvalidated();
+  perf.lap("listeners");
 }
 
 bool ModListSortProxy::hasConflictFlag(
