@@ -4761,7 +4761,8 @@ class EldenRingMo2SaveIsolation(mobase.IPluginTool):
         the save_file_extension of the ersc_settings.ini it ships, unless that
         isn't a short plain word or is another save's (sl2, co2, err, cnv...),
         else cnvco2."""
-        reserved = {"sl2", "co2", "err", "cnv", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
+        # mod: alt-saves' default extension, as the game plugin refuses it
+        reserved = {"sl2", "co2", "err", "cnv", "mod", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
         for settings in (folder / "DLLs" / "ersc_settings.ini", folder / "ersc_settings.ini"):
             if not settings.is_file():
                 continue

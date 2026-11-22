@@ -209,8 +209,11 @@ class ManifestGame(BasicGame):
         # detectGame() runs with the object already set (see _make_real)
         if self.__dict__.get("_real_ready"):
             return self._real_game
-        with _real_lock:
-            return self._make_real()
+        with _real_lock, _holding_locks():
+            real = self._make_real()
+        # a store error met while the real game was made, shown with no lock
+        _report_store_errors()
+        return real
 
     def _make_real(self) -> BasicGame:
         if self._real_game is None:
@@ -244,6 +247,7 @@ class ManifestGame(BasicGame):
 # the real game and the real game's detectGame() can read a path, so one lock
 # for both, never two taken in opposite orders
 from .basic_game import _detect_lock as _real_lock  # noqa: E402
+from .basic_game import _holding_locks, _report_store_errors  # noqa: E402
 
 # MO2 Revamped: a check inside basic_games' own games package, nothing else
 # (the manifest is a file: "os:abort" would call any function)

@@ -9,7 +9,9 @@
 
 #include <utility.h>
 
+#include <QDir>
 #include <QFile>
+#include <QImage>
 #include <QLocale>
 #include <QStringConverter>
 #include <QStringEncoder>
@@ -282,6 +284,14 @@ static void shellFiles()
   }
   CHECK(shell::CreateDirectories(QDir(QDir::toNativeSeparators(dir + "/n1/n2"))).success());
   CHECK(QDir(dir + "/n1/n2").exists());
+  {
+    // a relative path is refused, not made in the working directory (a split
+    // network path's "NAS/Games" made "<MO2>\NAS\Games")
+    auto relative = shell::CreateDirectories(QDir("mo2r-relative-test/x"));
+    CHECK(!relative.success());
+    CHECK(relative.error() == ERROR_BAD_PATHNAME);
+    CHECK(!QDir("mo2r-relative-test").exists());
+  }
   CHECK(QDir(nested).exists());
   {
     auto again = shell::CreateDirectories(QDir(nested));
@@ -426,9 +436,61 @@ static void guards()
   CHECK(true);
 }
 
+// a mod's picture is read as one format, never SVG, never decided again from
+// its content (restrictImageReader)
+void pictures()
+{
+  const QString dir = QDir::temp().filePath(QStringLiteral("mo2r-pictures-test"));
+  QDir(dir).removeRecursively();
+  QDir().mkpath(dir);
+  const QString svgAsPng = dir + QStringLiteral("/shot.png");
+  {
+    QFile f(svgAsPng);
+    f.open(QIODevice::WriteOnly);
+    f.write("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"8\" height=\"8\">"
+            "<image href=\"\\\\\\\\127.0.0.1\\\\x\\\\y.png\" width=\"8\" height=\"8\"/></svg>");
+  }
+  {
+    QImageReader reader(svgAsPng);
+    CHECK(restrictImageReader(reader));  // a .png: read as PNG only
+    CHECK(reader.read().isNull());
+    CHECK(reader.format() == "png");
+  }
+  {
+    QImageReader reader(svgAsPng);
+    CHECK(!restrictImageReader(reader, true));  // by content: SVG, refused
+    CHECK(reader.read().isNull());
+  }
+  {
+    QImageReader reader(dir + QStringLiteral("/drawing.svg"));
+    CHECK(!restrictImageReader(reader));
+  }
+  const QString png = dir + QStringLiteral("/real.png");
+  {
+    QImage image(4, 3, QImage::Format_ARGB32);
+    image.fill(Qt::red);
+    CHECK(image.save(png, "PNG"));
+  }
+  {
+    QImageReader reader(png);
+    CHECK(restrictImageReader(reader));
+    CHECK(reader.read().size() == QSize(4, 3));
+  }
+  {
+    // a PNG named .jpg, as OMODs do: read by its content
+    const QString misnamed = dir + QStringLiteral("/real.jpg");
+    QFile::copy(png, misnamed);
+    QImageReader reader(misnamed);
+    CHECK(restrictImageReader(reader, true));
+    CHECK(reader.read().size() == QSize(4, 3));
+  }
+  QDir(dir).removeRecursively();
+}
+
 int main(int argc, char** argv)
 {
   uitest::redirect(argc, argv);
+  pictures();
   strings();
   joins();
   naturalSort();

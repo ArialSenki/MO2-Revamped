@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <QDir>
 #include <QIcon>
 #include <QList>
+#include <QFileInfo>
+#include <QImageReader>
 #include <QString>
 #include <QTextStream>
 #include <QUrl>
@@ -506,6 +508,50 @@ QDLLEXPORT QString getFileVersion(QString const& filepath);
  */
 QDLLEXPORT QString getProductVersion(QString const& program);
 
+/**
+ * MO2 Revamped: sets up a reader for a picture that comes from a mod (an
+ * installer's images, a mod's screenshots): one format only, never decided
+ * again from the content, never SVG or PDF, and a decoding memory cap.
+ * QImageReader otherwise falls back to the content when the extension's
+ * reader can't read it, so an SVG named .png reached the SVG reader, whose
+ * <image href="\\server\..."> made Windows send the user's password hash to
+ * that server.
+ * @param byContent the format from the content instead of the extension (for
+ *                  OMODs, which often name their pictures wrong)
+ * @return false when the picture must not be read (the reader is then left
+ *         unable to read anything)
+ */
+// inline: plugins and the organizer use it with any uibase build
+inline bool restrictImageReader(QImageReader& reader, bool byContent = false)
+{
+  // the decoding cap the previews use
+  constexpr int MaxDecodeMegabytes = 128;
+  QByteArray format;
+  if (byContent) {
+    // only the format: which reader would read it, without decoding anything,
+    // by the content alone (imageFormat(fileName) tries the extension first)
+    if (!reader.fileName().isEmpty()) {
+      QImageReader probe(reader.fileName());
+      probe.setDecideFormatFromContent(true);
+      format = probe.format();
+    } else if (reader.device() != nullptr) {
+      format = QImageReader::imageFormat(reader.device());
+    }
+  } else {
+    format = QFileInfo(reader.fileName()).suffix().toLower().toLatin1();
+  }
+  format = format.toLower();
+  const bool refused = format.isEmpty() || format == "svg" || format == "svgz" ||
+                       format == "pdf" ||
+                       !QImageReader::supportedImageFormats().contains(format);
+  // a format that reads nothing when refused: the reader can't fall back
+  reader.setFormat(refused ? QByteArrayLiteral("mo2r-refused") : format);
+  reader.setAutoDetectImageFormat(false);
+  reader.setDecideFormatFromContent(false);
+  reader.setAllocationLimit(MaxDecodeMegabytes);
+  return !refused;
+}
+
 // removes and deletes all the children of the given widget
 //
 QDLLEXPORT void deleteChildWidgets(QWidget* w);
@@ -659,7 +705,7 @@ bool forEachLineInFile(const QString& filePath, F&& f)
         if (lineStart < p) {
           // skip white at end of line
           const char* lineEnd = p - 1;
-          while (std::isspace(*lineEnd) && lineEnd > lineStart) {
+          while (std::isspace(static_cast<unsigned char>(*lineEnd)) && lineEnd > lineStart) {
             --lineEnd;
           }
           ++lineEnd;

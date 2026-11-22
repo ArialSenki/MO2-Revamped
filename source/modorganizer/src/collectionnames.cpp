@@ -16,8 +16,16 @@ bool makeFolderName(QString& name)
 {
   QString fixed = name;
   if (!MOBase::fixDirectoryName(fixed)) {
-    name.clear();
-    return false;
+    // fixDirectoryName() now refuses a device name ("Aux", "con"): such a mod
+    // was installed as "_Aux" and must stay so, not become "Mod 3" (its
+    // folder would change at the collection's next update)
+    // (a name with nothing usable, "..." or "?*", leaves only the "_": refused)
+    QString prefixed = QStringLiteral("_") + name;
+    if (!MOBase::fixDirectoryName(prefixed) || prefixed == QStringLiteral("_")) {
+      name.clear();
+      return false;
+    }
+    fixed = prefixed;
   }
   // fixDirectoryName trims dots before it drops characters: "J.R.R.?" ends in one
   while (fixed.endsWith(u'.') || fixed.endsWith(u' ')) {

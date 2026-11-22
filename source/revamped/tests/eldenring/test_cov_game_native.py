@@ -333,12 +333,14 @@ class ForcedLoads(unittest.TestCase):
         self.organizer.active.discard("Convergence")
         self.assertIsNone(game._convergence_coop_extension())
 
-    def test_convergence_copy_failure_uses_the_mod_dll(self):
-        seamless = self.organizer.add_mod("Seamless", ["SeamlessCoop/ersc.dll"])
+    def test_convergence_copy_failure_loads_no_seamless(self):
+        # without its copy Seamless isn't loaded from the mod either: it would
+        # save Convergence's co-op games to the shared ER0000.co2 (185c0213)
+        self.organizer.add_mod("Seamless", ["SeamlessCoop/ersc.dll"])
         self.organizer.add_mod("Convergence", ["me3/convergence.me3"])
         game = game_for(self.organizer)
         with mock.patch.object(type(game), "_convergence_seamless_copy", side_effect=PermissionError("denied")):
-            self.assertEqual(game._seamless_load_dll(), seamless / "SeamlessCoop" / "ersc.dll")
+            self.assertIsNone(game._seamless_load_dll())
 
     def test_convergence_copy_without_settings_and_unchanged(self):
         self.organizer.add_mod("Seamless", ["SeamlessCoop/ersc.dll"])

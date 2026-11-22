@@ -52,7 +52,7 @@ class ConvergenceCoopExtension(unittest.TestCase):
         odd = mod_folder({"DLLs/ersc_settings.ini": "[SAVE]\nsave_file_extension = a/b\n"})
         self.assertEqual(Tool._convergence_coop_extension(odd), "cnvco2")
         # another save's extension, as the plugin refuses it
-        for other in ("sl2", "err", "cnv", "**"):
+        for other in ("sl2", "err", "cnv", "mod", "**"):
             folder = mod_folder({"DLLs/ersc_settings.ini": f"[SAVE]\nsave_file_extension = {other}\n"})
             self.assertEqual(Tool._convergence_coop_extension(folder), "cnvco2")
 

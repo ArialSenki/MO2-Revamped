@@ -101,13 +101,14 @@ void testMakeFolderName()
   CHECK_EQ(folder("Name.?"), "Name");
   CHECK_EQ(folder("Name \u00a0"), "Name");
 
-  // device names: refused by uibase's fixDirectoryName (in upper case only
-  // before its MO2 Revamped fix), or kept with "_" in front
+  // device names, which uibase's fixDirectoryName refuses in any case: kept
+  // with "_" in front, as a collection installed them before (a refused name
+  // became "Mod N", and its folder would change at the next update)
 #define CHECK_DEVICE(a, b) checkDevice((a), (b), __LINE__)
-  CHECK_EQ(folder("CON"), "<false>");
+  CHECK_EQ(folder("CON"), "_CON");
   CHECK_DEVICE("con", "_con");
   CHECK_EQ(folder("Nul.txt"), "_Nul.txt");
-  CHECK_EQ(folder("COM1"), "<false>");
+  CHECK_EQ(folder("COM1"), "_COM1");
   CHECK_DEVICE("com1", "_com1");
   CHECK_EQ(folder("COM\u00b9"), "_COM\u00b9");
   CHECK_EQ(folder("LPT9.esp"), "_LPT9.esp");

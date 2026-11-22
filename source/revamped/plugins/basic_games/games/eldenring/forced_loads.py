@@ -36,6 +36,12 @@ def _game_class():
     return EldenRingMo2Game
 
 
+# the reparse points that lead elsewhere: symbolic links and junctions (mount
+# points). OneDrive placeholders, deduplicated files and the like are files
+# where they are
+_LINK_REPARSE_TAGS = frozenset({0xA000000C, 0xA0000003})
+
+
 class ForcedLoadsMixin:
     def executableForcedLoads(self) -> list[mobase.ExecutableForcedLoadSetting]:
         if not self.isActive():
@@ -337,7 +343,8 @@ class ForcedLoadsMixin:
     # Convergence's cnv, Seamless's shared co2) nor a file type of their folders
     _CoopExtensionPattern = re.compile(r"[a-z0-9]{2,8}")
     _ReservedSaveExtensions = frozenset(
-        {"sl2", "co2", "err", "cnv", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
+        # mod: alt-saves' default extension
+        {"sl2", "co2", "err", "cnv", "mod", "bak", "ini", "dll", "exe", "txt", "json", "tmp"}
     )
 
     @classmethod
@@ -479,16 +486,24 @@ class ForcedLoadsMixin:
     def _files_without_links(folder: Path):
         """Everything below folder, never through a junction or symbolic link
         (one in a mod's SeamlessCoop folder would copy files from elsewhere on
-        the disk into the instance, or loop)."""
+        the disk into the instance, or loop). Only links: OneDrive's files and
+        deduplicated ones are reparse points too, and a Seamless in a mods
+        folder under OneDrive was refused, stopping every Convergence launch."""
+
+        def is_link(path: str) -> bool:
+            info = os.lstat(path)
+            if not info.st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                return False
+            return getattr(info, "st_reparse_tag", 0) in _LINK_REPARSE_TAGS
+
         for root, dirs, files in os.walk(folder, followlinks=False):
             kept = []
             for name in dirs:
                 path = os.path.join(root, name)
                 try:
-                    attributes = os.lstat(path).st_file_attributes
+                    if is_link(path):
+                        continue
                 except (OSError, AttributeError):
-                    continue
-                if attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
                     continue
                 kept.append(name)
                 yield Path(path)
@@ -496,7 +511,7 @@ class ForcedLoadsMixin:
             for name in files:
                 path = os.path.join(root, name)
                 try:
-                    if os.lstat(path).st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+                    if is_link(path):
                         continue
                 except (OSError, AttributeError):
                     continue
