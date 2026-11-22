@@ -243,8 +243,11 @@ bool CheckFNIS::fnisCheck(const QString &application)
     if (process == INVALID_HANDLE_VALUE) {
       reportError(tr("MO2 couldn't start FNIS (%1).").arg(fnisApp));
     } else {
-      DWORD exitCodeU;
-      if (m_MOInfo->waitForApplication(process, &exitCodeU)) {
+      // MO2 Revamped: the code is the third argument; passed second (as
+      // inherited), the pointer became refresh = true and the code was never
+      // written, so FNIS's result was whatever the stack held
+      DWORD exitCodeU = 0;
+      if (m_MOInfo->waitForApplication(process, true, &exitCodeU)) {
         int exitCode = static_cast<int>(exitCodeU);
         if (exitCode != 0) {
           cont = startAnyway(
