@@ -12,6 +12,7 @@
 #include <QStyle>
 #include <QStyleFactory>
 #include <QStyleHints>
+#include <QSvgRenderer>
 #include <QTimer>
 #include <QWidget>
 #include <QWindow>
@@ -382,11 +383,81 @@ QString iconFontFamily()
   return family;
 }
 
+bool hasIconFont()
+{
+  static const bool found = [] {
+    if (qEnvironmentVariableIntValue("MO2R_GLYPH_SVG") == 1) {
+      return false;
+    }
+    const QStringList families = QFontDatabase::families();
+    return families.contains(QStringLiteral("Segoe Fluent Icons")) ||
+           families.contains(QStringLiteral("Segoe MDL2 Assets"));
+  }();
+  return found;
+}
+
+namespace
+{
+// the glyph's SVG in the color on a px-wide square. Fluent UI System Icons keep
+// 2 px free around a 20 px icon, where a font glyph fills its em: drawn 20/16
+// larger and centered, the shapes reach the font's extent, as in MO2
+QPixmap svgGlyph(ushort codepoint, const QColor& color, int px)
+{
+  QPixmap pixmap(px, px);
+  pixmap.fill(Qt::transparent);
+  QSvgRenderer renderer(QStringLiteral(":/nxmglyphs/%1")
+                            .arg(QString::number(codepoint, 16).toUpper()));
+  if (!renderer.isValid()) {
+    return pixmap;
+  }
+  const qreal drawn = px * 1.25;
+  QPainter painter(&pixmap);
+  painter.setRenderHint(QPainter::Antialiasing);
+  renderer.render(&painter, QRectF((px - drawn) / 2, (px - drawn) / 2, drawn, drawn));
+  painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+  painter.fillRect(pixmap.rect(), color);
+  return pixmap;
+}
+}  // namespace
+
+void drawGlyph(QPainter* painter, const QRectF& rect, ushort codepoint, const QColor& color,
+               int pixelSize)
+{
+  painter->save();
+  if (hasIconFont()) {
+    QFont font(iconFontFamily());
+    font.setPixelSize(pixelSize);
+    painter->setFont(font);
+    painter->setPen(color);
+    painter->drawText(rect, Qt::AlignCenter, QString(QChar(codepoint)));
+  } else {
+    const qreal ratio = painter->device() != nullptr ? painter->device()->devicePixelRatioF() : 1.0;
+    QPixmap pixmap    = svgGlyph(codepoint, color, qRound(pixelSize * ratio));
+    pixmap.setDevicePixelRatio(ratio);
+    painter->drawPixmap(QPointF(rect.center().x() - pixelSize / 2.0,
+                                rect.center().y() - pixelSize / 2.0),
+                        pixmap);
+  }
+  painter->restore();
+}
+
 QIcon glyphIcon(ushort codepoint, const QColor& color, int size)
 {
   QIcon icon;
   for (const qreal ratio : {1.0, 1.25, 1.5, 2.0}) {
     const int px = qRound(size * ratio);
+    if (!hasIconFont()) {
+      // the font draws the glyph at 85% of the icon: the SVG as large
+      QPixmap pixmap(px, px);
+      pixmap.fill(Qt::transparent);
+      const int inner = qRound(px * 0.85);
+      QPainter painter(&pixmap);
+      painter.drawPixmap((px - inner) / 2, (px - inner) / 2, svgGlyph(codepoint, color, inner));
+      painter.end();
+      pixmap.setDevicePixelRatio(ratio);
+      icon.addPixmap(pixmap);
+      continue;
+    }
     QPixmap pixmap(px, px);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);

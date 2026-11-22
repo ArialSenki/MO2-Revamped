@@ -67,11 +67,7 @@ public:
     boxPath.addRoundedRect(box.adjusted(0.5, 0.5, -0.5, -0.5), 4, 4);
     if (checked) {
       painter->fillPath(boxPath, t.accent);
-      QFont glyph(Fluent::iconFontFamily());
-      glyph.setPixelSize(12);
-      painter->setFont(glyph);
-      painter->setPen(t.accentFg);
-      painter->drawText(box, Qt::AlignCenter, QString(QChar(0xE73E)));
+      Fluent::drawGlyph(painter, box, 0xE73E, t.accentFg, 12);
     } else {
       painter->fillPath(boxPath, t.field);
       painter->setPen(QPen(t.fieldBottom, 1));
