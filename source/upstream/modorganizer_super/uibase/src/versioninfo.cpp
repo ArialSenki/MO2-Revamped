@@ -258,7 +258,9 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
                   : scheme != SCHEME_DISCOVER ? scheme
                                               : SCHEME_REGULAR;
   m_ReleaseType = RELEASE_FINAL;
-  m_Major = m_Minor = m_SubMinor = m_SubSubMinor = 0;
+  // MO2 Revamped: the decimal positions too; a reused VersionInfo kept the
+  // previous version's ("1.05" then "f1.5" gave "f1.05")
+  m_Major = m_Minor = m_SubMinor = m_SubSubMinor = m_DecimalPositions = 0;
   m_Rest.clear();
   if (versionString.length() == 0) {
     return;
