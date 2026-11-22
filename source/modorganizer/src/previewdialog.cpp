@@ -1,5 +1,6 @@
 #include "previewdialog.h"
 #include "fluentdialogs.h"
+#include "fluenticons.h"
 #include "settings.h"
 #include "ui_previewdialog.h"
 #include <QFileInfo>
@@ -11,6 +12,9 @@ PreviewDialog::PreviewDialog(const QString& fileName, QWidget* parent)
   // keepRhiContentInside()
   FluentDialogs::keepRhiContentInside(this);
   ui->setupUi(this);
+  // MO2 Revamped: by resource path, which the glyph table knows
+  ui->previousButton->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/previous")));
+  ui->nextButton->setIcon(FluentIcons::icon(QStringLiteral(":/MO/gui/next")));
   resize(880, 700);
   ui->nameLabel->setText(QFileInfo(fileName).fileName());
   ui->nextButton->setEnabled(false);
