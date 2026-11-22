@@ -107,7 +107,17 @@ bool readsAsItsExtension(const QString& fileName, const QByteArray& fileData)
   reader.setAutoDetectImageFormat(false);
   reader.setDecideFormatFromContent(false);
   reader.setAllocationLimit(MaxDecodeMegabytes);
-  return reader.canRead() && reader.format() == format;
+  if (!reader.canRead()) {
+    return false;
+  }
+  // a frame QMovie (which has no allocation limit) would decode: its size
+  // from the header, or (GIF reports none before decoding) the first frame
+  // decoded under the limit; the later frames share its canvas
+  const QSize size = reader.size();
+  if (size.isValid()) {
+    return qint64(size.width()) * size.height() * 4 <= qint64(MaxDecodeMegabytes) * 1024 * 1024;
+  }
+  return !reader.read().isNull();
 }
 
 QPixmap readPicture(const QString& fileName, const QByteArray& fileData)
