@@ -8507,7 +8507,9 @@ void MainWindow::dropLocalFile(const QUrl& url, const QString& outputDir, bool m
       break;
     default:
     case QMessageBox::YesRole:
-      target = m_OrganizerCore.downloadManager()->getDownloadFileName(file.fileName());
+      // MO2 Revamped: a free name; without rename the same path came back and
+      // the copy (told yes to all) replaced the archive already there
+      target = m_OrganizerCore.downloadManager()->getDownloadFileName(file.fileName(), true);
       break;
     }
   }
