@@ -410,9 +410,25 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
       // flat list of folders as they were stored in the archive
       std::vector<Folder::Ptr> folders;
 
+      // MO2 Revamped: the folders' file counts may not add up to more than
+      // the header's, which has to fit in the archive (a file record is 16
+      // bytes). Folder records all pointing at one block of file records made
+      // millions of file objects out of a 100 KB archive
+      if (16ULL * header.fileCount > m_ArchiveSize ||
+          16ULL * header.folderCount > m_ArchiveSize) {
+        throw data_invalid_exception(makeString(
+            "invalid file count (filename: %s)", pathForMessage(fileName).c_str()));
+      }
+      uint64_t files = 0;
       for (unsigned long i = 0; i < header.folderCount; ++i) {
         folders.push_back(m_RootFolder->addFolder(m_File, header.fileNameLength,
                                                   header.offset, header.type));
+        files += folders.back()->getNumFiles();
+        if (files > header.fileCount) {
+          throw data_invalid_exception(makeString(
+              "more files than the header says (filename: %s)",
+              pathForMessage(fileName).c_str()));
+        }
       }
 
       m_File.seekg(header.offset);
