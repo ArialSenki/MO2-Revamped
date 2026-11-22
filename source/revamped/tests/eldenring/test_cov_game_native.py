@@ -148,6 +148,19 @@ class ResolvedProfiles(ProfileBase):
         self.assertEqual(data["entries"][0]["mod_name"], "B")
         self.assertEqual(data["entries"][0]["initializer"], "FromB")
 
+    def test_overridden_first_entry_drops_its_initializer(self):
+        # A's entry comes first but B's copy loads: A's export isn't called on it
+        self.organizer.add_mod("B", ["DLLs/a.dll"])
+        data = self.resolve("native_1 = DLLs/a.dll\nmod_1 = A\ninitializer_1 = FromA\n"
+                            "native_2 = DLLs/a.dll\nmod_2 = B\n")
+        self.assertEqual(len(data["entries"]), 1)
+        self.assertEqual(data["entries"][0]["mod_name"], "B")
+        self.assertIsNone(data["entries"][0]["initializer"])
+        # with one of its own, the winner's entry gives it
+        data = self.resolve("native_1 = DLLs/a.dll\nmod_1 = A\ninitializer_1 = FromA\n"
+                            "native_2 = DLLs/a.dll\nmod_2 = B\ninitializer_2 = FromB\n")
+        self.assertEqual(data["entries"][0]["initializer"], "FromB")
+
     def test_winner_switched_off(self):
         self.organizer.add_mod("B", ["DLLs/a.dll"])
         data = self.resolve("native_1 = DLLs/a.dll\nmod_1 = A\n"
