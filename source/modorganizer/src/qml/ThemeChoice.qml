@@ -10,8 +10,11 @@ Rectangle {
 
     required property ThemeChoiceBridge bridge
 
+    // FluentContentDialog's measures: 20 above the heading, 16 between the
+    // text and the tiles, 24 below them, and the button band; the height
+    // follows the text, so a translation that wraps one more line still fits
     implicitWidth: 600
-    implicitHeight: 372
+    implicitHeight: 20 + texts.implicitHeight + 16 + 196 + 24 + band.height
     color: Fluent.surface
     focus: true
 
@@ -24,7 +27,7 @@ Rectangle {
     // the content dialog's text, as FluentContentDialog sets it
     Column {
         id: texts
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 24 }
+        anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: 24; rightMargin: 24; topMargin: 20 }
         spacing: 8
         FluentText {
             width: parent.width
@@ -47,8 +50,8 @@ Rectangle {
 
     Row {
         id: tiles
-        anchors { left: parent.left; right: parent.right; top: texts.bottom; leftMargin: 24; rightMargin: 24; topMargin: 18 }
-        spacing: 12
+        anchors { left: parent.left; right: parent.right; top: texts.bottom; leftMargin: 24; rightMargin: 24; topMargin: 16 }
+        spacing: 6
 
         Repeater {
             model: root.bridge.themes
@@ -190,16 +193,18 @@ Rectangle {
         }
     }
 
-    // the buttons in the darker band below, as in a content dialog
+    // the button in the darker band below, as in a content dialog: 24 around
+    // it, and as wide as the band, as FluentContentDialog's buttons are
     Rectangle {
+        id: band
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-        height: 72
+        height: 80
         color: Fluent.window
         Rectangle { anchors { left: parent.left; right: parent.right; top: parent.top } height: 1; color: Fluent.divider }
         FluentButton {
-            anchors { right: parent.right; rightMargin: 24; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; right: parent.right; leftMargin: 24; rightMargin: 24; verticalCenter: parent.verticalCenter }
             primary: true
-            minWidth: 140
+            minWidth: 110
             text: root.bridge.acceptLabel
             onClicked: root.bridge.accept()
         }
