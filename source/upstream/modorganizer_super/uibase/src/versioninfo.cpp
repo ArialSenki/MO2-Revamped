@@ -219,8 +219,21 @@ QString VersionInfo::parseReleaseType(QString versionString)
   int offset = -1;
   int length = 0;
 
+  // MO2 Revamped: "rc" only as a word of its own, at the start or after a
+  // separator and before a number, a separator or the end ("1.0rc1",
+  // "1.1.0-rc.2", "1.0 RC"): any "rc" inside the rest ("1.0source", "-src")
+  // made a release candidate, with the "rc" cut out of the text
+  static const QRegularExpression rcToken(
+      QStringLiteral("(?:^|[-._ ])(rc)(?=[-._ ]*(?:[0-9]|$))"),
+      QRegularExpression::CaseInsensitiveOption);
+
   for (const auto& [name, type] : typeStrings) {
-    offset = (int)versionString.indexOf(name, Qt::CaseInsensitive);
+    if (type == RELEASE_CANDIDATE) {
+      const auto match = rcToken.match(versionString);
+      offset           = match.hasMatch() ? (int)match.capturedStart(1) : -1;
+    } else {
+      offset = (int)versionString.indexOf(name, Qt::CaseInsensitive);
+    }
     if (offset != -1) {
       m_ReleaseType = type;
       length        = (int)name.length();
@@ -298,7 +311,16 @@ void VersionInfo::parse(const QString& versionString, VersionScheme scheme,
   }
 
   auto match = VERSION_REGEX.match(temp);
-  if (match.hasMatch()) {
+  // MO2 Revamped: a number past int isn't read (toInt() made it 0, and
+  // "99999999999" was 0.0): the version is kept as text, as one without any
+  // number is (SCHEME_LITERAL below)
+  bool numbersFit = match.hasMatch();
+  for (int group : {1, 3, 5, 7}) {
+    if (numbersFit && !match.captured(group).isEmpty()) {
+      match.captured(group).toInt(&numbersFit);
+    }
+  }
+  if (numbersFit) {
     m_Major             = match.captured(1).toInt();
     m_Minor             = match.captured(3).toInt();
     QString subMinor    = match.captured(5);
