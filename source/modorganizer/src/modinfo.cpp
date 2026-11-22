@@ -416,15 +416,29 @@ bool ModInfo::updateOneFromDisc(const QString& modsDirectory, const QString& nam
 
   // the same folder read before: the new object takes its place; a new one
   // goes where a full read would put it
-  const auto it = s_ModsByName.find(name);
+  auto it = s_ModsByName.find(name);
+  // createFrom() adds an object without indexing it: a mod made through
+  // createMod() is in the collection under this name but not in the index yet,
+  // and a second object for the same folder listed the mod twice
+  std::size_t unindexed = s_Collection.size();
+  if (it == s_ModsByName.end()) {
+    for (std::size_t i = 0; i < s_Collection.size(); ++i) {
+      if (s_Collection[i] && s_Collection[i]->isRegular() &&
+          s_Collection[i]->internalName() == name) {
+        unindexed = i;
+        break;
+      }
+    }
+  }
+  const std::size_t at = it != s_ModsByName.end() ? it->second : unindexed;
   ModInfo::Ptr fresh;
-  if (it != s_ModsByName.end() && it->second < s_Collection.size() &&
-      s_Collection[it->second]->isRegular()) {
+  if (at < s_Collection.size() && s_Collection[at]->isRegular()) {
     // the old object goes first, as in a full read: what it still had to save
     // is written before the folder is read again, not over it afterwards
-    s_Collection[it->second].reset();
+    s_Collection[at].reset();
     fresh.reset(new ModInfoRegular(dir, core));
-    s_Collection[it->second] = fresh;
+    s_Collection[at] = fresh;
+    std::sort(s_Collection.begin(), s_Collection.end(), ModInfo::ByName);
   } else if (it != s_ModsByName.end()) {
     return false;
   } else {
