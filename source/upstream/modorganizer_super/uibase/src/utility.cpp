@@ -947,7 +947,10 @@ QString decodeTextData(const QByteArray& fileData, QString* encoding)
       codec   = utf16.value();
       decoder = QStringDecoder(codec);
     } else {
-      decoder = QStringDecoder(QStringConverter::Encoding::System);
+      // MO2 Revamped: reported too; it stayed "UTF-8", and the text editor
+      // saved an ANSI ini decoded with the code page back as UTF-8
+      codec   = QStringConverter::Encoding::System;
+      decoder = QStringDecoder(codec);
     }
     text = decoder.decode(fileData);
   }
