@@ -659,7 +659,7 @@ bool forEachLineInFile(const QString& filePath, F&& f)
         if (lineStart < p) {
           // skip white at end of line
           const char* lineEnd = p - 1;
-          while (std::isspace(*lineEnd) && lineEnd > lineStart) {
+          while (std::isspace(static_cast<unsigned char>(*lineEnd)) && lineEnd > lineStart) {
             --lineEnd;
           }
           ++lineEnd;

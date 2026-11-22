@@ -528,6 +528,15 @@ QVariant ModList::data(const QModelIndex& modelIndex, int role) const
 bool ModList::renameMod(int index, const QString& newName)
 {
   QString nameFixed = newName;
+  // MO2 Revamped: a device name first: fixDirectoryName() now refuses those
+  // too, and the plain "Invalid name" hid the message that says why
+  if (ModInfo::isReservedDeviceName(newName.trimmed())) {
+    MessageDialog::showMessage(
+        tr("Windows doesn't allow \"%1\" as a folder name. Choose another name.")
+            .arg(newName.trimmed()),
+        nullptr, true);
+    return false;
+  }
   if (!fixDirectoryName(nameFixed) || nameFixed.isEmpty()) {
     MessageDialog::showMessage(tr("Invalid name"), nullptr, true);
     return false;
