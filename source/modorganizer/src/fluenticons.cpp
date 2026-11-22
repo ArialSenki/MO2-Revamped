@@ -18,6 +18,7 @@
 #include <QHash>
 #include <QIconEngine>
 #include <QImage>
+#include <QImageReader>
 #include <QMenu>
 #include <QPainter>
 #include <QPixmap>
@@ -69,10 +70,15 @@ QImage svgGlyph(char16_t codepoint, int pixels, const QColor& ink)
     }
     return image;
   }
+  // drawn at the size asked for by the svg image plugin (imageformats/qsvg,
+  // shipped). Not through QIcon: without the svg icon engine (iconengines,
+  // not shipped) a QIcon reads an SVG once as a bitmap of its own 20 px and
+  // never scales it up, so every glyph above 20 device pixels came out 20 px
+  QImageReader reader(path, "svg");
+  reader.setScaledSize(QSize(pixels, pixels));
+  const QImage shapes = reader.read();
   QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing);
-  painter.setRenderHint(QPainter::SmoothPixmapTransform);
-  QIcon(path).paint(&painter, QRect(0, 0, pixels, pixels));
+  painter.drawImage(0, 0, shapes);
   painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
   painter.fillRect(image.rect(), ink);
   return image;
@@ -601,6 +607,30 @@ void drawGlyph(QPainter& painter, const QRectF& rect, char16_t codepoint,
   painter.restore();
 }
 
+namespace
+{
+// redraws a label's glyph picture in the new theme's color (see setGlyph)
+class GlyphLabelFollower : public QObject
+{
+public:
+  using QObject::QObject;
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::StyleChange || event->type() == QEvent::PaletteChange) {
+      auto* label = qobject_cast<QLabel*>(watched);
+      if (label != nullptr && label->text().isEmpty()) {
+        const int size = label->property("fluentGlyphSize").toInt();
+        label->setPixmap(glyph(char16_t(label->property("fluentGlyph").toInt()),
+                               Tone(label->property("fluentGlyphTone").toInt()))
+                             .pixmap(QSize(size, size), label->devicePixelRatioF()));
+      }
+    }
+    return false;
+  }
+};
+}  // namespace
+
 void setGlyph(QLabel* label, char16_t codepoint, int pixelSize, Tone tone)
 {
   if (hasGlyphFont()) {
@@ -610,6 +640,16 @@ void setGlyph(QLabel* label, char16_t codepoint, int pixelSize, Tone tone)
   label->setText({});
   label->setPixmap(glyph(codepoint, tone).pixmap(QSize(pixelSize, pixelSize),
                                                  label->devicePixelRatioF()));
+  // the picture is in the theme's color of now: drawn again when the theme
+  // changes (Settings applies one to the open windows, such as the main
+  // window's summary badges), as the font glyph is by the style sheet
+  label->setProperty("fluentGlyph", int(codepoint));
+  label->setProperty("fluentGlyphSize", pixelSize);
+  label->setProperty("fluentGlyphTone", int(tone));
+  if (!label->property("fluentGlyphFollows").toBool()) {
+    label->setProperty("fluentGlyphFollows", true);
+    label->installEventFilter(new GlyphLabelFollower(label));
+  }
 }
 
 void setGlyph(QAbstractButton* button, char16_t codepoint, int pixelSize, Tone tone)
@@ -658,17 +698,21 @@ QString imageUrl(const QString& resource, int size)
   // twice the size, so a scaled display still gets a sharp picture. The glyph
   // engine caches its pixmaps per color, so the pixmap's key changes with the
   // theme and the encoded picture is kept per key
-  static QHash<qint64, QString> cache;
+  // bounded: each time Qt's pixmap cache drops and redraws a glyph, or the theme
+  // changes, the key is new and the old picture would stay forever
+  static QCache<qint64, QString> cache(64);
   const QPixmap pixmap = icon(resource).pixmap(QSize(size, size) * 2);
-  if (auto it = cache.constFind(pixmap.cacheKey()); it != cache.constEnd()) {
-    return *it;
+  if (const QString* hit = cache.object(pixmap.cacheKey())) {
+    return *hit;
   }
   QByteArray png;
   QBuffer buffer(&png);
   buffer.open(QIODevice::WriteOnly);
   pixmap.save(&buffer, "PNG");
-  return *cache.insert(pixmap.cacheKey(), QStringLiteral("data:image/png;base64,") +
-                                              QString::fromLatin1(png.toBase64()));
+  const QString url =
+      QStringLiteral("data:image/png;base64,") + QString::fromLatin1(png.toBase64());
+  cache.insert(pixmap.cacheKey(), new QString(url));
+  return url;
 }
 
 QIcon file(const QString& fileName, bool directory)
