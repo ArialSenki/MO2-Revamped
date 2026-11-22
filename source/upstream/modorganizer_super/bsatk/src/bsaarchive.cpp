@@ -968,9 +968,16 @@ EErrorCode Archive::extractCompressed(File::Ptr file, std::ofstream& outFile) co
                       file->m_TextureChunks[i].packedSize);
           if (m_Type == TYPE_STARFIELD_LZ4_TEXTURE) {
             char* unpackedChunk = new char[length];
-            LZ4_decompress_safe(reinterpret_cast<char*>(chunk), unpackedChunk,
-                                file->m_TextureChunks[i].packedSize, length);
-            outFile.write(unpackedChunk, length);
+            const int unpacked =
+                LZ4_decompress_safe(reinterpret_cast<char*>(chunk), unpackedChunk,
+                                    file->m_TextureChunks[i].packedSize, length);
+            // MO2 Revamped: a chunk that doesn't decode to its declared size
+            // (damaged, or a negative error) was written out uninitialised
+            if (unpacked < 0 || static_cast<BSAULong>(unpacked) != length) {
+              result = ERROR_INVALIDDATA;
+            } else {
+              outFile.write(unpackedChunk, length);
+            }
             delete[] unpackedChunk;
           } else {
             boost::shared_array<unsigned char> unpackedChunk =
@@ -1194,8 +1201,13 @@ void Archive::readFiles(std::queue<FileInfo>& queue, boost::mutex& mutex,
                      reinterpret_cast<char*>(unpackedChunk.get()), length);
             } else {
               std::unique_ptr<char[]> unpackedChunk(new char[length]);
-              LZ4_decompress_safe(chunk.get(), unpackedChunk.get(),
-                                  fileInfo.file->m_TextureChunks[i].packedSize, length);
+              const int unpacked =
+                  LZ4_decompress_safe(chunk.get(), unpackedChunk.get(),
+                                      fileInfo.file->m_TextureChunks[i].packedSize, length);
+              // MO2 Revamped: checked, as in extractCompressed()
+              if (unpacked < 0 || static_cast<BSAULong>(unpacked) != length) {
+                throw data_invalid_exception("texture chunk doesn't unpack");
+              }
               memcpy(chunkData.get() + currentPos, unpackedChunk.get(), length);
             }
             fileInfo.file->m_UncompressedFileSize += length;
