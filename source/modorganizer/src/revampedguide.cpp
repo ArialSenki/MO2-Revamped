@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include <QAction>
+#include <QEvent>
 #include <QCoreApplication>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -598,6 +599,37 @@ std::vector<Topic> topics()
   };
 }
 
+// gives buttons the width of the widest, measured each time their page shows
+// (the style sheet and the scale set their sizes only then)
+class SameWidth : public QObject
+{
+public:
+  SameWidth(QWidget* page, QList<QPushButton*> buttons)
+      : QObject(page), m_buttons(std::move(buttons))
+  {
+    page->installEventFilter(this);
+  }
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::Show || event->type() == QEvent::StyleChange) {
+      int width = 0;
+      for (QPushButton* button : m_buttons) {
+        button->setMinimumWidth(0);
+        button->setMaximumWidth(QWIDGETSIZE_MAX);
+        width = std::max(width, button->sizeHint().width());
+      }
+      for (QPushButton* button : m_buttons) {
+        button->setFixedWidth(width);
+      }
+    }
+    return QObject::eventFilter(watched, event);
+  }
+
+private:
+  QList<QPushButton*> m_buttons;
+};
+
 // one page: its heading and a card with a Settings row per entry; a row's
 // button records its action and closes the guide (links open at once)
 QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
@@ -673,14 +705,10 @@ QWidget* makePage(const Topic& topic, QWidget* parent, bool withActions,
     }
     rows->addWidget(row);
   }
-  // a page's buttons line up in one column of the same width
-  int buttonWidth = 0;
-  for (QPushButton* button : buttons) {
-    button->ensurePolished();
-    buttonWidth = std::max(buttonWidth, button->sizeHint().width());
-  }
-  for (QPushButton* button : buttons) {
-    button->setMinimumWidth(buttonWidth);
+  // a page's buttons line up in one column of the same width, measured when
+  // the page shows, once the theme has sized them
+  if (buttons.size() > 1) {
+    new SameWidth(content, buttons);
   }
   layout->addWidget(card);
   layout->addStretch(1);
