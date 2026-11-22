@@ -1253,9 +1253,15 @@ ModInfo::Ptr OrganizerCore::installDownload(int index, int priority)
 
     if (modInfo != nullptr) {
       modInfo->addInstalledFile(modID, fileID);
-      m_DownloadManager.markInstalled(index);
-      if (settings().interface().hideDownloadsAfterInstallation()) {
-        m_DownloadManager.removeDownload(index, false);
+      // MO2 Revamped: the install ran events (progress, installer dialogs), and a
+      // download canceled or looked up meanwhile left the list: the index may be
+      // another download's now. This file's, found again
+      const int now = m_DownloadManager.indexByArchive(fileName);
+      if (now >= 0) {
+        m_DownloadManager.markInstalled(now);
+        if (settings().interface().hideDownloadsAfterInstallation()) {
+          m_DownloadManager.removeDownload(now, false);
+        }
       }
     }
 
@@ -1284,8 +1290,17 @@ ModInfo::Ptr OrganizerCore::installArchive(const QString& archivePath, int prior
       log::warn("install: the mod name '{}' can't be a folder name, not used", initModName);
     }
   }
-  const auto [modIndex, modInfo] =
-      doInstall(archivePath, modName, currentMod, priority, reinstallation);
+  // MO2 Revamped: caught as installDownload() does: an extraction error left
+  // doInstall() halfway (installer plugins never heard the end, nothing
+  // refreshed after a replaced mod was put back) and reached the caller
+  ModInfo::Ptr installed;
+  try {
+    installed = doInstall(archivePath, modName, currentMod, priority, reinstallation).second;
+  } catch (const std::exception& e) {
+    reportError(QString(e.what()));
+    return nullptr;
+  }
+  const ModInfo::Ptr modInfo = installed;
   if (m_CurrentProfile == nullptr) {
     return nullptr;
   }
