@@ -282,6 +282,14 @@ static void shellFiles()
   }
   CHECK(shell::CreateDirectories(QDir(QDir::toNativeSeparators(dir + "/n1/n2"))).success());
   CHECK(QDir(dir + "/n1/n2").exists());
+  {
+    // a relative path is refused, not made in the working directory (a split
+    // network path's "NAS/Games" made "<MO2>\NAS\Games")
+    auto relative = shell::CreateDirectories(QDir("mo2r-relative-test/x"));
+    CHECK(!relative.success());
+    CHECK(relative.error() == ERROR_BAD_PATHNAME);
+    CHECK(!QDir("mo2r-relative-test").exists());
+  }
   CHECK(QDir(nested).exists());
   {
     auto again = shell::CreateDirectories(QDir(nested));

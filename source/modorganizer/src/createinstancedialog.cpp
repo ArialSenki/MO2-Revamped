@@ -240,11 +240,17 @@ private:
         return;
       }
 
-      // root directory
+      // root directory: the drive, or a network path's \\server\share (split
+      // on "\", it starts "", "", "server", "share", and its root was "")
+      int first = 1;
       QDir d(cs[0]);
+      if (s.startsWith(QStringLiteral("\\\\")) && cs.size() >= 4) {
+        d     = QDir(QStringLiteral("\\\\%1\\%2").arg(cs[2], cs[3]));
+        first = 4;
+      }
 
       // for each directory after the root
-      for (int i = 1; i < cs.size(); ++i) {
+      for (int i = first; i < cs.size(); ++i) {
         d = d.filePath(cs[i]);
 
         if (!d.exists()) {

@@ -664,8 +664,16 @@ namespace shell
 
   Result CreateDirectories(const QDir& dir)
   {
-    // MO2 Revamped: a full path with backslashes, as SHCreateDirectory needs;
-    // with QDir's "C:/a/b/c" it made no folder past the first missing one
+    // MO2 Revamped: a relative path is refused, as SHCreateDirectory refused it:
+    // made absolute it landed in the working directory (a split network path's
+    // first pieces, "" and "NAS", made "<MO2>\NAS\..." for "\\NAS\...")
+    if (dir.isRelative()) {
+      return Result::makeFailure(
+          ERROR_BAD_PATHNAME,
+          QString::fromStdWString(formatSystemMessage(ERROR_BAD_PATHNAME)));
+    }
+    // a full path with backslashes, as SHCreateDirectory needs; with QDir's
+    // "C:/a/b/c" it made no folder past the first missing one
     const auto path = QDir::toNativeSeparators(dir.absolutePath()).toStdWString();
     const DWORD e   = static_cast<DWORD>(::SHCreateDirectory(0, path.c_str()));
 
