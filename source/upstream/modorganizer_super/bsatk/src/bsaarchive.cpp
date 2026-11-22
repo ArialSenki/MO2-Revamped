@@ -324,6 +324,12 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
             chunk.unknown      = readType<BSAUInt>(m_File);
             chunks.push_back(chunk);
           }
+          // MO2 Revamped: a texture with no chunks read chunks[0] of an empty
+          // vector and crashed MO2 on every refresh of a mod shipping it
+          if (chunks.empty()) {
+            throw data_invalid_exception(makeString(
+                "texture without chunks (filename: %s)", pathForMessage(fileName).c_str()));
+          }
           Folder::Ptr newDir = m_RootFolder->addFolderFromFile(
               fileNames[i], chunks[0].packedSize, chunks[0].offset,
               chunks[0].unpackedSize, texHeader, chunks);
@@ -335,6 +341,20 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
       return ERROR_NONE;
     } else if (m_Type == TYPE_MORROWIND) {
       std::vector<Folder::Ptr> folders;
+      // MO2 Revamped: the counts and name offsets come from the file; checked
+      // against its size before they size buffers. A crafted header wrapped
+      // the last name's length around to 0xFFFFFFFF, and the name buffer of
+      // new char[0] was then written 4 GB past its end.
+      const std::streamoff here = m_File.tellg();
+      m_File.seekg(0, std::ios::end);
+      const uint64_t fileSize = static_cast<uint64_t>(m_File.tellg());
+      m_File.seekg(here, std::ios::beg);
+      const uint64_t tables   = 12ULL * header.fileCount;
+      if (tables > fileSize || header.offset < tables ||
+          uint64_t(header.offset) > fileSize) {
+        throw data_invalid_exception(makeString(
+            "invalid file table (filename: %s)", pathForMessage(fileName).c_str()));
+      }
       BSAUInt dataOffset = 12 + header.offset + header.fileCount * 8;
 
       std::vector<MorrowindFileOffset> fileSizeOffset(header.fileCount);
@@ -347,8 +367,15 @@ EErrorCode Archive::read(const std::filesystem::path& fileName, bool testHashes)
         uint32_t index = 0;
         if (i + 1 == header.fileCount)
           index = last;
-        else
+        else if (fileNameOffset[i + 1] >= fileNameOffset[i])
           index = fileNameOffset[i + 1] - fileNameOffset[i];
+        else
+          index = UINT32_MAX;
+        // a name can't be longer than the names' table
+        if (index > header.offset - tables) {
+          throw data_invalid_exception(makeString(
+              "invalid file name (filename: %s)", pathForMessage(fileName).c_str()));
+        }
         char* filePath = new char[index + 1];
         m_File.read(filePath, index);
         filePath[index] = '\0';
