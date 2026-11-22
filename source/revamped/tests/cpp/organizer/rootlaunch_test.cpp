@@ -20,6 +20,8 @@
 
 #include <cstdio>
 
+#include <windows.h>
+
 namespace
 {
 int passed = 0;
@@ -374,6 +376,60 @@ void testConcerns()
   CHECK(!concerns("C:/Games/Skyrim/x.exe", "", "", ""));
   CHECK(concerns(QString::fromUtf8("D:/Juegos/Ñandú 🎉/x.exe"),
                  QString::fromUtf8("D:/Juegos/Ñandú 🎉"), mods, ow));
+
+  // a game at a drive root: "D:/" became "D://" and nothing was under it
+  CHECK(concerns("D:/game.exe", "D:/", mods, ow));
+  CHECK(concerns("d:\\bin\\game.exe", "D:\\", mods, ow));
+  CHECK(concerns("D:/game.exe", "D:", mods, ow));
+  CHECK(!concerns("E:/game.exe", "D:/", mods, ow));
+  CHECK(!concerns("D:/", "D:/", mods, ow));
+  CHECK(!concerns("D:", "D:/", mods, ow));
+  // mods and Overwrite at a drive root too
+  CHECK(concerns("M:/A/Root/tool.exe", game, "M:/", ow));
+  CHECK(concerns("O:/Root/tool.exe", game, mods, "O:\\"));
+}
+
+// a drive letter that isn't in use: the game folder of the drive-root plan
+QString freeDrive()
+{
+  const DWORD used = GetLogicalDrives();
+  for (int i = 25; i >= 3; --i) {
+    if (!(used & (1u << i))) {
+      return QString(QChar(u'A' + i)) + ":/";
+    }
+  }
+  return QString();
+}
+
+void testDriveRoot()
+{
+  // the plan for a game at a drive root: a program only in a mod's Root runs
+  // from there with the drive root as its working folder (the game folder
+  // itself needn't exist for that)
+  const QString drive = freeDrive();
+  if (drive.isEmpty()) {
+    std::printf("no free drive letter, drive root plan not tested\n");
+    return;
+  }
+  Setup s;
+  write(s.rootA + "/tool.exe", "MZ tool");
+  write(s.rootB + "/tools/tool2.exe", "MZ tool");
+  for (const QString& gameDir : {drive, QString(drive).replace('/', '\\'), drive.left(2)}) {
+    auto in    = s.input(drive + "tool.exe");
+    in.gameDir = gameDir;
+    const auto p = RootLaunch::plan(in);
+    check(p.runBinary.compare(s.rootA + "/tool.exe", Qt::CaseInsensitive) == 0,
+          "root program at a drive root", __LINE__, gameDir + ": " + p.runBinary);
+    CHECK_EQ(QDir::cleanPath(p.runDirectory), drive);
+
+    // in a subfolder
+    auto sub    = s.input(drive + "tools/tool2.exe");
+    sub.gameDir = gameDir;
+    const auto q = RootLaunch::plan(sub);
+    check(q.runBinary.compare(s.rootB + "/tools/tool2.exe", Qt::CaseInsensitive) == 0,
+          "Root program in a subfolder at a drive root", __LINE__, gameDir + ": " + q.runBinary);
+    CHECK_EQ(q.runDirectory, drive + "tools");
+  }
 }
 
 void testReadPe()
@@ -450,6 +506,7 @@ int main(int argc, char** argv)
   testProxy();
   testPrograms();
   testConcerns();
+  testDriveRoot();
   testReadPe();
 
   std::printf("rootlaunch_test: %d passed, %d failed\n", passed, failed);

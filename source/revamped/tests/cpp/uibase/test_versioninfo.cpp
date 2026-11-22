@@ -128,6 +128,42 @@ static void prealpha()
   CHECK(less(back, VersionInfo(1, 0, 0, VersionInfo::RELEASE_ALPHA)));
 }
 
+static void releaseCandidates()
+{
+  // "rc" is a release candidate as a word of its own: at the start of the
+  // rest or after a separator, before a number, a separator or the end
+  for (const char* s : {"1.0rc", "1.0rc1", "1.0RC2", "1.0 rc", "1.0-rc.3", "1.0_rc4",
+                        "1.0.rc", "1.0 RC 5"}) {
+    const bool rc = less(V(s), V("1.0")) && less(V("1.0beta"), V(s));
+    if (!rc) {
+      std::printf("  \"%s\" not a release candidate\n", s);
+    }
+    CHECK(rc);
+  }
+  CHECK(same(V("1.0-rc.3"), V("1.0rc3")));
+
+  // inside a word it isn't: "source", "src", "arc", "rcfix" were candidates
+  // (before 1.0, with the "rc" cut out of the text)
+  for (const char* s : {"1.0source", "1.0 source", "1.0-src", "1.0 arc", "1.0rcfix",
+                        "1.0 forced", "1.0-hotfix-rc_x"}) {
+    const bool rc = less(V(s), V("1.0"));
+    if (rc) {
+      std::printf("  \"%s\" taken as a release candidate\n", s);
+    }
+    CHECK(!rc);
+  }
+  CHECK_STR(V("1.0source").displayString(), "1.0source");
+  CHECK_STR(V("1.0 arc").displayString(), "1.0arc");
+  CHECK_STR(V("1.0-src").displayString(), "1.0-src");
+  CHECK(less(V("1.0"), V("1.0source")));
+
+  // the canonical string still parses back
+  for (const char* s : {"1.0rc1", "1.0-rc.3", "1.0source"}) {
+    const VersionInfo a(s);
+    CHECK(same(a, VersionInfo(a.canonicalString())));
+  }
+}
+
 static void schemes()
 {
   // decimal mark: "1.05" is 1.05, before 1.1
@@ -194,6 +230,24 @@ static void oddInputs()
   CHECK_STR(V("2147483647.2147483647").displayString(), "2147483647.2147483647");
   CHECK(less(V("2147483646"), V("2147483647")));
 
+  // past int a number isn't read (it was 0: "99999999999" was 0.0): the
+  // version is kept as text, as one with no number is
+  CHECK(V("99999999999").scheme() == VersionInfo::SCHEME_LITERAL);
+  CHECK_STR(V("99999999999").displayString(), "99999999999");
+  CHECK(!same(V("99999999999"), V("0")));
+  CHECK_STR(V("1.99999999999.3").displayString(), "1.99999999999.3");
+  CHECK(!same(V("1.99999999999.3"), V("1.0.3")));
+  CHECK(V("1.2.3.99999999999").scheme() == VersionInfo::SCHEME_LITERAL);
+  CHECK(V("2147483647.2147483647").scheme() == VersionInfo::SCHEME_REGULAR);
+  CHECK(V("2147483648").scheme() == VersionInfo::SCHEME_LITERAL);
+  CHECK(V(QString(100000, '9')).scheme() == VersionInfo::SCHEME_LITERAL);
+  // the same VersionInfo parsed again
+  VersionInfo big("1.2.3");
+  big.parse("4294967296.1");
+  CHECK_STR(big.displayString(), "4294967296.1");
+  big.parse("1.2.3");
+  CHECK(same(big, V("1.2.3")));
+
   // whitespace, junk, very long strings
   CHECK(V("   ").isValid());
   CHECK(V("1.0 (fixed)").isValid());
@@ -223,6 +277,7 @@ int main(int argc, char** argv)
   basics();
   semverPrereleases();
   prealpha();
+  releaseCandidates();
   schemes();
   reparse();
   oddInputs();
