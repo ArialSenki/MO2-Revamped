@@ -3003,10 +3003,16 @@ QFuture<void> MainWindow::checkForProblemsAsync()
       continue;
     }
     if (auto* diagnose = qobject_cast<IPluginDiagnose*>(pluginObj)) {
+      QElapsedTimer took;
+      took.start();
       try {
         proxied += diagnose->activeProblems().size();
       } catch (const std::exception& e) {
         log::warn("problem check of {} failed: {}", plugin->name(), e.what());
+      }
+      // they hold the interface thread: name the slow ones
+      if (took.elapsed() >= 20) {
+        log::debug("problem check of {}: {} ms", plugin->name(), took.elapsed());
       }
     }
   }
@@ -4012,7 +4018,11 @@ void MainWindow::activateSelectedProfile()
   m_OrganizerCore.setCurrentProfile(ui->profileBox->currentText());
 
   m_SavesTab->refreshSaveList();
-  m_OrganizerCore.refresh();
+  // MO2 Revamped: choosing the profile already refreshed the files for it; the
+  // mods folder is the same for every profile, so the full refresh read all
+  // of them again on this thread (1 s on a Nolvus list), while the refresh just
+  // started was still running with the mods as they were
+  updateSortButton();
   ui->modList->updateModCount();
   ui->espList->updatePluginCount();
   ui->statusBar->updateNormalMessage(m_OrganizerCore);

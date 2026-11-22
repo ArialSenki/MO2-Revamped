@@ -24,6 +24,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QSortFilterProxyModel>
 #include <QStringList>
 #include <bitset>
+#include <vector>
 
 class Profile;
 class OrganizerCore;
@@ -139,6 +140,10 @@ private:
   unsigned long flagsId(const std::vector<ModInfo::EFlag>& flags) const;
   bool hasConflictFlag(const std::vector<ModInfo::EConflictFlag>& flags) const;
   void updateFilterActive();
+  // which mods the filter shows now, by mod index
+  std::vector<bool> modsShown() const;
+  // re-filters after a filter change; shown is modsShown() from before it
+  void applyFilterChange(const std::vector<bool>& shown);
   bool filterMatchesModAnd(ModInfo::Ptr info, bool enabled) const;
   bool filterMatchesModOr(ModInfo::Ptr info, bool enabled) const;
 

@@ -703,6 +703,8 @@ private:
   unsigned int m_ESPListRebuilds = 0;
   // plugin list refreshes that only added and removed rows
   unsigned int m_ESPListUpdates = 0;
+  // from choosing a profile to the end of the refresh it started
+  QElapsedTimer m_ProfileSwitch;
 
   std::function<void(const QString&)> m_CollectionHandler;
   QStringList m_PendingCollections;

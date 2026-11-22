@@ -39,6 +39,7 @@
 #include "modlistsortproxy.h"
 #include "modlistversiondelegate.h"
 #include "modlistviewactions.h"
+#include "fluentperf.h"
 #include "organizercore.h"
 #include "usertheme.h"
 #include "shared/directoryentry.h"
@@ -717,6 +718,7 @@ void ModListView::scrollToAndSelect(const QModelIndexList& indexes,
 
 void ModListView::refreshExpandedItems()
 {
+  FluentPerf::Timer perf("ModListView::refreshExpandedItems");
   auto* model = m_sortProxy->sourceModel();
   for (auto i = 0; i < model->rowCount(); ++i) {
     auto idx = model->index(i, 0);
@@ -817,6 +819,7 @@ ModListView::ModCounters ModListView::counters() const
 
 void ModListView::updateModCount()
 {
+  FluentPerf::Timer perf("ModListView::updateModCount");
   const auto c = counters();
 
   ui.counter->display(c.visible.active);

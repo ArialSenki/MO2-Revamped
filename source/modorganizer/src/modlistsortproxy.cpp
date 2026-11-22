@@ -19,6 +19,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "modlistsortproxy.h"
 #include "fluentperf.h"
+#include <algorithm>
+#include <vector>
 #include <utility.h>
 #include "fluenticons.h"
 #include "fluentstatusdelegate.h"
@@ -71,9 +73,10 @@ void ModListSortProxy::setCriteria(const std::vector<Criteria>& criteria)
       (!criteria.empty() && criteria[0].id == CategoryFactory::UpdateAvailable);
 
   if (changed || isForUpdates) {
+    const auto shown = modsShown();
     m_Criteria = criteria;
     updateFilterActive();
-    invalidateFilter();
+    applyFilterChange(shown);
     emit filterInvalidated();
   }
 }
@@ -233,6 +236,7 @@ void ModListSortProxy::updateFilter(const QString& filter)
     return;
   }
 
+  const auto shown = modsShown();
   m_Filter = filter;
   m_FilterSegments.clear();
 
@@ -260,8 +264,11 @@ void ModListSortProxy::updateFilter(const QString& filter)
   // MO2_REVAMPED_PERF: the cost of one keystroke in the filter box
   FluentPerf::Timer perf("ModListSortProxy::updateFilter");
   updateFilterActive();
-  invalidateFilter();
+  perf.lap("active");
+  applyFilterChange(shown);
+  perf.lap("filter");
   emit filterInvalidated();
+  perf.lap("listeners");
 }
 
 bool ModListSortProxy::hasConflictFlag(
@@ -543,10 +550,50 @@ void ModListSortProxy::setOptions(ModListSortProxy::FilterMode mode,
                                   SeparatorsMode separators)
 {
   if (m_FilterMode != mode || separators != m_FilterSeparators) {
+    const auto shown   = modsShown();
     m_FilterMode       = mode;
     m_FilterSeparators = separators;
-    invalidateFilter();
+    applyFilterChange(shown);
     emit filterInvalidated();
+  }
+}
+
+std::vector<bool> ModListSortProxy::modsShown() const
+{
+  const unsigned int count =
+      m_Profile != nullptr ? std::min<unsigned int>(static_cast<unsigned int>(
+                                                        m_Profile->numMods()),
+                                                    ModInfo::getNumMods())
+                           : 0;
+  std::vector<bool> shown(count);
+  for (unsigned int i = 0; i < count; ++i) {
+    shown[i] = filterMatchesMod(ModInfo::getByIndex(i), m_Profile->modEnabled(i));
+  }
+  return shown;
+}
+
+void ModListSortProxy::applyFilterChange(const std::vector<bool>& shown)
+{
+  // MO2 Revamped: re-filtering tells the view of each run of rows that comes
+  // or goes, and the tree view redoes its whole layout for each one. A filter
+  // that hides or brings back thousands of scattered mods (typing or clearing
+  // "a" on a Nolvus list) froze the window for 3-20 s; one pass over
+  // everything costs about as much as a sort. Small changes stay incremental
+  const auto now    = modsShown();
+  std::size_t flips = 0;
+  if (now.size() != shown.size()) {
+    flips = now.size();
+  } else {
+    for (std::size_t i = 0; i < now.size(); ++i) {
+      if (now[i] != shown[i]) {
+        ++flips;
+      }
+    }
+  }
+  if (flips > 64) {
+    invalidate();
+  } else {
+    invalidateFilter();
   }
 }
 
