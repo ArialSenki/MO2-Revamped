@@ -54,6 +54,7 @@ try {
 Build-Test 'collection_names_test' @("$src\collectionnames.cpp", "$src\collectionfiles.cpp", "$src\collectionmanifest.cpp") @($qtCore, $uibase)
 Build-Test 'download_url_test' @("$src\downloadurl.cpp") @($qtCore, $uibase)
 Build-Test 'rootlaunch_test' @("$src\rootlaunch.cpp", "$src\rootcopy.cpp", "$src\importpatch.cpp") @($qtCore, 'advapi32.lib', 'user32.lib')
+Build-Test 'merge_staging_test' @("$src\mergestaging.cpp") @($qtCore)
 
 # Qt and uibase from their own folders
 $env:PATH = "$Qt\bin;$UibaseBuild;$env:PATH"
@@ -61,7 +62,8 @@ $failed = 0
 $runs = @(
   @{ Name = 'collection_names_test'; Args = @((Join-Path $Out 'work-names')) },
   @{ Name = 'download_url_test'; Args = @() },
-  @{ Name = 'rootlaunch_test'; Args = @($fixtures, (Join-Path $Out 'work-rootlaunch')) }
+  @{ Name = 'rootlaunch_test'; Args = @($fixtures, (Join-Path $Out 'work-rootlaunch')) },
+  @{ Name = 'merge_staging_test'; Args = @((Join-Path $Out 'work-merge')) }
 )
 foreach ($t in $runs) {
   & (Join-Path $Out "$($t.Name).exe") @($t.Args) | Out-Host

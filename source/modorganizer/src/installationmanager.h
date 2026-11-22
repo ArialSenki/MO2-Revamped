@@ -295,6 +295,10 @@ public:
   // a new mod's install stopped, and its partial folder is gone
   bool newModRemoved() const { return m_NewModRemoved; }
 
+  // a Merge stopped before any of its files reached the installed mod, or was
+  // undone: the mod is as it was
+  bool mergedModUntouched() const { return m_MergeUntouched; }
+
   // old versions a Replace left behind in this instance, the newest of each mod;
   // older copies of the same mods go in older
   QStringList replacedLeftovers(QStringList* older = nullptr) const;
@@ -426,7 +430,9 @@ private:
   QStringList replacedFolderRoots() const;
   QString setAsideMod(const QString& modFolder) const;
   void removeAsideSlot(const QString& aside) const;
+  QString makeMergeSlot() const;
 
+  bool m_MergeUntouched = false;
   bool m_ReplacedRestored = false;
   QString m_NewModFolder;
   QSet<QString> m_ApprovedReplacements;
