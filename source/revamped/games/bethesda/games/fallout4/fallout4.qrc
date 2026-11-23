@@ -1,6 +1,0 @@
-<RCC>
-    <!-- MO2 shows :/<short name>/splash while it starts (the old plugin's) -->
-    <qresource prefix="/Fallout4">
-        <file alias="splash">splash.png</file>
-    </qresource>
-</RCC>

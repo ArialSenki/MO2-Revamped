@@ -4,7 +4,7 @@
 // Replaces MO2's game_fallout4vr plugin: the same game to MO2 (name, short
 // names, IDs, folders, lists), written on the framework. Code only for what
 // the definition can't say: the Fallout 4 mods it takes, the Steam ID on its
-// only variant, the lower-case Creation Club names, the splash credit and
+// only variant, the lower-case Creation Club names and
 // light plugins only with Fallout 4 VR ESL Support (or Daytripper) installed.
 #pragma once
 
@@ -21,9 +21,6 @@ class Fallout4VRGame : public BethesdaGame
 
 public:
   Fallout4VRGame();
-
-public:  // IPlugin
-  QString description() const override;
 
 public:  // IPluginGame
   QStringList primarySources() const override { return validShortNames(); }

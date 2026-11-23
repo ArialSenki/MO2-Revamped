@@ -1,8 +1,7 @@
 // MO2 Revamped: Morrowind, on the Bethesda game framework.
 // Copyright (C) 2026 MO2 Revamped. GPL-3.0-or-later, like Mod Organizer 2.
 // The identity, folders, lists and store locations are those of MO2's
-// game_morrowind (by Schilduin and the MO2 team; splash screen by
-// AnyOldName3), which instances, Nexus and Wabbajack lists already know the
+// game_morrowind (by Schilduin and the MO2 team), which instances, Nexus and Wabbajack lists already know the
 // game by.
 #include "gamemorrowind.h"
 
@@ -47,9 +46,6 @@ namespace
       {u"LOOT", {}, ExecutableKind::Loot, u"--game=\"Morrowind\"", false, false}};
 
   constexpr Store StoreOrder[] = {Store::Bethesda, Store::Steam};
-
-  constexpr const char* Description =
-      QT_TRANSLATE_NOOP("GameMorrowind", "Adds support for %1.\nSplash screen by %2.");
 
   constexpr GameDefinition Morrowind{
       .pluginName          = u"Morrowind Support Plugin",
@@ -116,11 +112,6 @@ namespace
 }  // namespace
 
 MorrowindGame::MorrowindGame() : BethesdaGame(Morrowind) {}
-
-QString MorrowindGame::description() const
-{
-  return translate(Description).arg(definition().displayName.toString()).arg("AnyOldName3");
-}
 
 QDir MorrowindGame::documentsDirectory() const
 {

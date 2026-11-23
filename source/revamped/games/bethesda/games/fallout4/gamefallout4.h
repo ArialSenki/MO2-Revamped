@@ -5,8 +5,8 @@
 // names, IDs, settings, folders, lists), written on the framework. Code only
 // for what the definition can't say: the sTestFile lines of
 // Fallout4Custom.ini (while there, the game ignores plugins.txt, so MO2 gets
-// no load order to manage), the lower-case Creation Club names, the splash
-// credit and the warnings.
+// no load order to manage), the lower-case Creation Club names and the
+// warnings.
 #pragma once
 
 #include "core/bethesdagame.h"
@@ -31,9 +31,6 @@ public:
 
   // the plugins in the profile's Fallout4Custom.ini sTestFile1-10 lines
   QStringList testFilePlugins() const;
-
-public:  // IPlugin
-  QString description() const override;
 
 public:  // IPluginGame
   // on every variant (the old plugin has only "Regular")
