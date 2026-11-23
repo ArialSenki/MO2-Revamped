@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 from collections import Counter
 from pathlib import Path
@@ -29,14 +30,34 @@ sys.path.insert(0, str(HERE / "cyberpunk2077"))
 import harness  # noqa: E402
 
 AGENT = "mo2-plugin-test/1.0"
+# Nexus' API policy: every request names the application and its version; a
+# developer's test, not MO2 Revamped itself, so it says so
+APP_HEADERS = {"Application-Name": "MO2 Revamped plugin tests", "Application-Version": "1.0"}
+# the API's hourly allowance this test leaves for everything else
+KEEP_HOURLY = 50
+
+
+class RateLimited(Exception):
+    pass
 
 
 def get(url: str, key: str | None):
-    headers = {"User-Agent": AGENT, "Accept": "application/json"}
+    headers = {"User-Agent": AGENT, "Accept": "application/json", **APP_HEADERS}
     if key:
+        # the personal key only ever goes to the API itself
+        if not url.startswith("https://api.nexusmods.com/"):
+            raise ValueError(f"not the Nexus API: {url}")
         headers["apikey"] = key
-    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
+            remaining = response.headers.get("X-RL-Hourly-Remaining")
+            if key and remaining is not None and remaining.isdigit() and int(remaining) < KEEP_HOURLY:
+                raise RateLimited(f"{remaining} API requests left this hour")
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        if error.code == 429:
+            raise RateLimited("Nexus answered 429") from error
+        raise
 
 
 def fetch(game: str, count: int, cache: Path) -> dict:
@@ -59,6 +80,10 @@ def fetch(game: str, count: int, cache: Path) -> dict:
                 "file": files[0]["file_name"],
                 "paths": [f["file_path"].replace("\\", "/") for f in preview.get("files", []) if f.get("file_path")],
             }
+        except RateLimited as error:
+            # what was read so far is kept; the rest waits for another run
+            print(f"stopped: {error}", file=sys.stderr)
+            break
         except Exception as error:  # noqa: BLE001
             result[mod_id] = {"error": str(error)[:200]}
         time.sleep(0.25)

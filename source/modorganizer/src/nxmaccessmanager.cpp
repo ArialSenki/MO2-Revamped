@@ -238,6 +238,14 @@ QString NexusSSOLogin::stateToString(States s, const QString& e)
 
 void NexusSSOLogin::start()
 {
+  // MO2 Revamped: without a slug Nexus registered for MO2 Revamped, its SSO
+  // page would ask in no application's name (or another's): never opened
+  if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
+    setState(Error, QObject::tr("This build of MO2 Revamped has no Nexus SSO "
+                                "registration; use the API key or sign in."));
+    return;
+  }
+
   m_active = true;
   setState(ConnectingToSSO);
   m_timeout.start();

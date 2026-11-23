@@ -101,7 +101,8 @@ struct Redirect
     Malformed,
     // another path (a favicon, a probe): refused, the listener waits on
     WrongPath,
-    // the redirect, but its state isn't this sign-in's: refused, sign-in ends
+    // the redirect, but its state isn't this sign-in's: refused, the
+    // listener waits on for the real one
     StateMismatch,
     // the redirect with an error (the user declined, for one)
     Error,
@@ -116,9 +117,15 @@ struct Redirect
 };
 
 // reads the request head the browser sent to the listener. The redirect is a
-// GET to RedirectPath with code and state, or with error and state
+// GET to RedirectPath with code and state, or with error and state. With
+// expectedHost ("127.0.0.1:<port>"), a request whose Host header names
+// anything else (a DNS rebinding page, a request without Host) is Malformed
 Redirect parseRedirect(const QByteArray& head, const QString& expectedState,
-                       const QString& expectedPath = QString::fromLatin1(RedirectPath));
+                       const QString& expectedPath = QString::fromLatin1(RedirectPath),
+                       const QString& expectedHost = QString());
+
+// the Host header the browser sends to the loopback redirect: "127.0.0.1:<port>"
+QString redirectHost(quint16 port);
 
 // a complete HTTP/1.1 answer for the browser's tab, closing the connection
 QByteArray httpResponse(int status, const QString& title, const QString& message);

@@ -1098,9 +1098,12 @@ void NexusInterface::nextRequest()
       m_WaitingForToken = true;
       oauth->ensureFreshToken([this](bool ok, const QString& message) {
         m_WaitingForToken = false;
-        if (!ok) {
+        // once for each reason, not every 30 s while Nexus can't be reached
+        static QString lastProblem;
+        if (!ok && message != lastProblem) {
           log::warn("{}", message);
         }
+        lastProblem = ok ? QString() : message;
         // with the session gone, the requests go through the usual checks
         // (not signed in) instead of waiting
         QTimer::singleShot(ok ? 0 : 30000, this, [this] {
@@ -1282,6 +1285,7 @@ void NexusInterface::nextRequest()
   // node-nexus-api do, for REST v1 and GraphQL v2 alike)
   if (oauth->hasSession()) {
     request.setRawHeader("Authorization", "Bearer " + oauth->accessToken().toUtf8());
+    info.m_TokenGeneration = oauth->tokenGeneration();
   } else {
     request.setRawHeader("APIKEY", m_User.apiKey().toUtf8());
   }
@@ -1459,7 +1463,8 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
       // of the queue. When Nexus refuses the renewal too, the session ends
       log::debug("Nexus refused the sign-in's token for {}; renewing it",
                  withoutQuery(reply->url().toString()));
-      m_AccessManager->oauth()->invalidateAccessToken();
+      // a token renewed since this request went out isn't dropped again
+      m_AccessManager->oauth()->invalidateAccessToken(iter->m_TokenGeneration);
       NXMRequestInfo again = *iter;
       again.m_AuthRetried  = true;
       again.m_Reply        = nullptr;

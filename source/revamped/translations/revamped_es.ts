@@ -22653,6 +22653,14 @@ Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Pl
       <translation>No se pudo contactar con Nexus para renovar la sesión: %1</translation>
     </message>
     <message>
+      <source>Couldn't reach Nexus to renew the sign-in; trying again at %1.</source>
+      <translation>No se pudo contactar con Nexus para renovar la sesión; se volverá a intentar a las %1.</translation>
+    </message>
+    <message>
+      <source>HTTP code %1</source>
+      <translation>Código HTTP %1</translation>
+    </message>
+    <message>
       <source>Nexus ended the sign-in. Sign in again in Settings, Nexus.</source>
       <translation>Nexus cerró la sesión. Vuelve a iniciarla en Ajustes, Nexus.</translation>
     </message>
@@ -22686,6 +22694,10 @@ Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Pl
   </context>
   <context>
     <name>QObject</name>
+    <message>
+      <source>This build of MO2 Revamped has no Nexus SSO registration; use the API key or sign in.</source>
+      <translation>Esta versión de MO2 Revamped no tiene registro SSO en Nexus; usa la clave API o inicia sesión.</translation>
+    </message>
     <message>
       <source>Nexus refused the sign-in: it may have expired or been revoked. Sign in again in Settings, Nexus</source>
       <translation>Nexus rechazó la sesión: puede haber caducado o haberse revocado. Vuelve a iniciarla en Ajustes, Nexus</translation>

@@ -158,6 +158,31 @@ void testRedirect()
   CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: x\r\n", state).kind ==
         Redirect::Incomplete);
   CHECK(parseRedirect(QByteArray(20000, 'a'), state).kind == Redirect::Malformed);
+
+  // the Host header, when the listener names it (DNS rebinding)
+  const QString slash = QStringLiteral("/");
+  const QString host  = redirectHost(50000);
+  CHECK_EQ(host, "127.0.0.1:50000");
+  CHECK(parseRedirect(get("/?code=a&state=S7a-_x"), state, slash, host).kind ==
+        Redirect::Code);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nhost: 127.0.0.1:50000\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Code);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: evil.example:50000\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: 127.0.0.1:50001\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\n\r\n", state, slash, host).kind ==
+        Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: 127.0.0.1:50000\r\n"
+                      "Host: evil.example\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  // without an expected host, as before
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\n\r\n", state).kind ==
+        Redirect::Code);
 }
 
 void testResponse()

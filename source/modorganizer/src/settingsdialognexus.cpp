@@ -315,6 +315,22 @@ void NexusConnectionUI::manual()
   validateKey(d.key());
 }
 
+NexusConnectionUI::~NexusConnectionUI()
+{
+  // closing Settings (or the wizard) while the browser sign-in waits: nothing
+  // would check its account or show its result, and the listener would stay
+  // open for minutes, so it is cancelled
+  if (m_signInStarted) {
+    NexusOAuth* oauth = sharedOAuth();
+    if (oauth && oauth->signInActive()) {
+      // its signals no longer reach this page (its widgets may be gone)
+      QObject::disconnect(oauth, nullptr, this, nullptr);
+      m_signInStarted = false;
+      oauth->cancelSignIn();
+    }
+  }
+}
+
 void NexusConnectionUI::signIn()
 {
   NexusOAuth* oauth = sharedOAuth();

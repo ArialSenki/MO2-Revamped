@@ -134,6 +134,8 @@ void NexusOAuth::forget()
   m_accessToken.clear();
   m_accessExpires = {};
   m_refreshTimer.stop();
+  m_refreshRetryAt        = {};
+  m_refreshBackoffSeconds = 0;
   GlobalSettings::clearNexusOAuthTokens();
 }
 
@@ -164,6 +166,14 @@ void NexusOAuth::invalidateAccessToken()
 {
   m_accessToken.clear();
   m_accessExpires = {};
+}
+
+void NexusOAuth::invalidateAccessToken(quint64 generation)
+{
+  // a 401 for a token renewed since: the new one hasn't been refused
+  if (generation == m_generation) {
+    invalidateAccessToken();
+  }
 }
 
 void NexusOAuth::scheduleRefresh()
@@ -254,6 +264,9 @@ void NexusOAuth::onNewConnection()
       continue;
     }
 
+    // what one readyRead can bring is bounded: a request head longer than
+    // parseRedirect() takes is refused, not kept growing
+    socket->setReadBufferSize(32 * 1024);
     m_heads[socket] = {};
     connect(socket, &QTcpSocket::readyRead, this, [this, socket] {
       onSocketData(socket);
@@ -277,9 +290,15 @@ void NexusOAuth::onSocketData(QTcpSocket* socket)
     return;
   }
   it->second += socket->readAll();
+  if (!m_server) {
+    return;
+  }
 
-  // the request's line and headers hold the code: they never go to the log
-  const core::Redirect r = core::parseRedirect(it->second, m_state);
+  // the request's line and headers hold the code: they never go to the log.
+  // Only a request to 127.0.0.1:<this port> by name counts (DNS rebinding)
+  const core::Redirect r =
+      core::parseRedirect(it->second, m_state, QString::fromLatin1(core::RedirectPath),
+                          core::redirectHost(m_server->serverPort()));
 
   switch (r.kind) {
   case core::Redirect::Incomplete:
@@ -294,12 +313,13 @@ void NexusOAuth::onSocketData(QTcpSocket* socket)
     return;
 
   case core::Redirect::StateMismatch:
-    log::warn("nexus: the browser's answer wasn't for this sign-in; refused");
+    // refused, and the sign-in goes on waiting for Nexus' own answer: anything
+    // on this computer (a page, a program) could send this one, and ending
+    // the sign-in for it would let it cancel every sign-in
+    log::warn("nexus: an answer that wasn't for this sign-in was refused");
     answer(socket, 400, tr("Sign-in refused"),
            tr("This answer isn't for the sign-in MO2 Revamped started. Start it again "
               "from MO2 Revamped."));
-    finishSignIn(false, tr("The browser's answer didn't match this sign-in, so it was "
-                           "refused. Try again."));
     return;
 
   case core::Redirect::Error: {
@@ -395,6 +415,13 @@ void NexusOAuth::onExchangeFinished(QNetworkReply* reply)
   if (status == 0) {
     error = core::redactSecrets(reply->errorString());
     log::error("nexus: the sign-in's token request failed: {}", error);
+  } else if (status != 200) {
+    // an error answer (RFC 6749 section 5.2) or something in between
+    const core::Tokens t = core::parseTokens(body);
+    error = t.error == QLatin1String("invalid_response")
+                ? tr("HTTP code %1").arg(status)
+                : describe(t);
+    log::error("nexus: the sign-in's token request was refused ({}): {}", status, error);
   } else if (acceptTokens(body, error)) {
     if (m_refreshToken.isEmpty()) {
       error = tr("Nexus gave no refresh token");
@@ -433,12 +460,32 @@ void NexusOAuth::ensureFreshToken(TokenCallback done)
     return;
   }
 
+  // a refresh failed a moment ago without an answer from Nexus: no new one
+  // until its wait is over (the refresh timer starts it then)
+  if (!m_refresh && m_refreshRetryAt.isValid() && nowUtc() < m_refreshRetryAt) {
+    if (done) {
+      done(false, tr("Couldn't reach Nexus to renew the sign-in; trying again at %1.")
+                      .arg(m_refreshRetryAt.toLocalTime().toString(
+                          QStringLiteral("HH:mm:ss"))));
+    }
+    return;
+  }
+
   if (done) {
     m_waiting.push_back(std::move(done));
   }
   if (!m_refresh) {
     startRefresh();
   }
+}
+
+void NexusOAuth::refreshFailedTemporarily()
+{
+  // 30 s, 1, 2, 4, 8 and then 15 minutes between tries
+  m_refreshBackoffSeconds =
+      m_refreshBackoffSeconds <= 0 ? 30 : qMin<qint64>(m_refreshBackoffSeconds * 2, 15 * 60);
+  m_refreshRetryAt = nowUtc().addSecs(m_refreshBackoffSeconds);
+  m_refreshTimer.start(std::chrono::seconds(m_refreshBackoffSeconds));
 }
 
 void NexusOAuth::startRefresh()
@@ -467,7 +514,7 @@ void NexusOAuth::onRefreshFinished(QNetworkReply* reply)
     // tries again
     const QString error = core::redactSecrets(reply->errorString());
     log::warn("nexus: refreshing the sign-in failed: {}", error);
-    m_refreshTimer.start(2min);
+    refreshFailedTemporarily();
     finishWaiting(false, tr("Couldn't reach Nexus to renew the sign-in: %1").arg(error));
     return;
   }
@@ -475,6 +522,8 @@ void NexusOAuth::onRefreshFinished(QNetworkReply* reply)
   const core::Tokens t = core::parseTokens(body);
   QString error;
   if (status == 200 && acceptTokens(body, error)) {
+    m_refreshBackoffSeconds = 0;
+    m_refreshRetryAt        = {};
     store();
     scheduleRefresh();
     finishWaiting(true, {});
@@ -494,7 +543,7 @@ void NexusOAuth::onRefreshFinished(QNetworkReply* reply)
   }
 
   log::warn("nexus: refreshing the sign-in failed ({}): {}", status, reason);
-  m_refreshTimer.start(2min);
+  refreshFailedTemporarily();
   finishWaiting(false, tr("Nexus couldn't renew the sign-in (%1).").arg(status));
 }
 
@@ -553,6 +602,11 @@ QNetworkReply* NexusOAuth::postForm(const char* url, const QByteArray& body)
   request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
                        QNetworkRequest::AlwaysNetwork);
   request.setTransferTimeout(30000);
+  // the token endpoint's cookies aren't kept in nexus_cookies.dat, nor sent
+  request.setAttribute(QNetworkRequest::CookieLoadControlAttribute,
+                       QNetworkRequest::Manual);
+  request.setAttribute(QNetworkRequest::CookieSaveControlAttribute,
+                       QNetworkRequest::Manual);
   request.setHeader(QNetworkRequest::ContentTypeHeader,
                     "application/x-www-form-urlencoded; charset=UTF-8");
   request.setRawHeader("Accept", "application/json");
@@ -573,6 +627,7 @@ bool NexusOAuth::acceptTokens(const QByteArray& json, QString& error)
   }
 
   load();
+  ++m_generation;
   m_accessToken   = t.accessToken;
   m_accessExpires = core::expiryOf(t, nowUtc());
   // Nexus may rotate the refresh token: the newest one is kept

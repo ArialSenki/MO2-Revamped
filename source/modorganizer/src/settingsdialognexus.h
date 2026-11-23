@@ -15,6 +15,8 @@ public:
   NexusConnectionUI(QWidget* parent, Settings* s, QAbstractButton* connectButton,
                     QAbstractButton* disconnectButton, QAbstractButton* manualButton,
                     QListWidget* logList);
+  // MO2 Revamped: a browser sign-in this page started ends with it
+  ~NexusConnectionUI() override;
 
   void connect();
   void manual();
