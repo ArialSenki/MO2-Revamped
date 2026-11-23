@@ -39,6 +39,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <scopeguard.h>
 #include <utility.h>
 
+#include <QEvent>
+#include <QDialog>
 #include <QApplication>
 #include <QLabel>
 #include <QLineEdit>
@@ -1197,6 +1199,41 @@ void InstallationManager::postInstallCleanup()
   }
 }
 
+namespace
+{
+// MO2 Revamped: every window shown while an archive installs names it in its
+// title bar ("FOMOD installer – SkyUI_5_2_SE.7z"), so a page's several files
+// can be told apart; this covers every installer, the C++, Python and C# ones,
+// and MO2's own questions such as "mod exists", without each knowing the name
+class ArchiveInTitles : public QObject
+{
+public:
+  explicit ArchiveInTitles(QString archive) : m_suffix(QStringLiteral(" \u2013 ") + archive)
+  {
+    qApp->installEventFilter(this);
+  }
+
+  ~ArchiveInTitles() override { qApp->removeEventFilter(this); }
+
+  bool eventFilter(QObject* watched, QEvent* event) override
+  {
+    if (event->type() == QEvent::Show) {
+      auto* dialog = qobject_cast<QDialog*>(watched);
+      // a nested install (a bundle's archive) has its own filter, installed
+      // last and so asked first: its name is the one in the title
+      if (dialog != nullptr && dialog->isWindow() &&
+          !dialog->windowTitle().contains(QStringLiteral(" \u2013 "))) {
+        dialog->setWindowTitle(dialog->windowTitle() + m_suffix);
+      }
+    }
+    return false;
+  }
+
+private:
+  QString m_suffix;
+};
+}  // namespace
+
 InstallationResult InstallationManager::install(const QString& fileName,
                                                 GuessedValue<QString>& modName,
                                                 int modID)
@@ -1304,6 +1341,7 @@ InstallationResult InstallationManager::install(const QString& fileName,
   }
   log::debug("using mod name \"{}\" (id {}) -> {}", QString(modName), modID,
              m_CurrentFile);
+  ArchiveInTitles archiveInTitles(fileInfo.fileName());
 
   // If there's an archive already open, close it. This happens with the bundle
   // installer when it uncompresses a split archive, then finds it has a real archive
