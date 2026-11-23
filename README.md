@@ -12,9 +12,26 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.14](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.14)**
-— `MO2-Revamped-Setup-1.1.0-beta.14.exe` with its `SHA256SUMS.txt`. It is a beta,
+**Latest: [v1.1.0-beta.16](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.16)**
+— `MO2-Revamped-Setup-1.1.0-beta.16.exe` with its `SHA256SUMS.txt`. It is a beta,
 and the newest version.
+
+New in beta 16:
+
+- **Our own game plugins**, written from scratch, for the 14 Bethesda games,
+  Cyberpunk 2077, Baldur's Gate 3, The Witcher 3, Stardew Valley and Valheim.
+- **Faster start and large lists:** MO2 loads only the instance's game, and mod
+  toggles and problem checks are much faster with lists like Nolvus.
+- **Help pages and first steps**, Settings reorganised with animation levels,
+  and rewritten installer dialogs with previews; every install window shows
+  the archive's name in its title.
+- **Your own themes:** any .qss in the stylesheets folder appears in Settings,
+  and themes made for the original MO2 colour Revamped's own parts too.
+- Separate saves for The Convergence, Wine and Proton fixes, icons that no
+  longer need the Windows icon fonts, and security and stability fixes.
+
+New in beta 15: install several mods at once, drop archives from Explorer, a
+Nexus Collections gallery and an OLED Black theme.
 
 New in beta 14: **Wabbajack modlists install natively** (Tools > Wabbajack lists),
 with Wabbajack's gallery, the list's own profile, load order and programs, and
@@ -46,7 +63,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.14.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.16.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
