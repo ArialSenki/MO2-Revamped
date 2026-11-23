@@ -19,7 +19,7 @@ APIUserAccount::APIUserAccount() : m_type(APIUserAccountTypes::None) {}
 
 bool APIUserAccount::isValid() const
 {
-  return !m_key.isEmpty();
+  return !m_key.isEmpty() || m_oauth;
 }
 
 const QString& APIUserAccount::apiKey() const
@@ -68,6 +68,17 @@ APIUserAccount& APIUserAccount::name(const QString& name)
 APIUserAccount& APIUserAccount::type(APIUserAccountTypes type)
 {
   m_type = type;
+  return *this;
+}
+
+bool APIUserAccount::isOAuth() const
+{
+  return m_oauth;
+}
+
+APIUserAccount& APIUserAccount::oauth(bool b)
+{
+  m_oauth = b;
   return *this;
 }
 

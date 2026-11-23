@@ -175,6 +175,8 @@ mo2_add_filter(NAME src/core GROUPS
 	dialogplacement
 	winrarfallback
 	nexusinterface
+	nexusoauth
+	nexusoauthcore
 	nxmaccessmanager
 	organizercore
 	game_features

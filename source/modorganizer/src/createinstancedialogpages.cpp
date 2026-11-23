@@ -2481,7 +2481,7 @@ NexusPage::NexusPage(CreateInstanceDialog& dlg) : Page(dlg), m_skip(false)
 
   // just check it once, or connecting and then going back and forth would skip
   // the page, which would be unexpected
-  m_skip = GlobalSettings::hasNexusApiKey();
+  m_skip = GlobalSettings::hasNexusCredentials();
 
   QObject::connect(ui->nexusLog->model(), &QAbstractItemModel::rowsInserted, &m_dlg, [this] {
     if (ui->nexusLog->parentWidget()->isHidden()) {

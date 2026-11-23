@@ -205,6 +205,10 @@ public:
 
   static NexusInterface& instance();
 
+  // MO2 Revamped: whether instance() may be called (the instance wizard of a
+  // first start runs before it exists)
+  static bool exists();
+
   /**
    * @return the access manager object used to connect to nexus
    **/
@@ -680,6 +684,8 @@ private:
     bool m_IgnoreGenericErrorHandler;
     // MO2 Revamped: how many times Nexus answered 429 to this request
     int m_RateLimited = 0;
+    // MO2 Revamped: sent again once after Nexus refused the sign-in's token
+    bool m_AuthRetried = false;
 
     NXMRequestInfo(int modID, Type type, QVariant userData, const QString& subModule,
                    MOBase::IPluginGame const* game);
@@ -725,6 +731,9 @@ private:
   // MO2 Revamped: after a pause one request goes alone; the others follow
   // once Nexus answers it with something other than 429
   bool m_Probing = false;
+  // MO2 Revamped: the queue waits while the Nexus sign-in's access token is
+  // renewed
+  bool m_WaitingForToken = false;
   // when Nexus said its hourly and daily counts start again (last reply)
   QDateTime m_HourlyReset, m_DailyReset;
 

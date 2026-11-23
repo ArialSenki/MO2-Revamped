@@ -1037,6 +1037,34 @@ public:
   //
   static bool hasNexusApiKey();
 
+  // MO2 Revamped: the "Sign in with Nexus Mods" (OAuth) session, in Windows
+  // Credential Manager under ModOrganizer2_NexusOAuth_refresh and
+  // ModOrganizer2_NexusOAuth_access (each split in numbered pieces when it is
+  // longer than a credential holds), never in an INI file. `access` is the
+  // access token with its expiry (NexusOAuthCore::packAccess). Returns false
+  // and leaves the values untouched when no refresh token is stored
+  //
+  static bool nexusOAuthTokens(QString& refreshToken, QString& access);
+
+  // stores both; an empty access only removes the access token. Returns false
+  // on errors
+  //
+  static bool setNexusOAuthTokens(const QString& refreshToken, const QString& access);
+
+  // removes both tokens; returns false on errors
+  //
+  static bool clearNexusOAuthTokens();
+
+  // whether a refresh token is stored and this build has an OAuth client id
+  // (MO2R_NEXUS_OAUTH_CLIENT_ID): a session left by a build with one is ignored
+  // by a build without
+  //
+  static bool hasNexusOAuthSession();
+
+  // an API key or an OAuth session
+  //
+  static bool hasNexusCredentials();
+
   // resets anything that the user can disable
   static void resetDialogs();
 

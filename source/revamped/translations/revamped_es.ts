@@ -22550,4 +22550,149 @@ Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Pl
       <translation>%1 ocupa más de 1 MB, demasiado para el INI Editor.</translation>
     </message>
   </context>
+  <context>
+    <name>NexusOAuth</name>
+    <message>
+      <source>Cancelled.</source>
+      <translation>Cancelado.</translation>
+    </message>
+    <message>
+      <source>Signed in to Nexus Mods</source>
+      <translation>Sesión iniciada en Nexus Mods</translation>
+    </message>
+    <message>
+      <source>No answer from the browser in 5 minutes. Try again.</source>
+      <translation>El navegador no respondió en 5 minutos. Vuelve a intentarlo.</translation>
+    </message>
+    <message>
+      <source>This build of MO2 Revamped has no Nexus sign-in.</source>
+      <translation>Esta versión de MO2 Revamped no tiene inicio de sesión con Nexus.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped couldn't wait for the browser's answer: %1</source>
+      <translation>MO2 Revamped no pudo esperar la respuesta del navegador: %1</translation>
+    </message>
+    <message>
+      <source>Opened Nexus in your browser.</source>
+      <translation>Nexus se ha abierto en tu navegador.</translation>
+    </message>
+    <message>
+      <source>Sign in there and allow MO2 Revamped.</source>
+      <translation>Inicia sesión allí y permite el acceso a MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>The browser couldn't be opened.</source>
+      <translation>No se pudo abrir el navegador.</translation>
+    </message>
+    <message>
+      <source>Bad request</source>
+      <translation>Petición no válida</translation>
+    </message>
+    <message>
+      <source>This address only takes Nexus' answer.</source>
+      <translation>Esta dirección solo recibe la respuesta de Nexus.</translation>
+    </message>
+    <message>
+      <source>Not found</source>
+      <translation>No encontrado</translation>
+    </message>
+    <message>
+      <source>Sign-in refused</source>
+      <translation>Inicio de sesión rechazado</translation>
+    </message>
+    <message>
+      <source>This answer isn't for the sign-in MO2 Revamped started. Start it again from MO2 Revamped.</source>
+      <translation>Esta respuesta no es del inicio de sesión que abrió MO2 Revamped. Vuelve a empezar desde MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>The browser's answer didn't match this sign-in, so it was refused. Try again.</source>
+      <translation>La respuesta del navegador no correspondía a este inicio de sesión y se ha rechazado. Vuelve a intentarlo.</translation>
+    </message>
+    <message>
+      <source>Not signed in</source>
+      <translation>Sin iniciar sesión</translation>
+    </message>
+    <message>
+      <source>Nexus didn't give MO2 Revamped access. You can close this tab.</source>
+      <translation>Nexus no dio acceso a MO2 Revamped. Puedes cerrar esta pestaña.</translation>
+    </message>
+    <message>
+      <source>Access wasn't allowed on Nexus.</source>
+      <translation>No se permitió el acceso en Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus answered: %1</source>
+      <translation>Nexus respondió: %1</translation>
+    </message>
+    <message>
+      <source>You can close this tab and go back to MO2 Revamped.</source>
+      <translation>Puedes cerrar esta pestaña y volver a MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Nexus answered. Getting access...</source>
+      <translation>Nexus ha respondido. Obteniendo acceso...</translation>
+    </message>
+    <message>
+      <source>Nexus gave no refresh token</source>
+      <translation>Nexus no dio un token de renovación</translation>
+    </message>
+    <message>
+      <source>Signed in.</source>
+      <translation>Sesión iniciada.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't give access: %1</source>
+      <translation>Nexus no dio acceso: %1</translation>
+    </message>
+    <message>
+      <source>Not signed in to Nexus.</source>
+      <translation>No has iniciado sesión en Nexus.</translation>
+    </message>
+    <message>
+      <source>Couldn't reach Nexus to renew the sign-in: %1</source>
+      <translation>No se pudo contactar con Nexus para renovar la sesión: %1</translation>
+    </message>
+    <message>
+      <source>Nexus ended the sign-in. Sign in again in Settings, Nexus.</source>
+      <translation>Nexus cerró la sesión. Vuelve a iniciarla en Ajustes, Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus couldn't renew the sign-in (%1).</source>
+      <translation>Nexus no pudo renovar la sesión (%1).</translation>
+    </message>
+    <message>
+      <source>Signed out of Nexus.</source>
+      <translation>Sesión de Nexus cerrada.</translation>
+    </message>
+  </context>
+  <context>
+    <name>NexusConnectionUI</name>
+    <message>
+      <source>Sign in with Nexus Mods</source>
+      <translation>Iniciar sesión con Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Opens Nexus in your browser to allow MO2 Revamped, without copying an API key.</source>
+      <translation>Abre Nexus en tu navegador para dar acceso a MO2 Revamped, sin copiar una clave de API.</translation>
+    </message>
+    <message>
+      <source>Checking the Nexus account...</source>
+      <translation>Comprobando la cuenta de Nexus...</translation>
+    </message>
+    <message>
+      <source>Signed in to Nexus Mods as %1.</source>
+      <translation>Sesión iniciada en Nexus Mods como %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>QObject</name>
+    <message>
+      <source>Nexus refused the sign-in: it may have expired or been revoked. Sign in again in Settings, Nexus</source>
+      <translation>Nexus rechazó la sesión: puede haber caducado o haberse revocado. Vuelve a iniciarla en Ajustes, Nexus</translation>
+    </message>
+    <message>
+      <source>Sign in with Nexus Mods in your browser, or connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Inicia sesión con Nexus Mods en tu navegador, o conecta con la clave de API personal de la página de tu cuenta de Nexus. Los mensajes de conexión aparecen junto a estas acciones.</translation>
+    </message>
+  </context>
 </TS>

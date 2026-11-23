@@ -509,12 +509,12 @@ void ModListViewActions::checkModsForUpdates() const
                                                       QString());
     NexusInterface::instance().requestTrackingInfo(m_receiver, QVariant(), QString());
   } else {
-    QString apiKey;
-    if (GlobalSettings::nexusApiKey(apiKey)) {
+    // MO2 Revamped: the Nexus sign-in (OAuth) or the API key
+    if (GlobalSettings::hasNexusCredentials()) {
       m_core.doAfterLogin([=]() {
         checkModsForUpdates();
       });
-      NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
+      NexusInterface::instance().getAccessManager()->startStoredCheck();
     } else {
       const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
                                 "under Settings > Nexus.");
@@ -590,12 +590,12 @@ void ModListViewActions::checkModsForUpdates(
   if (NexusInterface::instance().getAccessManager()->validated()) {
     ModInfo::manualUpdateCheck(m_receiver, IDs);
   } else {
-    QString apiKey;
-    if (GlobalSettings::nexusApiKey(apiKey)) {
+    // MO2 Revamped: the Nexus sign-in (OAuth) or the API key
+    if (GlobalSettings::hasNexusCredentials()) {
       m_core.doAfterLogin([=]() {
         checkModsForUpdates(IDs);
       });
-      NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
+      NexusInterface::instance().getAccessManager()->startStoredCheck();
     } else {
       const QString notice = tr("You are not currently authenticated with Nexus. Please do so "
                                 "under Settings > Nexus.");

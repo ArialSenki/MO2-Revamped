@@ -115,6 +115,13 @@ public:
   APIUserAccount& limits(const APILimits& limits);
 
   /**
+   * MO2 Revamped: signed in with Nexus Mods (OAuth) instead of an API key;
+   * the requests then carry the sign-in's access token (NexusOAuth)
+   */
+  bool isOAuth() const;
+  APIUserAccount& oauth(bool b);
+
+  /**
    * returns the number of remaining requests
    */
   int remainingRequests() const;
@@ -135,6 +142,7 @@ private:
   QString m_key, m_id, m_name;
   APIUserAccountTypes m_type;
   APILimits m_limits;
+  bool m_oauth = false;
 };
 
 #endif  // APIUSERACCOUNT_H

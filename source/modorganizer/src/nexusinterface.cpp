@@ -21,6 +21,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "bbcode.h"
 #include "iplugingame.h"
+#include "nexusoauth.h"
 #include "nxmaccessmanager.h"
 #include "selectiondialog.h"
 #include "selfupdater.h"
@@ -375,6 +376,11 @@ NexusInterface& NexusInterface::instance()
 {
   MO_ASSERT(g_instance);
   return *g_instance;
+}
+
+bool NexusInterface::exists()
+{
+  return g_instance != nullptr && g_instance->m_AccessManager != nullptr;
 }
 
 void NexusInterface::setCacheDirectory(const QString& directory)
@@ -1084,6 +1090,29 @@ void NexusInterface::nextRequest()
     return;
   }
 
+  // MO2 Revamped: signed in with Nexus Mods (OAuth): the access token is
+  // renewed before it expires; the queue goes on once it is
+  NexusOAuth* oauth = m_AccessManager->oauth();
+  if (oauth->hasSession() && !oauth->tokenFresh()) {
+    if (!m_WaitingForToken) {
+      m_WaitingForToken = true;
+      oauth->ensureFreshToken([this](bool ok, const QString& message) {
+        m_WaitingForToken = false;
+        if (!ok) {
+          log::warn("{}", message);
+        }
+        // with the session gone, the requests go through the usual checks
+        // (not signed in) instead of waiting
+        QTimer::singleShot(ok ? 0 : 30000, this, [this] {
+          for (int i = 0; i < MAX_ACTIVE_DOWNLOADS; ++i) {
+            nextRequest();
+          }
+        });
+      });
+    }
+    return;
+  }
+
   if (m_User.exhausted()) {
     // MO2 Revamped: the queue waits for the next hourly batch instead of
     // dropping every request (each a failed download, a failed collection mod)
@@ -1248,7 +1277,14 @@ void NexusInterface::nextRequest()
   request.setAttribute(QNetworkRequest::CacheSaveControlAttribute, false);
   request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
                        QNetworkRequest::AlwaysNetwork);
-  request.setRawHeader("APIKEY", m_User.apiKey().toUtf8());
+  // MO2 Revamped: signed in with Nexus Mods (OAuth), the request carries the
+  // access token as a bearer token in place of the API key (as Vortex and
+  // node-nexus-api do, for REST v1 and GraphQL v2 alike)
+  if (oauth->hasSession()) {
+    request.setRawHeader("Authorization", "Bearer " + oauth->accessToken().toUtf8());
+  } else {
+    request.setRawHeader("APIKEY", m_User.apiKey().toUtf8());
+  }
   // MO2 Revamped: Qt follows redirects by itself and keeps the headers; the
   // key never goes to an address other than the API's
   request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
@@ -1416,7 +1452,21 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
     int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     QString errorMsg = withoutQuery(reply->errorString());
 
-    if (iter->m_AllowedErrors.contains(error) &&
+    if (statusCode == 401 && !iter->m_AuthRetried &&
+        m_AccessManager->oauth()->hasSession()) {
+      // MO2 Revamped: the sign-in's access token was refused (expired early,
+      // revoked): it is renewed and the request goes again, once, at the front
+      // of the queue. When Nexus refuses the renewal too, the session ends
+      log::debug("Nexus refused the sign-in's token for {}; renewing it",
+                 withoutQuery(reply->url().toString()));
+      m_AccessManager->oauth()->invalidateAccessToken();
+      NXMRequestInfo again = *iter;
+      again.m_AuthRetried  = true;
+      again.m_Reply        = nullptr;
+      again.m_Timeout      = nullptr;
+      m_RequestQueue.prepend(again);
+      return;
+    } else if (iter->m_AllowedErrors.contains(error) &&
         iter->m_AllowedErrors[error].contains(statusCode)) {
       // These errors are allows to silently happen.  They should be handled in
       // nxmRequestFailed below.

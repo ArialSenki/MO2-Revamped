@@ -891,10 +891,8 @@ int MOApplication::run(MOMultiProcess& multiProcess)
 
   // start an api check
   setStartupDiagnosticPhase("application.run.nexus_api_check");
-  QString apiKey;
-  if (GlobalSettings::nexusApiKey(apiKey)) {
-    m_nexus->getAccessManager()->apiCheck(apiKey);
-  }
+  // MO2 Revamped: the Nexus sign-in (OAuth) when there is one, else the API key
+  m_nexus->getAccessManager()->startStoredCheck();
 
   // tutorials
   setStartupDiagnosticPhase("application.run.tutorials");

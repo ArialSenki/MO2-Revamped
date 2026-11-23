@@ -54,5 +54,41 @@ class CoopPassword(unittest.TestCase):
         self.assertEqual(self.redact("save_file_extension = co2\n"), "save_file_extension = co2\n")
 
 
+class NexusSignIn(unittest.TestCase):
+    """The tokens and the code of "Sign in with Nexus Mods" (OAuth)."""
+
+    def setUp(self) -> None:
+        self.redact = mo2_revamped_info._Redactor()
+
+    def test_tokens_in_json(self) -> None:
+        out = self.redact('{"access_token":"AT-SECRET-1","refresh_token":"RT-SECRET-2",'
+                          '"expires_in":3600}')
+        self.assertNotIn("AT-SECRET-1", out)
+        self.assertNotIn("RT-SECRET-2", out)
+        self.assertIn('"expires_in":3600', out)
+
+    def test_code_in_redirect(self) -> None:
+        out = self.redact("GET /?code=CODE-SECRET-3&state=abc HTTP/1.1\n")
+        self.assertNotIn("CODE-SECRET-3", out)
+        self.assertIn("state=abc", out)
+
+    def test_code_and_verifier_in_form(self) -> None:
+        out = self.redact("grant_type=authorization_code&code=CODE-4&code_verifier=VER-5\n")
+        self.assertNotIn("CODE-4", out)
+        self.assertNotIn("VER-5", out)
+        self.assertIn("grant_type=authorization_code", out)
+
+    def test_bearer_header(self) -> None:
+        jwt = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxMjM0In0.c2lnbmF0dXJlLXZhbHVl"
+        out = self.redact("Authorization: Bearer " + jwt + "\n")
+        self.assertNotIn(jwt, out)
+        out = self.redact("sent with bearer " + jwt)
+        self.assertNotIn("c2lnbmF0dXJl", out)
+
+    def test_ordinary_codes_stay(self) -> None:
+        text = "exit code 0, error code: 5\n"
+        self.assertEqual(self.redact(text), text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
