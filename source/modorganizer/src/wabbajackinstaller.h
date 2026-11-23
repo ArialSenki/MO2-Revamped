@@ -18,6 +18,9 @@
 //  - TransformedTexture: a texture made smaller or recompressed, as the list's
 //    author did, with DirectXTex (not checked by hash: the result of a
 //    compression isn't the same byte for byte, Wabbajack doesn't check it either).
+//  - MergedPatch: a zEdit merge, last, as Wabbajack does it: its sources (files
+//    of this install) joined end to end in the list's order, then the list's
+//    patch (OctoDiff); zEdit isn't run. Checked by hash and size.
 // Then the screen's size goes into the profiles' prefs, as Wabbajack does.
 // Mod Organizer's own files (the list brings its own MO2) are never written;
 // the list's ModOrganizer.ini is handed back, its paths written in, for the
@@ -26,6 +29,7 @@
 // Nothing outside the install folder is written; the game's and the downloads'
 // files are only read.
 
+#include "wabbajackfiles.h"
 #include "wabbajacklist.h"
 
 #include <QHash>
@@ -76,14 +80,6 @@ using InstallProgress = std::function<void(const QString& text, int permille)>;
 
 InstallResult install(const InstallPlan& plan, const std::atomic_bool& cancel,
                       const InstallProgress& progress);
-
-// a path of the list ("mods\X\a.esp") under the install folder; empty when it
-// would lead out of it
-QString installPath(const QString& installFolder, const QString& relative);
-
-// the folder where an install keeps its own files (temporary ones, the MO2
-// plugins set aside)
-QString installStateFolder(const QString& installFolder);
 
 // an install that finished there: its folder isn't one to install into again
 bool isFinishedInstall(const QString& installFolder);

@@ -20613,6 +20613,49 @@ Se o MO2 Revamped estiver instalado em uma pasta protegida como Arquivos de Prog
 <context>
     <name>Wabbajack::Installer</name>
     <message>
+      <source>the list doesn't say which files it merges</source>
+      <translation>a lista não diz quais arquivos ela mescla</translation>
+    </message>
+    <message>
+      <source>its source %1 leads out of the install folder</source>
+      <translation>sua origem %1 sai da pasta de instalação</translation>
+    </message>
+    <message>
+      <source>its source %1 isn't there (it wasn't installed)</source>
+      <translation>sua origem %1 não está lá (não foi instalada)</translation>
+    </message>
+    <message>
+      <source>a temporary file can't be written</source>
+      <translation>não é possível gravar um arquivo temporário</translation>
+    </message>
+    <message>
+      <source>its source %1 can't be read</source>
+      <translation>não é possível ler sua origem %1</translation>
+    </message>
+    <message>
+      <source>%1 (sources that aren't the list's: %2)</source>
+      <translation>%1 (origens que não são as da lista: %2)</translation>
+    </message>
+    <message>
+      <source>its size isn't the list's</source>
+      <translation>seu tamanho não é o da lista</translation>
+    </message>
+    <message>
+      <source>Building the zEdit merges…</source>
+      <translation>Criando as mesclagens do zEdit…</translation>
+    </message>
+    <message>
+      <source>its source %1 is Mod Organizer's own file, which MO2 Revamped doesn't install</source>
+      <translation>sua origem %1 é um arquivo do próprio Mod Organizer, que o MO2 Revamped não instala</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n zEdit merges built.</source>
+      <translation>
+        <numerusform>%n mesclagem do zEdit criada.</numerusform>
+        <numerusform>%n mesclagens do zEdit criadas.</numerusform>
+      </translation>
+    </message>
+    <message>
       <source>the list's own copy is too large</source>
       <translation>a cópia da própria lista é grande demais</translation>
     </message>

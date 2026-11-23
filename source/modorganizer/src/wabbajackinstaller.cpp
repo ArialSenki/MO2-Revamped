@@ -36,8 +36,6 @@ namespace Wabbajack
 namespace
 {
 
-constexpr char StateName[] = ".mo2r-install";
-
 // how many failures are listed by name; the rest are counted
 constexpr int ListedFailures = 200;
 // the failures the summary names one by one; a full drive or a broken list
@@ -74,8 +72,6 @@ QString typeName(DirectiveType type)
     return QStringLiteral("ArchiveMeta");
   case DirectiveType::PropertyFile:
     return QStringLiteral("PropertyFile");
-  case DirectiveType::MergedPatch:
-    return QStringLiteral("MergedPatch");
   default:
     return QStringLiteral("Unknown");
   }
@@ -115,162 +111,6 @@ bool isBethesdaArchive(const QString& path)
 {
   const QString lower = path.toLower();
   return lower.endsWith(u".bsa") || lower.endsWith(u".ba2");
-}
-
-// the 7-bit encoded length of a .NET string, as BinaryReader reads it
-bool readDotNetString(QFile& f, QByteArray* out)
-{
-  quint32 length = 0;
-  for (int shift = 0; shift < 35; shift += 7) {
-    char c;
-    if (!f.getChar(&c)) {
-      return false;
-    }
-    length |= quint32(uchar(c) & 0x7F) << shift;
-    if ((uchar(c) & 0x80) == 0) {
-      // the name of a hash algorithm: anything long is a damaged patch
-      if (length > 256) {
-        return false;
-      }
-      *out = f.read(qint64(length));
-      return out->size() == qint64(length);
-    }
-  }
-  return false;
-}
-
-template <class T>
-bool readValue(QFile& f, T* v)
-{
-  return f.read(reinterpret_cast<char*>(v), sizeof(T)) == qint64(sizeof(T));
-}
-
-// an OctoDiff delta (Octopus Deploy's format, which Wabbajack uses):
-// "OCTODELTA", version 1, the hash's algorithm and the basis' hash, ">>>",
-// then until the end copy(start, length) from the basis or data(length)
-bool applyOctoDiff(const QString& basisPath, QFile& delta, const QString& outPath,
-                   qint64 expected, QString* error)
-{
-  QFile basis(basisPath);
-  if (!basis.open(QIODevice::ReadOnly)) {
-    *error = tr("the file to patch can't be read");
-    return false;
-  }
-  QByteArray magic = delta.read(9);
-  char version     = 0;
-  QByteArray algorithm;
-  qint32 hashLength = 0;
-  if (magic != "OCTODELTA" || !delta.getChar(&version) || version != 1 ||
-      !readDotNetString(delta, &algorithm) || !readValue(delta, &hashLength) ||
-      hashLength < 0 || hashLength > 1024) {
-    *error = tr("the patch is damaged");
-    return false;
-  }
-  delta.read(hashLength);
-  if (delta.read(3) != ">>>") {
-    *error = tr("the patch is damaged");
-    return false;
-  }
-
-  QSaveFile out(outPath);
-  if (!out.open(QIODevice::WriteOnly)) {
-    *error = tr("the patched file can't be written");
-    return false;
-  }
-  QByteArray buffer;
-  // never more than the file the list names: a damaged patch can't fill the disk
-  if (expected <= 0) {
-    expected = Collections::MaxPatchedSize;
-  }
-  qint64 written = 0;
-  while (!delta.atEnd()) {
-    char command;
-    if (!delta.getChar(&command)) {
-      break;
-    }
-    if (uchar(command) == 0x60) {
-      qint64 start = 0, length = 0;
-      if (!readValue(delta, &start) || !readValue(delta, &length) || start < 0 ||
-          length < 0 || start > basis.size() || length > basis.size() - start ||
-          length > expected - written || !basis.seek(start)) {
-        *error = tr("the patch doesn't fit the file it patches");
-        return false;
-      }
-      while (length > 0) {
-        buffer = basis.read(qMin<qint64>(length, 4 * 1024 * 1024));
-        if (buffer.isEmpty() || out.write(buffer) != buffer.size()) {
-          *error = tr("the patched file can't be written");
-          return false;
-        }
-        length -= buffer.size();
-        written += buffer.size();
-      }
-    } else if (uchar(command) == 0x80) {
-      qint64 length = 0;
-      if (!readValue(delta, &length) || length < 0 || length > expected - written) {
-        *error = tr("the patch is damaged");
-        return false;
-      }
-      while (length > 0) {
-        buffer = delta.read(qMin<qint64>(length, 4 * 1024 * 1024));
-        if (buffer.isEmpty() || out.write(buffer) != buffer.size()) {
-          *error = tr("the patch is damaged");
-          return false;
-        }
-        length -= buffer.size();
-        written += buffer.size();
-      }
-    } else {
-      *error = tr("the patch is damaged");
-      return false;
-    }
-  }
-  if (!out.commit()) {
-    *error = tr("the patched file can't be written");
-    return false;
-  }
-  return true;
-}
-
-bool applyPatch(const QString& basisPath, const QString& patchPath, const QString& outPath,
-                qint64 expected, QString* error)
-{
-  QFile delta(patchPath);
-  if (!delta.open(QIODevice::ReadOnly)) {
-    *error = tr("the list's patch isn't in it");
-    return false;
-  }
-  const QByteArray head = delta.peek(9);
-  if (head.startsWith("OCTODELTA")) {
-    return applyOctoDiff(basisPath, delta, outPath, expected, error);
-  }
-  if (head.startsWith("BSDIFF40")) {
-    // old lists: the collections' bspatch, whole files in memory
-    QFile basis(basisPath);
-    if (delta.size() > Collections::MaxPatchedSize) {
-      *error = tr("the patch is damaged");
-      return false;
-    }
-    if (!basis.open(QIODevice::ReadOnly) || basis.size() > Collections::MaxPatchedSize) {
-      *error = tr("the file to patch can't be read");
-      return false;
-    }
-    QByteArray result;
-    QString why;
-    if (!Collections::bspatch(basis.readAll(), delta.readAll(), result, &why)) {
-      *error = why;
-      return false;
-    }
-    QSaveFile out(outPath);
-    if (!out.open(QIODevice::WriteOnly) || out.write(result) != result.size() ||
-        !out.commit()) {
-      *error = tr("the patched file can't be written");
-      return false;
-    }
-    return true;
-  }
-  *error = tr("the patch has a format MO2 Revamped doesn't know");
-  return false;
 }
 
 // a texture made as the list's author made it: resized, its mipmaps made again
@@ -534,6 +374,9 @@ private:
   // where a directive's file goes; empty when it isn't written (Mod
   // Organizer's own, or a path that would lead out of the folder)
   QString targetOf(const Directive& d, bool* skipped);
+  // the same for a path of the list (a merge's source): *plugin gets the MO2
+  // plugin's name when the path is one of them
+  QString placeOf(const QString& relative, bool* skipped, QString* plugin = nullptr) const;
 
   bool extractInline();
   void installArchives();
@@ -541,6 +384,7 @@ private:
   void finishItem(const Item& item);
   void installInline();
   void buildBsas();
+  void mergePatches();
   void setScreenSize();
   bool verify(const Directive& d, const QString& path);
 };
@@ -631,7 +475,18 @@ QString Installer::targetOf(const Directive& d, bool* skipped)
     *skipped = true;
     return {};
   }
-  const QString to    = QString(d.to).replace(u'/', u'\\');
+  QString plugin;
+  const QString path = placeOf(d.to, skipped, &plugin);
+  if (!plugin.isEmpty()) {
+    m_plugins.insert(plugin);
+  }
+  return path;
+}
+
+QString Installer::placeOf(const QString& relative, bool* skipped, QString* plugin) const
+{
+  *skipped = false;
+  const QString to    = QString(relative).replace(u'/', u'\\');
   const int slash     = to.indexOf(u'\\');
   const QString first = (slash < 0 ? to : to.left(slash)).toLower();
 
@@ -648,7 +503,9 @@ QString Installer::targetOf(const Directive& d, bool* skipped)
   if (first == u"plugins" && slash > 0) {
     // an MO2 plugin the list adds: set aside, offered at the end
     const QString rest = to.mid(slash + 1);
-    m_plugins.insert(rest.section(u'\\', 0, 0));
+    if (plugin != nullptr) {
+      *plugin = rest.section(u'\\', 0, 0);
+    }
     return installPath(QDir(m_state).filePath("plugins"), rest);
   }
   return installPath(m_plan.installFolder, to);
@@ -687,6 +544,7 @@ bool Installer::extractInline()
     case DirectiveType::InlineFile:
     case DirectiveType::RemappedInlineFile:
     case DirectiveType::PatchedFromArchive:
+    case DirectiveType::MergedPatch:
       if (!d.dataId.isEmpty()) {
         wanted.insert(d.dataId.toLower());
       }
@@ -739,8 +597,9 @@ void Installer::installArchives()
   std::map<uint64_t, std::vector<Item>> byArchive;
   std::map<QString, int> unsupported;
   for (const Directive& d : m_list->directives) {
-    // the types installed here, by installInline and by buildBsas; any other
-    // is reported, its size counted so the progress still reaches the end
+    // the types installed here, by installInline, by buildBsas and by
+    // mergePatches; any other is reported, its size counted so the progress
+    // still reaches the end
     if (d.type == DirectiveType::ArchiveMeta || d.type == DirectiveType::PropertyFile) {
       // the archives' .meta files go with the downloads, and the property files
       // are the list's banner and readme: nothing of the install
@@ -749,7 +608,8 @@ void Installer::installArchives()
     }
     if (d.type != DirectiveType::FromArchive && d.type != DirectiveType::PatchedFromArchive &&
         d.type != DirectiveType::TransformedTexture && d.type != DirectiveType::InlineFile &&
-        d.type != DirectiveType::RemappedInlineFile && d.type != DirectiveType::CreateBSA) {
+        d.type != DirectiveType::RemappedInlineFile && d.type != DirectiveType::CreateBSA &&
+        d.type != DirectiveType::MergedPatch) {
       ++unsupported[typeName(d.type)];
       m_done += d.size;
       continue;
@@ -1384,6 +1244,80 @@ void Installer::buildBsas()
   }
 }
 
+void Installer::mergePatches()
+{
+  // last, as Wabbajack does them: their sources are files of the install
+  // (plugins from archives, patched or carried by the list), all written by now
+  int merged     = 0;
+  bool announced = false;
+  for (const Directive& d : m_list->directives) {
+    if (cancelled()) {
+      return;
+    }
+    if (d.type != DirectiveType::MergedPatch) {
+      continue;
+    }
+    if (!announced) {
+      report(tr("Building the zEdit merges…"), true);
+      announced = true;
+    }
+    bool skipped         = false;
+    const QString target = targetOf(d, &skipped);
+    if (skipped) {
+      ++m_result.modOrganizer;
+      m_done += d.size;
+      continue;
+    }
+    if (d.badHash) {
+      fail(d, tr("the list gives it a hash that isn't one"));
+      m_done += d.size;
+      continue;
+    }
+    if (target.isEmpty()) {
+      fail(d, tr("its path leads out of the install folder"));
+      m_done += d.size;
+      continue;
+    }
+    if (!isPlainId(d.dataId)) {
+      fail(d, tr("the list's patch isn't in it"));
+      m_done += d.size;
+      continue;
+    }
+
+    MergeRequest request;
+    request.sources    = d.extra;
+    request.patchPath  = QDir(m_inline).filePath(d.dataId.toLower());
+    request.joinedPath = stageFile();
+    request.target     = target;
+    request.hash       = d.hash;
+    request.size       = d.size;
+    // the sources are read where the install wrote them, never outside it
+    auto sourcePath = [this](const QString& relative, QString* why) {
+      bool mo2           = false;
+      const QString path = placeOf(relative, &mo2);
+      if (mo2) {
+        *why = tr("its source %1 is Mod Organizer's own file, which MO2 Revamped doesn't "
+                  "install")
+                   .arg(relative);
+      }
+      return path;
+    };
+    makeFolderFor(target);
+    QString why;
+    if (buildMergedPatch(request, sourcePath, &m_cancel, &why)) {
+      ++m_result.written;
+      ++merged;
+    } else if (!cancelled()) {
+      fail(d, why);
+    }
+    m_done += d.size;
+    report(QFileInfo(target).fileName());
+  }
+  if (merged > 0) {
+    m_result.notes.append(tr("%n zEdit merges built.", nullptr, merged));
+  }
+}
+
 InstallResult Installer::run()
 {
   m_state  = installStateFolder(m_plan.installFolder);
@@ -1429,6 +1363,9 @@ InstallResult Installer::run()
       }
       if (!cancelled()) {
         buildBsas();
+      }
+      if (!cancelled()) {
+        mergePatches();
       }
       if (!cancelled()) {
         setScreenSize();
@@ -1529,11 +1466,6 @@ InstallResult Installer::run()
 
 }  // namespace
 
-QString installStateFolder(const QString& installFolder)
-{
-  return QDir(installFolder).filePath(QString::fromLatin1(StateName));
-}
-
 bool isFinishedInstall(const QString& installFolder)
 {
   return QFileInfo::exists(QDir(installStateFolder(installFolder)).filePath("finished"));
@@ -1559,52 +1491,6 @@ QStringList byHandFolders(const QString& installFolder)
     }
   }
   return result;
-}
-
-QString installPath(const QString& installFolder, const QString& relative)
-{
-  QString r = QString(relative).replace(u'\\', u'/');
-  if (r.isEmpty() || QDir::isAbsolutePath(r) || r.contains(u':') || r.startsWith(u'/')) {
-    return {};
-  }
-  // MO2 Revamped: and the collections' rules: no characters Windows refuses,
-  // no part ending in a dot or a space, no CONIN$, CONOUT$, CLOCK$ or COM¹
-  if (!Collections::isSafeRelativePath(r)) {
-    return {};
-  }
-  static const QRegularExpression device(
-      QStringLiteral("^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\..*)?$"),
-      QRegularExpression::CaseInsensitiveOption);
-  // an 8.3 short name (MO2R-I~1) reaches a folder by another name: the
-  // install's own one among them
-  static const QRegularExpression shortName(
-      QStringLiteral(R"(^[^.~\s]{1,6}~[0-9]{1,6}(\.[^.]{0,3})?$)"),
-      QRegularExpression::CaseInsensitiveOption);
-  const QStringList parts = r.split(u'/');
-  if (parts.front().compare(QString::fromLatin1(StateName), Qt::CaseInsensitive) == 0) {
-    return {};
-  }
-  for (const QString& part : parts) {
-    if (part == u".." || device.match(part.trimmed()).hasMatch() ||
-        shortName.match(part).hasMatch()) {
-      return {};
-    }
-  }
-  QString base = QDir::cleanPath(installFolder);
-  if (!base.endsWith(u'/')) {
-    base += u'/';
-  }
-  const QString full = QDir::cleanPath(base + r);
-  if (!full.startsWith(base, Qt::CaseInsensitive)) {
-    return {};
-  }
-  // "./.mo2r-install/..." is the install's own folder too
-  const QString inside = full.mid(base.size());
-  if (inside.section(u'/', 0, 0).compare(QString::fromLatin1(StateName), Qt::CaseInsensitive) ==
-      0) {
-    return {};
-  }
-  return full;
 }
 
 InstallResult install(const InstallPlan& plan, const std::atomic_bool& cancel,
