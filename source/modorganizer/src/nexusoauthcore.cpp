@@ -134,15 +134,34 @@ QByteArray refreshBody(const QString& clientId, const QString& refreshToken)
                    {"refresh_token", refreshToken}});
 }
 
-QByteArray revokeBody(const QString& clientId, const QString& token)
+QByteArray revokeBody(const QString& clientId, const QString& token, const QString& hint)
 {
-  return formBody({{"client_id", clientId},
-                   {"token", token},
-                   {"token_type_hint", QStringLiteral("refresh_token")}});
+  return formBody({{"client_id", clientId}, {"token", token}, {"token_type_hint", hint}});
+}
+
+QString apiBaseOverride(const QString& value, bool devBuild)
+{
+  const QString v = value.trimmed();
+  if (!devBuild || v.isEmpty()) {
+    return {};
+  }
+  const QUrl url(v, QUrl::StrictMode);
+  if (!url.isValid() || url.scheme() != QLatin1String("http") ||
+      !url.userInfo().isEmpty() ||
+      (url.host() != QLatin1String("127.0.0.1") &&
+       url.host() != QLatin1String("localhost"))) {
+    return {};
+  }
+  return v.endsWith(QLatin1Char('/')) ? v.chopped(1) : v;
+}
+
+QString redirectHost(quint16 port)
+{
+  return QStringLiteral("127.0.0.1:%1").arg(port);
 }
 
 Redirect parseRedirect(const QByteArray& head, const QString& expectedState,
-                       const QString& expectedPath)
+                       const QString& expectedPath, const QString& expectedHost)
 {
   // a browser's request head is a few hundred bytes; anything this long
   // without its end isn't one
@@ -165,6 +184,27 @@ Redirect parseRedirect(const QByteArray& head, const QString& expectedState,
       !parts[1].startsWith('/')) {
     r.kind = Redirect::Malformed;
     return r;
+  }
+
+  // the browser came to the address MO2 Revamped gave Nexus: exactly one Host
+  // header, naming it (RFC 8252 section 8.3; a page on another name resolved
+  // to 127.0.0.1 is refused)
+  if (!expectedHost.isEmpty()) {
+    int hosts = 0;
+    bool same = false;
+    for (const QByteArray& line : head.left(end).split('\n').mid(1)) {
+      const qsizetype colon = line.indexOf(':');
+      if (colon <= 0 || line.left(colon).trimmed().toLower() != "host") {
+        continue;
+      }
+      ++hosts;
+      same = QString::fromLatin1(line.mid(colon + 1).trimmed())
+                 .compare(expectedHost, Qt::CaseInsensitive) == 0;
+    }
+    if (hosts != 1 || !same) {
+      r.kind = Redirect::Malformed;
+      return r;
+    }
   }
 
   const QUrl target(QStringLiteral("http://127.0.0.1") + QString::fromLatin1(parts[1]),

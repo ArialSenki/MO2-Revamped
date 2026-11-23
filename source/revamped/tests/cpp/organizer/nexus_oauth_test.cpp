@@ -106,6 +106,24 @@ void testBodies()
            "grant_type=refresh_token&client_id=cid&refresh_token=r%3Dt");
   CHECK_EQ(QString::fromLatin1(revokeBody("cid", "rt")),
            "client_id=cid&token=rt&token_type_hint=refresh_token");
+  CHECK_EQ(QString::fromLatin1(revokeBody("cid", "at", "access_token")),
+           "client_id=cid&token=at&token_type_hint=access_token");
+}
+
+void testApiBaseOverride()
+{
+  // a dev build takes a local http stub, without the trailing "/"
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1:8080/", true), "http://127.0.0.1:8080");
+  CHECK_EQ(apiBaseOverride(" http://localhost:9 ", true), "http://localhost:9");
+  // a release build never does
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1:8080", false), "");
+  CHECK_EQ(apiBaseOverride("", true), "");
+  // nothing off this computer, nothing but http, no user info tricks
+  CHECK_EQ(apiBaseOverride("https://127.0.0.1:8080", true), "");
+  CHECK_EQ(apiBaseOverride("http://evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1.evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://localhost@evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://evil.example@127.0.0.1", true), "");
 }
 
 void testRedirect()
@@ -158,6 +176,31 @@ void testRedirect()
   CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: x\r\n", state).kind ==
         Redirect::Incomplete);
   CHECK(parseRedirect(QByteArray(20000, 'a'), state).kind == Redirect::Malformed);
+
+  // the Host header, when the listener names it (DNS rebinding)
+  const QString slash = QStringLiteral("/");
+  const QString host  = redirectHost(50000);
+  CHECK_EQ(host, "127.0.0.1:50000");
+  CHECK(parseRedirect(get("/?code=a&state=S7a-_x"), state, slash, host).kind ==
+        Redirect::Code);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nhost: 127.0.0.1:50000\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Code);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: evil.example:50000\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: 127.0.0.1:50001\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\n\r\n", state, slash, host).kind ==
+        Redirect::Malformed);
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\nHost: 127.0.0.1:50000\r\n"
+                      "Host: evil.example\r\n\r\n",
+                      state, slash, host)
+            .kind == Redirect::Malformed);
+  // without an expected host, as before
+  CHECK(parseRedirect("GET /?code=a&state=S7a-_x HTTP/1.1\r\n\r\n", state).kind ==
+        Redirect::Code);
 }
 
 void testResponse()
@@ -291,6 +334,7 @@ int main()
   testPkce();
   testAuthorizeUrl();
   testBodies();
+  testApiBaseOverride();
   testRedirect();
   testResponse();
   testTokens();

@@ -686,6 +686,8 @@ private:
     int m_RateLimited = 0;
     // MO2 Revamped: sent again once after Nexus refused the sign-in's token
     bool m_AuthRetried = false;
+    // MO2 Revamped: which of the sign-in's access tokens it was sent with
+    quint64 m_TokenGeneration = 0;
 
     NXMRequestInfo(int modID, Type type, QVariant userData, const QString& subModule,
                    MOBase::IPluginGame const* game);

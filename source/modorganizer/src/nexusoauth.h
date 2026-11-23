@@ -75,6 +75,14 @@ public:
   // Nexus answered 401 to the token: the next request refreshes it first
   void invalidateAccessToken();
 
+  // changes each time a new access token arrives: a request remembers the one
+  // it was sent with, so a 401 that comes after a renewal doesn't renew again
+  quint64 tokenGeneration() const { return m_generation; }
+
+  // invalidateAccessToken() only when the token is still the one of
+  // `generation`
+  void invalidateAccessToken(quint64 generation);
+
 signals:
   // a line for the Settings log
   void signInProgress(const QString& message);
@@ -110,6 +118,12 @@ private:
   QPointer<QNetworkReply> m_refresh;
   std::vector<TokenCallback> m_waiting;
   QTimer m_refreshTimer;
+  quint64 m_generation = 0;
+  // after a refresh that failed without an answer from Nexus (offline, a 5xx):
+  // no new refresh before this, doubling up to 15 minutes
+  QDateTime m_refreshRetryAt;
+  qint64 m_refreshBackoffSeconds = 0;
+  void refreshFailedTemporarily();
 
   void load() const;
   void store();

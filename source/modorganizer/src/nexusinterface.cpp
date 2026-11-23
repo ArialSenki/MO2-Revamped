@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "bbcode.h"
 #include "iplugingame.h"
 #include "nexusoauth.h"
+#include "nexusoauthcore.h"
 #include "nxmaccessmanager.h"
 #include "selectiondialog.h"
 #include "selfupdater.h"
@@ -1098,9 +1099,12 @@ void NexusInterface::nextRequest()
       m_WaitingForToken = true;
       oauth->ensureFreshToken([this](bool ok, const QString& message) {
         m_WaitingForToken = false;
-        if (!ok) {
+        // once for each reason, not every 30 s while Nexus can't be reached
+        static QString lastProblem;
+        if (!ok && message != lastProblem) {
           log::warn("{}", message);
         }
+        lastProblem = ok ? QString() : message;
         // with the session gone, the requests go through the usual checks
         // (not signed in) instead of waiting
         QTimer::singleShot(ok ? 0 : 30000, this, [this] {
@@ -1282,6 +1286,7 @@ void NexusInterface::nextRequest()
   // node-nexus-api do, for REST v1 and GraphQL v2 alike)
   if (oauth->hasSession()) {
     request.setRawHeader("Authorization", "Bearer " + oauth->accessToken().toUtf8());
+    info.m_TokenGeneration = oauth->tokenGeneration();
   } else {
     request.setRawHeader("APIKEY", m_User.apiKey().toUtf8());
   }
@@ -1459,7 +1464,8 @@ void NexusInterface::requestFinished(std::list<NXMRequestInfo>::iterator iter)
       // of the queue. When Nexus refuses the renewal too, the session ends
       log::debug("Nexus refused the sign-in's token for {}; renewing it",
                  withoutQuery(reply->url().toString()));
-      m_AccessManager->oauth()->invalidateAccessToken();
+      // a token renewed since this request went out isn't dropped again
+      m_AccessManager->oauth()->invalidateAccessToken(iter->m_TokenGeneration);
       NXMRequestInfo again = *iter;
       again.m_AuthRetried  = true;
       again.m_Reply        = nullptr;
@@ -1705,18 +1711,23 @@ APIStats NexusInterface::getAPIStats() const
 namespace
 {
 // MO2 Revamped: the API's address; MO2R_NEXUS_API_BASE replaces it for tests
-// against a local stub (a fake 429), and only with an address on this
-// computer, so the API key never goes anywhere else
+// against a local stub (a fake 429), only in a dev build (a version on the dev
+// channel: alpha, dev...) and only with an address on this computer, so the
+// API key never goes anywhere else. A release build ignores it
 QString apiBase()
 {
   static const QString base = [] {
     const QString value = qEnvironmentVariable("MO2R_NEXUS_API_BASE").trimmed();
-    const QUrl url(value);
-    if (!value.isEmpty() && url.scheme() == QLatin1String("http") &&
-        (url.host() == QLatin1String("127.0.0.1") ||
-         url.host() == QLatin1String("localhost"))) {
-      log::warn("Nexus API requests go to the test address {}", value);
-      return value.endsWith(QLatin1Char('/')) ? value.chopped(1) : value;
+    const bool devBuild = SelfUpdater::buildChannel() == SelfUpdater::UpdateChannel::Dev;
+    const QString test  = NexusOAuthCore::apiBaseOverride(value, devBuild);
+    if (!test.isEmpty()) {
+      log::warn("Nexus API requests go to the test address {}", test);
+      return test;
+    }
+    if (!value.isEmpty()) {
+      log::warn("MO2R_NEXUS_API_BASE is ignored: {}",
+                devBuild ? "only an http address on 127.0.0.1 or localhost is taken"
+                         : "only a dev build takes it");
     }
     return QStringLiteral("https://api.nexusmods.com");
   }();

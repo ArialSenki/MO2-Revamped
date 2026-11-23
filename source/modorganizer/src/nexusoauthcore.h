@@ -88,7 +88,14 @@ QUrl authorizeUrl(const QString& clientId, const QString& redirectUri,
 QByteArray codeExchangeBody(const QString& clientId, const QString& redirectUri,
                             const QString& code, const QString& verifier);
 QByteArray refreshBody(const QString& clientId, const QString& refreshToken);
-QByteArray revokeBody(const QString& clientId, const QString& token);
+// RFC 7009; hint is "refresh_token" or "access_token"
+QByteArray revokeBody(const QString& clientId, const QString& token,
+                      const QString& hint = QStringLiteral("refresh_token"));
+
+// MO2R_NEXUS_API_BASE, the API address of a local stub for tests: taken only
+// in a dev build and only as http on 127.0.0.1 or localhost, without the
+// trailing "/"; empty otherwise (the real API is used)
+QString apiBaseOverride(const QString& value, bool devBuild);
 
 // what came to the loopback listener
 struct Redirect
@@ -101,7 +108,8 @@ struct Redirect
     Malformed,
     // another path (a favicon, a probe): refused, the listener waits on
     WrongPath,
-    // the redirect, but its state isn't this sign-in's: refused, sign-in ends
+    // the redirect, but its state isn't this sign-in's: refused, the
+    // listener waits on for the real one
     StateMismatch,
     // the redirect with an error (the user declined, for one)
     Error,
@@ -116,9 +124,15 @@ struct Redirect
 };
 
 // reads the request head the browser sent to the listener. The redirect is a
-// GET to RedirectPath with code and state, or with error and state
+// GET to RedirectPath with code and state, or with error and state. With
+// expectedHost ("127.0.0.1:<port>"), a request whose Host header names
+// anything else (a DNS rebinding page, a request without Host) is Malformed
 Redirect parseRedirect(const QByteArray& head, const QString& expectedState,
-                       const QString& expectedPath = QString::fromLatin1(RedirectPath));
+                       const QString& expectedPath = QString::fromLatin1(RedirectPath),
+                       const QString& expectedHost = QString());
+
+// the Host header the browser sends to the loopback redirect: "127.0.0.1:<port>"
+QString redirectHost(quint16 port);
 
 // a complete HTTP/1.1 answer for the browser's tab, closing the connection
 QByteArray httpResponse(int status, const QString& title, const QString& message);

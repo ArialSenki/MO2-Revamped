@@ -238,6 +238,14 @@ QString NexusSSOLogin::stateToString(States s, const QString& e)
 
 void NexusSSOLogin::start()
 {
+  // MO2 Revamped: without a slug Nexus registered for MO2 Revamped, its SSO
+  // page would ask in no application's name (or another's): never opened
+  if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
+    setState(Error, QObject::tr("This build of MO2 Revamped has no Nexus SSO "
+                                "registration; use the API key or sign in."));
+    return;
+  }
+
   m_active = true;
   setState(ConnectingToSSO);
   m_timeout.start();
@@ -507,6 +515,7 @@ void ValidationAttempt::onFinished()
 
   const auto code =
       m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+  m_httpStatus = code;
 
   if (code == 0) {
     // request wasn't even sent
@@ -883,9 +892,10 @@ void NexusKeyValidator::onAttemptFailure(const ValidationAttempt& a)
     attemptFinished(a);
   }
 
-  // MO2 Revamped: Nexus refused the sign-in's token: the next attempt renews
-  // it before asking again
-  if (m_bearer && a.result() != ValidationAttempt::Cancelled) {
+  // MO2 Revamped: Nexus refused the sign-in's token (401): the next attempt
+  // renews it before asking again. A timeout or a network error says nothing
+  // about the token, so it is kept
+  if (m_bearer && a.httpStatus() == 401) {
     m_manager.oauth()->invalidateAccessToken();
   }
 
@@ -942,6 +952,10 @@ NXMAccessManager::NXMAccessManager(QObject* parent, Settings* s,
   connect(m_oauth, &NexusOAuth::sessionEnded, this, [this](const QString& message) {
     log::warn("{}", message);
     clearApiKey();
+    // a stored API key (kept while signed in) takes over again
+    if (GlobalSettings::hasNexusApiKey()) {
+      startStoredCheck(true);
+    }
   });
 
   m_validator.finished = [&](auto&& r, auto&& m, auto&& u) {
