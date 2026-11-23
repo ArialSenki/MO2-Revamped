@@ -88,7 +88,14 @@ QUrl authorizeUrl(const QString& clientId, const QString& redirectUri,
 QByteArray codeExchangeBody(const QString& clientId, const QString& redirectUri,
                             const QString& code, const QString& verifier);
 QByteArray refreshBody(const QString& clientId, const QString& refreshToken);
-QByteArray revokeBody(const QString& clientId, const QString& token);
+// RFC 7009; hint is "refresh_token" or "access_token"
+QByteArray revokeBody(const QString& clientId, const QString& token,
+                      const QString& hint = QStringLiteral("refresh_token"));
+
+// MO2R_NEXUS_API_BASE, the API address of a local stub for tests: taken only
+// in a dev build and only as http on 127.0.0.1 or localhost, without the
+// trailing "/"; empty otherwise (the real API is used)
+QString apiBaseOverride(const QString& value, bool devBuild);
 
 // what came to the loopback listener
 struct Redirect

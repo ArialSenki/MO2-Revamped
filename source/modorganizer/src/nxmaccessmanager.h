@@ -120,6 +120,10 @@ public:
   void cancel();
 
   bool done() const;
+
+  // MO2 Revamped: the HTTP status of the answer; 0 without one (a timeout, no
+  // connection, cancelled)
+  int httpStatus() const { return m_httpStatus; }
   // started and still waiting for Nexus
   bool running() const;
   Result result() const;
@@ -134,6 +138,7 @@ private:
   QTimer m_timeout;
   QElapsedTimer m_elapsed;
   bool m_bearer = false;
+  int m_httpStatus = 0;
 
   bool sendRequest(NXMAccessManager& m, const QString& key);
 

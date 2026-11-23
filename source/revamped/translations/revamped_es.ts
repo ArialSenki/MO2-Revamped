@@ -22691,6 +22691,10 @@ Para abrirlos en otro programa, activa Usar un editor externo en Ajustes &gt; Pl
       <source>Signed in to Nexus Mods as %1.</source>
       <translation>Sesión iniciada en Nexus Mods como %1.</translation>
     </message>
+    <message>
+      <source>Signed out of Nexus Mods. The stored API key is used again.</source>
+      <translation>Sesión de Nexus Mods cerrada. Se vuelve a usar la clave API guardada.</translation>
+    </message>
   </context>
   <context>
     <name>QObject</name>

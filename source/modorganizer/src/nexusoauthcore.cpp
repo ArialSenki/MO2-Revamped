@@ -134,11 +134,25 @@ QByteArray refreshBody(const QString& clientId, const QString& refreshToken)
                    {"refresh_token", refreshToken}});
 }
 
-QByteArray revokeBody(const QString& clientId, const QString& token)
+QByteArray revokeBody(const QString& clientId, const QString& token, const QString& hint)
 {
-  return formBody({{"client_id", clientId},
-                   {"token", token},
-                   {"token_type_hint", QStringLiteral("refresh_token")}});
+  return formBody({{"client_id", clientId}, {"token", token}, {"token_type_hint", hint}});
+}
+
+QString apiBaseOverride(const QString& value, bool devBuild)
+{
+  const QString v = value.trimmed();
+  if (!devBuild || v.isEmpty()) {
+    return {};
+  }
+  const QUrl url(v, QUrl::StrictMode);
+  if (!url.isValid() || url.scheme() != QLatin1String("http") ||
+      !url.userInfo().isEmpty() ||
+      (url.host() != QLatin1String("127.0.0.1") &&
+       url.host() != QLatin1String("localhost"))) {
+    return {};
+  }
+  return v.endsWith(QLatin1Char('/')) ? v.chopped(1) : v;
 }
 
 QString redirectHost(quint16 port)

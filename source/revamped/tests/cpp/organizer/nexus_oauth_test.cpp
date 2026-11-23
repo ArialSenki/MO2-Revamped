@@ -106,6 +106,24 @@ void testBodies()
            "grant_type=refresh_token&client_id=cid&refresh_token=r%3Dt");
   CHECK_EQ(QString::fromLatin1(revokeBody("cid", "rt")),
            "client_id=cid&token=rt&token_type_hint=refresh_token");
+  CHECK_EQ(QString::fromLatin1(revokeBody("cid", "at", "access_token")),
+           "client_id=cid&token=at&token_type_hint=access_token");
+}
+
+void testApiBaseOverride()
+{
+  // a dev build takes a local http stub, without the trailing "/"
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1:8080/", true), "http://127.0.0.1:8080");
+  CHECK_EQ(apiBaseOverride(" http://localhost:9 ", true), "http://localhost:9");
+  // a release build never does
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1:8080", false), "");
+  CHECK_EQ(apiBaseOverride("", true), "");
+  // nothing off this computer, nothing but http, no user info tricks
+  CHECK_EQ(apiBaseOverride("https://127.0.0.1:8080", true), "");
+  CHECK_EQ(apiBaseOverride("http://evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://127.0.0.1.evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://localhost@evil.example", true), "");
+  CHECK_EQ(apiBaseOverride("http://evil.example@127.0.0.1", true), "");
 }
 
 void testRedirect()
@@ -316,6 +334,7 @@ int main()
   testPkce();
   testAuthorizeUrl();
   testBodies();
+  testApiBaseOverride();
   testRedirect();
   testResponse();
   testTokens();

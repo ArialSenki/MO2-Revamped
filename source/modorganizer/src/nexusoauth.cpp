@@ -572,18 +572,30 @@ void NexusOAuth::signOut()
 
   load();
   const QString refresh = m_refreshToken;
+  const QString access  = m_accessToken;
   forget();
   finishWaiting(false, tr("Signed out of Nexus."));
 
-  if (!refresh.isEmpty() && available()) {
-    // RFC 7009, at the revocation endpoint Nexus' discovery document lists;
-    // the tokens are already gone here, whatever Nexus answers
-    QNetworkReply* reply = postForm(core::RevokeUrl, core::revokeBody(clientId(), refresh));
-    connect(reply, &QNetworkReply::finished, reply, [reply] {
-      log::debug("nexus: sign-out revocation answered {}",
-                 reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
-      reply->deleteLater();
-    });
+  if (available()) {
+    // RFC 7009, at the revocation endpoint Nexus' discovery document lists:
+    // the refresh token and the access token, which would otherwise stay
+    // valid until it expires. The tokens are already gone here, whatever
+    // Nexus answers
+    const auto revoke = [this](const QString& token, const char* hint) {
+      QNetworkReply* reply = postForm(
+          core::RevokeUrl, core::revokeBody(clientId(), token, QString::fromLatin1(hint)));
+      connect(reply, &QNetworkReply::finished, reply, [reply, hint] {
+        log::debug("nexus: sign-out revocation ({}) answered {}", hint,
+                   reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
+        reply->deleteLater();
+      });
+    };
+    if (!refresh.isEmpty()) {
+      revoke(refresh, "refresh_token");
+    }
+    if (!access.isEmpty()) {
+      revoke(access, "access_token");
+    }
   }
 
   log::info("nexus: signed out of Nexus Mods (OAuth)");

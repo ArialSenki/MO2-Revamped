@@ -382,6 +382,25 @@ void NexusConnectionUI::onSignInFinished(bool ok, const QString& message)
 
 void NexusConnectionUI::disconnect()
 {
+  // MO2 Revamped: with a Nexus sign-in (OAuth), Disconnect ends only the
+  // sign-in; a stored API key stays and is used again
+  NexusOAuth* oauth = sharedOAuth();
+  if (oauth && (oauth->hasSession() || oauth->signInActive())) {
+    oauth->signOut();
+    auto* manager = NexusInterface::instance().getAccessManager();
+    manager->clearApiKey();
+    const bool key = GlobalSettings::hasNexusApiKey();
+    if (key) {
+      manager->startStoredCheck(true);
+    }
+    updateState();
+    emit keyChanged();
+    m_log->clear();
+    addLog(key ? tr("Signed out of Nexus Mods. The stored API key is used again.")
+               : tr("Disconnected."));
+    return;
+  }
+
   clearKey();
   m_log->clear();
   addLog(tr("Disconnected."));
@@ -436,9 +455,9 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
   NexusOAuth* oauth     = sharedOAuth();
 
   if (user && fromSignIn) {
-    // MO2 Revamped: one way to Nexus at a time: the sign-in replaces a stored
-    // API key
-    GlobalSettings::clearNexusApiKey();
+    // MO2 Revamped: the sign-in goes before a stored API key, which stays: the
+    // credential is shared with the original MO2, and signing out uses it
+    // again
     NexusInterface::instance().getAccessManager()->setLinkedAccount(*user);
     addLog(tr("Signed in to Nexus Mods as %1.").arg(user->name()));
     updateState();
@@ -545,11 +564,12 @@ void NexusConnectionUI::updateState()
     setButton(m_manual, true, QObject::tr("Cancel"));
     setButton(m_signIn, false, signInText);
   } else if (GlobalSettings::hasNexusCredentials()) {
-    // api key or sign-in present
+    // api key or sign-in present. MO2 Revamped: with only an API key, the
+    // sign-in is still offered (it goes before the key, which stays)
     setButton(m_connect, false, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, true);
     setButton(m_manual, false, QObject::tr("Enter API key manually"));
-    setButton(m_signIn, false, signInText);
+    setButton(m_signIn, !(oauth && oauth->hasSession()), signInText);
   } else {
     // api key not present
     setButton(m_connect, true, QObject::tr("Connect to Nexus"));

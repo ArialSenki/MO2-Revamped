@@ -22,6 +22,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "bbcode.h"
 #include "iplugingame.h"
 #include "nexusoauth.h"
+#include "nexusoauthcore.h"
 #include "nxmaccessmanager.h"
 #include "selectiondialog.h"
 #include "selfupdater.h"
@@ -1710,18 +1711,23 @@ APIStats NexusInterface::getAPIStats() const
 namespace
 {
 // MO2 Revamped: the API's address; MO2R_NEXUS_API_BASE replaces it for tests
-// against a local stub (a fake 429), and only with an address on this
-// computer, so the API key never goes anywhere else
+// against a local stub (a fake 429), only in a dev build (a version on the dev
+// channel: alpha, dev...) and only with an address on this computer, so the
+// API key never goes anywhere else. A release build ignores it
 QString apiBase()
 {
   static const QString base = [] {
     const QString value = qEnvironmentVariable("MO2R_NEXUS_API_BASE").trimmed();
-    const QUrl url(value);
-    if (!value.isEmpty() && url.scheme() == QLatin1String("http") &&
-        (url.host() == QLatin1String("127.0.0.1") ||
-         url.host() == QLatin1String("localhost"))) {
-      log::warn("Nexus API requests go to the test address {}", value);
-      return value.endsWith(QLatin1Char('/')) ? value.chopped(1) : value;
+    const bool devBuild = SelfUpdater::buildChannel() == SelfUpdater::UpdateChannel::Dev;
+    const QString test  = NexusOAuthCore::apiBaseOverride(value, devBuild);
+    if (!test.isEmpty()) {
+      log::warn("Nexus API requests go to the test address {}", test);
+      return test;
+    }
+    if (!value.isEmpty()) {
+      log::warn("MO2R_NEXUS_API_BASE is ignored: {}",
+                devBuild ? "only an http address on 127.0.0.1 or localhost is taken"
+                         : "only a dev build takes it");
     }
     return QStringLiteral("https://api.nexusmods.com");
   }();
