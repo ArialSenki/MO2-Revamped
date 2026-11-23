@@ -2,7 +2,8 @@
 outline, "M2" inside) into the program's images. Writes to the folder given as
 the first argument:
 
-  logo.ico       -> src/mo_icon.ico, branding/MO2-Revamped.ico, installer app.ico
+  logo.ico       -> src/mo_icon.ico, branding/MO2-Revamped.ico, installer app.ico,
+                    nxmhandler/src/mo_icon.ico
   logo-1254.png  -> src/resources/mo_icon.png, branding/MO2-Revamped-icon.png
   logo-256.png   -> installer/qtui/resources/icon.png
   banner.png     -> src/splash.png, branding/MO2-Revamped-about.png
