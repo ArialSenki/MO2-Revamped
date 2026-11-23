@@ -211,6 +211,221 @@ QString hex(const QColor& c)
   return c.name(QColor::HexRgb).toUpper();
 }
 
+// MO2 Revamped: an old MO2 theme (skyrim.qss, Paper, vs15...) has no mo2r-theme
+// header, so nothing told the Fluent parts drawn on top of it (cards, switches,
+// the navigation, the accent) its colors: they stayed Fluent's grey and blue on
+// the theme's own. Its colors are read from its rules instead: the window and
+// text from the QWidget (or QMainWindow, QDialog) rule, the surface from the
+// item views and fields, the border from the borders it draws most, the muted
+// text from :disabled, the accent from :hover, :focus and selections
+struct SheetRule
+{
+  QString selectors;
+  QMap<QString, QString> values;
+};
+
+QList<SheetRule> sheetRules(QString sheet)
+{
+  static const QRegularExpression comments(QStringLiteral("/\\*.*?\\*/"),
+                                           QRegularExpression::DotMatchesEverythingOption);
+  sheet.remove(comments);
+  static const QRegularExpression block(QStringLiteral("([^{}]+)\\{([^{}]*)\\}"));
+  QList<SheetRule> rules;
+  auto it = block.globalMatch(sheet);
+  while (it.hasNext()) {
+    const auto m = it.next();
+    SheetRule rule;
+    rule.selectors = m.captured(1).simplified();
+    for (const QString& declaration : m.captured(2).split(';')) {
+      const int colon = declaration.indexOf(':');
+      if (colon > 0) {
+        rule.values.insert(declaration.left(colon).trimmed().toLower(),
+                           declaration.mid(colon + 1).trimmed());
+      }
+    }
+    rules.append(rule);
+  }
+  return rules;
+}
+
+// the first color in a value ("1px solid #5F5F5E", "qlineargradient(...)")
+QColor colorIn(const QString& value)
+{
+  static const QRegularExpression color(
+      QStringLiteral("#[0-9A-Fa-f]{3,8}\\b|rgba?\\([^)]*\\)|\\b(black|white|gray|grey)\\b"));
+  const auto m = color.match(value);
+  if (!m.hasMatch()) {
+    return {};
+  }
+  QString text = m.captured(0);
+  // Qt's rgba() takes 0-255 alpha, a sheet often 0-1: only the color counts here
+  static const QRegularExpression rgba(QStringLiteral("rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)"));
+  if (const auto c = rgba.match(text); c.hasMatch()) {
+    return QColor(c.captured(1).toInt(), c.captured(2).toInt(), c.captured(3).toInt());
+  }
+  const QColor parsed(text);
+  return parsed.isValid() ? QColor(parsed.rgb()) : QColor();
+}
+
+bool selectorHas(const QString& selectors, const QStringList& names)
+{
+  for (const QString& one : selectors.split(',')) {
+    const QString first = one.trimmed().section(' ', 0, 0);
+    for (const QString& name : names) {
+      if (first.compare(name, Qt::CaseInsensitive) == 0 || first == QStringLiteral("*")) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+QMap<QString, QColor> guessColors(const QString& sheet)
+{
+  QMap<QString, QColor> colors;
+  const auto rules = sheetRules(sheet);
+  const auto background = [](const SheetRule& rule) {
+    const QColor c = colorIn(rule.values.value(QStringLiteral("background-color")));
+    return c.isValid() ? c : colorIn(rule.values.value(QStringLiteral("background")));
+  };
+
+  for (const auto& rule : rules) {
+    if (!selectorHas(rule.selectors, {QStringLiteral("QWidget"), QStringLiteral("QMainWindow"),
+                                      QStringLiteral("QDialog")})) {
+      continue;
+    }
+    if (!colors.contains(QStringLiteral("window")) && background(rule).isValid()) {
+      colors.insert(QStringLiteral("window"), background(rule));
+    }
+    if (const QColor text = colorIn(rule.values.value(QStringLiteral("color")));
+        !colors.contains(QStringLiteral("text")) && text.isValid()) {
+      colors.insert(QStringLiteral("text"), text);
+    }
+  }
+
+  const QStringList surfaces = {QStringLiteral("QAbstractItemView"), QStringLiteral("QTreeView"),
+                                QStringLiteral("QListView"), QStringLiteral("QTableView"),
+                                QStringLiteral("QLineEdit"), QStringLiteral("QTextEdit"),
+                                QStringLiteral("QPlainTextEdit")};
+  QMap<QRgb, int> borders, accents, fills, hues;
+  for (const auto& rule : rules) {
+    if (const QColor fill = background(rule);
+        fill.isValid() && fill != colors.value(QStringLiteral("window"))) {
+      fills[fill.rgb()] += 1;
+    }
+    // any color with a hue (a link, a progress bar's gradient), for a theme
+    // whose states have none
+    for (auto v = rule.values.cbegin(); v != rule.values.cend(); ++v) {
+      static const QRegularExpression anyColor(QStringLiteral("#[0-9A-Fa-f]{6}\\b"));
+      auto all = anyColor.globalMatch(v.value());
+      while (all.hasNext()) {
+        const QColor c(all.next().captured(0));
+        if (c.hsvSaturationF() > 0.25 && c.valueF() > 0.4) {
+          hues[c.rgb()] += 1;
+        }
+      }
+    }
+    if (!colors.contains(QStringLiteral("surface")) && !rule.selectors.contains(':') &&
+        selectorHas(rule.selectors, surfaces) && background(rule).isValid() &&
+        background(rule) != colors.value(QStringLiteral("window"))) {
+      colors.insert(QStringLiteral("surface"), background(rule));
+    }
+    for (auto v = rule.values.cbegin(); v != rule.values.cend(); ++v) {
+      if (v.key().startsWith(QStringLiteral("border")) && !v.key().contains("radius") &&
+          !v.key().contains("width") && !v.key().contains("style")) {
+        if (const QColor c = colorIn(v.value()); c.isValid()) {
+          borders[c.rgb()] += rule.selectors.contains(':') ? 0 : 1;
+        }
+      }
+    }
+    const bool state = rule.selectors.contains(QStringLiteral(":hover")) ||
+                       rule.selectors.contains(QStringLiteral(":focus")) ||
+                       rule.selectors.contains(QStringLiteral(":checked")) ||
+                       rule.selectors.contains(QStringLiteral(":selected"));
+    for (auto v = rule.values.cbegin(); v != rule.values.cend(); ++v) {
+      const bool selection = v.key() == QStringLiteral("selection-background-color");
+      if ((state || selection) && (v.key().contains("color") || v.key().startsWith("border"))) {
+        const QColor c = colorIn(v.value());
+        // an accent has a hue; greys are borders and fills
+        if (c.isValid() && c.hsvSaturationF() > 0.25 && c.valueF() > 0.3) {
+          accents[c.rgb()] += 1;
+        }
+      }
+    }
+    if (rule.selectors.contains(QStringLiteral(":disabled")) &&
+        !colors.contains(QStringLiteral("muted"))) {
+      if (const QColor c = colorIn(rule.values.value(QStringLiteral("color"))); c.isValid()) {
+        colors.insert(QStringLiteral("muted"), c);
+      }
+    }
+  }
+  const auto most = [](const QMap<QRgb, int>& counts) {
+    QRgb best = 0;
+    int n     = -1;
+    for (auto it = counts.cbegin(); it != counts.cend(); ++it) {
+      if (it.value() > n) {
+        best = it.key();
+        n    = it.value();
+      }
+    }
+    return n < 0 ? QColor() : QColor(best);
+  };
+  if (const QColor b = most(borders); b.isValid()) {
+    colors.insert(QStringLiteral("border"), b);
+  }
+  if (const QColor a = most(accents); a.isValid()) {
+    colors.insert(QStringLiteral("accent"), a);
+  } else if (const QColor h = most(hues); h.isValid()) {
+    colors.insert(QStringLiteral("accent"), h);
+  }
+  // the item views' own fill, or the fill the theme uses most (hover, menus)
+  if (!colors.contains(QStringLiteral("surface"))) {
+    if (const QColor f = most(fills); f.isValid()) {
+      colors.insert(QStringLiteral("surface"), f);
+    }
+  }
+  // secondary text must stay readable: a disabled color is often too faint
+  // for every caption the Fluent parts draw in muted
+  const QColor window = colors.value(QStringLiteral("window"));
+  const QColor text   = colors.value(QStringLiteral("text"));
+  if (window.isValid() && text.isValid()) {
+    const QColor muted = colors.value(QStringLiteral("muted"));
+    const auto contrast = [](const QColor& a, const QColor& b) {
+      const auto lum = [](const QColor& c) {
+        const auto ch = [](double v) {
+          return v <= 0.03928 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * ch(c.redF()) + 0.7152 * ch(c.greenF()) + 0.0722 * ch(c.blueF());
+      };
+      const double la = lum(a), lb = lum(b);
+      return (std::max(la, lb) + 0.05) / (std::min(la, lb) + 0.05);
+    };
+    if (!muted.isValid() || contrast(muted, window) < 4.5) {
+      colors.insert(QStringLiteral("muted"), mix(window, text, 0.62));
+    }
+  }
+  return colors;
+}
+
+// the name in an old theme's first comment ("Skyrim", above its author)
+QString commentName(const QString& head)
+{
+  static const QRegularExpression first(QStringLiteral("^\\s*/\\*!?(.*?)\\*/"),
+                                        QRegularExpression::DotMatchesEverythingOption);
+  const auto m = first.match(head);
+  if (!m.hasMatch()) {
+    return {};
+  }
+  for (QString line : m.captured(1).split('\n')) {
+    static const QRegularExpression decoration(QStringLiteral("^[\\s*=!\\-]+|[\\s*=\\-]+$"));
+    line.remove(decoration);
+    if (!line.isEmpty()) {
+      return line.contains(':') || line.size() > 40 ? QString() : line;
+    }
+  }
+  return {};
+}
+
 // recolors every #rgb, #rrggbb, rgb() and rgba() in the sheet
 QString recolorSheet(const Theme& theme, const QString& sheet)
 {
@@ -424,6 +639,21 @@ std::optional<Theme> load(const QString& stylesheetsDir, const QString& fileName
         log::warn("theme '{}': unknown key '{}'", fileName, key);
       }
     }
+  }
+
+  if (!header.hasMatch()) {
+    // an old MO2 theme: its colors from its rules, its name from its comment
+    file.seek(0);
+    theme.colors = guessColors(decodeText(file.readAll()));
+    if (const QString name = commentName(head); !name.isEmpty()) {
+      theme.name = name.left(60);
+    }
+    QStringList found;
+    for (auto it = theme.colors.cbegin(); it != theme.colors.cend(); ++it) {
+      found << it.key() + "=" + hex(it.value());
+    }
+    log::debug("theme '{}' has no mo2r-theme header; colors read from its rules: {}",
+               fileName, found.join(QStringLiteral(", ")));
   }
 
   if (dark) {
