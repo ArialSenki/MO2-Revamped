@@ -99,9 +99,9 @@ colors always win.
 
 Rules the old theme has for whole widget types can still clash with Revamped's
 layout, for instance `QWidget { background-color: ... }` behind the options in
-a card, or margins between buttons. [`docs/themes/Skyrim.qss`](themes/Skyrim.qss)
-is chintsu_kun's Skyrim theme ported this way: a header with its colors, one rule
-removed and one added, each marked in the file.
+a card, or margins between buttons. To port such a theme, add the header with
+its colors and adjust or remove the rules that clash, marking each change in the
+file. Only share a ported theme if its license allows modified copies.
 
 ## Keep a copy
 
