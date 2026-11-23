@@ -24,9 +24,6 @@ class MorrowindGame : public BethesdaGame
 public:
   MorrowindGame();
 
-public:  // IPlugin
-  QString description() const override;
-
 public:  // IPluginGame
   // the game folder: Morrowind.ini and Saves are there
   QDir documentsDirectory() const override;

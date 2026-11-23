@@ -17138,6 +17138,10 @@ Splash screen by %2.</source>
       <source>&lt;p&gt;Some active mods have F4SE plugins, but no mod has %1, the Address Library for this game version (%2). Most F4SE plugins need it, and without it they don&apos;t load or the game closes at start.&lt;/p&gt;&lt;p&gt;Install &quot;Address Library for F4SE Plugins&quot; from Nexus (the file for your game version) and activate it.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Certains mods actifs ont des plugins F4SE, mais aucun mod ne contient %1, l&apos;Address Library pour cette version du jeu (%2). La plupart des plugins F4SE en ont besoin : sans elle, ils ne se chargent pas ou le jeu se ferme au démarrage.&lt;/p&gt;&lt;p&gt;Installez « Address Library for F4SE Plugins » depuis Nexus (le fichier pour votre version du jeu) et activez-le.&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
+    </message>
   </context>
   <context>
     <name>GameFallout4VR</name>
@@ -17150,6 +17154,10 @@ Splash screen by %2.</source>
 Splash screen by %2.</source>
       <translation>Ajoute la prise en charge de %1.
 Écran de démarrage par %2.</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
     </message>
   </context>
   <context>
@@ -17178,6 +17186,10 @@ Splash screen by %2.</source>
 Splash screen by %2.</source>
       <translation>Ajoute la prise en charge de %1.
 Écran de démarrage par %2.</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Ajoute la prise en charge de %1.</translation>
     </message>
   </context>
   <context>

@@ -2299,26 +2299,42 @@ void MOSplash::close()
 }
 
 QString MOSplash::getSplashPath(const Settings& settings, const QString& dataPath,
-                                const MOBase::IPluginGame* game) const
+                                const MOBase::IPluginGame*) const
 {
   if (!settings.useSplash()) {
     return {};
   }
 
-  // try splash from instance directory
+  // a splash of the user's own in the instance directory
   const QString splashPath = dataPath + "/splash.png";
   if (QFile::exists(dataPath + "/splash.png")) {
-    // earlier versions left a copy of their logo here, which would show forever
-    static const QStringList oldLogos = {
+    // earlier versions left a copy of their logo here, which would show
+    // forever: by file for MO2 Revamped's first one, and by pixels for the ones
+    // MO2 2.5.2 saved again itself (its own, and the Fallout 4, Fallout 4 VR
+    // and Morrowind plugins')
+    static const QStringList oldLogoFiles = {
         "4e77a09b7ca9969486d7167d4349a947f15acef8"};
+    static const QStringList oldLogoPixels = {
+        "71c5aece7ff771864eea661a3fd239de15272059",
+        "bd70a1840cd2cb439865795d68f0c3d7d7c15dcf",
+        "e891aec2faf5d51876fed6d97cd8d71ef1a9b298"};
     QFile copy(splashPath);
-    const bool oldLogo =
+    bool oldLogo =
         copy.open(QIODevice::ReadOnly) &&
-        oldLogos.contains(QString::fromLatin1(
+        oldLogoFiles.contains(QString::fromLatin1(
             QCryptographicHash::hash(copy.readAll(), QCryptographicHash::Sha1).toHex()));
     copy.close();
 
     QImage image(splashPath);
+    if (!oldLogo && !image.isNull()) {
+      const QImage pixels = image.convertToFormat(QImage::Format_ARGB32);
+      oldLogo = oldLogoPixels.contains(QString::fromLatin1(
+          QCryptographicHash::hash(
+              QByteArrayView(reinterpret_cast<const char*>(pixels.constBits()),
+                             pixels.sizeInBytes()),
+              QCryptographicHash::Sha1)
+              .toHex()));
+    }
     if (oldLogo) {
       QFile::remove(splashPath);
     } else if (!image.isNull()) {
@@ -2326,14 +2342,10 @@ QString MOSplash::getSplashPath(const Settings& settings, const QString& dataPat
     }
   }
 
-  // try splash from plugin
-  QString pluginSplash = QString(":/%1/splash").arg(game->gameShortName());
-  if (QFile::exists(pluginSplash)) {
-    QImage image(pluginSplash);
-    if (!image.isNull()) {
-      return pluginSplash;
-    }
-  }
+  // MO2 Revamped: no splash from the game plugin. 2.5.2 showed
+  // ":/<game>/splash" (Fallout 4, Fallout 4 VR and Morrowind had one, with the
+  // old "Mod Organizer 2" logo), so the logo changed with the game, and only
+  // when the plugin happened to be loaded this early
 
   // try default splash from resource
   QString defaultSplash = ":/MO/gui/splash";

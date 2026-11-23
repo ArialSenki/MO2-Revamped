@@ -4,8 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 
 # named game_fallout4vr.dll like the plugin it replaces (MO2 and the installer
 # know the game by that file); the target is rv_game_* to keep it apart
-# from the old plugin's sources in source/upstream. fallout4vr.qrc (the splash screen) is picked up by
-# mo2_configure_plugin.
+# from the old plugin's sources in source/upstream.
 add_library(rv_game_fallout4vr SHARED)
 set_target_properties(rv_game_fallout4vr PROPERTIES OUTPUT_NAME game_fallout4vr)
 mo2_configure_plugin(rv_game_fallout4vr

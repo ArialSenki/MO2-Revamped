@@ -16931,6 +16931,10 @@ Tela inicial por %2.</translation>
       <source>&lt;p&gt;Some active mods have F4SE plugins, but no mod has %1, the Address Library for this game version (%2). Most F4SE plugins need it, and without it they don&apos;t load or the game closes at start.&lt;/p&gt;&lt;p&gt;Install &quot;Address Library for F4SE Plugins&quot; from Nexus (the file for your game version) and activate it.&lt;/p&gt;</source>
       <translation>&lt;p&gt;Alguns mods ativos têm plugins do F4SE, mas nenhum mod tem %1, a Address Library para esta versão do jogo (%2). A maioria dos plugins do F4SE precisa dela: sem ela, eles não carregam ou o jogo fecha ao iniciar.&lt;/p&gt;&lt;p&gt;Instale &quot;Address Library for F4SE Plugins&quot; pela Nexus (o arquivo para sua versão do jogo) e ative-o.&lt;/p&gt;</translation>
     </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Adiciona suporte a %1.</translation>
+    </message>
   </context>
   <context>
     <name>GameFallout4VR</name>
@@ -16943,6 +16947,10 @@ Tela inicial por %2.</translation>
 Splash screen by %2.</source>
       <translation>Adiciona suporte a %1.
 Tela inicial por %2.</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Adiciona suporte a %1.</translation>
     </message>
   </context>
   <context>
@@ -16971,6 +16979,10 @@ Tela inicial por %2.</translation>
 Splash screen by %2.</source>
       <translation>Adiciona suporte a %1.
 Tela inicial por %2.</translation>
+    </message>
+    <message>
+      <source>Adds support for %1.</source>
+      <translation>Adiciona suporte a %1.</translation>
     </message>
   </context>
   <context>

@@ -4,8 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 
 # named game_morrowind.dll like the plugin it replaces (MO2 and the installer
 # know the game by that file); the target is rv_game_* to keep it apart
-# from the old plugin's sources in source/upstream. morrowind.qrc (the splash screen) is picked up by
-# mo2_configure_plugin.
+# from the old plugin's sources in source/upstream.
 add_library(rv_game_morrowind SHARED)
 set_target_properties(rv_game_morrowind PROPERTIES OUTPUT_NAME game_morrowind)
 mo2_configure_plugin(rv_game_morrowind

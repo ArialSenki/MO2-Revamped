@@ -1,7 +1,7 @@
 // MO2 Revamped: Fallout 4 VR, on the Bethesda game framework.
 // Copyright (C) 2026 MO2 Revamped. GPL-3.0-or-later, like Mod Organizer 2.
 // The identity, folders, lists and store locations are those of MO2's
-// game_fallout4vr (by the MO2 contributors; splash screen by nekoyoubi),
+// game_fallout4vr (by the MO2 contributors),
 // which instances, Nexus and Wabbajack lists already know the game by.
 #include "gamefallout4vr.h"
 
@@ -69,9 +69,6 @@ namespace
 
   // only Bethesda's key, as MO2's plugin looked (Steam's installs write it)
   constexpr Store StoreOrder[] = {Store::Bethesda};
-
-  constexpr const char* Description =
-      QT_TRANSLATE_NOOP("GameFallout4VR", "Adds support for %1.\nSplash screen by %2.");
 
   constexpr GameDefinition Fallout4VR{
       .pluginName          = u"Fallout 4 VR Support Plugin",
@@ -159,11 +156,6 @@ namespace
 }  // namespace
 
 Fallout4VRGame::Fallout4VRGame() : BethesdaGame(Fallout4VR) {}
-
-QString Fallout4VRGame::description() const
-{
-  return translate(Description).arg(definition().displayName.toString()).arg("nekoyoubi");
-}
 
 QString Fallout4VRGame::steamAPPId() const
 {

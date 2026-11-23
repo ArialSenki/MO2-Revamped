@@ -1,7 +1,7 @@
 // MO2 Revamped: Fallout 4, on the Bethesda game framework.
 // Copyright (C) 2026 MO2 Revamped. GPL-3.0-or-later, like Mod Organizer 2.
 // The identity, folders, lists and store locations are those of MO2's
-// game_fallout4 (by Tannin and the MO2 team; splash screen by nekoyoubi),
+// game_fallout4 (by Tannin and the MO2 team),
 // which instances, Nexus and Wabbajack lists already know the game by.
 #include "gamefallout4.h"
 
@@ -115,9 +115,6 @@ namespace
       "<p>Remove the sTestFile lines from Fallout4Custom.ini (in the profile's folder if "
       "the profile has its own INI files, otherwise in Documents\\My Games\\Fallout4) and "
       "start the game again.</p>");
-  constexpr const char* Description =
-      QT_TRANSLATE_NOOP("GameFallout4", "Adds support for %1.\nSplash screen by %2.");
-
   constexpr GameDefinition Fallout4{
       .pluginName          = u"Fallout 4 Support Plugin",
       .translationContext  = "GameFallout4",
@@ -192,11 +189,6 @@ Fallout4Game::Fallout4Game()
     : BethesdaGame(Fallout4),
       m_ExtenderDiagnose(this, ProblemExtenderVersion, ProblemAddressLibrary, ExtenderTexts)
 {}
-
-QString Fallout4Game::description() const
-{
-  return translate(Description).arg(definition().displayName.toString()).arg("nekoyoubi");
-}
 
 QString Fallout4Game::steamAPPId() const
 {
