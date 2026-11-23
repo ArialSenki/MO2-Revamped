@@ -7714,6 +7714,74 @@ void MainWindow::askFirstStartQuestions()
   }
 }
 
+void MainWindow::offerMergeRecovery()
+{
+  // not over another question (the replaced mods' one)
+  if (QApplication::activeModalWidget() != nullptr) {
+    QTimer::singleShot(1000, this, [this] {
+      offerMergeRecovery();
+    });
+    return;
+  }
+  auto* installer      = m_OrganizerCore.installationManager();
+  // also removes what a merge had extracted when it stopped before touching the mod
+  const auto leftovers = installer->mergeLeftovers();
+  if (leftovers.empty()) {
+    return;
+  }
+  QStringList names;
+  for (const auto& leftover : leftovers) {
+    names.append(leftover.mod);
+  }
+
+  enum
+  {
+    Later = 0,
+    Finish,
+    Undo
+  };
+  FluentContentDialog dialog(
+      this, QStringLiteral("UnfinishedMergeDialog"), tr("Finish merging mods"),
+      tr("Mod Organizer stopped while it was adding an archive's files to these "
+         "installed mods, so each has only part of them:\n\n%1\n\nFinish adds the rest "
+         "of the files. Undo takes out the ones already added and puts back the files "
+         "they replaced, so the mods are as they were before. Later changes nothing, "
+         "and Mod Organizer asks again at the next start.")
+          .arg(names.join(QLatin1Char('\n'))));
+  auto* finish = dialog.addButton(tr("Finish"), true);
+  auto* undo   = dialog.addButton(tr("Undo"));
+  auto* later  = dialog.addButton(tr("Later"));
+  connect(finish, &QPushButton::clicked, &dialog, [&dialog] {
+    dialog.done(Finish);
+  });
+  connect(undo, &QPushButton::clicked, &dialog, [&dialog] {
+    dialog.done(Undo);
+  });
+  connect(later, &QPushButton::clicked, &dialog, &QDialog::reject);
+  dialog.resize(560, dialog.sizeHint().height());
+
+  const int choice = dialog.exec();
+  if (choice != Finish && choice != Undo) {
+    return;
+  }
+  QStringList failed;
+  for (const auto& leftover : leftovers) {
+    if (!(choice == Finish ? installer->finishMerge(leftover)
+                           : installer->undoMerge(leftover))) {
+      failed.append(QStringLiteral("%1: %2").arg(leftover.mod,
+                                                 QDir::toNativeSeparators(leftover.slot)));
+    }
+  }
+  if (!failed.isEmpty()) {
+    QMessageBox::warning(this, tr("Finish merging mods"),
+                         tr("These could not be completed; close any program using the "
+                            "mods' files. Their files stay in these folders, and Mod "
+                            "Organizer asks again at the next start:\n\n%1")
+                             .arg(failed.join(QLatin1Char('\n'))));
+  }
+  m_OrganizerCore.refresh();
+}
+
 void MainWindow::offerReplacedModsRecovery()
 {
   // not over another question (the first start's category setup)
@@ -7723,6 +7791,10 @@ void MainWindow::offerReplacedModsRecovery()
     });
     return;
   }
+  // after this one's question, or at once when it has none
+  QTimer::singleShot(0, this, [this] {
+    offerMergeRecovery();
+  });
   auto* installer            = m_OrganizerCore.installationManager();
   QStringList older;
   const QStringList leftovers = installer->replacedLeftovers(&older);

@@ -299,6 +299,20 @@ public:
   // undone: the mod is as it was
   bool mergedModUntouched() const { return m_MergeUntouched; }
 
+  // a Merge that Mod Organizer didn't live to finish
+  struct MergeLeftover
+  {
+    QString slot;
+    QString mod;
+  };
+  // the merges of this instance that stopped while their files were moving into
+  // the mod. Those that stopped before (the mod is whole, the extracted files
+  // are not) are removed here
+  std::vector<MergeLeftover> mergeLeftovers() const;
+  // the rest of the files go into the mod / the mod goes back to how it was
+  bool finishMerge(const MergeLeftover& leftover);
+  bool undoMerge(const MergeLeftover& leftover);
+
   // old versions a Replace left behind in this instance, the newest of each mod;
   // older copies of the same mods go in older
   QStringList replacedLeftovers(QStringList* older = nullptr) const;
@@ -430,7 +444,7 @@ private:
   QStringList replacedFolderRoots() const;
   QString setAsideMod(const QString& modFolder) const;
   void removeAsideSlot(const QString& aside) const;
-  QString makeMergeSlot() const;
+  QString makeMergeSlot(const QString& modFolder) const;
 
   bool m_MergeUntouched = false;
   bool m_ReplacedRestored = false;

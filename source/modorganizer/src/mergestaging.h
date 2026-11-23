@@ -29,6 +29,17 @@ struct Result
 // staged, target and backup should be on one volume (the moves are renames).
 Result apply(const QString& staged, const QString& target, const QString& backup);
 
+// What lets a move that the program didn't live to finish be taken back at the
+// next start: the names of the files under staged, written to planFile before
+// the first one moves.
+bool writePlan(const QString& staged, const QString& planFile);
+
+// After such a stop: every file of the plan that reached target leaves it, and
+// the files it replaced return from backup. False when one of them couldn't.
+// (Finishing instead is apply() again: it moves what is still under staged.)
+bool undoInterrupted(const QString& planFile, const QString& staged, const QString& target,
+                     const QString& backup);
+
 }  // namespace MergeStaging
 
 #endif

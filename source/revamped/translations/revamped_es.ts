@@ -7684,6 +7684,38 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Terminar de reemplazar mods</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Terminar de combinar mods</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer se detuvo mientras añadía los archivos de un paquete a estos mods instalados, así que cada uno tiene solo una parte:
+
+%1
+
+Terminar añade el resto de los archivos. Deshacer quita los que ya se añadieron y devuelve los archivos que reemplazaron, de modo que los mods quedan como estaban. Más tarde no cambia nada, y Mod Organizer volverá a preguntar en el próximo inicio.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Terminar</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Deshacer</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Estos no se han podido completar; cierra los programas que usen los archivos de los mods. Sus archivos siguen en estas carpetas, y Mod Organizer volverá a preguntar en el próximo inicio:
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Restaurar</translation>
     </message>

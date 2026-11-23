@@ -7886,6 +7886,38 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
       <translation>Terminer le remplacement des mods</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Terminer la fusion des mods</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer s&apos;est arrêté pendant qu&apos;il ajoutait les fichiers d&apos;une archive à ces mods installés ; chacun n&apos;en a donc qu&apos;une partie :
+
+%1
+
+Terminer ajoute le reste des fichiers. Annuler retire ceux déjà ajoutés et remet les fichiers qu&apos;ils ont remplacés, pour que les mods soient comme avant. Plus tard ne change rien, et Mod Organizer reposera la question au prochain démarrage.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Terminer</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Ceux-ci n&apos;ont pas pu être terminés ; fermez les programmes qui utilisent les fichiers des mods. Leurs fichiers restent dans ces dossiers, et Mod Organizer reposera la question au prochain démarrage :
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Restaurer</translation>
     </message>

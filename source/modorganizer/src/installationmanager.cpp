@@ -717,25 +717,118 @@ QString InstallationManager::setAsideMod(const QString& modFolder) const
   return {};
 }
 
-QString InstallationManager::makeMergeSlot() const
+namespace
+{
+// in a merge's numbered folder: whose it is, and the files that were moving
+const QString MergeManifestName = QStringLiteral("merging.ini");
+const QString MergePlanName     = QStringLiteral("moving.txt");
+
+QStringList mergeFolderRoots(const QString& modsDirectory)
 {
   // as the replaced mods: beside the mods folder, or inside it when that is a
   // volume of its own, so the files move into the mod without being copied
-  const QString mods = QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory));
+  const QString mods = QDir::cleanPath(QDir::fromNativeSeparators(modsDirectory));
   const QString name = QString::fromLatin1(MergingModsFolder);
   QStringList roots{QDir::cleanPath(QFileInfo(mods).absolutePath() + "/" + name),
                     QDir::cleanPath(mods + "/" + name)};
   roots.removeDuplicates();
-  for (const QString& root : roots) {
+  return roots;
+}
+
+void removeMergeSlot(const QString& slot)
+{
+  QDir(slot).removeRecursively();
+  QDir().rmdir(QFileInfo(slot).absolutePath());
+}
+}  // namespace
+
+QString InstallationManager::makeMergeSlot(const QString& modFolder) const
+{
+  for (const QString& root : mergeFolderRoots(m_ModsDirectory)) {
     QString slot;
     for (int n = 1; slot.isEmpty() || QFileInfo::exists(slot); ++n) {
       slot = root + "/" + QString::number(n);
     }
     if (QDir().mkpath(slot + "/new")) {
+      QSettings manifest(slot + "/" + MergeManifestName, QSettings::IniFormat);
+      manifest.setValue("modsPath",
+                        QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory)));
+      manifest.setValue("mod", QFileInfo(modFolder).fileName());
+      manifest.setValue("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+      manifest.sync();
       return slot;
     }
   }
   return {};
+}
+
+std::vector<InstallationManager::MergeLeftover> InstallationManager::mergeLeftovers() const
+{
+  const QString mods = QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory));
+  std::vector<MergeLeftover> found;
+  for (const QString& root : mergeFolderRoots(m_ModsDirectory)) {
+    const auto slotList = QDir(root).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QFileInfo& slot : slotList) {
+      const QString path         = slot.absoluteFilePath();
+      const QString manifestPath = path + "/" + MergeManifestName;
+      // two instances can share the parent folder: only what says it is this one's
+      if (!QFileInfo::exists(manifestPath)) {
+        continue;
+      }
+      const QSettings manifest(manifestPath, QSettings::IniFormat);
+      if (manifest.value("modsPath").toString().compare(mods, Qt::CaseInsensitive) != 0) {
+        continue;
+      }
+      const QString mod = manifest.value("mod").toString();
+      if (!QFileInfo::exists(path + "/" + MergePlanName)) {
+        // it stopped while extracting: nothing had reached the mod, and the files
+        // here are not all of the archive
+        log::info("removing what a merge into '{}' that did not finish had extracted: {}",
+                  mod, path);
+        removeMergeSlot(path);
+        continue;
+      }
+      if (mod.isEmpty() || mod.contains('/') || mod.contains('\\') ||
+          !QFileInfo(mods + "/" + mod).isDir()) {
+        // the mod is gone or was renamed: the files stay for the user
+        log::warn("the files of an unfinished merge into '{}' are in {}", mod, path);
+        continue;
+      }
+      found.push_back({path, mod});
+    }
+  }
+  return found;
+}
+
+bool InstallationManager::finishMerge(const MergeLeftover& leftover)
+{
+  const QString target =
+      QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory)) + "/" + leftover.mod;
+  const MergeStaging::Result merged =
+      MergeStaging::apply(leftover.slot + "/new", target, leftover.slot + "/old");
+  if (!merged.ok) {
+    log::error("finishing the merge into {} stopped at {}", target, merged.failed);
+    return false;
+  }
+  log::info("finished the merge into {}: {} more files", target, merged.moved);
+  removeMergeSlot(leftover.slot);
+  return true;
+}
+
+bool InstallationManager::undoMerge(const MergeLeftover& leftover)
+{
+  const QString target =
+      QDir::cleanPath(QDir::fromNativeSeparators(m_ModsDirectory)) + "/" + leftover.mod;
+  if (!MergeStaging::undoInterrupted(leftover.slot + "/" + MergePlanName,
+                                     leftover.slot + "/new", target,
+                                     leftover.slot + "/old")) {
+    log::error("the merge into {} could not be undone completely; its files are in {}",
+               target, leftover.slot);
+    return false;
+  }
+  log::info("undid the unfinished merge into {}", target);
+  removeMergeSlot(leftover.slot);
+  return true;
 }
 
 void InstallationManager::removeAsideSlot(const QString& aside) const
@@ -982,7 +1075,7 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
   QString mergeSlot;
   bool keepMergeSlot = false;
   if (merge) {
-    mergeSlot = makeMergeSlot();
+    mergeSlot = makeMergeSlot(targetDirectory);
     if (mergeSlot.isEmpty()) {
       reportError(tr("The folder to extract the files to could not be created next to "
                      "the mods folder. The installed mod was not changed."));
@@ -993,8 +1086,7 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
   }
   ON_BLOCK_EXIT([&]() {
     if (!mergeSlot.isEmpty() && !keepMergeSlot) {
-      QDir(mergeSlot).removeRecursively();
-      QDir().rmdir(QFileInfo(mergeSlot).absolutePath());
+      removeMergeSlot(mergeSlot);
     }
   });
   // an extraction that throws (a damaged archive, a full disk) also leaves it whole
@@ -1028,6 +1120,12 @@ InstallationResult InstallationManager::doInstall(GuessedValue<QString>& modName
   }
 
   if (merge) {
+    // if Mod Organizer doesn't live to finish the move, the next start can
+    if (!MergeStaging::writePlan(extractDirectory, mergeSlot + "/" + MergePlanName)) {
+      reportError(tr("The folder to extract the files to could not be created next to "
+                     "the mods folder. The installed mod was not changed."));
+      return {IPluginInstaller::RESULT_FAILED};
+    }
     const MergeStaging::Result merged =
         MergeStaging::apply(extractDirectory, targetDirectory, mergeSlot + "/old");
     if (!merged.ok) {

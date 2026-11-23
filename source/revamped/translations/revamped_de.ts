@@ -7640,6 +7640,38 @@ Wiederherstellungs-Snapshots wurden aufbewahrt unter: %2</translation>
       <translation>Ersetzen der Mods abschließen</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Zusammenführen von Mods abschließen</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer wurde beendet, während die Dateien eines Archivs zu diesen installierten Mods hinzugefügt wurden; jede hat nur einen Teil davon:
+
+%1
+
+Abschließen fügt die restlichen Dateien hinzu. Rückgängig entfernt die bereits hinzugefügten und stellt die ersetzten Dateien wieder her, sodass die Mods wie zuvor sind. Später ändert nichts, und Mod Organizer fragt beim nächsten Start erneut.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Abschließen</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Rückgängig</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Diese konnten nicht abgeschlossen werden; schließe alle Programme, die Dateien der Mods verwenden. Ihre Dateien bleiben in diesen Ordnern, und Mod Organizer fragt beim nächsten Start erneut:
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Wiederherstellen</translation>
     </message>

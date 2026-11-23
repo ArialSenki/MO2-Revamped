@@ -7632,6 +7632,38 @@ Os snapshots de recuperação foram mantidos em: %2</translation>
       <translation>Concluir a substituição de mods</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Concluir a mesclagem de mods</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>O Mod Organizer parou enquanto adicionava os arquivos de um pacote a estes mods instalados, então cada um tem só uma parte deles:
+
+%1
+
+Concluir adiciona o restante dos arquivos. Desfazer retira os que já foram adicionados e devolve os arquivos que eles substituíram, deixando os mods como estavam. Mais tarde não muda nada, e o Mod Organizer perguntará de novo na próxima inicialização.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Concluir</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Desfazer</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Não foi possível concluir estes; feche os programas que usam os arquivos dos mods. Os arquivos deles continuam nestas pastas, e o Mod Organizer perguntará de novo na próxima inicialização:
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Restaurar</translation>
     </message>

@@ -8054,6 +8054,38 @@ Gli snapshot di recupero sono stati conservati in: %2</translation>
       <translation>Completa la sostituzione delle mod</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Completa l&apos;unione delle mod</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer si è interrotto mentre aggiungeva i file di un archivio a queste mod installate, quindi ognuna ne ha solo una parte:
+
+%1
+
+Completa aggiunge il resto dei file. Annulla toglie quelli già aggiunti e rimette i file che avevano sostituito, così le mod tornano com&apos;erano. Più tardi non cambia nulla, e Mod Organizer lo chiederà di nuovo al prossimo avvio.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Completa</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Annulla</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Non è stato possibile completare queste; chiudi i programmi che usano i file delle mod. I loro file restano in queste cartelle, e Mod Organizer lo chiederà di nuovo al prossimo avvio:
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Ripristina</translation>
     </message>

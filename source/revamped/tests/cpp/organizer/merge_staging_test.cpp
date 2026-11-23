@@ -167,6 +167,61 @@ void testLocked(const QString& work)
   CHECK(snapshot(c.mod) == before);
 }
 
+// the state a merge is in when the program dies while the files are moving
+void stopPartway(const Case& c)
+{
+  write(c.staged + "/Mod.esp", "new plugin");
+  write(c.staged + "/textures/a.dds", "new a");
+  write(c.staged + "/textures/b.dds", "new b");
+  write(c.staged + "/meshes/deep/m.nif", "new mesh");
+  write(c.staged + "/meshes/later.nif", "new later");
+  CHECK(MergeStaging::writePlan(c.staged, c.staged + "/../moving.txt"));
+  // one replaced and one added file are in the mod
+  QDir().mkpath(c.backup + "/textures");
+  CHECK(QFile::rename(c.mod + "/textures/a.dds", c.backup + "/textures/a.dds"));
+  CHECK(QFile::rename(c.staged + "/textures/a.dds", c.mod + "/textures/a.dds"));
+  QDir().mkpath(c.mod + "/meshes/deep");
+  CHECK(QFile::rename(c.staged + "/meshes/deep/m.nif", c.mod + "/meshes/deep/m.nif"));
+  // and one was set aside when it stopped, its new version not in yet
+  CHECK(QFile::rename(c.mod + "/Mod.esp", c.backup + "/Mod.esp"));
+}
+
+void testUndoInterrupted(const QString& work)
+{
+  Case c(work, "died-undo");
+  const auto before = snapshot(c.mod);
+  stopPartway(c);
+  CHECK(snapshot(c.mod) != before);
+  CHECK(MergeStaging::undoInterrupted(c.staged + "/../moving.txt", c.staged, c.mod, c.backup));
+  CHECK(snapshot(c.mod) == before);
+
+  // a plan with names that leave the mod touches nothing out there
+  Case d(work, "died-plan");
+  write(work + "/died-plan/mods/Other/keep.txt", "other mod");
+  write(d.staged + "/../moving.txt", "../Other/keep.txt\nC:/Windows/x\n\nMod.esp\n");
+  const auto all = snapshot(work + "/died-plan/mods");
+  MergeStaging::undoInterrupted(d.staged + "/../moving.txt", d.staged, d.mod, d.backup);
+  CHECK(snapshot(work + "/died-plan/mods").value("Other/keep.txt") == "other mod");
+  CHECK(snapshot(work + "/died-plan/mods").size() == all.size() - 1);  // Mod.esp: in the plan
+  CHECK(!MergeStaging::undoInterrupted(d.staged + "/../none.txt", d.staged, d.mod, d.backup));
+}
+
+void testFinishInterrupted(const QString& work)
+{
+  Case c(work, "died-finish");
+  stopPartway(c);
+  const auto r = MergeStaging::apply(c.staged, c.mod, c.backup);
+  CHECK(r.ok);
+  CHECK(r.moved == 3);
+  const auto mod = snapshot(c.mod);
+  CHECK(mod.value("Mod.esp") == "new plugin");
+  CHECK(mod.value("textures/a.dds") == "new a");
+  CHECK(mod.value("textures/b.dds") == "new b");
+  CHECK(mod.value("meshes/deep/m.nif") == "new mesh");
+  CHECK(mod.value("meshes/later.nif") == "new later");
+  CHECK(mod.value("textures/keep/only-old.dds") == "only old");
+}
+
 void testNothing(const QString& work)
 {
   Case c(work, "nothing");
@@ -196,6 +251,8 @@ int main(int argc, char** argv)
   testUndo(work, "undo-middle", "textures/blocked.dds");
   testUndo(work, "undo-last", "zzz/last");
   testLocked(work);
+  testUndoInterrupted(work);
+  testFinishInterrupted(work);
   testNothing(work);
 
   std::printf("merge_staging_test: %d passed, %d failed\n", g_passed, g_failed);

@@ -311,6 +311,7 @@ private:
   void askFirstStartQuestions();
 
   void offerReplacedModsRecovery();
+  void offerMergeRecovery();
 
   // MO2 Revamped: once per instance, when the script extender is installed
   // and Run starts something else: offers to start the game through it

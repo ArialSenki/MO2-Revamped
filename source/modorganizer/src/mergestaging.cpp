@@ -143,4 +143,67 @@ Result apply(const QString& stagedDir, const QString& targetDir, const QString& 
   return result;
 }
 
+bool writePlan(const QString& stagedDir, const QString& planFile)
+{
+  const QDir staged(stagedDir);
+  QFile file(planFile);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    return false;
+  }
+  QDirIterator it(stagedDir, QDir::Files | QDir::Hidden | QDir::System,
+                  QDirIterator::Subdirectories);
+  while (it.hasNext()) {
+    it.next();
+    const QByteArray line = staged.relativeFilePath(it.filePath()).toUtf8() + '\n';
+    if (file.write(line) != line.size()) {
+      return false;
+    }
+  }
+  // on the disk before the first file moves
+  return file.flush() && (file.close(), file.error() == QFileDevice::NoError);
+}
+
+bool undoInterrupted(const QString& planFile, const QString& stagedDir,
+                     const QString& targetDir, const QString& backupDir)
+{
+  QFile file(planFile);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return false;
+  }
+  const QString target = QDir::cleanPath(targetDir);
+  bool clean           = true;
+  while (!file.atEnd()) {
+    QByteArray line = file.readLine();
+    while (line.endsWith('\n') || line.endsWith('\r')) {
+      line.chop(1);
+    }
+    const QString rel = QDir::cleanPath(QString::fromUtf8(line));
+    // nothing outside the mod
+    if (rel.isEmpty() || rel == "." || rel.startsWith("..") || QDir::isAbsolutePath(rel)) {
+      continue;
+    }
+    const QString inMod = target + "/" + rel;
+    const QString kept  = backupDir + "/" + rel;
+    const bool moved    = !QFileInfo::exists(stagedDir + "/" + rel);
+    const bool hadOld   = QFileInfo::exists(kept);
+    if (moved && QFileInfo::exists(inMod) && !QFile::remove(inMod)) {
+      clean = false;
+      continue;
+    }
+    if (hadOld) {
+      // not there when the stop came between setting it aside and the new one
+      if (QFileInfo::exists(inMod) || !QFile::rename(kept, inMod)) {
+        clean = false;
+      }
+    } else if (moved) {
+      // the folders made for it, as far as they are empty
+      QString dir = QFileInfo(inMod).absolutePath();
+      while (dir.length() > target.length() && QDir().rmdir(dir)) {
+        dir = QFileInfo(dir).absolutePath();
+      }
+    }
+  }
+  return clean;
+}
+
 }  // namespace MergeStaging
