@@ -82,10 +82,26 @@ paths relative to your theme's file, as in `url(mytheme/background.png)`.
 
 ## Themes made for Mod Organizer 2
 
-A theme made for the classic MO2 interface loads too, on top of Dark (or Light,
-if its name says so). MO2 Revamped's windows are laid out differently, though,
-so it will only partly apply. Adding the header above helps a lot: its colors
-reach what the old theme doesn't.
+A theme made for the classic MO2 interface loads too: drop its `.qss` file (and
+its image folder) into `stylesheets` and it appears in Settings > Appearance as
+"Name (on Dark)", or on Light if its name says so. Its name comes from the
+first line of its opening comment, when that is a short title.
+
+MO2 Revamped draws some parts itself (the cards, switches, navigation, summary
+tiles and the main button), and a style sheet's rules don't reach them. Without
+a header, their colors are read from the theme's rules: the window and text
+from its `QWidget` rule, the surface from its item views or the fill it uses
+most, the border from the borders it draws most, the accent from its hover,
+focus and selection colors (or any color with a hue), and the muted text from
+`:disabled`, made lighter if it would be hard to read. The log says what it
+found (at the debug level). When the guess is off, add the header above: its
+colors always win.
+
+Rules the old theme has for whole widget types can still clash with Revamped's
+layout, for instance `QWidget { background-color: ... }` behind the options in
+a card, or margins between buttons. [`docs/themes/Skyrim.qss`](themes/Skyrim.qss)
+is chintsu_kun's Skyrim theme ported this way: a header with its colors, one rule
+removed and one added, each marked in the file.
 
 ## Keep a copy
 
