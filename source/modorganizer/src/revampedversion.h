@@ -21,6 +21,12 @@
 // instead. Set it to the slug Nexus gives to bring "Connect to Nexus" back
 #define MO2R_NEXUS_SSO_SLUG ""
 
+// the OAuth client id Nexus registers for MO2 Revamped's "Sign in with Nexus
+// Mods" (OAuth 2.0 with PKCE, a public client with a loopback redirect, see
+// nexusoauth.h). Empty until Nexus issues it: Settings then hides the button
+// and everything goes through the personal API key, as before
+#define MO2R_NEXUS_OAUTH_CLIENT_ID ""
+
 // the page in Nexus' Modding Tools section, where moderators asked multi-game
 // tools to live: the update notice links to it
 #define MO2R_NEXUS_PAGE_URL "https://www.nexusmods.com/site/mods/2612"

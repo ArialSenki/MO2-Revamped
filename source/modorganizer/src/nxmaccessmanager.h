@@ -28,7 +28,9 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include <QNetworkReply>
 #include <QProgressDialog>
 #include <QTimer>
+#include <QJsonDocument>
 #include <QWebSocket>
+#include <memory>
 #include <set>
 
 namespace MOBase
@@ -36,6 +38,7 @@ namespace MOBase
 class IPluginGame;
 }
 class NXMAccessManager;
+class NexusOAuth;
 class Settings;
 
 class NexusSSOLogin
@@ -89,6 +92,9 @@ private:
 // can't help, so the failure says where to connect again
 QString nexusKeyRefusedMessage();
 
+// MO2 Revamped: the same for a Nexus sign-in (OAuth) whose token Nexus refused
+QString nexusSignInRefusedMessage();
+
 class ValidationAttempt
 {
 public:
@@ -108,7 +114,9 @@ public:
   ValidationAttempt(const ValidationAttempt&)            = delete;
   ValidationAttempt& operator=(const ValidationAttempt&) = delete;
 
-  void start(NXMAccessManager& m, const QString& key);
+  // bearer: `key` is the access token of a Nexus sign-in (OAuth), checked at
+  // the userinfo endpoint; otherwise an API key, checked at users/validate
+  void start(NXMAccessManager& m, const QString& key, bool bearer = false);
   void cancel();
 
   bool done() const;
@@ -125,10 +133,13 @@ private:
   QString m_message;
   QTimer m_timeout;
   QElapsedTimer m_elapsed;
+  bool m_bearer = false;
 
   bool sendRequest(NXMAccessManager& m, const QString& key);
 
   void onFinished();
+  void onBearerFinished(int code, const QJsonDocument& doc,
+                        const QList<QNetworkReply::RawHeaderPair>& headers);
   void onSslErrors(const QList<QSslError>& errors);
   void onTimeout();
 
@@ -157,6 +168,9 @@ public:
   ~NexusKeyValidator();
 
   void start(const QString& key, Behaviour b);
+  // MO2 Revamped: checks the Nexus sign-in (OAuth) instead of an API key; its
+  // access token is renewed first when it has expired
+  void startOAuth(Behaviour b);
   void cancel();
 
   bool isActive() const;
@@ -167,6 +181,11 @@ private:
   Settings* m_settings;
   NXMAccessManager& m_manager;
   QString m_key;
+  bool m_bearer = false;
+  // waiting for the sign-in's access token before an attempt; the guard tells
+  // the token's callback whether this validator still exists
+  bool m_waitingForToken = false;
+  std::shared_ptr<int> m_alive = std::make_shared<int>(0);
   std::vector<std::unique_ptr<ValidationAttempt>> m_attempts;
 
   // the attempts of the check before: a new check can start from the callback
@@ -232,6 +251,13 @@ public:
 
   void apiCheck(const QString& apiKey, bool force = false);
 
+  // MO2 Revamped: checks what is stored: the Nexus sign-in (OAuth) when there
+  // is one, else the API key; false when neither is
+  bool startStoredCheck(bool force = false);
+
+  // MO2 Revamped: the Nexus sign-in (OAuth); never null
+  NexusOAuth* oauth() const { return m_oauth; }
+
   void clearCookies();
 
   QString userAgent(const QString& subModule = QString()) const;
@@ -282,8 +308,10 @@ private:
   QString m_MOVersion;
   NexusKeyValidator m_validator;
   States m_validationState;
+  NexusOAuth* m_oauth;
 
   void startValidationCheck(const QString& key);
+  void startOAuthCheck();
 
   void onValidatorFinished(ValidationAttempt::Result r, const QString& message,
                            std::optional<APIUserAccount>);

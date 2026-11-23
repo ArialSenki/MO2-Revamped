@@ -20,6 +20,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "nxmaccessmanager.h"
 #include "iplugingame.h"
 #include "nexusinterface.h"
+#include "nexusoauth.h"
+#include "nexusoauthcore.h"
 #include "nxmurl.h"
 #include "persistentcookiejar.h"
 #include "report.h"
@@ -384,8 +386,9 @@ ValidationAttempt::ValidationAttempt(std::chrono::seconds timeout)
   });
 }
 
-void ValidationAttempt::start(NXMAccessManager& m, const QString& key)
+void ValidationAttempt::start(NXMAccessManager& m, const QString& key, bool bearer)
 {
+  m_bearer = bearer;
   if (!sendRequest(m, key)) {
     return;
   }
@@ -398,10 +401,18 @@ void ValidationAttempt::start(NXMAccessManager& m, const QString& key)
 
 bool ValidationAttempt::sendRequest(NXMAccessManager& m, const QString& key)
 {
-  const QString requestUrl(NexusBaseUrl + "/users/validate");
+  // MO2 Revamped: a Nexus sign-in (OAuth) is checked where Vortex checks it,
+  // at the userinfo endpoint with its access token; an API key at
+  // users/validate, as before
+  const QString requestUrl(m_bearer ? QString::fromLatin1(NexusOAuthCore::UserInfoUrl)
+                                    : NexusBaseUrl + "/users/validate");
   QNetworkRequest request(requestUrl);
 
-  request.setRawHeader("APIKEY", key.toUtf8());
+  if (m_bearer) {
+    request.setRawHeader("Authorization", "Bearer " + key.toUtf8());
+  } else {
+    request.setRawHeader("APIKEY", key.toUtf8());
+  }
   // MO2 Revamped: a redirect elsewhere would take the key along
   request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                        QNetworkRequest::SameOriginRedirectPolicy);
@@ -510,6 +521,11 @@ void ValidationAttempt::onFinished()
 
   const QJsonObject data = doc.object();
 
+  if (m_bearer) {
+    onBearerFinished(code, doc, headers);
+    return;
+  }
+
   // the key itself: revoked, changed on Nexus, or mistyped. A 403 that isn't
   // Nexus' own JSON answer comes from something in between (a firewall or
   // proxy page) and is retried as any other failed request
@@ -568,6 +584,51 @@ void ValidationAttempt::onFinished()
           .id(QString("%1").arg(id))
           .name(name)
           .type(premium ? APIUserAccountTypes::Premium : APIUserAccountTypes::Regular)
+          .limits(NexusInterface::parseLimits(headers));
+
+  setSuccess(user);
+}
+
+void ValidationAttempt::onBearerFinished(int code, const QJsonDocument& doc,
+                                         const QList<QNetworkReply::RawHeaderPair>& headers)
+{
+  // the token expired or was revoked: the validator drops it and the next
+  // attempt renews it first; when Nexus refuses the renewal too, the session
+  // ends there (NexusOAuth::sessionEnded)
+  if (code == 401) {
+    setFailure(SoftError, nexusSignInRefusedMessage() + QString(" (%1)").arg(code));
+    return;
+  }
+  if (code == 403 && doc.isObject()) {
+    setFailure(HardError, nexusSignInRefusedMessage() + QString(" (%1)").arg(code));
+    return;
+  }
+
+  if (code != 200) {
+    QString s = NexusOAuthCore::redactSecrets(m_reply->errorString());
+    if (s.isEmpty()) {
+      s = QObject::tr("HTTP code %1").arg(code);
+    } else {
+      s += QString(" (%1)").arg(code);
+    }
+    setFailure(SoftError, s);
+    return;
+  }
+
+  const auto info = NexusOAuthCore::parseUserInfo(doc.toJson(QJsonDocument::Compact));
+  if (!info) {
+    setFailure(HardError, QObject::tr("Bad response"));
+    return;
+  }
+
+  // userinfo isn't on the API's server, so it carries no request counts: they
+  // come with the first API answer (NexusInterface::parseLimits)
+  const auto user =
+      APIUserAccount()
+          .oauth(true)
+          .id(info->id)
+          .name(info->name)
+          .type(info->premium ? APIUserAccountTypes::Premium : APIUserAccountTypes::Regular)
           .limits(NexusInterface::parseLimits(headers));
 
   setSuccess(user);
@@ -655,7 +716,8 @@ void NexusKeyValidator::start(const QString& key, Behaviour b)
     return;
   }
 
-  m_key = key;
+  m_key    = key;
+  m_bearer = false;
 
   const auto timeouts = getTimeouts();
 
@@ -670,6 +732,23 @@ void NexusKeyValidator::start(const QString& key, Behaviour b)
     break;
   }
   }
+
+  nextTry();
+}
+
+void NexusKeyValidator::startOAuth(Behaviour b)
+{
+  if (isActive()) {
+    log::debug("nexus: trying to start while ongoing; ignoring");
+    return;
+  }
+
+  m_key.clear();
+  m_bearer = true;
+
+  const auto timeouts = getTimeouts();
+  createAttempts(b == OneShot ? std::vector<std::chrono::seconds>{timeouts[0]}
+                              : timeouts);
 
   nextTry();
 }
@@ -690,6 +769,13 @@ void NexusKeyValidator::cancel()
 {
   log::debug("nexus: connection cancelled");
 
+  // a token still being renewed: its answer is ignored
+  if (m_waitingForToken) {
+    m_waitingForToken = false;
+    m_alive           = std::make_shared<int>(0);
+    setFinished(ValidationAttempt::Cancelled, QObject::tr("Cancelled"), {});
+  }
+
   for (auto&& a : m_attempts) {
     a->cancel();
   }
@@ -701,6 +787,9 @@ bool NexusKeyValidator::isActive() const
   // still not done would keep every later check from starting, and
   // NXMAccessManager::validated() showing a progress that never ends.
   // The next attempt starts as the one before fails, so there is no gap
+  if (m_waitingForToken) {
+    return true;
+  }
   for (auto&& a : m_attempts) {
     if (a->running()) {
       return true;
@@ -747,7 +836,29 @@ bool NexusKeyValidator::nextTry()
         onAttemptFailure(*a);
       };
 
-      a->start(m_manager, m_key);
+      if (!m_bearer) {
+        a->start(m_manager, m_key);
+        return true;
+      }
+
+      // MO2 Revamped: a Nexus sign-in: its access token, renewed first when
+      // it has expired. The answer may come at once or later
+      ValidationAttempt* attempt = a.get();
+      std::weak_ptr<int> alive   = m_alive;
+      m_waitingForToken          = true;
+      m_manager.oauth()->ensureFreshToken(
+          [this, attempt, alive](bool ok, const QString& message) {
+            if (alive.expired() || !m_waitingForToken) {
+              return;
+            }
+            m_waitingForToken = false;
+            if (!ok) {
+              cancel();
+              setFinished(ValidationAttempt::HardError, message, {});
+              return;
+            }
+            attempt->start(m_manager, m_manager.oauth()->accessToken(), true);
+          });
       return true;
     }
   }
@@ -770,6 +881,12 @@ void NexusKeyValidator::onAttemptFailure(const ValidationAttempt& a)
 {
   if (attemptFinished) {
     attemptFinished(a);
+  }
+
+  // MO2 Revamped: Nexus refused the sign-in's token: the next attempt renews
+  // it before asking again
+  if (m_bearer && a.result() != ValidationAttempt::Cancelled) {
+    m_manager.oauth()->invalidateAccessToken();
   }
 
   switch (a.result()) {
@@ -808,11 +925,25 @@ QString nexusKeyRefusedMessage()
                      "Connect again in Settings, Nexus");
 }
 
+QString nexusSignInRefusedMessage()
+{
+  return QObject::tr("Nexus refused the sign-in: it may have expired or been revoked. "
+                     "Sign in again in Settings, Nexus");
+}
+
 NXMAccessManager::NXMAccessManager(QObject* parent, Settings* s,
                                    const QString& moVersion)
     : QNetworkAccessManager(parent), m_Settings(s), m_MOVersion(moVersion),
-      m_validator(s, *this), m_validationState(NotChecked)
+      m_validator(s, *this), m_validationState(NotChecked),
+      m_oauth(new NexusOAuth(*this, this))
 {
+  // MO2 Revamped: Nexus refused to renew the sign-in: signed out, the status
+  // bar and the window title follow
+  connect(m_oauth, &NexusOAuth::sessionEnded, this, [this](const QString& message) {
+    log::warn("{}", message);
+    clearApiKey();
+  });
+
   m_validator.finished = [&](auto&& r, auto&& m, auto&& u) {
     onValidatorFinished(r, m, u);
   };
@@ -972,6 +1103,46 @@ void NXMAccessManager::apiCheck(const QString& apiKey, bool force)
   }
 
   startValidationCheck(apiKey);
+}
+
+bool NXMAccessManager::startStoredCheck(bool force)
+{
+  if (m_oauth->hasSession()) {
+    if (m_validator.isActive()) {
+      return true;
+    }
+    if (m_Settings && m_Settings->network().offlineMode()) {
+      m_validationState = NotChecked;
+      return true;
+    }
+    if (force) {
+      m_validationState = NotChecked;
+    }
+    if (m_validationState == Valid) {
+      emit validateSuccessful(false);
+      return true;
+    }
+    startOAuthCheck();
+    return true;
+  }
+
+  QString apiKey;
+  if (GlobalSettings::nexusApiKey(apiKey)) {
+    apiCheck(apiKey, force);
+    return true;
+  }
+
+  return false;
+}
+
+void NXMAccessManager::startOAuthCheck()
+{
+  m_validationState = NotChecked;
+  m_validator.startOAuth(NexusKeyValidator::Retry);
+
+  if (m_ProgressDialog) {
+    startProgress();
+  }
 }
 
 const QString& NXMAccessManager::MOVersion() const

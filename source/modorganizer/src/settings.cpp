@@ -23,6 +23,8 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "executableslist.h"
 #include "instancemanager.h"
 #include "modelutils.h"
+#include "nexusoauthcore.h"
+#include "revampedversion.h"
 #include "serverinfo.h"
 #include "selfupdater.h"
 #include "settingsutilities.h"
@@ -2825,6 +2827,93 @@ bool GlobalSettings::clearNexusApiKey()
 bool GlobalSettings::hasNexusApiKey()
 {
   return !getWindowsCredential("APIKEY").isEmpty();
+}
+
+namespace
+{
+
+// MO2 Revamped: a value kept in Credential Manager as "<key>", "<key>_1",
+// "<key>_2"... (a generic credential holds at most 1280 UTF-16 characters)
+constexpr int MaxOAuthPieces = 8;
+
+QString readCredentialPieces(const QString& key)
+{
+  QString value = getWindowsCredential(key);
+  if (value.isEmpty()) {
+    return {};
+  }
+  for (int i = 1; i < MaxOAuthPieces; ++i) {
+    const QString piece = getWindowsCredential(QStringLiteral("%1_%2").arg(key).arg(i));
+    if (piece.isEmpty()) {
+      break;
+    }
+    value += piece;
+  }
+  return value;
+}
+
+bool writeCredentialPieces(const QString& key, const QString& value)
+{
+  const QStringList pieces = NexusOAuthCore::splitForCredential(value);
+  if (pieces.size() > MaxOAuthPieces) {
+    log::error("the Nexus sign-in's {} is too long to store", key);
+    return false;
+  }
+
+  bool ok = true;
+  for (int i = 0; i < MaxOAuthPieces; ++i) {
+    const QString name = i == 0 ? key : QStringLiteral("%1_%2").arg(key).arg(i);
+    // the pieces a longer value left are removed as well
+    ok = setWindowsCredential(name, i < pieces.size() ? pieces[i] : QString()) && ok;
+  }
+  return ok;
+}
+
+const QString OAuthRefreshCredential = QStringLiteral("NexusOAuth_refresh");
+const QString OAuthAccessCredential  = QStringLiteral("NexusOAuth_access");
+
+}  // namespace
+
+bool GlobalSettings::nexusOAuthTokens(QString& refreshToken, QString& access)
+{
+  const QString refresh = readCredentialPieces(OAuthRefreshCredential);
+  if (refresh.isEmpty()) {
+    return false;
+  }
+  refreshToken = refresh;
+  access       = readCredentialPieces(OAuthAccessCredential);
+  return true;
+}
+
+bool GlobalSettings::setNexusOAuthTokens(const QString& refreshToken,
+                                         const QString& access)
+{
+  const bool refreshOk = writeCredentialPieces(OAuthRefreshCredential, refreshToken);
+  const bool accessOk  = writeCredentialPieces(OAuthAccessCredential, access);
+  if (!refreshOk || !accessOk) {
+    // the values never go to the log
+    log::error("Storing the Nexus sign-in failed");
+    return false;
+  }
+  return true;
+}
+
+bool GlobalSettings::clearNexusOAuthTokens()
+{
+  return setNexusOAuthTokens({}, {});
+}
+
+bool GlobalSettings::hasNexusOAuthSession()
+{
+  if (QStringLiteral(MO2R_NEXUS_OAUTH_CLIENT_ID).isEmpty()) {
+    return false;
+  }
+  return !getWindowsCredential(OAuthRefreshCredential).isEmpty();
+}
+
+bool GlobalSettings::hasNexusCredentials()
+{
+  return hasNexusApiKey() || hasNexusOAuthSession();
 }
 
 void GlobalSettings::resetDialogs()

@@ -53,6 +53,7 @@ try {
 
 Build-Test 'collection_names_test' @("$src\collectionnames.cpp", "$src\collectionfiles.cpp", "$src\collectionmanifest.cpp") @($qtCore, $uibase)
 Build-Test 'download_url_test' @("$src\downloadurl.cpp") @($qtCore, $uibase)
+Build-Test 'nexus_oauth_test' @("$src\nexusoauthcore.cpp") @($qtCore)
 Build-Test 'rootlaunch_test' @("$src\rootlaunch.cpp", "$src\rootcopy.cpp", "$src\importpatch.cpp") @($qtCore, 'advapi32.lib', 'user32.lib')
 
 # Qt and uibase from their own folders
@@ -61,6 +62,7 @@ $failed = 0
 $runs = @(
   @{ Name = 'collection_names_test'; Args = @((Join-Path $Out 'work-names')) },
   @{ Name = 'download_url_test'; Args = @() },
+  @{ Name = 'nexus_oauth_test'; Args = @() },
   @{ Name = 'rootlaunch_test'; Args = @($fixtures, (Join-Path $Out 'work-rootlaunch')) }
 )
 foreach ($t in $runs) {

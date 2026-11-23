@@ -1493,7 +1493,12 @@ class _Redactor:
             # Nexus links and API requests: the download key and the account
             (re.compile(r"(?i)(\b(?:key|apikey|api_key|api-key|access_token|"
                         r"refresh_token|id_token|token|password|cooppassword|secret|session|"
+                        r"code_verifier|client_secret|"
                         r"user_id|userid)\b[\"']?\s*[=:]\s*[\"']?)" + secret), r"\1" + self.Removed),
+            # the "Sign in with Nexus Mods" redirect and token request carry the
+            # authorization code as a query or form parameter ("?code=...",
+            # "&code=..."); "exit code: 5" and the like stay
+            (re.compile(r"(?i)([?&#]code=)[^\s\"'&#<>]+"), r"\1" + self.Removed),
             # a Nexus API key: base64 pieces joined by "--" ("...==--...--...=="),
             # which can hold "/" and so isn't caught below
             (re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{8,}={0,2}--[A-Za-z0-9+/]{8,}={0,2}"

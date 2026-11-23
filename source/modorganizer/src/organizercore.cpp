@@ -411,11 +411,10 @@ bool OrganizerCore::nexusApi(bool retry)
     // previous attempt, maybe even successful
     return false;
   } else {
-    QString apiKey;
-    if (GlobalSettings::nexusApiKey(apiKey)) {
+    // MO2 Revamped: the Nexus sign-in (OAuth) or the API key
+    if (accessManager->startStoredCheck()) {
       // credentials stored or user entered them manually
-      log::debug("attempt to verify nexus api key");
-      accessManager->apiCheck(apiKey);
+      log::debug("attempt to verify nexus credentials");
       return true;
     } else {
       // no credentials stored and user didn't enter them
@@ -2368,12 +2367,12 @@ void OrganizerCore::loggedInAction(QWidget* parent, std::function<void()> f)
   if (NexusInterface::instance().getAccessManager()->validated()) {
     f();
   } else if (!m_Settings.network().offlineMode()) {
-    QString apiKey;
-    if (GlobalSettings::nexusApiKey(apiKey)) {
+    // MO2 Revamped: the Nexus sign-in (OAuth) or the API key
+    if (GlobalSettings::hasNexusCredentials()) {
       doAfterLogin([f] {
         f();
       });
-      NexusInterface::instance().getAccessManager()->apiCheck(apiKey);
+      NexusInterface::instance().getAccessManager()->startStoredCheck();
     } else {
       MessageDialog::showMessage(tr("You need to be logged in with Nexus"), parent, true);
     }

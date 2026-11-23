@@ -19,6 +19,9 @@ public:
   void connect();
   void manual();
   void disconnect();
+  // MO2 Revamped: "Sign in with Nexus Mods" (OAuth with PKCE), when the build
+  // has a client id (MO2R_NEXUS_OAUTH_CLIENT_ID)
+  void signIn();
 
 signals:
   void stateChanged();
@@ -30,7 +33,15 @@ private:
   QAbstractButton* m_connect;
   QAbstractButton* m_disconnect;
   QAbstractButton* m_manual;
+  QAbstractButton* m_signIn = nullptr;
   QListWidget* m_log;
+  // this page started the sign-in in the browser (Settings and the instance
+  // wizard share the one NexusOAuth)
+  bool m_signInStarted = false;
+  // the account being checked came from the sign-in, not from a key
+  bool m_checkingSignIn = false;
+
+  void onSignInFinished(bool ok, const QString& message);
 
   std::unique_ptr<NexusSSOLogin> m_nexusLogin;
   std::unique_ptr<NexusKeyValidator> m_nexusValidator;

@@ -7,6 +7,7 @@
 #include <QFormLayout>
 #include <QMessageBox>
 #include "nexusinterface.h"
+#include "nexusoauth.h"
 #include "revampedversion.h"
 #include "serverinfo.h"
 #include "shared/util.h"
@@ -105,6 +106,14 @@ QWidget* wrapNexusGroupInCard(QGroupBox* group, const QString& cardObjectName,
     }
   }
   return card;
+}
+
+// MO2 Revamped: the Nexus sign-in (OAuth), or null before the Nexus
+// interface exists (the instance wizard of a first start)
+NexusOAuth* sharedOAuth()
+{
+  return NexusInterface::exists() ? NexusInterface::instance().getAccessManager()->oauth()
+                                  : nullptr;
 }
 
 }  // namespace
@@ -218,7 +227,46 @@ NexusConnectionUI::NexusConnectionUI(QWidget* parent, Settings* s,
     });
   }
 
-  if (GlobalSettings::hasNexusApiKey()) {
+  // MO2 Revamped: "Sign in with Nexus Mods" beside "Enter API key manually",
+  // only when this build has an OAuth client id; without one the page stays
+  // as it was
+  if (m_manual && NexusOAuth::available() && sharedOAuth() != nullptr) {
+    QWidget* holder = m_manual->parentWidget();
+    auto* box = holder ? qobject_cast<QBoxLayout*>(
+                             findContainingLayout(holder->layout(), m_manual))
+                       : nullptr;
+    if (box) {
+      auto* button = new QPushButton(tr("Sign in with Nexus Mods"), holder);
+      button->setObjectName(QStringLiteral("nexusOAuthSignIn"));
+      button->setSizePolicy(m_manual->sizePolicy());
+      button->setMinimumSize(m_manual->minimumSize());
+      button->setToolTip(tr("Opens Nexus in your browser to allow MO2 Revamped, "
+                            "without copying an API key."));
+      box->insertWidget(box->indexOf(m_manual), button);
+      m_signIn = button;
+
+      QObject::connect(button, &QPushButton::clicked, this, [this] {
+        signIn();
+      });
+
+      NexusOAuth* oauth = sharedOAuth();
+      QObject::connect(oauth, &NexusOAuth::signInProgress, this,
+                       [this](const QString& message) {
+                         if (m_signInStarted) {
+                           addLog(message);
+                         }
+                       });
+      QObject::connect(oauth, &NexusOAuth::signInFinished, this,
+                       [this](bool ok, const QString& message) {
+                         onSignInFinished(ok, message);
+                       });
+      QObject::connect(oauth, &NexusOAuth::sessionChanged, this, [this] {
+        updateState();
+      });
+    }
+  }
+
+  if (GlobalSettings::hasNexusCredentials()) {
     addLog(tr("Connected."));
   } else {
     addLog(tr("Not connected."));
@@ -267,6 +315,55 @@ void NexusConnectionUI::manual()
   validateKey(d.key());
 }
 
+void NexusConnectionUI::signIn()
+{
+  NexusOAuth* oauth = sharedOAuth();
+  if (!oauth) {
+    return;
+  }
+
+  if (oauth->signInActive()) {
+    oauth->cancelSignIn();
+    return;
+  }
+
+  m_log->clear();
+  m_signInStarted = true;
+  oauth->signIn();
+  updateState();
+}
+
+void NexusConnectionUI::onSignInFinished(bool ok, const QString& message)
+{
+  if (!m_signInStarted) {
+    updateState();
+    return;
+  }
+  m_signInStarted = false;
+
+  if (!ok) {
+    addLog(message);
+    updateState();
+    return;
+  }
+
+  // the account behind the sign-in, checked as an API key is: its name and
+  // whether it is Premium
+  if (!m_nexusValidator) {
+    m_nexusValidator.reset(new NexusKeyValidator(
+        m_settings, *NexusInterface::instance().getAccessManager()));
+
+    m_nexusValidator->finished = [&](auto&& r, auto&& m, auto&& u) {
+      onValidatorFinished(r, m, u);
+    };
+  }
+
+  addLog(tr("Checking the Nexus account..."));
+  m_checkingSignIn = true;
+  m_nexusValidator->startOAuth(NexusKeyValidator::OneShot);
+  updateState();
+}
+
 void NexusConnectionUI::disconnect()
 {
   clearKey();
@@ -286,6 +383,7 @@ void NexusConnectionUI::validateKey(const QString& key)
   }
 
   addLog(tr("Checking API key..."));
+  m_checkingSignIn = false;
   m_nexusValidator->start(key, NexusKeyValidator::OneShot);
 }
 
@@ -317,7 +415,27 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
                                             const QString& message,
                                             std::optional<APIUserAccount> user)
 {
+  const bool fromSignIn = m_checkingSignIn;
+  m_checkingSignIn      = false;
+  NexusOAuth* oauth     = sharedOAuth();
+
+  if (user && fromSignIn) {
+    // MO2 Revamped: one way to Nexus at a time: the sign-in replaces a stored
+    // API key
+    GlobalSettings::clearNexusApiKey();
+    NexusInterface::instance().getAccessManager()->setLinkedAccount(*user);
+    addLog(tr("Signed in to Nexus Mods as %1.").arg(user->name()));
+    updateState();
+    emit keyChanged();
+    return;
+  }
+
   if (user) {
+    // a key entered by hand replaces a Nexus sign-in
+    if (oauth && oauth->hasSession()) {
+      oauth->signOut();
+    }
+
     // applies at once: the Nexus requests, the status bar and the window title
     // all follow this signal, so linking needs no restart
     NexusInterface::instance().getAccessManager()->setLinkedAccount(*user);
@@ -329,6 +447,10 @@ void NexusConnectionUI::onValidatorFinished(ValidationAttempt::Result r,
       addLog(tr("Failed to set API key"));
     }
   } else {
+    if (oauth && fromSignIn && r != ValidationAttempt::Cancelled) {
+      // the tokens of an account that couldn't be read aren't kept
+      oauth->signOut();
+    }
     if (message.isEmpty()) {
       // shouldn't happen
       addLog(tr("Unknown error"));
@@ -360,6 +482,12 @@ bool NexusConnectionUI::clearKey()
 {
   const auto ret = GlobalSettings::clearNexusApiKey();
 
+  // MO2 Revamped: Disconnect also ends a Nexus sign-in (OAuth)
+  NexusOAuth* oauth = sharedOAuth();
+  if (oauth && (oauth->hasSession() || oauth->signInActive())) {
+    oauth->signOut();
+  }
+
   NexusInterface::instance().getAccessManager()->clearApiKey();
   updateState();
 
@@ -379,26 +507,39 @@ void NexusConnectionUI::updateState()
     }
   };
 
-  if (m_nexusLogin && m_nexusLogin->isActive()) {
+  const NexusOAuth* oauth = sharedOAuth();
+  const QString signInText = tr("Sign in with Nexus Mods");
+
+  if (oauth && oauth->signInActive()) {
+    // MO2 Revamped: waiting for the browser's sign-in
+    setButton(m_signIn, m_signInStarted, QObject::tr("Cancel"));
+    setButton(m_connect, false, QObject::tr("Connect to Nexus"));
+    setButton(m_disconnect, false);
+    setButton(m_manual, false, QObject::tr("Enter API key manually"));
+  } else if (m_nexusLogin && m_nexusLogin->isActive()) {
     // api key is in the process of being retrieved
     setButton(m_connect, true, QObject::tr("Cancel"));
     setButton(m_disconnect, false);
     setButton(m_manual, false, QObject::tr("Enter API key manually"));
+    setButton(m_signIn, false, signInText);
   } else if (m_nexusValidator && m_nexusValidator->isActive()) {
     // api key is in the process of being tested
     setButton(m_connect, false, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, false);
     setButton(m_manual, true, QObject::tr("Cancel"));
-  } else if (GlobalSettings::hasNexusApiKey()) {
-    // api key is present
+    setButton(m_signIn, false, signInText);
+  } else if (GlobalSettings::hasNexusCredentials()) {
+    // api key or sign-in present
     setButton(m_connect, false, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, true);
     setButton(m_manual, false, QObject::tr("Enter API key manually"));
+    setButton(m_signIn, false, signInText);
   } else {
     // api key not present
     setButton(m_connect, true, QObject::tr("Connect to Nexus"));
     setButton(m_disconnect, false);
     setButton(m_manual, true, QObject::tr("Enter API key manually"));
+    setButton(m_signIn, true, signInText);
   }
 
   emit stateChanged();
@@ -596,7 +737,12 @@ NexusSettingsTab::NexusSettingsTab(Settings& s, SettingsDialog& d) : SettingsTab
   m_connectionUI.reset(new NexusConnectionUI(&dialog(), &settings(), ui->nexusConnect,
                                              ui->nexusDisconnect, ui->nexusManualKey,
                                              ui->nexusLog));
-  if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
+  if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty() && NexusOAuth::available()) {
+    ui->nexusConnectionDescription->setText(
+        QObject::tr("Sign in with Nexus Mods in your browser, or connect with the "
+                    "personal API key from your Nexus account page. Connection "
+                    "messages appear beside these actions."));
+  } else if (QStringLiteral(MO2R_NEXUS_SSO_SLUG).isEmpty()) {
     ui->nexusConnectionDescription->setText(
         QObject::tr("Connect with the personal API key from your Nexus account page. "
                     "Connection messages appear beside these actions."));
