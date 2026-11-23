@@ -10,8 +10,8 @@ starts the game. Keep each function in step with the C++ or Rust it names.
 
     py -3.12 -I source/revamped/tests/eldenring/signatures.py [exe ...]
 
-With no arguments it scans every eldenring.exe and nightreign.exe below
-D:\\[Backup] (ELDEN_RING_EXE_BACKUPS to change the folder).
+With no arguments it scans every eldenring.exe and nightreign.exe below the
+folder named by the ELDEN_RING_EXE_BACKUPS environment variable.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-BACKUPS = Path(os.environ.get("ELDEN_RING_EXE_BACKUPS", r"D:\[Backup]"))
+BACKUPS = Path(os.environ.get("ELDEN_RING_EXE_BACKUPS", "exe-backups"))
 
 IMAGE_SCN_CNT_INITIALIZED_DATA = 0x00000040
 IMAGE_SCN_MEM_EXECUTE = 0x20000000

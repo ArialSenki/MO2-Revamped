@@ -13,7 +13,7 @@
 #   cmake --build D:\mo2build\wt-pyperf-upstream\build --config RelWithDebInfo --target uibase
 param(
   [string[]]$Only,
-  [string]$Out   = "C:\Users\Arial\AppData\Local\Temp\claude\c36c951def9a0d7e\e7bc76b5-f0f2-460c-8e83-c81b5684797c\scratchpad\cpp-uibase",
+  [string]$Out   = (Join-Path $env:TEMP 'mo2r-cpp-uibase'),
   [string]$Build = 'D:\mo2build\wt-pyperf-upstream\build',
   [string]$Qt    = 'D:\mo2build\Qt\6.12.0\msvc2022_64',
   [switch]$Direct
