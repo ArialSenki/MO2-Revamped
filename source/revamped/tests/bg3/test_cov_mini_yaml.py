@@ -134,11 +134,39 @@ class Reading(unittest.TestCase):
         text = "lit: |\n  line1\n  line2\n\n  line4\nfold: >\n  a\n  b\n\n  c\nkeep: |+\n  k\n\nstrip: |-\n  s\nend: 1\n"
         self.assertEqual(
             mini_yaml.loads(text),
-            {"lit": "line1\nline2\n\nline4\n", "fold": "a b\n\nc\n", "keep": "k\n", "strip": "s", "end": 1},
+            {"lit": "line1\nline2\n\nline4\n", "fold": "a b\nc\n", "keep": "k\n\n", "strip": "s", "end": 1},
         )
         self.assertEqual(mini_yaml.loads("- |\n  a\n  b\n- >\n  c\n  d\n"), ["a\nb\n", "c d\n"])
         self.assertEqual(mini_yaml.loads("|\n  top\n"), "top\n")
         self.assertEqual(mini_yaml.loads("a: |\n  # not a comment\n  b\n"), {"a": "# not a comment\nb\n"})
+
+    def test_folded_block_keeps_more_indented_lines(self):
+        # only the break between two lines at the block's indentation folds
+        self.assertEqual(
+            mini_yaml.loads("a: >\n  x\n    - one\n    - two\n  y\nb: 1\n"),
+            {"a": "x\n  - one\n  - two\ny\n", "b": 1},
+        )
+        self.assertEqual(mini_yaml.loads("a: >\n  x\n\n    code\n\n  y\n"), {"a": "x\n\n  code\n\ny\n"})
+        self.assertEqual(mini_yaml.loads("a: >-\n  x\n   y\n  z\n  w\n"), {"a": "x\n y\nz w"})
+        self.assertEqual(mini_yaml.loads("a: >\n  x\n  y\n\n\n  z\n"), {"a": "x y\n\nz\n"})
+        self.assertEqual(mini_yaml.loads("a: >\n\n  x\n  y\n"), {"a": "\nx y\n"})
+
+    def test_block_chomping(self):
+        # "+" keeps every blank line at the end, a plain block one line break, "-" none
+        self.assertEqual(mini_yaml.loads("a: |+\n  k\n\n\nb: 1\n"), {"a": "k\n\n\n", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: >+\n  x\n  y\n\nb: 1\n"), {"a": "x y\n\n", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: |\n  k\n\n\nb: 1\n"), {"a": "k\n", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: |-\n  k\n\n\nb: 1\n"), {"a": "k", "b": 1})
+        # at the end of the file, with and without blank lines after the text
+        self.assertEqual(mini_yaml.loads("a: |+\n  k\n"), {"a": "k\n"})
+        self.assertEqual(mini_yaml.loads("a: |+\n  k\n\n"), {"a": "k\n\n"})
+        self.assertEqual(mini_yaml.loads("a: |+\n  k"), {"a": "k\n"})
+        self.assertEqual(mini_yaml.loads("- |+\n  k\n\n- 2\n"), ["k\n\n", 2])
+        # a comment back at the key's indentation ends the block after its blank line
+        self.assertEqual(mini_yaml.loads("a: |+\n  k\n\n# c\nb: 1\n"), {"a": "k\n\n", "b": 1})
+        # a block with no text
+        self.assertEqual(mini_yaml.loads("a: |\nb: 1\n"), {"a": "", "b": 1})
+        self.assertEqual(mini_yaml.loads("a: |+\n\n\nb: 1\n"), {"a": "\n\n", "b": 1})
 
     def test_block_indentation_indicator(self):
         # the text starts N columns in from its parent: its own leading spaces stay

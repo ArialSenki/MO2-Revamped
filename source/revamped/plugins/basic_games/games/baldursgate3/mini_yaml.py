@@ -416,21 +416,40 @@ class _Block:
             self.pos += 1
         cut = block_indent or 0
         text_lines = [line[cut:] if line.strip() else "" for line in body]
+        # MO2 Revamped: the blank lines at the end are the chomping's: none
+        # for "-", one line break for a plain block, all of them for "+"
+        # ("|+" lost them like a plain "|")
+        trailing = 0
+        while text_lines and text_lines[-1] == "":
+            text_lines.pop()
+            trailing += 1
         if folded:
+            # MO2 Revamped: only the break between two lines at the block's
+            # own indentation folds into a space; around a more-indented line
+            # it stays a line break, as YAML has it (an indented list or code
+            # inside a > block came out as one line)
             text = ""
-            for j, line in enumerate(text_lines):
-                if j == 0:
-                    text = line
-                elif line == "" or text_lines[j - 1] == "":
-                    text += "\n" + line if line else "\n"
+            blanks = 0
+            previous: str | None = None
+            for line in text_lines:
+                if line == "":
+                    blanks += 1
+                    continue
+                if previous is None:
+                    text = "\n" * blanks + line
+                elif previous[0] in " \t" or line[0] in " \t":
+                    text += "\n" * (blanks + 1) + line
                 else:
-                    text += " " + line
+                    text += ("\n" * blanks if blanks else " ") + line
+                previous = line
+                blanks = 0
         else:
             text = "\n".join(text_lines)
-        text = text.rstrip("\n")
         if chomp == "-":
             return text
-        return text + "\n"
+        if chomp == "+":
+            return text + "\n" * (trailing + (1 if text_lines else 0))
+        return text + "\n" if text_lines else ""
 
     def sequence(self, indent: int) -> list[Any]:
         items: list[Any] = []
@@ -511,7 +530,12 @@ def _loads(text: str) -> Any:
     ended = False
     # MO2 Revamped: lines end at "\n" only; str.splitlines() also broke them
     # at U+0085, U+2028 and U+2029 inside quoted text
-    for raw in text.split("\n"):
+    raw_lines = text.split("\n")
+    if raw_lines[-1] == "":
+        # the text after the last line break isn't a line (a |+ block at the
+        # end of the file would count one blank line too many)
+        raw_lines.pop()
+    for raw in raw_lines:
         raw = raw.removesuffix("\r")
         if "\t" in raw[: len(raw) - len(raw.lstrip())]:
             raise ValueError("tabs in indentation")
