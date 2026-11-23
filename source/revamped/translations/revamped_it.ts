@@ -20859,6 +20859,49 @@ Se MO2 Revamped è installato in una cartella protetta come Programmi, avvialo u
 <context>
     <name>Wabbajack::Installer</name>
     <message>
+      <source>the list doesn't say which files it merges</source>
+      <translation>la lista non dice quali file unisce</translation>
+    </message>
+    <message>
+      <source>its source %1 leads out of the install folder</source>
+      <translation>la sua origine %1 esce dalla cartella di installazione</translation>
+    </message>
+    <message>
+      <source>its source %1 isn't there (it wasn't installed)</source>
+      <translation>la sua origine %1 non c'è (non è stata installata)</translation>
+    </message>
+    <message>
+      <source>a temporary file can't be written</source>
+      <translation>non si può scrivere un file temporaneo</translation>
+    </message>
+    <message>
+      <source>its source %1 can't be read</source>
+      <translation>non si può leggere la sua origine %1</translation>
+    </message>
+    <message>
+      <source>%1 (sources that aren't the list's: %2)</source>
+      <translation>%1 (origini che non sono quelle della lista: %2)</translation>
+    </message>
+    <message>
+      <source>its size isn't the list's</source>
+      <translation>la sua dimensione non è quella della lista</translation>
+    </message>
+    <message>
+      <source>Building the zEdit merges…</source>
+      <translation>Creazione delle unioni di zEdit…</translation>
+    </message>
+    <message>
+      <source>its source %1 is Mod Organizer's own file, which MO2 Revamped doesn't install</source>
+      <translation>la sua origine %1 è un file di Mod Organizer stesso, che MO2 Revamped non installa</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n zEdit merges built.</source>
+      <translation>
+        <numerusform>%n unione di zEdit creata.</numerusform>
+        <numerusform>%n unioni di zEdit create.</numerusform>
+      </translation>
+    </message>
+    <message>
       <source>the list's own copy is too large</source>
       <translation>la copia dell'elenco stesso è troppo grande</translation>
     </message>

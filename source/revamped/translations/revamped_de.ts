@@ -20637,6 +20637,49 @@ Wenn MO2 Revamped in einem geschützten Ordner wie Programme installiert ist, st
 <context>
     <name>Wabbajack::Installer</name>
     <message>
+      <source>the list doesn't say which files it merges</source>
+      <translation>die Liste sagt nicht, welche Dateien sie zusammenführt</translation>
+    </message>
+    <message>
+      <source>its source %1 leads out of the install folder</source>
+      <translation>seine Quelle %1 führt aus dem Installationsordner heraus</translation>
+    </message>
+    <message>
+      <source>its source %1 isn't there (it wasn't installed)</source>
+      <translation>seine Quelle %1 fehlt (sie wurde nicht installiert)</translation>
+    </message>
+    <message>
+      <source>a temporary file can't be written</source>
+      <translation>eine temporäre Datei kann nicht geschrieben werden</translation>
+    </message>
+    <message>
+      <source>its source %1 can't be read</source>
+      <translation>seine Quelle %1 kann nicht gelesen werden</translation>
+    </message>
+    <message>
+      <source>%1 (sources that aren't the list's: %2)</source>
+      <translation>%1 (Quellen, die nicht die der Liste sind: %2)</translation>
+    </message>
+    <message>
+      <source>its size isn't the list's</source>
+      <translation>seine Größe ist nicht die der Liste</translation>
+    </message>
+    <message>
+      <source>Building the zEdit merges…</source>
+      <translation>Die zEdit-Merges werden erstellt…</translation>
+    </message>
+    <message>
+      <source>its source %1 is Mod Organizer's own file, which MO2 Revamped doesn't install</source>
+      <translation>seine Quelle %1 ist eine Datei von Mod Organizer selbst, die MO2 Revamped nicht installiert</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n zEdit merges built.</source>
+      <translation>
+        <numerusform>%n zEdit-Merge erstellt.</numerusform>
+        <numerusform>%n zEdit-Merges erstellt.</numerusform>
+      </translation>
+    </message>
+    <message>
       <source>the list's own copy is too large</source>
       <translation>die eigene Kopie der Liste ist zu groß</translation>
     </message>

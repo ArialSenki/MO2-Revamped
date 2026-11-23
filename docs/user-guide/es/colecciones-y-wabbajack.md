@@ -116,6 +116,8 @@ puede ser la del juego, la de descargas ni la raíz de una unidad. Al terminar,
 - La instancia nueva toma el tema de esta instancia y las categorías de la lista
   (o las de esta instancia, si la lista no trae), así que abre sin las
   preguntas del primer inicio.
+- Las fusiones de zEdit de la lista se rehacen con el parche de la lista, como
+  hace Wabbajack: no hace falta zEdit.
 - Los plugins de MO2 que trae una lista se apartan y se ofrecen; no se instalan
   solos.
 - Una instalación que se detuvo se puede continuar más tarde.

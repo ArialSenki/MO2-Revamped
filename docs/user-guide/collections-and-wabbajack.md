@@ -109,6 +109,8 @@ new instance** switches to it.
 - The new instance takes this instance's theme, and the list's categories (or
   this instance's, when the list has none), so it opens without the
   first-start questions.
+- zEdit merges in the list are rebuilt from the list's patch, as Wabbajack
+  does: zEdit isn't needed.
 - MO2 plugins that a list brings are set aside and offered, not installed on
   their own.
 - An install that stopped can be continued later.

@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased (1.1.0-beta.17)
+
+### Wabbajack lists
+
+- **zEdit merges (MergedPatch)** are built now. As Wabbajack does it, zEdit
+  isn't run: the merge's source plugins, already installed, are joined in the
+  list's order and the list's patch (OctoDiff) is applied. The merge is built
+  last and checked by its hash and size; when it fails, the summary names the
+  source that is missing or isn't the list's. Sources outside the install
+  folder are refused. Until now these merges were left out and listed under
+  "Not done yet". The MO2 plugins a list brings are still set aside and
+  offered, not installed.
+
 ## 1.1.0-beta.16 (pre-release) — November 22, 2026
 
 Beta 15 plus our own game plugins for the 14 Bethesda games, Cyberpunk 2077,
