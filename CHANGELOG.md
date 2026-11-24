@@ -13,6 +13,19 @@
   "Not done yet". The MO2 plugins a list brings are still set aside and
   offered, not installed.
 
+### Elden Ring
+
+- **ELDEN RING Reforged's UI images.** Its tutorials showed "You are missing
+  Reforged UI images" and its item pictures were missing: the archive Reforged
+  makes with its tool Gideon (`menu\hi\00_Solo`, about 2 GB, from the game's
+  own) was never made, and the installer left Gideon out. The installer now
+  keeps Gideon in `_ReforgedTools` (the game never reads it) and runs it after
+  installing or updating Reforged, with a progress window; the archive goes in
+  the mod and the game folder isn't changed. Tools > **Reforged UI images...**
+  makes it again. Before a start, and in the notifications, MO2 says when it is
+  missing, made for an older Reforged, or hidden by another mod's `00_Solo`
+  (The Convergence brings one). Reforged installed before beta 18: reinstall it.
+
 ### Fixes
 
 - **Changing the theme** is seamless again, as when Windows changes its own:

@@ -28,6 +28,7 @@ from .common import (
     qWarning,
     _tr,
 )
+from . import reforged_ui
 
 
 def _game_class():
@@ -240,6 +241,118 @@ class LaunchChecksMixin:
                 self._organizer.setPersistent(self.name(), key, combination)
             except (AttributeError, RuntimeError) as error:
                 qWarning(f"Elden Ring MO2: could not save the regulation.bin choice: {error}")
+        return True
+
+    def _reforged_ui_images_ready(self, app_path: str) -> bool:
+        """Without the UI images Gideon makes from the game's own, Reforged's
+        tutorials show "You are missing Reforged UI images" and its item
+        pictures are missing; another mod's 00_Solo above Reforged's hides
+        them too. Reforged's own launcher (outside the VFS) makes its own."""
+        if self.GameShortName != "eldenring" or self._runs_outside_vfs(app_path):
+            return True
+        mods = self._mod_folders()
+        found = reforged_ui.active_reforged(mods)
+        if found is None:
+            return True
+        name, root = found
+        state = reforged_ui.status(root)
+        profile = self._organizer.profile()
+        profile_name = profile.name() if profile is not None else ""
+        if state != "ready":
+            return self._ask_reforged_ui_images(name, root, state, profile_name)
+        others, winner = reforged_ui.other_providers(mods, name)
+        if not others:
+            return True
+        combination = "|".join(sorted(other.casefold() for other in [name, *others]))
+        key = f"reforged_ui_conflict_accepted_{profile_name}"
+        try:
+            if self._organizer.persistent(self.name(), key, "") == combination:
+                return True
+        except (AttributeError, RuntimeError):
+            pass
+        qInfo(f"Elden Ring MO2: other active mods bring menu/hi/00_Solo beside {name}: {', '.join(others)}.")
+        box = QMessageBox(self._message_parent())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_tr("Reforged UI images"))
+        box.setText(_tr("Several active mods bring their own UI images (00_Solo)"))
+        box.setInformativeText(reforged_ui.conflict_text(others, winner, name))
+        remember = QCheckBox(_tr("Don't warn again for these mods"))
+        box.setCheckBox(remember)
+        start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(start)
+        box.exec()
+        box.deleteLater()
+        if box.clickedButton() is not start:
+            return False
+        if remember.isChecked():
+            try:
+                self._organizer.setPersistent(self.name(), key, combination)
+            except (AttributeError, RuntimeError) as error:
+                qWarning(f"Elden Ring MO2: could not save the UI images choice: {error}")
+        return True
+
+    def _ask_reforged_ui_images(self, name: str, root: Path, state: str, profile_name: str) -> bool:
+        tool = reforged_ui.find_gideon(root)
+        version = reforged_ui._project_version(tool) if tool is not None else ""
+        choice = f"{name.casefold()}|{state}|{version}"
+        key = f"reforged_ui_skipped_{profile_name}"
+        try:
+            if self._organizer.persistent(self.name(), key, "") == choice:
+                return True
+        except (AttributeError, RuntimeError):
+            pass
+        qInfo(f"Elden Ring MO2: Reforged's UI images in {name}: {state}.")
+        box = QMessageBox(self._message_parent())
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(_tr("Reforged UI images"))
+        box.setText(
+            _tr("ELDEN RING Reforged's UI images are from an older version of Reforged")
+            if state == "outdated"
+            else _tr("ELDEN RING Reforged's UI images are missing")
+        )
+        details = _tr(
+            "Without them its tutorials show \"You are missing Reforged UI images\" and "
+            "its item pictures are missing."
+        )
+        create = None
+        if tool is None:
+            details += "\n\n" + reforged_ui.check_before_run(root, None)
+        else:
+            details += " " + _tr(
+                "MO2 makes them with Reforged's own tool, Gideon, from your game files: "
+                "about 2 GB, in under a minute."
+            )
+        box.setInformativeText(details)
+        remember = QCheckBox(_tr("Don't ask again for this version of Reforged"))
+        box.setCheckBox(remember)
+        if tool is not None:
+            create = box.addButton(_tr("Create them"), QMessageBox.ButtonRole.AcceptRole)
+        start = box.addButton(_tr("Start anyway"), QMessageBox.ButtonRole.DestructiveRole)
+        box.addButton(_tr("Cancel"), QMessageBox.ButtonRole.RejectRole)
+        box.setDefaultButton(create or start)
+        box.exec()
+        box.deleteLater()
+        clicked = box.clickedButton()
+        if clicked is create and create is not None:
+            if reforged_ui.create_images(
+                self._message_parent(), name, root,
+                Path(self.gameDirectory().absolutePath()), self._organizer,
+            ):
+                # MO2 reads the new files before its next launch, not this one
+                QMessageBox.information(
+                    self._message_parent(),
+                    _tr("Reforged UI images"),
+                    _tr("Reforged's UI images are ready. Start the game again."),
+                )
+            return False
+        if clicked is not start:
+            return False
+        if remember.isChecked():
+            try:
+                self._organizer.setPersistent(self.name(), key, choice)
+            except (AttributeError, RuntimeError) as error:
+                qWarning(f"Elden Ring MO2: could not save the UI images choice: {error}")
         return True
 
     @staticmethod

@@ -825,8 +825,8 @@ function Copy-EldenRingPlugins {
     $allowedDirectories = @('basic_games', 'data', 'eldenring_mo2_archive_installer', 'installer_fomod_csharp', 'eldenring_mo2_tools', 'installer_wizard', 'plugin_python')
     $allowedRootFiles = @(
         'DDSPreview.py', 'diagnose_basic.dll', 'eldenring_mo2_native_profile_tool.py',
-        'eldenring_mo2_save_isolation.py', 'eldenring_mo2_startup_tool.py',
-        'inibakery.dll', 'inieditor.dll', 'installer_bundle.dll',
+        'eldenring_mo2_reforged_ui.py', 'eldenring_mo2_save_isolation.py',
+        'eldenring_mo2_startup_tool.py', 'inibakery.dll', 'inieditor.dll', 'installer_bundle.dll',
         'installer_fomod_csharp.dll', 'installer_fomod.dll', 'installer_manual.dll',
         'installer_quick.dll', 'mo2_revamped_info.py', 'preview_base.dll'
     )
@@ -871,6 +871,8 @@ function Copy-EldenRingPlugins {
         'eldenring_mo2_startup_tool.py', 'eldenring_mo2_archive_installer\installer.py',
         'eldenring_mo2_tools\save_isolation.py', 'eldenring_mo2_tools\native_profile_tool.py',
         'eldenring_mo2_tools\startup_tool.py', 'eldenring_mo2_tools\stub.py',
+        'eldenring_mo2_reforged_ui.py', 'eldenring_mo2_tools\reforged_ui_tool.py',
+        'basic_games\games\eldenring\reforged_ui.py',
         'basic_games\games\game_eldenring_mo2.py', 'basic_games\games\eldenring\common.py',
         'basic_games\games\eldenring\recovery_probe.py',
         'data\revamped_fluent.py', 'installer_wizard\dialog.py',

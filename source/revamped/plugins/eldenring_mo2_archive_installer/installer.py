@@ -296,6 +296,13 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                         if online.is_dir():
                             shutil.rmtree(online, ignore_errors=True)
                             qInfo(f"Elden Ring MO2: removed the online release of {new_mod.name()}.")
+                    if not preserve and not self._nightreign_active():
+                        # once MO2 has the mod in its list: Gideon makes the UI
+                        # images from the game's own, as Reforged's launcher would
+                        mod_name, mod_root = new_mod.name(), new_mod.absolutePath()
+                        QTimer.singleShot(
+                            0, lambda: self._create_reforged_ui_images(mod_name, mod_root)
+                        )
                 installed_dll_routes = self._collect_installed_dll_routes(
                     Path(new_mod.absolutePath())
                 )
@@ -357,6 +364,24 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             self._pending_choice = None
             self._pending_source_dll_routes = []
             self._pending_reforged_layout = None
+
+    def _create_reforged_ui_images(self, mod_name: str, mod_root: str) -> None:
+        """Reforged's tutorial and item pictures (menu/hi/00_Solo), made by
+        its own tool unless this install kept the ones it has."""
+        try:
+            from basic_games.games.eldenring import reforged_ui
+
+            root = Path(mod_root)
+            if reforged_ui.find_gideon(root) is None or reforged_ui.up_to_date(root):
+                return
+            try:
+                game = Path(self._organizer.managedGame().gameDirectory().absolutePath())
+            except (AttributeError, RuntimeError):
+                game = None
+            reforged_ui.create_images(self._parentWidget(), mod_name, root, game, self._organizer)
+        except Exception as error:
+            # the mod is installed either way
+            qCritical(f"Elden Ring MO2: could not make Reforged's UI images: {error!r}")
 
     @staticmethod
     def _link_reforged_release(mod_root: Path, layout: dict) -> int:
@@ -439,7 +464,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
                 for directory in directories
                 if not (current_path / directory).is_symlink()
                 # the Reforged release kept for its own launcher (me3's DLLs)
-                and not (current_path == mod_root and directory == "_ReforgedOnline")
+                # and its UI image tool (Gideon's libraries)
+                and not (
+                    current_path == mod_root
+                    and directory.casefold() in {"_reforgedonline", "_reforgedtools"}
+                )
             ]
             for filename in filenames:
                 if Path(filename).suffix.casefold() != ".dll":
@@ -1535,9 +1564,10 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
         from basic_games.games.game_eldenring_mo2 import EldenRingModDataChecker
 
         online_folder = EldenRingModDataChecker.ReforgedOnlineDirectory.casefold()
+        tools_folder = EldenRingModDataChecker.ReforgedToolsDirectory.casefold()
         game_folders = EldenRingModDataChecker._asset_directories
         summary = {
-            "game": 0, "dlls": 0, "dlls_routed": 0, "dll_settings": 0, "online": 0, "other": 0,
+            "game": 0, "dlls": 0, "dlls_routed": 0, "dll_settings": 0, "online": 0, "tools": 0, "other": 0,
             "regulation": False, "paths": paths, "misplaced": 0, "misplaced_in": "",
         }
         for path in paths:
@@ -1547,13 +1577,15 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             if (
                 preserve
                 and parts[0] not in game_folders
-                and parts[0] not in {online_folder, "dlls", "seamlesscoop", "native", "natives", "mods"}
+                and parts[0] not in {online_folder, tools_folder, "dlls", "seamlesscoop", "native", "natives", "mods"}
                 and any(part in game_folders for part in parts[1:-1])
             ):
                 summary["misplaced"] += 1
                 summary["misplaced_in"] = summary["misplaced_in"] or path.split("/")[0]
             if parts[0] == online_folder:
                 summary["online"] += 1
+            elif parts[0] == tools_folder:
+                summary["tools"] += 1
             elif parts[-1].endswith(".dll"):
                 summary["dlls"] += 1
                 summary["dlls_routed"] += parts[0] == "dlls"
@@ -2070,6 +2102,11 @@ class EldenRingArchiveInstaller(mobase.IPluginInstallerSimple):
             if summary["online"]:
                 summary_row(
                     0xE774, self.tr("Reforged's online version"), files(summary["online"])
+                )
+            if summary.get("tools"):
+                summary_row(
+                    0xE91B, self.tr("Reforged's UI image tool (Gideon)"), files(summary["tools"]),
+                    self.tr("MO2 runs it after the install to make the tutorial and item pictures."),
                 )
             if summary["other"]:
                 summary_row(0xE8A5, self.tr("Other files"), files(summary["other"]))
