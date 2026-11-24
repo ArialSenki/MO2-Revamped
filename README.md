@@ -12,13 +12,17 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.17](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.17)**
-— `MO2-Revamped-Setup-1.1.0-beta.17.exe` with its `SHA256SUMS.txt`. It is a beta,
+**Latest: [v1.1.0-beta.18](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.18)**
+— `MO2-Revamped-Setup-1.1.0-beta.18.exe` with its `SHA256SUMS.txt`. It is a beta,
 and the newest version.
 
-Beta 17 is beta 16 with two fixes: switching themes in Settings reaches every
-part again, and mods tagged with the game's display name no longer show the
-"different game" indicator.
+New in beta 18: **Merge** into an installed mod no longer leaves it half
+changed, and a merge interrupted by closing or a crash is offered at the next
+start (Finish, Undo or Later); **ELDEN RING Reforged's UI images** are made by
+its tool Gideon after the install (Tools > Reforged UI images... makes them
+again); **zEdit merges** of older Wabbajack lists are built; changing the
+**theme** is seamless; and small fixes. Beta 17 was beta 16 with two fixes
+(switching themes, and the "different game" indicator).
 
 New in beta 16:
 
@@ -67,7 +71,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.17.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.18.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
