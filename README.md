@@ -12,9 +12,10 @@ tools for **Elden Ring** and **Elden Ring Nightreign**. It is maintained by
 
 ## Download
 
-**Latest: [v1.1.0-beta.16](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.16)**
-— `MO2-Revamped-Setup-1.1.0-beta.16.exe` with its `SHA256SUMS.txt`. It is a beta,
-and the newest version.
+**Latest: [v1.1.0-beta.17](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.1.0-beta.17)**
+— `MO2-Revamped-Setup-1.1.0-beta.17.exe` with its `SHA256SUMS.txt`. It is a beta,
+and the newest version: beta 16 with two fixes (switching themes, and the mod
+list's "different game" indicator).
 
 - **Our own game plugins** (new in beta 16): the 14 Bethesda games, Cyberpunk 2077, Baldur's Gate 3, The Witcher 3, Stardew Valley and Valheim.
 - **Faster with large lists** (beta 16): MO2 loads only the instance's game at start, and mod toggles and problem checks are much faster.
@@ -28,7 +29,7 @@ and the newest version.
 - **Nexus collections** are included.
 - **Elden Ring and Nightreign:** the tools are included.
 
-Its changes are in the [beta's changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.16/CHANGELOG.md).
+Its changes are in the [beta's changelog](https://github.com/ArialSenki/MO2-Revamped/blob/v1.1.0-beta.17/CHANGELOG.md).
 The betas are developed on the
 [design/fluent-v4](https://github.com/ArialSenki/MO2-Revamped/tree/design/fluent-v4)
 branch, whose README describes them in full.
@@ -41,7 +42,7 @@ and [v1.0.0](https://github.com/ArialSenki/MO2-Revamped/releases/tag/v1.0.0).
 
 ### Installing
 
-1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.16.exe`) and pick your language.
+1. Run the setup (`MO2-Revamped-Setup-1.1.0-beta.17.exe`) and pick your language.
 2. Choose **Install MO2 Revamped** and the installation folder.
 3. When setup finishes, MO2 starts in the language you chose. Create an
    instance for your game; for Elden Ring or Nightreign the New instance
