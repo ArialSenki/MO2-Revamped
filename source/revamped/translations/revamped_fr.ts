@@ -22546,4 +22546,161 @@ Pour les ouvrir dans un autre programme, activez Utiliser un éditeur externe da
       <translation>%1 dépasse 1 Mo, trop pour l&apos;INI Editor.</translation>
     </message>
   </context>
+  <context>
+    <name>NexusOAuth</name>
+    <message>
+      <source>Cancelled.</source>
+      <translation>Annulé.</translation>
+    </message>
+    <message>
+      <source>Signed in to Nexus Mods</source>
+      <translation>Connecté à Nexus Mods</translation>
+    </message>
+    <message>
+      <source>No answer from the browser in 5 minutes. Try again.</source>
+      <translation>Aucune réponse du navigateur en 5 minutes. Réessayez.</translation>
+    </message>
+    <message>
+      <source>This build of MO2 Revamped has no Nexus sign-in.</source>
+      <translation>Cette version de MO2 Revamped n'a pas de connexion à Nexus.</translation>
+    </message>
+    <message>
+      <source>MO2 Revamped couldn't wait for the browser's answer: %1</source>
+      <translation>MO2 Revamped n'a pas pu attendre la réponse du navigateur : %1</translation>
+    </message>
+    <message>
+      <source>Opened Nexus in your browser.</source>
+      <translation>Nexus a été ouvert dans votre navigateur.</translation>
+    </message>
+    <message>
+      <source>Sign in there and allow MO2 Revamped.</source>
+      <translation>Connectez-vous et autorisez MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>The browser couldn't be opened.</source>
+      <translation>Le navigateur n'a pas pu être ouvert.</translation>
+    </message>
+    <message>
+      <source>Bad request</source>
+      <translation>Requête invalide</translation>
+    </message>
+    <message>
+      <source>This address only takes Nexus' answer.</source>
+      <translation>Cette adresse n'accepte que la réponse de Nexus.</translation>
+    </message>
+    <message>
+      <source>Not found</source>
+      <translation>Introuvable</translation>
+    </message>
+    <message>
+      <source>Sign-in refused</source>
+      <translation>Connexion refusée</translation>
+    </message>
+    <message>
+      <source>This answer isn't for the sign-in MO2 Revamped started. Start it again from MO2 Revamped.</source>
+      <translation>Cette réponse ne correspond pas à la connexion lancée par MO2 Revamped. Relancez-la depuis MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Not signed in</source>
+      <translation>Non connecté</translation>
+    </message>
+    <message>
+      <source>Nexus didn't give MO2 Revamped access. You can close this tab.</source>
+      <translation>Nexus n'a pas donné accès à MO2 Revamped. Vous pouvez fermer cet onglet.</translation>
+    </message>
+    <message>
+      <source>Access wasn't allowed on Nexus.</source>
+      <translation>L'accès n'a pas été autorisé sur Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus answered: %1</source>
+      <translation>Nexus a répondu : %1</translation>
+    </message>
+    <message>
+      <source>You can close this tab and go back to MO2 Revamped.</source>
+      <translation>Vous pouvez fermer cet onglet et revenir à MO2 Revamped.</translation>
+    </message>
+    <message>
+      <source>Nexus answered. Getting access...</source>
+      <translation>Nexus a répondu. Obtention de l'accès...</translation>
+    </message>
+    <message>
+      <source>Nexus gave no refresh token</source>
+      <translation>Nexus n'a pas fourni de jeton d'actualisation</translation>
+    </message>
+    <message>
+      <source>Signed in.</source>
+      <translation>Connecté.</translation>
+    </message>
+    <message>
+      <source>Nexus didn't give access: %1</source>
+      <translation>Nexus n'a pas donné accès : %1</translation>
+    </message>
+    <message>
+      <source>Not signed in to Nexus.</source>
+      <translation>Non connecté à Nexus.</translation>
+    </message>
+    <message>
+      <source>Couldn't reach Nexus to renew the sign-in: %1</source>
+      <translation>Impossible de joindre Nexus pour renouveler la connexion : %1</translation>
+    </message>
+    <message>
+      <source>Couldn't reach Nexus to renew the sign-in; trying again at %1.</source>
+      <translation>Impossible de joindre Nexus pour renouveler la connexion ; nouvel essai à %1.</translation>
+    </message>
+    <message>
+      <source>HTTP code %1</source>
+      <translation>Code HTTP %1</translation>
+    </message>
+    <message>
+      <source>Nexus ended the sign-in. Sign in again in Settings, Nexus.</source>
+      <translation>Nexus a mis fin à la connexion. Reconnectez-vous dans Paramètres, Nexus.</translation>
+    </message>
+    <message>
+      <source>Nexus couldn't renew the sign-in (%1).</source>
+      <translation>Nexus n'a pas pu renouveler la connexion (%1).</translation>
+    </message>
+    <message>
+      <source>Signed out of Nexus.</source>
+      <translation>Déconnecté de Nexus.</translation>
+    </message>
+  </context>
+  <context>
+    <name>NexusConnectionUI</name>
+    <message>
+      <source>Sign in with Nexus Mods</source>
+      <translation>Se connecter avec Nexus Mods</translation>
+    </message>
+    <message>
+      <source>Opens Nexus in your browser to allow MO2 Revamped, without copying an API key.</source>
+      <translation>Ouvre Nexus dans votre navigateur pour autoriser MO2 Revamped, sans copier de clé API.</translation>
+    </message>
+    <message>
+      <source>Checking the Nexus account...</source>
+      <translation>Vérification du compte Nexus...</translation>
+    </message>
+    <message>
+      <source>Signed in to Nexus Mods as %1.</source>
+      <translation>Connecté à Nexus Mods en tant que %1.</translation>
+    </message>
+    <message>
+      <source>Signed out of Nexus Mods. The stored API key is used again.</source>
+      <translation>Déconnecté de Nexus Mods. La clé API enregistrée est de nouveau utilisée.</translation>
+    </message>
+  </context>
+  <context>
+    <name>QObject</name>
+    <message>
+      <source>This build of MO2 Revamped has no Nexus SSO registration; use the API key or sign in.</source>
+      <translation>Cette version de MO2 Revamped n'a pas d'enregistrement SSO Nexus ; utilisez la clé API ou connectez-vous.</translation>
+    </message>
+    <message>
+      <source>Nexus refused the sign-in: it may have expired or been revoked. Sign in again in Settings, Nexus</source>
+      <translation>Nexus a refusé la connexion : elle a peut-être expiré ou été révoquée. Reconnectez-vous dans Paramètres, Nexus</translation>
+    </message>
+    <message>
+      <source>Sign in with Nexus Mods in your browser, or connect with the personal API key from your Nexus account page. Connection messages appear beside these actions.</source>
+      <translation>Connectez-vous avec Nexus Mods dans votre navigateur, ou utilisez la clé API personnelle de la page de votre compte Nexus. Les messages de connexion s'affichent à côté de ces actions.</translation>
+    </message>
+  </context>
 </TS>
