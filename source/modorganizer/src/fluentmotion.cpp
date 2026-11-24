@@ -632,10 +632,13 @@ void coverWindows()
       // the Mica backdrop doesn't come with the picture, and Windows redraws it
       // in the new theme only a while after the window's own surfaces: under the
       // picture it would turn dark (or light) before everything else. The
-      // picture gets the backdrop's color in the theme it shows
+      // picture gets the backdrop's color in the theme it shows: Windows' own
+      // (the theme makes the window's background transparent, so the palette
+      // has none)
       picture = QPixmap(grabbed.size());
       picture.setDevicePixelRatio(grabbed.devicePixelRatio());
-      picture.fill(window->palette().color(QPalette::Window));
+      picture.fill(qApp->property("revampedDark").toBool() ? QColor(0x20, 0x20, 0x20)
+                                                           : QColor(0xF3, 0xF3, 0xF3));
       QPainter p(&picture);
       p.drawPixmap(0, 0, grabbed);
     }
