@@ -234,6 +234,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     "load.txt",
                     "seamlesscoop",
                     self.ReforgedOnlineDirectory,
+                    self.ReforgedToolsDirectory,
                 ],
                 delete=[
                     "*.md",
@@ -447,11 +448,15 @@ class EldenRingModDataChecker(BasicModDataChecker):
     # config me3 would give it (see _game_class()._reforged_attach_config).
     _reforged_native_path = "internals/modengine/dll"
     _reforged_dll = "reforged.dll"
-    # what the launcher, me3 and the UI setup tool (Gideon) need, not the game
+    # Reforged's UI image tool (Gideon), not a game file
     _reforged_tool_paths = ("mod/menu/deploy",)
     # the release kept for Reforged's own launcher (its online mode); its DLLs
     # (me3's among them) are never MO2's natives
     ReforgedOnlineDirectory = "_ReforgedOnline"
+    # without it, Gideon on its own (menu/deploy below it): MO2 runs it to make
+    # Reforged's UI images (eldenring/reforged_ui.py); the game never reads it
+    ReforgedToolsDirectory = "_ReforgedTools"
+    _reforged_kept_directories = frozenset({"_reforgedonline", "_reforgedtools"})
     ReforgedLauncherPath = "internals/launcher/ReforgedLauncher.exe"
 
     @classmethod
@@ -521,7 +526,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
             return
         if depth < 2:
             for entry in list(filetree):
-                if is_directory(entry) and entry.name() != self.ReforgedOnlineDirectory:
+                if is_directory(entry) and entry.name().casefold() not in self._reforged_kept_directories:
                     self._remove_loader_launchers(entry, depth + 1)
 
     _optional_folder_names = re.compile(
@@ -535,7 +540,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         for entry in list(filetree):
             if (
                 is_directory(entry)
-                and entry.name() != self.ReforgedOnlineDirectory
+                and entry.name().casefold() not in self._reforged_kept_directories
                 and self._optional_folder_names.search(entry.name())
                 and any(
                     other is not entry
@@ -552,7 +557,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 entry.detach()
         if depth < 2:
             for entry in list(filetree):
-                if is_directory(entry) and entry.name() != self.ReforgedOnlineDirectory:
+                if is_directory(entry) and entry.name().casefold() not in self._reforged_kept_directories:
                     removed += self._remove_optional_folders(entry, depth + 1)
         return removed
 
@@ -595,7 +600,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
                 and len(entry) > 0
                 and name not in self._content_directories
                 and name not in self._package_directories
-                and name not in {"seamlesscoop", "logs", self.ReforgedOnlineDirectory.casefold()}
+                and name not in {"seamlesscoop", "logs", *self._reforged_kept_directories}
                 and not self._has_game_payload(entry)
             ):
                 names.add(name)
@@ -620,7 +625,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if depth > self._archive_wrapper_depth_limit:
             return
         for entry in list(filetree):
-            if not is_directory(entry) or entry.name() == self.ReforgedOnlineDirectory:
+            if not is_directory(entry) or entry.name().casefold() in self._reforged_kept_directories:
                 continue
             if entry.name().casefold() == "logs" and len(entry) > 0 and all(
                 not is_directory(child) and child.name().casefold().endswith(".log")
@@ -654,7 +659,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
         self, filetree: mobase.IFileTree, keep_online: bool = False
     ) -> bool:
         """Lay out ELDEN RING Reforged as MO2 runs it: mod/ at the game root,
-        its natives in DLLs, and nothing of its launcher or me3.
+        its natives in DLLs, its UI image tool (Gideon) in ``_ReforgedTools``,
+        and nothing of its launcher or me3.
 
         With ``keep_online`` the rest of the release (launcher, me3, its tools
         and notes) moves whole into ``_ReforgedOnline``; the archive installer
@@ -677,7 +683,9 @@ class EldenRingModDataChecker(BasicModDataChecker):
             if keep_online:
                 filetree.move(tool, f"{online}/{Path(path).parent.as_posix()}/")
             else:
-                tool.detach()
+                # Gideon writes menu/hi two folders above its own: in
+                # _ReforgedTools, from where MO2 moves the archives into place
+                filetree.move(tool, f"{self.ReforgedToolsDirectory}/menu/")
         native_names = []
         for entry in list(natives):
             if not is_directory(entry) and Path(entry.name()).suffix.casefold() in {
@@ -738,8 +746,8 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if not self.previewing:
             qInfo(
                 "Elden Ring MO2: laid out ELDEN RING Reforged for MO2: its game files "
-                "at the game root and its natives in DLLs; its launcher and me3 are "
-                "not installed."
+                "at the game root, its natives in DLLs and its UI image tool in "
+                f"{self.ReforgedToolsDirectory}; its launcher and me3 are not installed."
             )
         return True
 
@@ -886,7 +894,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
                     # does the Reforged release kept for its own launcher
                     if entry.name().casefold() in {
                         "seamlesscoop",
-                        self.ReforgedOnlineDirectory.casefold(),
+                        *self._reforged_kept_directories,
                     }:
                         continue
                     if entry.name().casefold() in companions:
@@ -1397,7 +1405,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         self._fix_basic_patterns(filetree, depth)
         for entry in list(filetree):
             if is_directory(entry) and not (
-                depth == 0 and entry.name() == self.ReforgedOnlineDirectory
+                depth == 0 and entry.name().casefold() in self._reforged_kept_directories
             ):
                 self._fix_known_layouts(entry, depth + 1)
 
@@ -1503,7 +1511,7 @@ class EldenRingModDataChecker(BasicModDataChecker):
         if (
             name in self._content_directories
             or name == "seamlesscoop"
-            or name == self.ReforgedOnlineDirectory.casefold()
+            or name in self._reforged_kept_directories
         ):
             return False
 

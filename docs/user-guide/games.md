@@ -244,6 +244,17 @@ other game.
 mods and their load order, for each profile. They load through MO2 Revamped's
 native bridge, also with Seamless Co-op and ELDEN RING Reforged.
 
+**Reforged UI images.** ELDEN RING Reforged's tutorial and item pictures come
+from an archive (`menu\hi\00_Solo`, about 2 GB) that its own tool, Gideon,
+makes from your game files. After installing or updating Reforged, MO2 runs
+Gideon and puts the archive in the mod; the game folder isn't changed. To make
+it again: Tools > **Reforged UI images...**. Without it, the tutorials show
+"You are missing Reforged UI images". MO2 warns before starting the game when
+the archive is missing, and when another active mod (The Convergence brings
+one) has its own `00_Solo` with a higher priority than Reforged. Reforged
+installed with a version before beta 18 has no Gideon: reinstall it from its
+archive.
+
 **Saves.** Tools > **Save isolation** chooses where saves go:
 
 - **Only this profile (recommended)**;

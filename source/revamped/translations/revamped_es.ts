@@ -2062,6 +2062,14 @@ Reinstala el mod para cambiarlo.</translation>
       <source>These names can't be used for a file or folder: {0}. A name can't be empty, "." or "..", contain &lt; &gt; : " / \ | ? *, end with a dot or a space, or be a name Windows reserves (CON, NUL, COM1...). Rename them.</source>
       <translation>Estos nombres no se pueden usar para un archivo o carpeta: {0}. Un nombre no puede estar vacío, ser «.» o «..», contener &lt; &gt; : " / \ | ? *, terminar en punto o espacio, ni ser un nombre que Windows reserva para sí (CON, NUL, COM1…). Cámbiales el nombre.</translation>
     </message>
+    <message>
+      <source>Reforged's UI image tool (Gideon)</source>
+      <translation>Herramienta de imágenes de interfaz de Reforged (Gideon)</translation>
+    </message>
+    <message>
+      <source>MO2 runs it after the install to make the tutorial and item pictures.</source>
+      <translation>MO2 la ejecuta después de la instalación para crear las imágenes de tutoriales y objetos.</translation>
+    </message>
 </context>
   <context>
     <name>EldenRingGame</name>
@@ -2640,6 +2648,162 @@ Si alguna tiene un progreso que quieres, cierra el juego y vuelve a copiarla.</t
     <message>
       <source>The game has closed, but {0} is still open. MO2 puts the Steam saves back when it closes. Don&apos;t start the game from Steam until then.</source>
       <translation>El juego se ha cerrado, pero {0} sigue abierto. MO2 devolverá las partidas de Steam cuando se cierre. Hasta entonces, no inicies el juego desde Steam.</translation>
+    </message>
+    <message>
+      <source>Reforged UI images</source>
+      <translation>Imágenes de interfaz de Reforged</translation>
+    </message>
+    <message>
+      <source>Starting Gideon, Reforged's UI image tool...</source>
+      <translation>Iniciando Gideon, la herramienta de imágenes de interfaz de Reforged...</translation>
+    </message>
+    <message>
+      <source>Copying the game's UI archive (00_Solo) from your game files...</source>
+      <translation>Copiando el archivo de interfaz del juego (00_Solo) de tus archivos del juego...</translation>
+    </message>
+    <message>
+      <source>Adding Reforged's pictures to the archive...</source>
+      <translation>Añadiendo las imágenes de Reforged al archivo...</translation>
+    </message>
+    <message>
+      <source>Finishing...</source>
+      <translation>Terminando...</translation>
+    </message>
+    <message>
+      <source>This copy of ELDEN RING Reforged doesn't have its UI image tool (Gideon): MO2 versions before 1.1.0-beta.18 left it out when installing. Reinstall Reforged from its archive (right-click the mod, Reinstall), and MO2 creates the images after the install.</source>
+      <translation>Esta copia de ELDEN RING Reforged no tiene su herramienta de imágenes de interfaz (Gideon): las versiones de MO2 anteriores a 1.1.0-beta.18 la dejaban fuera al instalar. Reinstala Reforged desde su archivo (clic derecho en el mod, Reinstalar) y MO2 creará las imágenes después de la instalación.</translation>
+    </message>
+    <message>
+      <source>MO2 couldn't find the game folder with Data0.bhd, where Gideon reads the game's UI images. Check the game's folder in MO2's instance settings, and that Steam has the game installed.</source>
+      <translation>MO2 no encontró la carpeta del juego con Data0.bhd, de donde Gideon lee las imágenes de interfaz del juego. Comprueba la carpeta del juego en los ajustes de la instancia de MO2 y que Steam tenga el juego instalado.</translation>
+    </message>
+    <message>
+      <source>There isn't enough free space on the drive of your mods: the UI images need about {0} GB, and {1} GB are free. Free some space and try again.</source>
+      <translation>No hay suficiente espacio libre en la unidad de tus mods: las imágenes de interfaz necesitan unos {0} GB y hay {1} GB libres. Libera algo de espacio y vuelve a intentarlo.</translation>
+    </message>
+    <message>
+      <source>Gideon couldn't start: {0}</source>
+      <translation>Gideon no pudo iniciarse: {0}</translation>
+    </message>
+    <message>
+      <source>{0} s - Reforged's tutorials and item pictures, about 2 GB.</source>
+      <translation>{0} s - Tutoriales e imágenes de objetos de Reforged, unos 2 GB.</translation>
+    </message>
+    <message>
+      <source>Gideon couldn't create Reforged's UI images</source>
+      <translation>Gideon no pudo crear las imágenes de interfaz de Reforged</translation>
+    </message>
+    <message>
+      <source>Gideon finds the game through Steam: if Steam doesn't have ELDEN RING installed, run the game from Steam once or verify its files, then try again from Tools &gt; Reforged UI images...</source>
+      <translation>Gideon encuentra el juego a través de Steam: si Steam no tiene ELDEN RING instalado, abre el juego una vez desde Steam o verifica sus archivos, y vuelve a intentarlo desde Herramientas &gt; Imágenes de interfaz de Reforged...</translation>
+    </message>
+    <message>
+      <source>Gideon said:</source>
+      <translation>Gideon dijo:</translation>
+    </message>
+    <message>
+      <source>MO2 couldn't put the UI images in the mod: {0}</source>
+      <translation>MO2 no pudo colocar las imágenes de interfaz en el mod: {0}</translation>
+    </message>
+    <message>
+      <source>MO2 couldn't remove the old {0}: {1}</source>
+      <translation>MO2 no pudo eliminar el antiguo {0}: {1}</translation>
+    </message>
+    <message>
+      <source>{0} also bring their own menu\hi\00_Solo (UI images: loading screens, item pictures). The game reads only one, Reforged's, which has the highest priority, so the pictures those mods add won't show.</source>
+      <translation>{0} también traen su propio menu\hi\00_Solo (imágenes de interfaz: pantallas de carga, imágenes de objetos). El juego solo lee uno, el de Reforged, que tiene la prioridad más alta, así que las imágenes que añaden esos mods no se verán.</translation>
+    </message>
+    <message>
+      <source>{0} has a higher priority than {1} and brings its own menu\hi\00_Solo (UI images). The game reads only that one, so Reforged's tutorials show "You are missing Reforged UI images" and its item pictures are missing. Give {1} the higher priority, or turn off the mods you don't need.</source>
+      <translation>{0} tiene más prioridad que {1} y trae su propio menu\hi\00_Solo (imágenes de interfaz). El juego solo lee ese, así que los tutoriales de Reforged muestran "You are missing Reforged UI images" y faltan sus imágenes de objetos. Da a {1} la prioridad más alta o desactiva los mods que no necesites.</translation>
+    </message>
+    <message>
+      <source>Several active mods bring their own UI images (00_Solo)</source>
+      <translation>Varios mods activos traen sus propias imágenes de interfaz (00_Solo)</translation>
+    </message>
+    <message>
+      <source>Don't ask again for this version of Reforged</source>
+      <translation>No volver a preguntar con esta versión de Reforged</translation>
+    </message>
+    <message>
+      <source>ELDEN RING Reforged's UI images are from an older version of Reforged</source>
+      <translation>Las imágenes de interfaz de ELDEN RING Reforged son de una versión anterior de Reforged</translation>
+    </message>
+    <message>
+      <source>ELDEN RING Reforged's UI images are missing</source>
+      <translation>Faltan las imágenes de interfaz de ELDEN RING Reforged</translation>
+    </message>
+    <message>
+      <source>Without them its tutorials show "You are missing Reforged UI images" and its item pictures are missing.</source>
+      <translation>Sin ellas, sus tutoriales muestran "You are missing Reforged UI images" y faltan sus imágenes de objetos.</translation>
+    </message>
+    <message>
+      <source>MO2 makes them with Reforged's own tool, Gideon, from your game files: about 2 GB, in under a minute.</source>
+      <translation>MO2 las crea con la propia herramienta de Reforged, Gideon, a partir de tus archivos del juego: unos 2 GB, en menos de un minuto.</translation>
+    </message>
+    <message>
+      <source>Create them</source>
+      <translation>Crearlas</translation>
+    </message>
+    <message>
+      <source>Reforged's UI images are ready. Start the game again.</source>
+      <translation>Las imágenes de interfaz de Reforged están listas. Vuelve a iniciar el juego.</translation>
+    </message>
+    <message>
+      <source>Makes ELDEN RING Reforged's UI images (tutorials, item pictures) with its tool, Gideon.</source>
+      <translation>Crea las imágenes de interfaz de ELDEN RING Reforged (tutoriales, imágenes de objetos) con su herramienta, Gideon.</translation>
+    </message>
+    <message>
+      <source>Reforged UI images...</source>
+      <translation>Imágenes de interfaz de Reforged...</translation>
+    </message>
+    <message>
+      <source>Make the tutorial and item pictures of ELDEN RING Reforged from your game files.</source>
+      <translation>Crea las imágenes de tutoriales y objetos de ELDEN RING Reforged a partir de tus archivos del juego.</translation>
+    </message>
+    <message>
+      <source>{0} has its UI images. Make them again if Reforged's tutorials or item pictures are missing in the game.</source>
+      <translation>{0} tiene sus imágenes de interfaz. Vuelve a crearlas si en el juego faltan los tutoriales o las imágenes de objetos de Reforged.</translation>
+    </message>
+    <message>
+      <source>{0} doesn't have its UI images yet: its tutorials show "You are missing Reforged UI images" and its item pictures are missing.</source>
+      <translation>{0} aún no tiene sus imágenes de interfaz: sus tutoriales muestran "You are missing Reforged UI images" y faltan sus imágenes de objetos.</translation>
+    </message>
+    <message>
+      <source>{0}'s UI images were made for an older version of Reforged.</source>
+      <translation>Las imágenes de interfaz de {0} se crearon para una versión anterior de Reforged.</translation>
+    </message>
+    <message>
+      <source>MO2 runs Reforged's own tool, Gideon: it copies the game's UI archive (00_Solo) from your game files and adds Reforged's pictures, about 2 GB in the mod's folder, in under a minute. The game folder isn't changed.</source>
+      <translation>MO2 ejecuta la propia herramienta de Reforged, Gideon: copia el archivo de interfaz del juego (00_Solo) de tus archivos del juego y le añade las imágenes de Reforged, unos 2 GB en la carpeta del mod, en menos de un minuto. La carpeta del juego no se modifica.</translation>
+    </message>
+    <message>
+      <source>Make them again</source>
+      <translation>Volver a crearlas</translation>
+    </message>
+    <message>
+      <source>Reforged's UI images are ready.</source>
+      <translation>Las imágenes de interfaz de Reforged están listas.</translation>
+    </message>
+    <message>
+      <source>No ELDEN RING Reforged mod is installed. Install Reforged from its archive and MO2 makes its UI images after the install.</source>
+      <translation>No hay ningún mod ELDEN RING Reforged instalado. Instala Reforged desde su archivo y MO2 creará sus imágenes de interfaz después de la instalación.</translation>
+    </message>
+    <message>
+      <source>Reforged UI image checks</source>
+      <translation>Comprobaciones de las imágenes de interfaz de Reforged</translation>
+    </message>
+    <message>
+      <source>Warns when ELDEN RING Reforged's UI images are missing or hidden by another mod.</source>
+      <translation>Avisa cuando faltan las imágenes de interfaz de ELDEN RING Reforged u otro mod las oculta.</translation>
+    </message>
+    <message>
+      <source>Another mod's UI images hide ELDEN RING Reforged's</source>
+      <translation>Las imágenes de interfaz de otro mod ocultan las de ELDEN RING Reforged</translation>
+    </message>
+    <message>
+      <source>Fix makes them with Reforged's own tool, Gideon, from your game files (about 2 GB, under a minute). Tools &gt; Reforged UI images... does the same.</source>
+      <translation>Corregir las crea con la propia herramienta de Reforged, Gideon, a partir de tus archivos del juego (unos 2 GB, menos de un minuto). Herramientas &gt; Imágenes de interfaz de Reforged... hace lo mismo.</translation>
     </message>
 </context>
   <context>

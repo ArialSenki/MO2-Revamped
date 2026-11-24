@@ -121,6 +121,8 @@ class LaunchMixin:
             return False
         if not self._regulation_conflict_ready(app_path):
             return False
+        if not self._reforged_ui_images_ready(app_path):
+            return False
         if not self._file_loader_ready(app_path):
             return False
         if not self._save_extension_ready(app_path):

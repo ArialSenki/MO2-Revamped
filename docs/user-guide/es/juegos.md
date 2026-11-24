@@ -255,6 +255,18 @@ Seamless Co-op y FRZN Merge, y avisa cuando un Seamless Co-op es del otro juego.
 mods activados y su orden de carga, para cada perfil. Se cargan con el puente
 nativo de MO2 Revamped, también con Seamless Co-op y ELDEN RING Reforged.
 
+**Imágenes de interfaz de Reforged.** Las imágenes de los tutoriales y de los
+objetos de ELDEN RING Reforged vienen de un archivo (`menu\hi\00_Solo`, unos
+2 GB) que crea su propia herramienta, Gideon, a partir de tus archivos del
+juego. Después de instalar o actualizar Reforged, MO2 ejecuta Gideon y pone el
+archivo en el mod; la carpeta del juego no se toca. Para crearlo de nuevo:
+Herramientas > **Imágenes de interfaz de Reforged...**. Sin él, los tutoriales
+muestran "You are missing Reforged UI images". MO2 avisa antes de iniciar el
+juego si falta el archivo, y si otro mod activo (The Convergence trae uno)
+tiene su propio `00_Solo` con más prioridad que Reforged. Un Reforged instalado
+con una versión anterior a la beta 18 no tiene Gideon: reinstálalo desde su
+archivo.
+
 **Partidas.** Herramientas > **Aislamiento de partidas** elige dónde van las
 partidas:
 
