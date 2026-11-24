@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (1.1.0-beta.18)
+## 1.1.0-beta.18 (pre-release) — November 24, 2026
 
 ### Wabbajack lists
 

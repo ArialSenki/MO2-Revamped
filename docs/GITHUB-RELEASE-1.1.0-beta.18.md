@@ -1,7 +1,8 @@
 MO2 Revamped 1.1.0 beta 18 is the **newest version**, still a beta. It is
 beta 17 plus a **safe Merge** into an installed mod (a cancelled, failed or
 interrupted merge no longer leaves the mod half changed), **zEdit merges** for
-older Wabbajack lists, a **seamless theme change**, and small fixes. The
+older Wabbajack lists, **ELDEN RING Reforged's UI images** made by its
+tool Gideon after the install, a **seamless theme change**, and small fixes. The
 **Nexus sign-in** in the browser is built in but stays hidden until Nexus
 issues MO2 Revamped's client id.
 
@@ -34,6 +35,18 @@ The installer is not digitally signed, so Windows SmartScreen may warn about it.
   applied, then checked by its hash and size. Until now they were left out and
   listed under "Not done yet". Only **older lists** have these merges; newer
   lists don't use them and install as before.
+
+## Elden Ring
+
+- **ELDEN RING Reforged's UI images.** Reforged's tutorials said "You are
+  missing Reforged UI images" and item pictures were missing: the archive its
+  tool Gideon makes from the game's own files (about 2 GB) was never made,
+  because the installer left Gideon out. The installer now keeps Gideon in
+  `_ReforgedTools` and runs it after installing or updating Reforged, with a
+  progress window; the archive goes in the mod, the game folder isn't changed.
+  **Tools > Reforged UI images...** makes it again, and MO2 says before a start
+  when it is missing, outdated or hidden by another mod. Reforged installed
+  before beta 18: reinstall it. Tested in game.
 
 ## Fixes
 
