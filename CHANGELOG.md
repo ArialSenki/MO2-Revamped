@@ -11,7 +11,38 @@
   source that is missing or isn't the list's. Sources outside the install
   folder are refused. Until now these merges were left out and listed under
   "Not done yet". The MO2 plugins a list brings are still set aside and
-  offered, not installed.
+  offered, not installed. Only older lists have these merges; newer lists
+  don't use them, so most lists install as before.
+
+### Installing mods
+
+- **Merge into an installed mod** no longer leaves it half changed. The archive
+  is extracted to a folder of its own (`.mo2-merging`, beside the mods folder,
+  or inside it when that is a volume of its own; the mod list skips it), and
+  its files go into the mod only once all of them are there. Until now a
+  cancelled or failed merge left the mod with part of the new files and some
+  of its own already replaced. If a file can't be moved (a program has it
+  open, or the mod has a folder where the archive has a file), the files
+  already moved go back and the replaced ones return; the message says
+  whether the mod is as it was, or where its files are when it couldn't be put
+  back.
+- **A merge that Mod Organizer didn't live to finish** (closed or crashed while
+  the files were moving) is offered at the next start: **Finish** adds the
+  rest of the files, **Undo** takes out the ones already added and puts back
+  the files they replaced, **Later** asks again at the next start. A merge
+  that stopped while extracting never reached the mod, and what it had
+  extracted is removed. Folders of another instance that shares the parent
+  folder are left alone.
+
+### Nexus
+
+- **"Sign in with Nexus Mods"** (OAuth 2.0 with PKCE, in the browser, without
+  copying an API key) is built in but **not shown yet**: it appears once Nexus
+  issues MO2 Revamped's client id. Until then the API key works as before.
+  When it is on, the tokens are kept in Windows Credential Manager, renewed
+  before they expire and revoked on sign-out, and signing in keeps the stored
+  API key, which is used again after signing out. Its texts are translated to
+  the five languages.
 
 ### Fixes
 
@@ -20,6 +51,27 @@
   everywhere, then it fades in. Until now the cards and lists changed first and
   the window's background, the command bar and the status bar a moment later.
   With animations off (in MO2 or in Windows) the change shows in one step.
+- **Root copy:** a game installed at a drive root (`D:\`) no longer gives paths
+  like `D://file` in the copy's record, the log and the messages.
+- **Elden Ring bridge:** a leftover `HKCU\Software\Wine` registry key on a real
+  Windows (left by a tool or a copied profile) no longer counts as Wine, where
+  the bridge released the game's startup minimization by time and showed the
+  game too early. With the key, one of the exports only Wine has must also be
+  there.
+- **Without the Windows icon fonts:** the glyphs in the rows of the Python
+  tools are drawn in the theme's muted tone, like MO2's own, instead of the
+  text color; and the main window's summary tiles ask for one glyph picture
+  per tone instead of one per frame of their color animation, which filled the
+  image cache.
+- **Baldur's Gate 3:** the YAML reader for "Convert JSONS to YAML" reads `>`
+  blocks with more-indented lines and blank lines as YAML does, and `|+`
+  keeps the blank lines at the end.
+
+### Tests
+
+- New C++ tests for the merge (`merge_staging_test`), the Nexus sign-in
+  (`nexus_oauth_test`) and the Wabbajack merges (`wabbajack_merge_test`), and
+  a line coverage script for the C++ tests (`tests/cpp/coverage.ps1`).
 
 ## 1.1.0-beta.17 (pre-release) — November 24, 2026
 
