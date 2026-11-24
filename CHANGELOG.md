@@ -13,6 +13,15 @@
   "Not done yet". The MO2 plugins a list brings are still set aside and
   offered, not installed.
 
+### Fixes
+
+- **Changing the theme** in Settings reaches every part again. With the new
+  interface (Qt Quick) on, the main window's summary tiles kept the colors of
+  the theme MO2 started with, and so did the Instances window and the theme
+  question opened afterwards: Qt Quick read the colors from a copy that was
+  never updated. The toolbar and executables' icons are also redone once the
+  new theme is fully applied, not before (edits to a theme's file included).
+
 ## 1.1.0-beta.16 (pre-release) — November 22, 2026
 
 Beta 15 plus our own game plugins for the 14 Bethesda games, Cyberpunk 2077,

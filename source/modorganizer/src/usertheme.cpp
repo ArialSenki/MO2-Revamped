@@ -717,6 +717,22 @@ void publishColors(const Theme* theme)
   }
 }
 
+Applied* Applied::instance()
+{
+  static Applied* applied = new Applied(QCoreApplication::instance());
+  return applied;
+}
+
+void notifyApplied()
+{
+  emit Applied::instance()->applied();
+}
+
+QMetaObject::Connection whenApplied(QObject* context, std::function<void()> what)
+{
+  return QObject::connect(Applied::instance(), &Applied::applied, context, std::move(what));
+}
+
 QColor recolor(const QColor& color)
 {
   const auto& theme = current();
