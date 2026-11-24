@@ -169,22 +169,18 @@ void viewGone()
   }
 }
 
-// follows the theme: Settings applies a new style sheet to the running windows
+// a view's own style or palette changes (a window's style sheet, the font).
+// A new theme comes through UserTheme::whenApplied() (see Fluent()), once it
+// is all in place: these events come while MOApplication is still applying it
 class ThemeFollower : public QObject
 {
 public:
   using QObject::QObject;
 
-  bool eventFilter(QObject* watched, QEvent* event) override
+  bool eventFilter(QObject*, QEvent* event) override
   {
     if (event->type() == QEvent::StyleChange || event->type() == QEvent::PaletteChange) {
       Fluent::instance()->refresh();
-      // a view that shows the window behind it (such as the main window's
-      // summary row) keeps its clear color transparent
-      if (auto* view = qobject_cast<QQuickWidget*>(watched);
-          view != nullptr && !view->property("quickSeeThrough").toBool()) {
-        view->setClearColor(Fluent::instance()->window());
-      }
     }
     return false;
   }
@@ -310,6 +306,13 @@ QQuickWidget* createView(QWidget* parent, const QString& name, const QVariantMap
   view->setObjectName(name + QStringLiteral("QuickView"));
   view->setResizeMode(QQuickWidget::SizeRootObjectToView);
   view->setClearColor(fluent->window());
+  // a view that shows the window behind it (such as the main window's summary
+  // row) keeps its clear color transparent; the others follow the theme
+  QObject::connect(fluent, &Fluent::changed, view, [view] {
+    if (!view->property("quickSeeThrough").toBool()) {
+      view->setClearColor(Fluent::instance()->window());
+    }
+  });
   view->setFocusPolicy(Qt::StrongFocus);
   view->installEventFilter(new ThemeFollower(view));
   view->setInitialProperties(properties);
@@ -355,6 +358,10 @@ Fluent::Fluent(QObject* parent) : QObject(parent)
                      ? QStringLiteral("Segoe Fluent Icons")
                      : QStringLiteral("Segoe MDL2 Assets");
   refresh();
+  // every theme MOApplication applies, once it is fully in place
+  UserTheme::whenApplied(this, [this] {
+    refresh();
+  });
 }
 
 bool Fluent::glyphFont() const
