@@ -1569,6 +1569,10 @@ bool MOApplication::setStyleFile(const QString& styleName)
     styleHints()->setColorScheme(property("revampedDark").toBool() ? Qt::ColorScheme::Dark
                                                                    : Qt::ColorScheme::Light);
 #endif
+    // no user theme's colors either
+    UserTheme::publishColors(nullptr);
+    setProperty("revampedOled", false);
+    UserTheme::notifyApplied();
   }
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   m_appliedStyleFile = styleName;
@@ -2235,6 +2239,8 @@ void MOApplication::updateStyle(const QString& fileName)
     }
   }
   applyNativeTitleBarThemeToVisibleMainWindows(fileName);
+  // last: what keeps colors of its own reads the theme now in place
+  UserTheme::notifyApplied();
 }
 
 namespace
