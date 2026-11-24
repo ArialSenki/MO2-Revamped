@@ -56,9 +56,14 @@ ModInfoRegular::ModInfoRegular(const QDir& path, OrganizerCore& core)
   readMeta();
   s_CreateTimes[1] += stage.nsecsElapsed();
   stage.restart();
-  if (m_GameName.compare(core.managedGame()->gameShortName(), Qt::CaseInsensitive) != 0)
-    if (!core.managedGame()->primarySources().contains(m_GameName, Qt::CaseInsensitive))
-      m_IsAlternate = true;
+  // Some installs wrote the game's display name ("ELDEN RING") instead of its
+  // short name ("eldenring"): both mean the managed game, not another one.
+  if (!m_GameName.isEmpty() &&
+      m_GameName.compare(core.managedGame()->gameShortName(), Qt::CaseInsensitive) != 0 &&
+      m_GameName.compare(core.managedGame()->gameName(), Qt::CaseInsensitive) != 0 &&
+      m_GameName.compare(core.managedGame()->gameNexusName(), Qt::CaseInsensitive) != 0 &&
+      !core.managedGame()->primarySources().contains(m_GameName, Qt::CaseInsensitive))
+    m_IsAlternate = true;
 
   // populate m_Archives
   m_Archives = QStringList();
