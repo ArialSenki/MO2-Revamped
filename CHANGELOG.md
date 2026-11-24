@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (1.1.0-beta.17)
+## Unreleased (1.1.0-beta.18)
 
 ### Wabbajack lists
 
@@ -13,6 +13,10 @@
   "Not done yet". The MO2 plugins a list brings are still set aside and
   offered, not installed.
 
+## 1.1.0-beta.17 (pre-release) — November 24, 2026
+
+Beta 16 with two fixes, nothing else.
+
 ### Fixes
 
 - **Changing the theme** in Settings reaches every part again. With the new
@@ -21,6 +25,9 @@
   question opened afterwards: Qt Quick read the colors from a copy that was
   never updated. The toolbar and executables' icons are also redone once the
   new theme is fully applied, not before (edits to a theme's file included).
+- **Mod list:** a mod whose meta.ini names the game by its display name
+  (`gameName=ELDEN RING` instead of `eldenring`) no longer shows the yellow
+  "different game" indicator, and neither does a mod with no game name.
 
 ## 1.1.0-beta.16 (pre-release) — November 22, 2026
 
