@@ -1530,6 +1530,14 @@ bool MOApplication::setStyleFile(const QString& styleName)
 
   m_oledStyle = oled;
 
+  // MO2 Revamped: the open windows keep showing the old theme until the new one
+  // is in place everywhere, then it fades in, as when Windows changes its own.
+  // Without this the cards and lists turned dark (or light) first, and the
+  // window's backdrop, the command bar and the status bar over it a moment
+  // later: Windows redraws the Mica backdrop in the new theme only after the
+  // window has drawn itself
+  FluentMotion::coverWindows();
+
   // remove all files from watch
   QStringList currentWatch = m_styleWatcher.files();
   if (currentWatch.count() != 0) {
@@ -1577,6 +1585,7 @@ bool MOApplication::setStyleFile(const QString& styleName)
   applyNativeTitleBarThemeToVisibleMainWindows(styleName);
   m_appliedStyleFile = styleName;
   m_appliedOled      = oled;
+  FluentMotion::uncoverWindows();
   return true;
 }
 

@@ -23,6 +23,16 @@
 #include <QWidget>
 
 #include <memory>
+#include <vector>
+
+#include <QApplication>
+
+#ifdef Q_OS_WIN
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#endif
 
 namespace FluentMotion
 {
@@ -536,6 +546,147 @@ void crossFade(QWidget* host, const QPixmap& before)
   animation->setEndValue(1.0);
   animation->setDuration(Fast);
   animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+namespace
+{
+  // the picture of a window laid over it while its theme changes. Drawn by
+  // hand: a theme's rules for labels or plain widgets don't reach it
+  class WindowPicture : public QWidget
+  {
+  public:
+    WindowPicture(QWidget* window, QPixmap picture)
+        : QWidget(window), m_picture(std::move(picture))
+    {
+      setObjectName(QStringLiteral("fluentWindowPicture"));
+      setAttribute(Qt::WA_TransparentForMouseEvents);
+      setAttribute(Qt::WA_NoSystemBackground);
+      setFocusPolicy(Qt::NoFocus);
+      setGeometry(window->rect());
+      show();
+      raise();
+    }
+
+  protected:
+    void paintEvent(QPaintEvent*) override
+    {
+      QPainter p(this);
+      p.drawPixmap(0, 0, m_picture);
+    }
+
+  private:
+    QPixmap m_picture;
+  };
+
+  // counts the changes: a change's pictures wait only for that change
+  int g_coverTurn = 0;
+
+  std::vector<QPointer<WindowPicture>>& windowPictures()
+  {
+    static std::vector<QPointer<WindowPicture>> pictures;
+    return pictures;
+  }
+
+  // the window's pictures take the place of nothing anymore
+  void dropWindowPictures()
+  {
+    for (const auto& picture : windowPictures()) {
+      delete picture.data();
+    }
+    windowPictures().clear();
+  }
+
+  // Windows' "Animation effects" (Accessibility > Visual effects)
+  bool systemAnimations()
+  {
+#ifdef Q_OS_WIN
+    BOOL on = TRUE;
+    if (SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION, 0, &on, 0)) {
+      return on != FALSE;
+    }
+#endif
+    return true;
+  }
+}  // namespace
+
+void coverWindows()
+{
+  // a second change before the first one's pictures are gone: the windows are
+  // pictured as they are now, not under the old pictures
+  dropWindowPictures();
+  ++g_coverTurn;
+
+  for (QWidget* window : QApplication::topLevelWidgets()) {
+    const Qt::WindowType type = window->windowType();
+    if (!window->isVisible() || window->isMinimized() || window->size().isEmpty() ||
+        (type != Qt::Window && type != Qt::Dialog && type != Qt::Tool)) {
+      continue;
+    }
+
+    const QPixmap grabbed = window->grab();
+    if (grabbed.isNull()) {
+      continue;
+    }
+    QPixmap picture = grabbed;
+    if (window->property("fluentMica").toBool()) {
+      // the Mica backdrop doesn't come with the picture, and Windows redraws it
+      // in the new theme only a while after the window's own surfaces: under the
+      // picture it would turn dark (or light) before everything else. The
+      // picture gets the backdrop's color in the theme it shows
+      picture = QPixmap(grabbed.size());
+      picture.setDevicePixelRatio(grabbed.devicePixelRatio());
+      picture.fill(window->palette().color(QPalette::Window));
+      QPainter p(&picture);
+      p.drawPixmap(0, 0, grabbed);
+    }
+    windowPictures().emplace_back(new WindowPicture(window, std::move(picture)));
+  }
+}
+
+void uncoverWindows()
+{
+  if (windowPictures().empty()) {
+    return;
+  }
+
+  // the windows redraw in the next turn of the event loop (the native frames
+  // and the Mica backdrop after that, see applyNativeTitleBarTheme()) and the
+  // Qt Quick views in their own frames: the pictures stay three frames more
+  const int turn = g_coverTurn;
+  QTimer::singleShot(0, qApp, [turn] {
+    QTimer::singleShot(50, qApp, [turn] {
+      if (turn != g_coverTurn) {
+        return;
+      }
+      auto pictures = std::move(windowPictures());
+      windowPictures().clear();
+      const bool fade = g_enabled && systemAnimations();
+      for (const auto& picture : pictures) {
+        if (picture.isNull()) {
+          continue;
+        }
+        if (!fade) {
+          delete picture.data();
+          continue;
+        }
+        auto* effect = new QGraphicsOpacityEffect(picture);
+        picture->setGraphicsEffect(effect);
+        QVariantAnimation* animation = createAnimation(effect, QEasingCurve::InOutQuad);
+        QObject::connect(animation, &QVariantAnimation::valueChanged, effect,
+                         [effect](const QVariant& value) {
+                           effect->setOpacity(1.0 - value.toReal());
+                         });
+        QObject::connect(animation, &QVariantAnimation::finished, picture.data(),
+                         &QObject::deleteLater);
+        animation->setStartValue(0.0);
+        animation->setEndValue(1.0);
+        animation->setDuration(200);
+        animation->start(QAbstractAnimation::DeleteWhenStopped);
+        // a newer change drops it while it fades
+        windowPictures().push_back(picture);
+      }
+    });
+  });
 }
 
 void pageIn(QWidget* page, int rise)

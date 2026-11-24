@@ -81,6 +81,15 @@ void pageIn(QWidget* page, int rise = 16);
 // page change has no empty frame between the two
 void crossFade(QWidget* host, const QPixmap& before);
 
+// a change that redraws every window at once (a theme switch), seamless like
+// Windows' own: coverWindows() lays a picture of what each visible window
+// shows over it, and uncoverWindows(), called once the change is made, fades
+// the pictures away when the windows have drawn themselves again. Without
+// animations (MO2's or Windows' animation effects) the pictures go in one step,
+// so no half-redrawn window shows either
+void coverWindows();
+void uncoverWindows();
+
 // Windows 11 drop-down chevron for a tool button with a menu: the button's own
 // arrow is hidden ([fluentChevron="true"] in the theme) and a chevron is drawn
 // `right` pixels from its right edge, turning over while the menu is open.
