@@ -57,6 +57,9 @@ QString getUsvfsVersionString();
 // where Replace keeps a mod's old version until the install has finished
 inline constexpr char ReplacedModsFolder[] = ".mo2-replaced";
 
+// where Merge extracts an archive before its files go into the installed mod
+inline constexpr char MergingModsFolder[] = ".mo2-merging";
+
 struct ShellRemoveResult
 {
   int error    = 0;

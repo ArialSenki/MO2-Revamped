@@ -56,6 +56,7 @@ Build-Test 'download_url_test' @("$src\downloadurl.cpp") @($qtCore, $uibase)
 Build-Test 'nexus_oauth_test' @("$src\nexusoauthcore.cpp") @($qtCore)
 Build-Test 'wabbajack_merge_test' @("$src\wabbajackfiles.cpp", "$src\wabbajackhash.cpp", "$src\collectionfiles.cpp") @($qtCore, $uibase)
 Build-Test 'rootlaunch_test' @("$src\rootlaunch.cpp", "$src\rootcopy.cpp", "$src\importpatch.cpp") @($qtCore, 'advapi32.lib', 'user32.lib')
+Build-Test 'merge_staging_test' @("$src\mergestaging.cpp") @($qtCore)
 
 # Qt and uibase from their own folders
 $env:PATH = "$Qt\bin;$UibaseBuild;$env:PATH"
@@ -65,7 +66,8 @@ $runs = @(
   @{ Name = 'download_url_test'; Args = @() },
   @{ Name = 'nexus_oauth_test'; Args = @() },
   @{ Name = 'wabbajack_merge_test'; Args = @((Join-Path $Out 'work-wabbajack-merge')) },
-  @{ Name = 'rootlaunch_test'; Args = @($fixtures, (Join-Path $Out 'work-rootlaunch')) }
+  @{ Name = 'rootlaunch_test'; Args = @($fixtures, (Join-Path $Out 'work-rootlaunch')) },
+  @{ Name = 'merge_staging_test'; Args = @((Join-Path $Out 'work-merge')) }
 )
 foreach ($t in $runs) {
   & (Join-Path $Out "$($t.Name).exe") @($t.Args) | Out-Host

@@ -1155,6 +1155,9 @@ OrganizerCore::doInstall(const QString& archivePath, GuessedValue<QString> modNa
             m_InstallationManager.replacedModRestored()
                 ? tr("The installation was cancelled while extracting files. The "
                      "installed mod is back as it was.")
+            : m_InstallationManager.mergedModUntouched()
+                ? tr("The installation was cancelled while extracting files. None of "
+                     "them were added to the installed mod, which is as it was.")
             : m_InstallationManager.newModRemoved()
                 ? tr("The installation was cancelled while extracting files. Nothing was installed.")
                 : tr("The installation was cancelled while extracting files. "

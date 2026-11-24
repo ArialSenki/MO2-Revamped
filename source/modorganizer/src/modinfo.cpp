@@ -327,7 +327,8 @@ void ModInfo::updateFromDisc(const QString& modsDirectory, OrganizerCore& core,
     QHash<QString, QDateTime> creationTimes;
     while (modIter.hasNext()) {
       const QFileInfo info = modIter.nextFileInfo();
-      if (info.fileName() != QLatin1String(MOShared::ReplacedModsFolder)) {
+      if (info.fileName() != QLatin1String(MOShared::ReplacedModsFolder) &&
+          info.fileName() != QLatin1String(MOShared::MergingModsFolder)) {
         modPaths.push_back(info.filePath());
         creationTimes.insert(QDir(info.filePath()).absolutePath(), info.birthTime());
       }
@@ -404,6 +405,7 @@ bool ModInfo::updateOneFromDisc(const QString& modsDirectory, const QString& nam
   TimeThis tt("ModInfo::updateOneFromDisc()");
 
   if (name.isEmpty() || name == QLatin1String(MOShared::ReplacedModsFolder) ||
+      name == QLatin1String(MOShared::MergingModsFolder) ||
       isBackupName(name) || isSeparatorName(name)) {
     return false;
   }

@@ -10,6 +10,11 @@ Item {
     // the size in points instead, when set (as the summary tiles' badges)
     property real pointSize: 0
     property color color: Fluent.muted
+    // the color the picture is asked for in: the one the color is going to, not
+    // each step of an animation on it (a new picture per frame, every one kept
+    // in the image cache). Set by who animates the color; the picture then
+    // changes once, at the start
+    property color pictureColor: color
 
     readonly property int pixels: pointSize > 0 ? Math.round(pointSize * 4 / 3) : size
 
@@ -41,7 +46,7 @@ Item {
         cache: true
         source: Fluent.glyphFont || glyph.text === "" ? ""
               : "image://fluentglyph/" + glyph.text.charCodeAt(0).toString(16).toUpperCase()
-                + "/" + String(glyph.color).substring(1)
+                + "/" + String(glyph.pictureColor).substring(1)
         Accessible.ignored: true
     }
 }

@@ -7684,6 +7684,38 @@ Las instantáneas de recuperación se conservaron en: %2</translation>
       <translation>Terminar de reemplazar mods</translation>
     </message>
     <message>
+      <source>Finish merging mods</source>
+      <translation>Terminar de combinar mods</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer se detuvo mientras añadía los archivos de un paquete a estos mods instalados, así que cada uno tiene solo una parte:
+
+%1
+
+Terminar añade el resto de los archivos. Deshacer quita los que ya se añadieron y devuelve los archivos que reemplazaron, de modo que los mods quedan como estaban. Más tarde no cambia nada, y Mod Organizer volverá a preguntar en el próximo inicio.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Terminar</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Deshacer</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Estos no se han podido completar; cierra los programas que usen los archivos de los mods. Sus archivos siguen en estas carpetas, y Mod Organizer volverá a preguntar en el próximo inicio:
+
+%1</translation>
+    </message>
+    <message>
       <source>Restore</source>
       <translation>Restaurar</translation>
     </message>
@@ -10123,6 +10155,10 @@ Mueve a un mod lo que quieras conservar antes de continuar.</translation>
     <message>
       <source>The installation was cancelled while extracting files. Nothing was installed.</source>
       <translation>Se canceló la instalación durante la extracción. No se ha instalado nada.</translation>
+    </message>
+    <message>
+      <source>The installation was cancelled while extracting files. None of them were added to the installed mod, which is as it was.</source>
+      <translation>Se canceló la instalación durante la extracción. No se ha añadido ningún archivo al mod instalado, que sigue como estaba.</translation>
     </message>
     <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>
@@ -14435,6 +14471,20 @@ WinRAR está instalado en este PC y puede que sí pueda. ¿Extraer el archivo co
     <message>
       <source>The folder for the new version could not be created.</source>
       <translation>No se ha podido crear la carpeta de la versión nueva.</translation>
+    </message>
+    <message>
+      <source>The folder to extract the files to could not be created next to the mods folder. The installed mod was not changed.</source>
+      <translation>No se ha podido crear junto a la carpeta de mods la carpeta donde extraer los archivos. El mod instalado no ha cambiado.</translation>
+    </message>
+    <message>
+      <source>The files could not be added to the installed mod: &quot;%1&quot; could not be written. The mod is as it was before. Close any program using its files and install it again.</source>
+      <translation>No se han podido añadir los archivos al mod instalado: no se ha podido escribir «%1». El mod sigue como estaba. Cierra los programas que usen sus archivos e instálalo de nuevo.</translation>
+    </message>
+    <message>
+      <source>The files could not be added to the installed mod: &quot;%1&quot; could not be written, and the mod could not be put back as it was. The files it had before, and the new ones that are not in it, are in this folder:
+%2</source>
+      <translation>No se han podido añadir los archivos al mod instalado: no se ha podido escribir «%1», y el mod no se ha podido dejar como estaba. Los archivos que tenía antes, y los nuevos que no están en él, están en esta carpeta:
+%2</translation>
     </message>
     <message>
       <source>The previous version of the mod could not be put back. It is in this folder:

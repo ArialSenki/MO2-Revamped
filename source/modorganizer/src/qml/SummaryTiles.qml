@@ -72,10 +72,14 @@ Item {
                         anchors.centerIn: parent
                         text: tile.modelData.glyph
                         pointSize: 13
-                        color: tile.tone === "accent" ? Fluent.accent
-                             : tile.tone === "caution" ? Fluent.onTintCaution
-                             : tile.tone === "critical" ? Fluent.critical
-                             : Fluent.muted
+                        readonly property color toneColor: tile.tone === "accent" ? Fluent.accent
+                                                         : tile.tone === "caution" ? Fluent.onTintCaution
+                                                         : tile.tone === "critical" ? Fluent.critical
+                                                         : Fluent.muted
+                        color: toneColor
+                        // without the icon font the glyph is a picture: one for
+                        // the new tone, not one per frame of the animation
+                        pictureColor: toneColor
                         Behavior on color { enabled: tile.settled; ColorAnimation { duration: Fluent.normal } }
                         Accessible.ignored: true
                     }

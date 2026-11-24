@@ -5706,6 +5706,20 @@ WinRAR est installé sur ce PC et pourrait y arriver. Extraire l'archive avec Wi
       <translation>Le dossier de la nouvelle version n&apos;a pas pu être créé.</translation>
     </message>
     <message>
+      <source>The folder to extract the files to could not be created next to the mods folder. The installed mod was not changed.</source>
+      <translation>Le dossier où extraire les fichiers n&apos;a pas pu être créé à côté du dossier des mods. Le mod installé n&apos;a pas été modifié.</translation>
+    </message>
+    <message>
+      <source>The files could not be added to the installed mod: &quot;%1&quot; could not be written. The mod is as it was before. Close any program using its files and install it again.</source>
+      <translation>Les fichiers n&apos;ont pas pu être ajoutés au mod installé : « %1 » n&apos;a pas pu être écrit. Le mod est resté tel quel. Fermez les programmes qui utilisent ses fichiers et installez-le de nouveau.</translation>
+    </message>
+    <message>
+      <source>The files could not be added to the installed mod: &quot;%1&quot; could not be written, and the mod could not be put back as it was. The files it had before, and the new ones that are not in it, are in this folder:
+%2</source>
+      <translation>Les fichiers n&apos;ont pas pu être ajoutés au mod installé : « %1 » n&apos;a pas pu être écrit, et le mod n&apos;a pas pu être remis tel qu&apos;il était. Les fichiers qu&apos;il avait avant, et les nouveaux qui n&apos;y sont pas, se trouvent dans ce dossier :
+%2</translation>
+    </message>
+    <message>
       <source>The previous version of the mod could not be put back. It is in this folder:
 %1</source>
       <translation>La version précédente du mod n&apos;a pas pu être remise en place. Elle se trouve dans ce dossier :
@@ -7870,6 +7884,38 @@ Les instantanés de récupération ont été conservés dans : %2</translation>
     <message>
       <source>Finish replacing mods</source>
       <translation>Terminer le remplacement des mods</translation>
+    </message>
+    <message>
+      <source>Finish merging mods</source>
+      <translation>Terminer la fusion des mods</translation>
+    </message>
+    <message>
+      <source>Mod Organizer stopped while it was adding an archive&apos;s files to these installed mods, so each has only part of them:
+
+%1
+
+Finish adds the rest of the files. Undo takes out the ones already added and puts back the files they replaced, so the mods are as they were before. Later changes nothing, and Mod Organizer asks again at the next start.</source>
+      <translation>Mod Organizer s&apos;est arrêté pendant qu&apos;il ajoutait les fichiers d&apos;une archive à ces mods installés ; chacun n&apos;en a donc qu&apos;une partie :
+
+%1
+
+Terminer ajoute le reste des fichiers. Annuler retire ceux déjà ajoutés et remet les fichiers qu&apos;ils ont remplacés, pour que les mods soient comme avant. Plus tard ne change rien, et Mod Organizer reposera la question au prochain démarrage.</translation>
+    </message>
+    <message>
+      <source>Finish</source>
+      <translation>Terminer</translation>
+    </message>
+    <message>
+      <source>Undo</source>
+      <translation>Annuler</translation>
+    </message>
+    <message>
+      <source>These could not be completed; close any program using the mods&apos; files. Their files stay in these folders, and Mod Organizer asks again at the next start:
+
+%1</source>
+      <translation>Ceux-ci n&apos;ont pas pu être terminés ; fermez les programmes qui utilisent les fichiers des mods. Leurs fichiers restent dans ces dossiers, et Mod Organizer reposera la question au prochain démarrage :
+
+%1</translation>
     </message>
     <message>
       <source>Restore</source>
@@ -10251,6 +10297,10 @@ Déplacez dans un mod ce que vous voulez garder avant de continuer.</translation
     <message>
       <source>The installation was cancelled while extracting files. Nothing was installed.</source>
       <translation>L&apos;installation a été annulée pendant l&apos;extraction. Rien n&apos;a été installé.</translation>
+    </message>
+    <message>
+      <source>The installation was cancelled while extracting files. None of them were added to the installed mod, which is as it was.</source>
+      <translation>L&apos;installation a été annulée pendant l&apos;extraction. Aucun fichier n&apos;a été ajouté au mod installé, qui est resté tel quel.</translation>
     </message>
     <message>
       <source>&lt;a href="%1"&gt;hook.dll&lt;/a&gt; has been found in your game folder (right click to copy the full path). This is most likely a leftover of setting the ModOrganizer 1 load mechanism to "Script Extender", in which case you must remove this file either by changing the load mechanism in ModOrganizer 1 or by manually removing the file. Otherwise, the game may fail to start or crash.</source>

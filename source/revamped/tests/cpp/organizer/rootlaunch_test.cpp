@@ -432,6 +432,15 @@ void testDriveRoot()
   }
 }
 
+void testUnder()
+{
+  // a file's path in the game folder, also with the game at a drive root
+  CHECK(RootCopy::under("D:/Games/Game", "bin/a.dll") == "D:/Games/Game/bin/a.dll");
+  CHECK(RootCopy::under("D:/", "bin/a.dll") == "D:/bin/a.dll");
+  CHECK(RootCopy::under("D:\\", "a.dll") == "D:\\a.dll");
+  CHECK(RootCopy::under("D:/Games/Game/", "a.dll") == "D:/Games/Game/a.dll");
+}
+
 void testReadPe()
 {
   const QString dir = g_work + "/pe";
@@ -507,6 +516,7 @@ int main(int argc, char** argv)
   testPrograms();
   testConcerns();
   testDriveRoot();
+  testUnder();
   testReadPe();
 
   std::printf("rootlaunch_test: %d passed, %d failed\n", passed, failed);
