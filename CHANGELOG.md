@@ -13,6 +13,14 @@
   "Not done yet". The MO2 plugins a list brings are still set aside and
   offered, not installed.
 
+### Fixes
+
+- **Changing the theme** is seamless again, as when Windows changes its own:
+  the open windows keep the old theme until the new one is in place
+  everywhere, then it fades in. Until now the cards and lists changed first and
+  the window's background, the command bar and the status bar a moment later.
+  With animations off (in MO2 or in Windows) the change shows in one step.
+
 ## 1.1.0-beta.17 (pre-release) — November 24, 2026
 
 Beta 16 with two fixes, nothing else.
