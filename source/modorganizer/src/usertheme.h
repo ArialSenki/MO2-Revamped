@@ -4,7 +4,9 @@
 #include <QColor>
 #include <QList>
 #include <QMap>
+#include <QObject>
 #include <QString>
+#include <functional>
 #include <optional>
 
 // MO2 Revamped: themes of your own. A .qss in the stylesheets folder other than
@@ -60,6 +62,33 @@ QString composeStyleSheet(const Theme& theme, const QString& baseSheet,
 
 // the theme the code-painted widgets follow: null for a built-in theme
 void publishColors(const Theme* theme);
+
+// MO2 Revamped: a theme has been applied in full (the revampedDark and
+// revampedOled properties, publishColors(), the palette and the style sheet).
+// What keeps theme colors of its own (the Qt Quick views' Fluent colors, the
+// main window's toolbar icons) reads them again here: a widget's StyleChange
+// or PaletteChange comes while the theme is still being applied, and
+// Settings' styleChanged reaches the main window before MOApplication has
+// applied the new theme at all (its connection is queued)
+class Applied : public QObject
+{
+  Q_OBJECT
+
+public:
+  static Applied* instance();
+
+signals:
+  void applied();
+
+private:
+  using QObject::QObject;
+};
+
+// MOApplication, at the very end of applying a theme
+void notifyApplied();
+
+// runs what after every theme applied from now on, while context lives
+QMetaObject::Connection whenApplied(QObject* context, std::function<void()> what);
 
 // a color of the built-in themes (Light or Dark, whichever the user theme loads
 // on top of) as the user theme shows it: greys move to the theme's window,

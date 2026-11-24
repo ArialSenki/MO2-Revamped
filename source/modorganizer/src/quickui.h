@@ -128,8 +128,6 @@ class Fluent : public QObject
   Q_PROPERTY(int slow READ slow NOTIFY changed)
 
 public:
-  explicit Fluent(QObject* parent = nullptr);
-
   // the one instance, shared by every view
   static Fluent* instance();
   static Fluent* create(QQmlEngine*, QJSEngine*);
@@ -194,6 +192,11 @@ signals:
   void changed();
 
 private:
+  // private, so QML takes instance() through create(): with a public default
+  // constructor the QML engine made a Fluent of its own, which nothing ever
+  // refreshed, and the views kept the colors of the theme they were made in
+  explicit Fluent(QObject* parent);
+
   bool m_dark = false, m_oled = false, m_animated = true;
   QColor m_window, m_surface, m_surfaceBorder, m_divider, m_text, m_muted, m_disabledText,
       m_accent, m_critical, m_caution, m_success, m_accentFill, m_accentFillHover,

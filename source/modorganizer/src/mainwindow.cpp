@@ -242,6 +242,7 @@ along with Mod Organizer.  If not, see <http://www.gnu.org/licenses/>.
 #include "revampedversion.h"
 #include "selfupdater.h"
 #include "updatenoticedialog.h"
+#include "usertheme.h"
 
 #pragma warning(disable : 4428)
 
@@ -3370,15 +3371,18 @@ void MainWindow::showEvent(QShowEvent* event)
       };
     }
 
-    // this needs to be connected here instead of in the constructor because the
-    // actual changing of the stylesheet is done by MOApplication, which
-    // connects its signal in runApplication() (in main.cpp), and that happens
-    // _after_ the MainWindow is constructed, but _before_ it is shown
+    // connected once the window is shown: the themes MOApplication applies
+    // before that (the instance's own, the first start's question) are in
+    // place for the first show's resetActionIcons() below
     //
-    // by connecting the event here, changing the style setting will first be
-    // handled by MOApplication, and then in updateStyle(), at which point the
-    // stylesheet has already been set correctly
-    connect(this, SIGNAL(styleChanged(QString)), this, SLOT(updateStyle(QString)));
+    // MO2 Revamped: MOApplication applies a new style from a queued
+    // connection, so styleChanged reached updateStyle() first and the action
+    // icons, the executables' icons and the floating log's title bar were
+    // redone in the old theme. updateStyle() now runs once the theme is in
+    // place, edits to the theme's file included
+    UserTheme::whenApplied(this, [this] {
+      updateStyle({});
+    });
 
     // Let the first stylesheet/layout pass finish before capturing geometry.
     // The application stylesheet is selected after construction, and Qt may
